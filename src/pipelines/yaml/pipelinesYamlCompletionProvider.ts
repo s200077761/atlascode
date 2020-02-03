@@ -1,10 +1,6 @@
-import axios from 'axios';
 import { CompletionItem, CompletionItemKind, CompletionItemProvider, Position, SnippetString, TextDocument } from 'vscode';
-import { addCurlLogging } from '../../atlclients/interceptors';
-import { Container } from '../../container';
-import { getAgent } from '../../jira/jira-client/providers';
+import { getAxiosInstance } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
-import { ConnectionTimeout } from '../../util/time';
 
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
@@ -97,19 +93,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     }
 
     private loadPipes(): void {
-        const transport = axios.create({
-            timeout: ConnectionTimeout,
-            headers: {
-                'X-Atlassian-Token': 'no-check',
-                'x-atlassian-force-account-id': 'true',
-                "Accept-Encoding": "gzip, deflate"
-            },
-            ...getAgent()
-        });
-
-        if (Container.config.enableCurlLogging) {
-            addCurlLogging(transport);
-        }
+        const transport = getAxiosInstance();
 
         transport(BB_PIPES_URL, {
             method: "GET",

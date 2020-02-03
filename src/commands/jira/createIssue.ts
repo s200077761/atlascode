@@ -4,6 +4,7 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { BBData, CommentData } from '../../webviews/createIssueWebview';
+import { ProductJira } from '../../atlclients/authInfo';
 
 export interface TodoIssueData {
     summary: string;
@@ -11,7 +12,7 @@ export interface TodoIssueData {
     insertionPoint: Position;
 }
 
-export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefined) {
+export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefined, source?: string) {
     if (isTodoIssueData(data)) {
         const partialIssue = {
             summary: data.summary,
@@ -21,11 +22,11 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
             onCreated: annotateComment,
         };
         Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
-        startIssueCreationEvent('todoComment').then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        startIssueCreationEvent('todoComment', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         return;
     } else if (isUri(data) && data.scheme === 'file') {
         Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
-        startIssueCreationEvent('contextMenu').then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        startIssueCreationEvent('contextMenu', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         return;
     } else if (isBBIssueData(data)) {
         const partialIssue = {
@@ -35,12 +36,12 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
             onCreated: updateBBIssue,
         };
         Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
-        startIssueCreationEvent('todoComment').then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        startIssueCreationEvent('todoComment', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         return;
     }
 
     Container.createIssueWebview.createOrShow();
-    startIssueCreationEvent('explorer').then(e => { Container.analyticsClient.sendTrackEvent(e); });
+    startIssueCreationEvent(source || 'explorer', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 }
 
 function isTodoIssueData(a: any): a is TodoIssueData {

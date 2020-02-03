@@ -1,10 +1,8 @@
-import axios from 'axios';
 import { format } from 'date-fns';
 import { pmfSubmitted } from "../analytics";
 import { Container } from "../container";
 import { PMFData } from "../ipc/messaging";
-import { getAgent } from "../jira/jira-client/providers";
-import { ConnectionTimeout } from "../util/time";
+import { getAxiosInstance } from "../jira/jira-client/providers";
 
 const devPMF = {
     collectorId: "235854834",
@@ -137,15 +135,7 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
         });
     }
 
-    const transport = axios.create({
-        timeout: ConnectionTimeout,
-        headers: {
-            'X-Atlassian-Token': 'no-check',
-            'x-atlassian-force-account-id': 'true',
-            "Accept-Encoding": "gzip, deflate"
-        },
-        ...getAgent()
-    });
+    const transport = getAxiosInstance();
 
     transport(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
         method: "POST",

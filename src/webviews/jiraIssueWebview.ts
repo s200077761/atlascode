@@ -663,7 +663,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
                         if (pr) {
                             const bbApi = await clientForSite(pr.site);
-                            commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
+                            commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`), nonce: msg.nonce });

@@ -1,41 +1,16 @@
-import { AxiosResponse } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { getAgent } from '../../jira/jira-client/providers';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
-import { Client, ClientError } from '../httpClient';
+import { HTTPClient } from '../httpClient';
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
 import { ServerRepositoriesApi } from './repositories';
 
 export class ServerPullRequestApi implements PullRequestApi {
-    private client: Client;
     private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
-    constructor(site: DetailedSiteInfo, username: string, password: string) {
-        this.client = new Client(
-            site.baseApiUrl,
-            `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            getAgent(site),
-            async (response: AxiosResponse): Promise<Error> => {
-                let errString = 'Unknown error';
-                const errJson = response.data;
-
-                if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
-                    const e = errJson.errors[0];
-                    errString = e.message || errString;
-                } else {
-                    errString = errJson;
-                }
-
-                return new ClientError(response.statusText, errString);
-            }
-        );
-    }
-
-    async getCurrentUserPullRequests(site: BitbucketSite): Promise<PaginatedPullRequests> {
-        throw new Error('This api is not not available for bitbucket server');
+    constructor(private client: HTTPClient) {
     }
 
     async getList(workspaceRepo: WorkspaceRepo, queryParams?: any): Promise<PaginatedPullRequests> {
@@ -124,19 +99,19 @@ export class ServerPullRequestApi implements PullRequestApi {
             });
     }
 
-    async get(pr: PullRequest): Promise<PullRequest> {
-        const { ownerSlug, repoSlug } = pr.site;
+    async get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}`,
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}`,
             {
                 markup: true,
                 avatarSize: 64
             }
         );
 
-        const taskCount = await this.getTaskCount(pr);
-        return ServerPullRequestApi.toPullRequestModel(data, taskCount, pr.site, pr.workspaceRepo);
+        const taskCount = await this.getTaskCount(site, prId);
+        return ServerPullRequestApi.toPullRequestModel(data, taskCount, site, workspaceRepo);
     }
 
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
@@ -631,12 +606,17 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(data, 0, site, workspaceRepo);
     }
 
-    async update(pr: PullRequest, title: string) {
+    async update(pr: PullRequest, title: string, reviewerAccountIds: string[]) {
         const { ownerSlug, repoSlug } = pr.site;
 
         let prBody = {
             version: pr.data.version,
-            title: title
+            title: title,
+            reviewers: reviewerAccountIds.map(accountId => ({
+                user: {
+                    name: accountId
+                }
+            }))
         };
 
         await this.client.put(
@@ -724,11 +704,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         return data;
     }
 
-    private async getTaskCount(pr: PullRequest): Promise<number> {
-        const { ownerSlug, repoSlug } = pr.site;
+    private async getTaskCount(site: BitbucketSite, prId: string): Promise<number> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks/count`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`
         );
 
         return data;

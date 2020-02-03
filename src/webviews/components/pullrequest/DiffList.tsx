@@ -16,6 +16,8 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
             return { backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a' };
         } else if (status === FileStatus.COPIED) {
             return { backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900' };
+        } else if (status === FileStatus.CONFLICT) {
+            return { backgroundColor: '#f6c342', borderColor: '#f6c342', color: '#594300' };
         } else {
             //I'm not sure how Bitbucket handles 'unknown' statuses so I settled on purple
             return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6'};
@@ -33,6 +35,8 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
             return 'RENAMED';
         } else if (status === FileStatus.COPIED) {
             return 'COPIED';
+        } else if (status === FileStatus.CONFLICT) {
+            return 'CONFLICT';
         } else {
             return 'UNKNOWN';
         }
@@ -57,7 +61,7 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
                         position='mouse'
                     >
                         <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
-                            {fileDiff.status}
+                            {fileDiff.status.substring(0, 1)}
                         </span>
                     </Tooltip>
                     <a 

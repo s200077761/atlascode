@@ -1,6 +1,6 @@
 import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
 import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common/agent';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import * as fs from "fs";
 import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
@@ -14,21 +14,26 @@ import { ConnectionTimeout } from "../../util/time";
 var tunnel = require("tunnel");
 
 export const jiraTransportFactory: TransportFactory = () => {
-    const transport = axios.create({
+    return getAxiosInstance();
+};
+
+export function getAxiosInstance(): AxiosInstance {
+    const instance = axios.create({
         timeout: ConnectionTimeout,
         headers: {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',
-            "Accept-Encoding": "gzip, deflate"
-        }
+            'Accept-Encoding': 'gzip, deflate'
+        },
+        ...getAgent()
     });
 
     if (Container.config.enableCurlLogging) {
-        addCurlLogging(transport);
+        addCurlLogging(instance);
     }
 
-    return transport;
-};
+    return instance;
+}
 
 export const jiraCloudAuthProvider = (token: string): AuthorizationProvider => {
 
