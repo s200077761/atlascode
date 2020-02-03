@@ -908,6 +908,12 @@ section button span {
 
 /*-------------------- BEGIN - Jira Comments --------------------*/
 
+.jira-issue-macro .icon {
+  height: 16px;
+  min-width: 16px;
+  vertical-align: text-top;
+}
+
 .jira-comment {
   color: var(--vscode-editor-foreground)
 }
@@ -1534,9 +1540,12 @@ pre {
   text-decoration: none;
   text-transform: uppercase;
   margin: 2px 4px 0;
-  width: 16px!important;
   height: 14px!important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+.commit-file-diff-stats .aui-lozenge {
+  width: 16px !important;
 }
 
 .commit-files-summary .commit-files-summary--filename {

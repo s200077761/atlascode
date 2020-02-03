@@ -1,32 +1,39 @@
-import React from 'react';
-import Button from '@atlaskit/button';
+import Avatar from '@atlaskit/avatar';
+import Button, { ButtonProps } from '@atlaskit/button';
 import { AsyncSelect, components } from '@atlaskit/select';
-import Avatar from "@atlaskit/avatar";
 import Tooltip from '@atlaskit/tooltip';
+import React from 'react';
 
 const UserOption = (props: any) => {
     return (
         <components.Option {...props}>
             <div ref={props.innerRef} style={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} />
-                <div style={{ display: 'inline-grid' }}>
+                <Avatar
+                    size="medium"
+                    borderColor="var(--vscode-dropdown-foreground)!important"
+                    src={props.data.avatarUrl}
+                />
+                <Tooltip content={props.data.mention}>
                     <span style={{ marginLeft: '4px' }}>{props.data.displayName}</span>
-                    <small style={{ marginLeft: '4px' }}>{props.data.mention}</small>
-                </div>
+                </Tooltip>
             </div>
         </components.Option>
     );
 };
 
-type State = { isOpen: boolean, value: any };
+type State = { isOpen: boolean; value: any };
 
 // PopoutMentionPicker is a modified version of `Popout` example from https://react-select.com/advanced#experimental
 export default class PopoutMentionPicker extends React.Component<
     {
-        onUserMentioned: (user: any) => void,
-        loadUserOptions: (input: string) => any
+        targetButtonProps?: Partial<ButtonProps>;
+        targetButtonContent: string;
+        targetButtonTooltip: string;
+        onUserMentioned: (user: any) => void;
+        loadUserOptions: (input: string) => any;
     },
-    State> {
+    State
+> {
     constructor(props: any) {
         super(props);
         this.state = { isOpen: false, value: undefined };
@@ -48,8 +55,10 @@ export default class PopoutMentionPicker extends React.Component<
                 isOpen={isOpen}
                 onClose={this.toggleOpen}
                 target={
-                    <Tooltip content='Mention @'>
-                        <Button onClick={this.toggleOpen} isSelected={isOpen}>@</Button>
+                    <Tooltip content={this.props.targetButtonTooltip}>
+                        <Button {...this.props.targetButtonProps} onClick={this.toggleOpen} isSelected={isOpen}>
+                            {this.props.targetButtonContent}
+                        </Button>
                     </Tooltip>
                 }
             >
@@ -64,7 +73,8 @@ export default class PopoutMentionPicker extends React.Component<
                     loadOptions={this.props.loadUserOptions}
                     placeholder="Search..."
                     tabSelectsValue={false}
-                    controlShouldRenderValue={false} />
+                    controlShouldRenderValue={false}
+                />
             </Dropdown>
         );
     }
@@ -83,7 +93,7 @@ const Menu = (props: any) => {
                 marginTop: 8,
                 position: 'absolute',
                 zIndex: 2,
-                width: 'inherit'
+                width: '350px'
             }}
             {...props}
         />
@@ -97,28 +107,21 @@ const Blanket = (props: any) => (
             top: 0,
             right: 0,
             position: 'fixed',
-            zIndex: 1,
+            zIndex: 1
         }}
         {...props}
     />
 );
 const Dropdown = ({ children, isOpen, target, onClose }: any) => (
-    <div style={{ position: 'relative', width: '350px' }}>
-        {target}
-        {isOpen ? <Menu>{children}</Menu> : null}
-        {isOpen ? <Blanket onClick={onClose} /> : null}
-    </div>
+    <React.Fragment>
+        <div style={{ position: 'relative' }}>
+            {target}
+            {isOpen ? <Menu>{children}</Menu> : null}
+            {isOpen ? <Blanket onClick={onClose} /> : null}
+        </div>
+    </React.Fragment>
 );
-const Svg = (p: any) => (
-    <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        focusable="false"
-        role="presentation"
-        {...p}
-    />
-);
+const Svg = (p: any) => <svg width="24" height="24" viewBox="0 0 24 24" focusable="false" role="presentation" {...p} />;
 const DropdownIndicator = () => (
     <div style={{ color: 'gray', height: 24, width: 32 }}>
         <Svg>

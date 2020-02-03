@@ -90,8 +90,8 @@ export async function issueUpdatedEvent(site: DetailedSiteInfo, issueKey: string
     return instanceTrackEvent(site, 'updated', 'issue', { actionSubjectId: issueKey, attributes: { fieldName: fieldName, fieldKey: fieldKey } });
 }
 
-export async function startIssueCreationEvent(source: string): Promise<TrackEvent> {
-    return trackEvent('createFromSource', 'issue', { attributes: { source: source, hostProduct: ProductJira.name } });
+export async function startIssueCreationEvent(source: string, product: Product): Promise<TrackEvent> {
+    return trackEvent('createFromSource', 'issue', { attributes: { source: source, hostProduct: product.name } });
 }
 
 // Bitbucket issue events

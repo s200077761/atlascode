@@ -578,11 +578,15 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
 
-    async update(pr: PullRequest, title: string) {
+    async update(pr: PullRequest, title: string, reviewerAccountIds: string[]) {
         const { ownerSlug, repoSlug } = pr.site;
 
         let prBody = {
-            title: title
+            title: title,
+            reviewers: reviewerAccountIds.map(accountId => ({
+                type: 'user',
+                account_id: accountId
+            }))
         };
 
         await this.client.put(
