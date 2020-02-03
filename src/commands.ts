@@ -88,7 +88,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 env.openExternal(uri);
             }
         }),
-        commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
+        commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
         commands.registerCommand(Commands.ShowIssue, async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite)),
         commands.registerCommand(Commands.ShowIssueForKey, async (issueKey?: string) => await showIssueForKey(issueKey)),
         commands.registerCommand(Commands.ShowIssueForSiteIdAndKey, async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey)),
