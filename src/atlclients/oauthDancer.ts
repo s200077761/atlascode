@@ -155,7 +155,7 @@ export class OAuthDancer implements Disposable {
         return app;
     }
 
-    public async doDance(provider: OAuthProvider, site: SiteInfo): Promise<OAuthResponse> {
+    public async doDance(provider: OAuthProvider, site: SiteInfo, callback?: string): Promise<OAuthResponse> {
         const currentlyInflight = this._authsInFlight.get(provider);
         if (currentlyInflight) {
             currentlyInflight.cancel(`Authentication for ${provider} has been cancelled.`);
@@ -211,7 +211,7 @@ export class OAuthDancer implements Disposable {
 
                         respEvent.res.send(Resources.html.get('authSuccessHtml')!({
                             product: product,
-                            vscodeurl: vscodeurl
+                            vscodeurl: callback ?? vscodeurl
                         }));
 
                         const oauthResponse: OAuthResponse = {

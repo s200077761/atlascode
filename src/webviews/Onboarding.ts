@@ -1,5 +1,5 @@
-import { commands, env } from 'vscode';
-import { authenticateButtonEvent, doneButtonEvent, logoutButtonEvent, moreSettingsButtonEvent } from '../analytics';
+import { commands, env, version } from 'vscode';
+import { authenticateButtonEvent, doneButtonEvent, logoutButtonEvent, moreSettingsButtonEvent, featureChangeEvent } from '../analytics';
 import { DetailedSiteInfo, isBasicAuthInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
@@ -9,7 +9,14 @@ import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { AbstractReactWebview } from './abstractWebview';
+import { configuration } from '../config/configuration';
+const onboardingUrl = version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openOnboarding' : 'vscode://atlassian.atlascode/openOnboarding';
 
+interface ChangeEnabledAction extends Action {
+    changes: {
+        [key: string]: any;
+    };
+}
 export class OnboardingWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
@@ -48,7 +55,9 @@ export class OnboardingWebview extends AbstractReactWebview {
             jiraCloudSites: cloudJira,
             jiraServerSites: serverJira,
             bitbucketCloudSites: cloudBitbucket,
-            bitbucketServerSites: serverBitbucket
+            bitbucketServerSites: serverBitbucket,
+            enableJiraConfig: Container.config.jira.enabled,
+            enableBitbucketConfig: Container.config.bitbucket.enabled
         });
     }
 
@@ -67,16 +76,14 @@ export class OnboardingWebview extends AbstractReactWebview {
     }
 
     private separateCloudFromServer(siteList: DetailedSiteInfo[]): [DetailedSiteInfo[], DetailedSiteInfo[]] {
-        let cloudSites: DetailedSiteInfo[] = [];
-        let serverSites: DetailedSiteInfo[] = [];
-        for (const site of siteList) {
-            if (site.isCloud) {
-                cloudSites.push(site);
-            } else {
-                serverSites.push(site);
-            }
-        }
-        return [cloudSites, serverSites];
+        return siteList.reduce((cloudAndServerSites: [DetailedSiteInfo[], DetailedSiteInfo[]], currentSite) => {
+            currentSite.isCloud ? cloudAndServerSites[0].push(currentSite) : cloudAndServerSites[1].push(currentSite);
+            return cloudAndServerSites;
+        }, [[], []]);
+    }
+
+    private isChangeEnabledAction(a: Action): a is ChangeEnabledAction {
+        return a && (<ChangeEnabledAction>a).changes !== undefined;
     }
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
@@ -93,6 +100,16 @@ export class OnboardingWebview extends AbstractReactWebview {
                     this.hide();
                     break;
                 }
+                case 'changeEnabled': {
+                    if(this.isChangeEnabledAction(msg)){
+                        for (const key in msg.changes) {
+                            const value = msg.changes[key];
+                            await configuration.updateEffective(key, value, null, true);
+                            this.invalidate();
+                            featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
+                        }
+                    }
+                }
                 case 'login': {
                     handled = true;
                     if (isLoginAuthAction(msg)) {
@@ -105,7 +122,7 @@ export class OnboardingWebview extends AbstractReactWebview {
                                 this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Authentication error') });
                             }
                         } else {
-                            authenticateCloud(msg.siteInfo);
+                            authenticateCloud(msg.siteInfo, onboardingUrl);
                         }
                         authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
