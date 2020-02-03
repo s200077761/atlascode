@@ -22,7 +22,7 @@ import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy, Task } from '.
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
-import { Checkout, CopyPullRequestLink, CreateTask, DeleteComment, DeleteTask, EditComment, EditTask, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
+import { AddReviewer, Checkout, CopyPullRequestLink, CreateTask, DeleteComment, DeleteTask, EditComment, EditTask, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
 import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
 import { AtlLoader } from '../AtlLoader';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
@@ -47,7 +47,7 @@ import Reviewers from './Reviewers';
 
 type Emit = CreateTask |
     EditTask | DeleteTask | UpdateTitle |
-    UpdateApproval | Merge | Checkout |
+    AddReviewer | UpdateApproval | Merge | Checkout |
     PostComment | DeleteComment | EditComment |
     CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction |
     OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
@@ -60,6 +60,7 @@ interface ViewState {
     isMergeButtonLoading: boolean;
     isCheckoutButtonLoading: boolean;
     isAnyCommentLoading: boolean;
+    isReviewersLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
     commitMessage: string;
@@ -87,6 +88,7 @@ const emptyState: ViewState = {
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
     isAnyCommentLoading: false,
+    isReviewersLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
     commitMessage: '',
@@ -197,6 +199,14 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
+    handleReviewerAdded = (accountId: string) => {
+        this.setState({ isReviewersLoading: true });
+        this.postMessage({
+            action: 'addReviewer',
+            accountId: accountId
+        });
+    };
+
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
             this.userSuggestions = undefined;
@@ -228,7 +238,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
-                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isAnyCommentLoading: false, isReviewersLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
                 break;
             }
             case 'checkout': {
@@ -236,6 +246,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     isApproveButtonLoading: false,
                     isMergeButtonLoading: false,
                     isCheckoutButtonLoading: false,
+                    isReviewersLoading: false,
                     pr: { ...this.state.pr, currentBranch: e.currentBranch }
                 });
                 break;
@@ -253,6 +264,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         isMergeButtonLoading: false,
                         isCheckoutButtonLoading: false,
                         isAnyCommentLoading: false,
+                        isReviewersLoading: false,
                         closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.data.closeSourceBranch : this.state.closeSourceBranch
                     },
                         () => {
@@ -422,7 +434,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         const actionsContent = (
             <div className='ac-inline-grid'>
-                <Reviewers {...this.state.pr} />
+                <Reviewers {...this.state.pr} loadUserOptions={this.loadUserOptions} onAddReviewer={this.handleReviewerAdded} isLoading={this.state.isReviewersLoading} />
                 {!pr.siteDetails.isCloud &&
                     <Tooltip content={currentUserApprovalStatus === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}>
                         <Button className={currentUserApprovalStatus === 'NEEDS_WORK' ? 'ac-button-warning' : 'ac-button'}

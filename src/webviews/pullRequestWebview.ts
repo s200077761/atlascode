@@ -14,7 +14,7 @@ import { Container } from '../container';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { isCheckout, isCreateTask, isDeleteComment, isDeleteTask, isEditComment, isEditTask, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, isUpdateTitle, Merge } from '../ipc/prActions';
+import { isCheckout, isCreateTask, isDeleteComment, isDeleteTask, isEditComment, isEditTask, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, isUpdateTitle, Merge, isAddReviewer } from '../ipc/prActions';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -196,6 +196,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.checkout(this._pr, msg.branch, msg.isSourceBranch);
                         } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'addReviewer': {
+                    if (isAddReviewer(msg)) {
+                        handled = true;
+                        try {
+                            await this.addReviewer(this._pr, msg.accountId);
+                        } catch (e) {
+                            Logger.error(new Error(`error adding reviewer: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
@@ -418,7 +430,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async updateTitle(pr: PullRequest, text: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(pr, text);
+        await bbApi.pullrequests.update(pr, text, pr.data.participants.filter(p => p.role === 'PARTICIPANT').map(p =>  p.accountId));
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
     }
@@ -428,6 +440,16 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         await bbApi.pullrequests.updateApproval(pr, status);
 
         prApproveEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        await this.updatePullRequest();
+    }
+
+    private async addReviewer(pr: PullRequest, accountId: string) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.update(
+            pr,
+            pr.data.title,
+            [...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId), accountId]
+        );
         await this.updatePullRequest();
     }
 
