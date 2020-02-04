@@ -11,6 +11,9 @@ import { Action } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import { WebviewComponent } from '../WebviewComponent';
 import { SiteEditor } from './SiteEditor';
+import ProductEnabler from './ProductEnabler';
+
+type changeObject = { [key: string]: any };
 
 type ViewState = {
     isRemote: boolean;
@@ -19,6 +22,8 @@ type ViewState = {
     bitbucketCloudSites: DetailedSiteInfo[];
     bitbucketServerSites: DetailedSiteInfo[];
     isErrorBannerOpen: boolean;
+    enableJiraConfig: boolean;
+    enableBitbucketConfig: boolean;
     errorDetails: any;
 };
 
@@ -29,6 +34,8 @@ const emptyViewState = {
     bitbucketCloudSites: [],
     bitbucketServerSites: [],
     isErrorBannerOpen: false,
+    enableJiraConfig: true,
+    enableBitbucketConfig: true,
     errorDetails: undefined
 };
 
@@ -52,7 +59,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                     jiraCloudSites: e.jiraCloudSites,
                     jiraServerSites: e.jiraServerSites,
                     bitbucketCloudSites: e.bitbucketCloudSites,
-                    bitbucketServerSites: e.bitbucketServerSites
+                    bitbucketServerSites: e.bitbucketServerSites,
+                    enableJiraConfig: e.enableJiraConfig,
+                    enableBitbucketConfig: e.enableBitbucketConfig
                 });
                 break;
             }
@@ -88,6 +97,10 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
         return this.state.jiraCloudSites.length > 0 || this.state.jiraServerSites.length > 0 || this.state.bitbucketCloudSites.length > 0 || this.state.bitbucketServerSites.length > 0;
     };
 
+    onConfigChange = (change: changeObject) => {
+        this.postMessage({ action: 'changeEnabled', changes: change });
+    };
+
     public render() {
         return (
             <Page>
@@ -111,77 +124,91 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                     <br></br>
                                     <p>To get started, log in with Jira and/or Bitbucket.</p>
                                 </GridColumn>
-                                <GridColumn medium={10}>
-                                    <div style={{ marginTop: '30px' }}>
-                                        <h2>Jira</h2>
-                                        <Grid>
-                                            <GridColumn medium={5}>
-                                                <SiteEditor
-                                                    sites={this.state.jiraCloudSites}
-                                                    product={ProductJira}
-                                                    isRemote={this.state.isRemote}
-                                                    handleDeleteSite={this.handleLogout}
-                                                    handleSaveSite={this.handleLogin}
-                                                    siteExample={'e.g. <company>.atlassian.net'}
-                                                    cloudOrServer={'cloud'}
-                                                />
-                                            </GridColumn>
-                                            <GridColumn medium={5}>
-                                                <SiteEditor
-                                                    sites={this.state.jiraServerSites}
-                                                    product={ProductJira}
-                                                    isRemote={this.state.isRemote}
-                                                    handleDeleteSite={this.handleLogout}
-                                                    handleSaveSite={this.handleLogin}
-                                                    siteExample={'e.g. jira.<company>.com'}
-                                                    cloudOrServer={'server'}
-                                                />
-                                            </GridColumn>
-                                        </Grid>
+                                <GridColumn medium={12}>
+                                    <div style={{ marginTop: '20px' }}>
+                                        <ProductEnabler
+                                            jiraEnabled={this.state.enableJiraConfig}
+                                            bbEnabled={this.state.enableBitbucketConfig}
+                                            onConfigChange={this.onConfigChange} />
                                     </div>
                                 </GridColumn>
+                                <GridColumn medium={10}> 
+                                    {this.state.enableJiraConfig && 
+                                        <div style={{ marginTop: '10px' }}>
+                                            <h2>Jira</h2>
+                                            <Grid>
+                                                <GridColumn medium={5}>
+                                                    <SiteEditor
+                                                        sites={this.state.jiraCloudSites}
+                                                        product={ProductJira}
+                                                        isRemote={this.state.isRemote}
+                                                        handleDeleteSite={this.handleLogout}
+                                                        handleSaveSite={this.handleLogin}
+                                                        siteExample={'e.g. <company>.atlassian.net'}
+                                                        cloudOrServer={'cloud'}
+                                                    />
+                                                </GridColumn>
+                                                <GridColumn medium={5}>
+                                                    <SiteEditor
+                                                        sites={this.state.jiraServerSites}
+                                                        product={ProductJira}
+                                                        isRemote={this.state.isRemote}
+                                                        handleDeleteSite={this.handleLogout}
+                                                        handleSaveSite={this.handleLogin}
+                                                        siteExample={'e.g. jira.<company>.com'}
+                                                        cloudOrServer={'server'}
+                                                    />
+                                                </GridColumn>
+                                            </Grid>
+                                        </div>
+                                    }
+                                </GridColumn>
                                 <GridColumn medium={10}>
-                                    <div style={{ marginTop: '30px' }}>
-                                        <h2>Bitbucket</h2>
-                                        <Grid>
-                                            <GridColumn medium={5}>
-                                                <SiteEditor
-                                                    sites={this.state.bitbucketCloudSites}
-                                                    product={ProductBitbucket}
-                                                    isRemote={this.state.isRemote}
-                                                    handleDeleteSite={this.handleLogout}
-                                                    handleSaveSite={this.handleLogin}
-                                                    siteExample={'e.g. bitbucket.org/<company>'}
-                                                    cloudOrServer={'cloud'}
-                                                />
-                                            </GridColumn>
-                                            <GridColumn medium={5}>
-                                                <SiteEditor
-                                                    sites={this.state.bitbucketServerSites}
-                                                    product={ProductBitbucket}
-                                                    isRemote={this.state.isRemote}
-                                                    handleDeleteSite={this.handleLogout}
-                                                    handleSaveSite={this.handleLogin}
-                                                    siteExample={'e.g. bitbucket.<company>.com'}
-                                                    cloudOrServer={'server'}
-                                                />
-                                            </GridColumn>
-                                        </Grid>
-                                    </div>
+                                    {this.state.enableBitbucketConfig && 
+                                        <div style={{ marginTop: this.state.enableJiraConfig ? '30px' : '10px' }}>
+                                            <h2>Bitbucket</h2>
+                                            <Grid>
+                                                <GridColumn medium={5}>
+                                                    <SiteEditor
+                                                        sites={this.state.bitbucketCloudSites}
+                                                        product={ProductBitbucket}
+                                                        isRemote={this.state.isRemote}
+                                                        handleDeleteSite={this.handleLogout}
+                                                        handleSaveSite={this.handleLogin}
+                                                        siteExample={'e.g. bitbucket.org/<company>'}
+                                                        cloudOrServer={'cloud'}
+                                                    />
+                                                </GridColumn>
+                                                <GridColumn medium={5}>
+                                                    <SiteEditor
+                                                        sites={this.state.bitbucketServerSites}
+                                                        product={ProductBitbucket}
+                                                        isRemote={this.state.isRemote}
+                                                        handleDeleteSite={this.handleLogout}
+                                                        handleSaveSite={this.handleLogin}
+                                                        siteExample={'e.g. bitbucket.<company>.com'}
+                                                        cloudOrServer={'server'}
+                                                    />
+                                                </GridColumn>
+                                            </Grid>
+                                        </div>
+                                    }
                                 </GridColumn>
                                 <GridColumn medium={12}>
-                                    <div style={{ display: 'inline-block', float: 'right', marginLeft: '10px', marginTop: '150px' }}>
-                                        <div style={{ marginRight: '5px', display: 'inline-block' }}>
-                                            <Tooltip content={!this.anythingAuthenticated() ? "Authenticate with Jira or Bitbucket to continue" : "Click to close this page"}>
-                                                <Button className='ac-button' onClick={() => { this.postMessage({ action: 'closePage' }); }} isDisabled={!this.anythingAuthenticated()}>Done</Button>
-                                            </Tooltip>
+                                    {(this.state.enableJiraConfig || this.state.enableBitbucketConfig) && 
+                                        <div style={{ display: 'inline-block', float: 'right', marginLeft: '10px', marginTop: '150px' }}>
+                                            <div style={{ marginRight: '5px', display: 'inline-block' }}>
+                                                <Tooltip content={!this.anythingAuthenticated() ? "Authenticate with Jira or Bitbucket to continue" : "Click to close this page"}>
+                                                    <Button className='ac-button' onClick={() => { this.postMessage({ action: 'closePage' }); }} isDisabled={!this.anythingAuthenticated()}>Done</Button>
+                                                </Tooltip>
+                                            </div>
+                                            <div style={{ display: 'inline-block' }}>
+                                                <Tooltip content="Click to open additional settings">
+                                                    <Button className='ac-button' onClick={() => { this.postMessage({ action: 'openSettings' }); }}>More Settings...</Button>
+                                                </Tooltip>
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'inline-block' }}>
-                                            <Tooltip content="Click to open additional settings">
-                                                <Button className='ac-button' onClick={() => { this.postMessage({ action: 'openSettings' }); }}>More Settings...</Button>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
+                                    }
                                 </GridColumn>
                             </Grid>
                         </form>);
