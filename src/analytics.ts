@@ -94,6 +94,10 @@ export async function startIssueCreationEvent(source: string, product: Product):
     return trackEvent('createFromSource', 'issue', { attributes: { source: source, hostProduct: product.name } });
 }
 
+export async function searchIssuesEvent(product: Product): Promise<TrackEvent> {
+    return trackEvent('searchIssues', 'issue', { attributes: { hostProduct: product.name } });
+}
+
 // Bitbucket issue events
 
 export async function bbIssueCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {

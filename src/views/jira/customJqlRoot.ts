@@ -12,6 +12,7 @@ import { CreateJiraIssueNode } from './headerNode';
 import { Logger } from "../../logger";
 import { SearchJiraIssuesNode } from './searchJiraIssueNode';
 import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models";
+import { searchIssuesEvent } from "../../analytics";
 
 const createJiraIssueNode = new CreateJiraIssueNode();
 let searchJiraIssuesNode = new SearchJiraIssuesNode();
@@ -57,6 +58,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   createIssueQuickPick() {
+    searchIssuesEvent(ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     const quickPickIssues: QuickPickIssue[] = 
       searchJiraIssuesNode.getIssues()
       .map(issue => { 
