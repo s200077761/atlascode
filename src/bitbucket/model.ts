@@ -1,8 +1,8 @@
-import { FileDiffQueryParams } from "src/views/pullrequest/pullRequestNode";
-import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
-import { PipelineApiImpl } from "../pipelines/pipelines";
-import { Remote, Repository } from "../typings/git";
-import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
+import { FileDiffQueryParams } from 'src/views/pullrequest/pullRequestNode';
+import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
+import { PipelineApiImpl } from '../pipelines/pipelines';
+import { Remote, Repository } from '../typings/git';
+import { BitbucketIssuesApiImpl } from './bitbucket-cloud/bbIssues';
 
 export type BitbucketSite = {
     details: DetailedSiteInfo;
@@ -46,7 +46,7 @@ export const UnknownUser = {
 
 export type Reviewer = User & {
     status: ApprovalStatus;
-    role: "PARTICIPANT" | "REVIEWER";
+    role: 'PARTICIPANT' | 'REVIEWER';
 };
 
 export type Repo = {
@@ -95,34 +95,34 @@ export type Comment = {
 };
 
 export const emptyUser = {
-    accountId: "",
-    displayName: "",
-    url: "",
-    avatarUrl: "",
-    mention: ""
+    accountId: '',
+    displayName: '',
+    url: '',
+    avatarUrl: '',
+    mention: ''
 };
 
 export const emptyTask = {
-    commentId: "",
+    commentId: '',
     creator: emptyUser,
-    created: "",
-    updated: "",
+    created: '',
+    updated: '',
     isComplete: false,
-    id: "",
+    id: '',
     editable: false,
     deletable: false,
-    content: ""
+    content: ''
 };
 
 export const emptyComment = {
-    id: "",
+    id: '',
     deletable: false,
     editable: false,
     user: emptyUser,
-    htmlContent: "",
-    rawContent: "",
-    ts: "",
-    updatedTs: "",
+    htmlContent: '',
+    rawContent: '',
+    ts: '',
+    updatedTs: '',
     deleted: false,
     children: [],
     tasks: []
@@ -140,7 +140,7 @@ export type Commit = {
 
 export type BuildStatus = {
     name: string;
-    state: "SUCCESSFUL" | "FAILED" | "INPROGRESS" | "STOPPED";
+    state: 'SUCCESSFUL' | 'FAILED' | 'INPROGRESS' | 'STOPPED';
     url: string;
     ts: string;
 };
@@ -176,7 +176,7 @@ export enum FileStatus {
     RENAMED = 'R',
     CONFLICT = 'CONFLICT',
     UNKNOWN = 'X'
-};
+}
 
 export interface FileDiff {
     file: string;
@@ -187,7 +187,7 @@ export interface FileDiff {
     lhsQueryParams?: FileDiffQueryParams;
     rhsQueryParams?: FileDiffQueryParams;
     fileChange?: FileChange;
-};
+}
 
 export type CreatePullRequestData = {
     reviewerAccountIds: string[];
@@ -199,7 +199,7 @@ export type CreatePullRequestData = {
     closeSourceBranch: boolean;
 };
 
-export type ApprovalStatus = "APPROVED" | "UNAPPROVED" | "NEEDS_WORK";
+export type ApprovalStatus = 'APPROVED' | 'UNAPPROVED' | 'NEEDS_WORK';
 
 export type PullRequestData = {
     siteDetails: DetailedSiteInfo;
@@ -213,18 +213,18 @@ export type PullRequestData = {
         repo: Repo;
         branchName: string;
         commitHash: string;
-    },
+    };
     destination: {
         repo: Repo;
         branchName: string;
         commitHash: string;
-    },
+    };
     title: string;
     htmlSummary: string;
     rawSummary: string;
     ts: string;
     updatedTs: string;
-    state: "MERGED" | "SUPERSEDED" | "OPEN" | "DECLINED";
+    state: 'MERGED' | 'SUPERSEDED' | 'OPEN' | 'DECLINED';
     closeSourceBranch: boolean;
     taskCount: number;
     buildStatuses?: BuildStatus[];
@@ -268,8 +268,7 @@ export type BitbucketIssue = {
 };
 
 export function isBitbucketIssue(a: any): a is BitbucketIssue {
-    return a && (<BitbucketIssue>a).site !== undefined
-        && (<BitbucketIssue>a).data !== undefined;
+    return a && (<BitbucketIssue>a).site !== undefined && (<BitbucketIssue>a).data !== undefined;
 }
 
 export type BitbucketIssueData = any;
@@ -277,13 +276,16 @@ export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
-    getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getList(
+        workspaceRepo: WorkspaceRepo,
+        queryParams?: { pagelen?: number; sort?: string; q?: string }
+    ): Promise<PaginatedPullRequests>;
     getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     nextPage(prs: PaginatedPullRequests): Promise<PaginatedPullRequests>;
     getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
-    get(pr: PullRequest): Promise<PullRequest>;
+    get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
@@ -296,11 +298,22 @@ export interface PullRequestApi {
     editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task>;
     deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void>;
     getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
-    create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
-    update(pr: PullRequest, title: string): Promise<void>;
+    create(
+        site: BitbucketSite,
+        workspaceRepo: WorkspaceRepo,
+        createPrData: CreatePullRequestData
+    ): Promise<PullRequest>;
+    update(pr: PullRequest, title: string, reviewerAccountIds: string[]): Promise<void>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
-    postComment(site: BitbucketSite, prId: string, text: string, parentCommentId?: string, inline?: { from?: number, to?: number, path: string }, lineMeta?: "ADDED" | "REMOVED"): Promise<Comment>;
+    postComment(
+        site: BitbucketSite,
+        prId: string,
+        text: string,
+        parentCommentId?: string,
+        inline?: { from?: number; to?: number; path: string },
+        lineMeta?: 'ADDED' | 'REMOVED'
+    ): Promise<Comment>;
     getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }
 
