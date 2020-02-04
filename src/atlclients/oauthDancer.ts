@@ -18,8 +18,7 @@ import { ConnectionTimeout, Time } from '../util/time';
 import { AccessibleResource, emptyUserInfo, OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo, UserInfo } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-
-const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
+import { settingsUrl } from '../webviews/configWebview';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
@@ -148,14 +147,14 @@ export class OAuthDancer implements Disposable {
             res.send(Resources.html.get('authFailureHtml')!({
                 errMessage: 'Authorization did not complete in the time alotted.',
                 actionMessage: 'Please try again.',
-                vscodeurl: vscodeurl
+                vscodeurl: settingsUrl
             }));
         });
 
         return app;
     }
 
-    public async doDance(provider: OAuthProvider, site: SiteInfo, callback?: string): Promise<OAuthResponse> {
+    public async doDance(provider: OAuthProvider, site: SiteInfo, callback: string): Promise<OAuthResponse> {
         const currentlyInflight = this._authsInFlight.get(provider);
         if (currentlyInflight) {
             currentlyInflight.cancel(`Authentication for ${provider} has been cancelled.`);
@@ -211,7 +210,7 @@ export class OAuthDancer implements Disposable {
 
                         respEvent.res.send(Resources.html.get('authSuccessHtml')!({
                             product: product,
-                            vscodeurl: callback ?? vscodeurl
+                            vscodeurl: callback
                         }));
 
                         const oauthResponse: OAuthResponse = {
@@ -229,7 +228,7 @@ export class OAuthDancer implements Disposable {
                         respEvent.res.send(Resources.html.get('authFailureHtml')!({
                             errMessage: `Error authenticating with ${provider}: ${err}`,
                             actionMessage: 'Give it a moment and try again.',
-                            vscodeurl: vscodeurl
+                            vscodeurl: settingsUrl
                         }));
 
                         reject(`Error authenticating with ${provider}: ${err}`);

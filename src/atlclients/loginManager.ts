@@ -19,7 +19,7 @@ export class LoginManager {
     }
 
     // this is *only* called when login buttons are clicked by the user
-    public async userInitiatedOAuthLogin(site: SiteInfo, callback?: string): Promise<void> {
+    public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
         const provider = oauthProviderForSite(site);
         try {
             if (!provider) {
