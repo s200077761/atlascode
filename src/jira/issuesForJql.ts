@@ -2,7 +2,7 @@ import { MinimalIssue, readSearchResults } from "@atlassianlabs/jira-pi-common-m
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
 
-const MAX_RESULTS = 100;
+export const MAX_RESULTS = 100;
 
 export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
   const client = await Container.clientManager.jiraClient(site);
