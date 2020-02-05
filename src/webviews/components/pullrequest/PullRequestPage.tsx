@@ -63,7 +63,8 @@ interface ViewState {
     isReviewersLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
-    commitMessage: string;
+    commitMessage?: string;
+    defaultCommitMessage: string;
     mergeStrategy: { label: string, value: string | undefined };
     closeSourceBranch?: boolean;
     isErrorBannerOpen: boolean;
@@ -91,7 +92,8 @@ const emptyState: ViewState = {
     isReviewersLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
-    commitMessage: '',
+    commitMessage: undefined,
+    defaultCommitMessage: '',
     mergeStrategy: { label: 'Default merge strategy', value: undefined },
     closeSourceBranch: undefined,
     isErrorBannerOpen: false,
@@ -123,7 +125,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.postMessage({
             action: 'merge',
             mergeStrategy: this.state.mergeStrategy.value,
-            commitMessage: this.state.commitMessage,
+            commitMessage: this.state.commitMessage || this.state.defaultCommitMessage,
             closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
@@ -268,9 +270,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.data.closeSourceBranch : this.state.closeSourceBranch
                     },
                         () => {
-                            if (this.state.mergeStrategy.value === undefined) {
-                                this.handleMergeStrategyChange(this.state.pr.mergeStrategies.find(strategy => strategy.isDefault === true));
-                            }
+                            this.state.mergeStrategy.value === undefined
+                                ? this.handleMergeStrategyChange(this.state.pr.mergeStrategies.find(strategy => strategy.isDefault === true))
+                                : this.setState({ defaultCommitMessage: this.getDefaultCommitMessage(this.state.mergeStrategy as MergeStrategy) });
                         }
                     );
                 }
@@ -336,16 +338,20 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     handleCommitMessageChange = (text: string) => this.setState({ commitMessage: text });
 
-    handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item }, this.resetCommitMessage);
+    handleMergeStrategyChange = (item: any) => this.setState({
+        mergeStrategy: item,
+        commitMessage: undefined,
+        defaultCommitMessage: this.getDefaultCommitMessage(item)
+    });
 
     handleOpenDiffView = (fileDiff: FileDiff) => {
         this.postMessage({ action: 'openDiffView', fileChange: fileDiff.fileChange! });
     };
 
-    resetCommitMessage = () => {
-        const mergeStrategy = this.state.mergeStrategy.value;
-        if (mergeStrategy === 'fast_forward') {
-            this.setState({ commitMessage: '' });
+    getDefaultCommitMessage = (mergeStrategy: MergeStrategy) => {
+        const mergeStrategyValue = mergeStrategy.value;
+        if (mergeStrategyValue === 'fast_forward') {
+            return '';
         }
 
         const { id, source, title, participants } = this.state.pr.pr!.data;
@@ -355,7 +361,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         let defaultCommitMessage = `${branchInfo} ${pullRequestInfo}\n\n${title}`;
 
-        if (mergeStrategy === 'squash') {
+        if (mergeStrategyValue === 'squash') {
             const commits = this.state.pr.commits || [];
             // Minor optimization: if there's exactly 1 commit, and the commit
             // message already matches the pull request title, no need to display the
@@ -377,7 +383,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             defaultCommitMessage += `\n\n${approverInfo}`;
         }
 
-        this.setState({ commitMessage: defaultCommitMessage });
+        return defaultCommitMessage;
     };
 
     render() {
@@ -463,16 +469,16 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         className="ac-select-container"
                                         classNamePrefix="ac-select"
                                         getOptionLabel={(option: MergeStrategy) => `${option.label}${option.isDefault ? ' (default)' : ''}`}
-                                        getOptionValue={(option: MergeStrategy) => option.value}
+                                        getOptionValue={(option: MergeStrategy) => option}
                                         value={this.state.mergeStrategy}
                                         onChange={this.handleMergeStrategyChange} />
                                 </div>
                                 {this.state.mergeStrategy.value !== 'fast_forward' &&
                                     <div className='ac-vpadding'>
-                                        <Tooltip content={this.state.commitMessage}>
+                                        <Tooltip content={this.state.commitMessage || this.state.defaultCommitMessage}>
                                             <EdiText
                                                 type='textarea'
-                                                value={this.state.commitMessage}
+                                                value={this.state.commitMessage || this.state.defaultCommitMessage}
                                                 onSave={this.handleCommitMessageChange}
                                                 validation={isValidString}
                                                 validationMessage='Commit message is required'
