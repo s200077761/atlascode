@@ -28,6 +28,7 @@ export enum Commands {
     BitbucketShowPullRequestsToReview = 'atlascode.bb.showPullRequestsToReview',
     BitbucketShowPullRequestsCreatedByMe = 'atlascode.bb.showOpenPullRequestsCreatedByMe',
     BitbucketPullRequestFilters = 'atlascode.bb.showPullRequestFilters',
+    JiraSearchIssues = 'atlascode.jira.searchIssues',
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     RefreshPullRequestExplorerNode = 'atlascode.bb.refreshPullRequest',

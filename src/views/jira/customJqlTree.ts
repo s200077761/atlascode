@@ -8,6 +8,7 @@ import { MAX_RESULTS } from '../../jira/issuesForJql';
 
 export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNode {
   public readonly disposables: Disposable[] = [];
+  private _numIssues: number;
 
   constructor(readonly jqlEntry: JQLEntry) {
     super(undefined, "No issues match this query");
@@ -16,6 +17,10 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
 
   async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
     return super.getChildren(undefined, allowFetch);
+  }
+
+  setNumIssues(issueCount: number): void {
+    this._numIssues = issueCount;
   }
 
   getTreeItem(): TreeItem {

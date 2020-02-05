@@ -15,7 +15,6 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
     protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
-    protected _numIssues: number | undefined;
     private _jqlEntry: JQLEntry | undefined;
     private _jqlSite: DetailedSiteInfo | undefined;
 
@@ -83,7 +82,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }
     }
 
-    async executeQuery(): Promise<void> {
+    async executeQuery(): Promise<MinimalORIssueLink<DetailedSiteInfo>[]> {
         if (Container.siteManager.productHasAtLeastOneSite(ProductJira) && this._jqlEntry && this._jqlSite) {
             const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
 
@@ -99,23 +98,25 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
                 this._issues = newIssues;
             }
 
-            this._numIssues = this.countIssues(this._issues);
+            return this.flattenIssueList(this._issues);
         }
+        
+        return [];
     }
 
     //Recursively traverse the issue tree and count all the issues
-    countIssues(issues: MinimalORIssueLink<DetailedSiteInfo>[]): number {
-        return issues.reduce((total, issue) => {
+    flattenIssueList(issues: MinimalORIssueLink<DetailedSiteInfo>[]): MinimalORIssueLink<DetailedSiteInfo>[] {
+        return issues.reduce((issueAccumulator, issue) => {
             if (isMinimalIssue(issue) && Array.isArray(issue.subtasks) && issue.subtasks.length > 0) {
-                //Issue has subtasks, so count 1 + the count of the subtasks
-                return total + 1 + this.countIssues(issue.subtasks);
+                //Issue has subtasks, append the issue and the flattened subtasks
+                return [...issueAccumulator, issue, ...this.flattenIssueList(issue.subtasks)];
             } else if (isMinimalIssue(issue) && Array.isArray(issue.epicChildren) && issue.epicChildren.length > 0) {
-                //Issue is an epic, so count 1 + the count of the subtasks
-                return total + 1 + this.countIssues(issue.epicChildren);
+                //Issue is an epic, so append the issue and the flattened subtasks
+                return [...issueAccumulator, issue, ...this.flattenIssueList(issue.epicChildren)];
             } 
-            //The issue is a regular issue, so just count 1
-            return total + 1;
-        }, 0);
+            //The issue is a regular issue, so just append the issue
+            return [...issueAccumulator, issue];
+        }, []);
     }
 
     getTreeItem(node: IssueNode): TreeItem {
