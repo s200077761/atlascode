@@ -31,6 +31,10 @@ export function registerResources(vscodeContext: ExtensionContext) {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'preferences.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'preferences.svg')))
     });
+    Resources.icons.set('search', {
+        light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'search.svg'))),
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'search.svg')))
+    });
     Resources.icons.set('add', {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'add.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg')))

@@ -258,6 +258,15 @@ track:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - id: 20496
+    action: fileCheckedOut
+    subject: pullRequestBranch
+    library: server
+    description: |
+      when 'Edit this File' action is taken and associated branch is checked out
+    attributes:
+      - name: instanceType
+      - name: hostProduct
   - id: 15637
     action: approved
     subject: pullRequest
@@ -340,6 +349,12 @@ track:
       - name: source
         type: string
         description: "The method used to start the create.\n* explorer\n* contextMenu\n* todoComment"
+  - id: 20659
+    action: searchIssues
+    subject: issue
+    library: server
+    description: |
+      when a user clicks to search for issues
 screen:
   - id: 14476
     name: atlascode.views.jira.assignedIssues

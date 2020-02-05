@@ -1,6 +1,6 @@
+import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import {
     BitbucketSite,
@@ -72,7 +72,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
-        item.description = `updated ${distanceInWordsToNow(this.pr.data.updatedTs, { addSuffix: true })}`;
+        item.description = `updated ${distanceInWordsToNow(this.pr.data.updatedTs, {
+            addSuffix: true
+        })}`;
 
         return item;
     }
@@ -120,7 +122,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
     private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
         const bbApi = await clientForSite(this.pr.site);
-        return await bbApi.pullrequests.get(pr);
+        return await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo);
     }
 
     private async createRelatedJiraIssueNode(

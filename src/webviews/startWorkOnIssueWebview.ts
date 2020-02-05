@@ -21,7 +21,6 @@ const customBranchType: BranchType = { kind: "Custom", prefix: "" };
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
     private _state: MinimalIssue<DetailedSiteInfo> = createEmptyMinimalIssue(emptySiteInfo);
-    private _issueKey: string = "";
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -236,7 +235,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
     }
 
     private async forceUpdateIssue() {
-        let key = this._issueKey;
+        let key = this._state.key;
         if (key !== "") {
             try {
                 let issue = await fetchMinimalIssue(key, this._state.siteDetails);

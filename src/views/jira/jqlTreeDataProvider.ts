@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalIssue, isMinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -77,38 +77,50 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
         } else if (this._issues) {
             return this.nodesForIssues();
-        } else if (allowFetch) {
-            return await this.fetchIssues();
         } else {
             return [];
         }
     }
 
-    getTreeItem(node: IssueNode): TreeItem {
-        return node.getTreeItem();
+    async executeQuery(): Promise<MinimalORIssueLink<DetailedSiteInfo>[]> {
+        if (Container.siteManager.productHasAtLeastOneSite(ProductJira) && this._jqlEntry && this._jqlSite) {
+            const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
+
+            // We already have everything that matches the JQL. The subtasks likely include things that 
+            // don't match the query so we get rid of them.
+            newIssues.forEach(i => {
+                i.subtasks = [];
+            });
+    
+            if (Container.config.jira.explorer.nestSubtasks) {
+                this._issues = await this.constructIssueTree(newIssues);
+            } else {
+                this._issues = newIssues;
+            }
+
+            return this.flattenIssueList(this._issues);
+        }
+        
+        return [];
     }
 
-    private async fetchIssues(): Promise<IssueNode[]> {
-        if (!this._jqlEntry || !this._jqlSite) {
-            return Promise.resolve([]);
-        }
+    //Recursively traverse the issue tree and count all the issues
+    flattenIssueList(issues: MinimalORIssueLink<DetailedSiteInfo>[]): MinimalORIssueLink<DetailedSiteInfo>[] {
+        return issues.reduce((issueAccumulator, issue) => {
+            if (isMinimalIssue(issue) && Array.isArray(issue.subtasks) && issue.subtasks.length > 0) {
+                //Issue has subtasks, append the issue and the flattened subtasks
+                return [...issueAccumulator, issue, ...this.flattenIssueList(issue.subtasks)];
+            } else if (isMinimalIssue(issue) && Array.isArray(issue.epicChildren) && issue.epicChildren.length > 0) {
+                //Issue is an epic, so append the issue and the flattened subtasks
+                return [...issueAccumulator, issue, ...this.flattenIssueList(issue.epicChildren)];
+            } 
+            //The issue is a regular issue, so just append the issue
+            return [...issueAccumulator, issue];
+        }, []);
+    }
 
-        // fetch issues matching the jql
-        const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
-
-        // We already have evertyhing that matches the JQL. The subtasks likely include things that 
-        // don't match the query so we get rid of them.
-        newIssues.forEach(i => {
-            i.subtasks = [];
-        });
-
-        if (Container.config.jira.explorer.nestSubtasks) {
-            this._issues = await this.constructIssueTree(newIssues);
-        } else {
-            this._issues = newIssues;
-        }
-
-        return this.nodesForIssues();
+    getTreeItem(node: IssueNode): TreeItem {
+        return node.getTreeItem();
     }
 
     private async constructIssueTree(jqlIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {

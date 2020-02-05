@@ -59,6 +59,15 @@ export function isPostComment(a: Action): a is PostComment {
     return (<PostComment>a).content !== undefined;
 }
 
+export interface AddReviewer extends Action {
+    action: 'addReviewer';
+    accountId: string;
+}
+
+export function isAddReviewer(a: Action): a is AddReviewer {
+    return (<AddReviewer>a).accountId !== undefined;
+}
+
 export interface RefreshPullRequest extends Action {
     action: 'refreshPR';
 }

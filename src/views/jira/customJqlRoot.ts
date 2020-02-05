@@ -1,5 +1,5 @@
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from "vscode";
-import { ProductJira } from '../../atlclients/authInfo';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, commands, window, QuickPickItem } from "vscode";
+import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from "../../commands";
 import { configuration, JQLEntry } from "../../config/configuration";
 import { Container } from '../../container';
@@ -9,8 +9,16 @@ import { IssueNode } from "../nodes/issueNode";
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { CustomJQLTree } from "./customJqlTree";
 import { CreateJiraIssueNode } from './headerNode';
+import { Logger } from "../../logger";
+import { SearchJiraIssuesNode } from './searchJiraIssueNode';
+import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models";
+import { searchIssuesEvent } from "../../analytics";
 
 const createJiraIssueNode = new CreateJiraIssueNode();
+let searchJiraIssuesNode = new SearchJiraIssuesNode();
+interface QuickPickIssue extends QuickPickItem {
+  issue: MinimalORIssueLink<DetailedSiteInfo>;
+}
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -25,12 +33,12 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   constructor() {
     super();
     this._jqlList = this.getCustomJqlSiteList();
-
     this._children = [];
 
     this._disposable = Disposable.from(
       Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
       Container.jqlManager.onDidJQLChange(this.refresh, this),
+      commands.registerCommand(Commands.JiraSearchIssues, this.createIssueQuickPick)
     );
 
     Container.context.subscriptions.push(
@@ -47,6 +55,31 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
   getTreeItem(element: AbstractBaseNode) {
     return element.getTreeItem();
+  }
+
+  createIssueQuickPick() {
+    searchIssuesEvent(ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+    const quickPickIssues: QuickPickIssue[] = 
+      searchJiraIssuesNode.getIssues()
+      .map(issue => { 
+        return {
+          label: issue.key, 
+          description: issue.summary, 
+          issue: issue
+        };
+      }
+    );
+    window
+      .showQuickPick<QuickPickIssue>(quickPickIssues, {
+        matchOnDescription: true,
+        placeHolder: 'Search for issue key or summary',
+      })
+      .then((quickPickIssue: QuickPickIssue | undefined) => {
+        if(quickPickIssue){
+          commands.executeCommand(Commands.ShowIssue, quickPickIssue.issue);
+        }
+      }
+    );
   }
 
   async getChildren(element: IssueNode | undefined) {
@@ -66,14 +99,27 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       return Promise.resolve([new SimpleJiraIssueNode("Configure JQL entries in settings to view Jira issues", { command: Commands.ShowJiraIssueSettings, title: "Customize JQL settings" })]);
     }
 
-    return [
-      createJiraIssueNode,
-      ...this._jqlList.map((jql: JQLEntry) => {
-        const childTree = new CustomJQLTree(jql);
-        this._children.push(childTree);
-        return childTree;
-      })
-    ];
+    /* This both creates the _children array and executes the queries on each child. This ensures all children are initialized 
+    prior to returning anything. Since executeQuery() returns an issue list for each child, we also accumulate those lists inside
+    of allIssues, and then dedupe them at the end. This gives us a searchable issue list for the QuickPick */
+    let allIssues: MinimalORIssueLink<DetailedSiteInfo>[] = [];
+    this._children = await Promise.all(
+      this._jqlList.map(async (jql: JQLEntry) => { 
+          const childTree = new CustomJQLTree(jql);
+          const flattenedIssueList = await childTree.executeQuery().catch(e => {
+            Logger.error(new Error(`Error executing JQL: ${e}`));
+            return [];
+          });
+          childTree.setNumIssues(flattenedIssueList.length);
+          allIssues.push(...flattenedIssueList);
+          return childTree;
+        }
+      )
+    );
+    allIssues = [...new Map(allIssues.map(issue => [issue.key, issue])).values()]; //dedupe
+    searchJiraIssuesNode.setIssues(allIssues);
+
+    return [createJiraIssueNode, searchJiraIssuesNode, ...this._children];
   }
 
   refresh() {

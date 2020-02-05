@@ -1,15 +1,11 @@
-import axios from 'axios';
 import { window } from "vscode";
 import { authenticatedEvent } from "../analytics";
 import { AnalyticsClient } from "../analytics-node-client/src";
-import { Container } from "../container";
-import { getAgent } from "../jira/jira-client/providers";
+import { getAxiosInstance } from "../jira/jira-client/providers";
 import { Logger } from "../logger";
 import { SiteManager } from "../siteManager";
-import { ConnectionTimeout } from "../util/time";
 import { AccessibleResource, AuthInfo, BasicAuthInfo, DetailedSiteInfo, isBasicAuthInfo, OAuthInfo, OAuthProvider, oauthProviderForSite, Product, ProductBitbucket, ProductJira, SiteInfo } from "./authInfo";
 import { CredentialManager } from "./authStore";
-import { addCurlLogging } from "./interceptors";
 import { OAuthDancer } from "./oauthDancer";
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
@@ -23,14 +19,14 @@ export class LoginManager {
     }
 
     // this is *only* called when login buttons are clicked by the user
-    public async userInitiatedOAuthLogin(site: SiteInfo): Promise<void> {
+    public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
         const provider = oauthProviderForSite(site);
         try {
             if (!provider) {
                 throw new Error(`No provider found for ${site.host}`);
             }
 
-            const resp = await this._dancer.doDance(provider, site);
+            const resp = await this._dancer.doDance(provider, site, callback);
 
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
@@ -151,27 +147,14 @@ export class LoginManager {
                 break;
         }
 
-        const transport = axios.create({
-            timeout: ConnectionTimeout,
-            headers: {
-                'X-Atlassian-Token': 'no-check',
-                'x-atlassian-force-account-id': 'true',
-                "Accept-Encoding": "gzip, deflate"
-            }
-        });
-
-        if (Container.config.enableCurlLogging) {
-            addCurlLogging(transport);
-        }
+        const transport = getAxiosInstance();
 
         const res = await transport(siteDetailsUrl, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
-            },
-            ...getAgent(site)
-
+            }
         });
         const json = res.data;
 
