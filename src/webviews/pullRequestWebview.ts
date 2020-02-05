@@ -51,7 +51,6 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _pr: PullRequest | undefined = undefined;
-    private lastUpdatedTs: string | undefined = undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -335,14 +334,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         const bbApi = await clientForSite(this._pr.site);
 
-        this._pr = await bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
-        // Bitbucket Server does not update timestamp for approval changes :(
-        if (this._pr.site.details.isCloud && this.lastUpdatedTs && this.lastUpdatedTs === this._pr.data.updatedTs) {
-            return;
-        }
-        this.lastUpdatedTs = this._pr.data.updatedTs;
-
         const prDetailsPromises = Promise.all([
+            bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo),
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
@@ -350,7 +343,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getChangedFiles(this._pr),
             bbApi.pullrequests.getTasks(this._pr)
         ]);
-        const [commits, comments, buildStatuses, mergeStrategies, fileChanges, tasks] = await prDetailsPromises;
+        const [updatedPr, commits, comments, buildStatuses, mergeStrategies, fileChanges, tasks] = await prDetailsPromises;
+        this._pr = updatedPr;
         const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
 
         const issuesPromises = Promise.all([
