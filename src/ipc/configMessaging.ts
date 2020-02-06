@@ -1,6 +1,6 @@
 import { Message } from './messaging';
 import { IConfig } from '../config/model';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { AuthInfo, DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 
 export interface FeedbackUser {
     userName: string;
@@ -12,11 +12,21 @@ export interface ConfigWorkspaceFolder {
     uri: string;
 }
 
+export interface SiteAuthInfo {
+    site: DetailedSiteInfo;
+    auth: AuthInfo | undefined;
+}
+
+export const emptySiteAuthInfo: SiteAuthInfo = {
+    site: emptySiteInfo,
+    auth: undefined
+};
+
 export type ConfigInspect = { [key: string]: any };
 export interface ConfigData extends Message {
     inspect: ConfigInspect;
-    jiraSites: DetailedSiteInfo[];
-    bitbucketSites: DetailedSiteInfo[];
+    jiraSites: SiteAuthInfo[];
+    bitbucketSites: SiteAuthInfo[];
     workspaceFolders: ConfigWorkspaceFolder[];
     feedbackUser: FeedbackUser;
     isRemote: boolean;
@@ -46,6 +56,6 @@ export interface JqlData extends Message {
 }
 
 export interface SitesAvailableUpdate extends Message {
-    jiraSites: DetailedSiteInfo[];
-    bitbucketSites: DetailedSiteInfo[];
+    jiraSites: SiteAuthInfo[];
+    bitbucketSites: SiteAuthInfo[];
 }

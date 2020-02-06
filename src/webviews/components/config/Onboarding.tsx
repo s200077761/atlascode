@@ -10,8 +10,8 @@ import { LoginAuthAction, LogoutAuthAction, SaveSettingsAction } from '../../../
 import { Action } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import { WebviewComponent } from '../WebviewComponent';
-import { SiteEditor } from './SiteEditor';
 import ProductEnabler from './ProductEnabler';
+import { SiteEditor } from './SiteEditor';
 
 type changeObject = { [key: string]: any };
 

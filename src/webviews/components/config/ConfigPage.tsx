@@ -305,6 +305,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
     };
 
+    handleEdit = (site: DetailedSiteInfo, auth: AuthInfo) => {
+        this.postMessage({ action: 'edit', detailedSiteInfo: site, authInfo: auth });
+    };
+
     handleLogout = (site: DetailedSiteInfo) => {
         this.postMessage({ action: 'logout', detailedSiteInfo: site });
     };
@@ -612,56 +616,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                         />
                                                     </Panel>
 
-                                                    <Panel
-                                                        {...this.shouldDefaultExpand(SettingSource.BBIssue)}
-                                                        header={panelHeader(
-                                                            'Bitbucket Issues Explorer',
-                                                            'configure the Bitbucket issues explorer and notifications'
-                                                        )}
-                                                    >
-                                                        <BitbucketIssuesConfig
-                                                            config={this.state.config!}
-                                                            onConfigChange={this.onConfigChange}
-                                                        />
-                                                    </Panel>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBIssue)} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket issues explorer and notifications')}>
+                                                    <BitbucketIssuesConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
+                                                </Panel>
 
-                                                    <Panel
-                                                        header={panelHeader(
-                                                            'Context Menus',
-                                                            'configure the context menus in editor'
-                                                        )}
-                                                    >
-                                                        <BitbucketContextMenus
-                                                            config={this.state.config!}
-                                                            onConfigChange={this.onConfigChange}
-                                                        />
-                                                    </Panel>
-                                                    <Panel
-                                                        header={panelHeader(
-                                                            'Status Bar',
-                                                            'configure the status bar display for Bitbucket'
-                                                        )}
-                                                    >
-                                                        <BBStatusBar
-                                                            config={this.state.config!}
-                                                            onConfigChange={this.onConfigChange}
-                                                        />
-                                                    </Panel>
-                                                </TabPanel>
-                                            )}
-                                            <TabPanel>
-                                                <Panel
-                                                    isDefaultExpanded
-                                                    header={
-                                                        <div>
-                                                            <p className="subheader">miscellaneous settings</p>
-                                                        </div>
-                                                    }
-                                                >
-                                                    <WelcomeConfig
-                                                        config={this.state.config!}
-                                                        onConfigChange={this.onConfigChange}
-                                                    />
+                                                <Panel header={panelHeader('Context Menus', 'configure the context menus in editor')}>
+                                                    <BitbucketContextMenus config={this.state.config!} onConfigChange={this.onConfigChange} />
                                                 </Panel>
                                                 <Panel
                                                     isDefaultExpanded

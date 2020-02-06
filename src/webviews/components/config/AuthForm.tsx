@@ -15,27 +15,27 @@ import {
 } from '../../../atlclients/authInfo';
 import * as FieldValidators from '../fieldValidators';
 
-export default class AuthForm extends PureComponent<
-    {
-        product: Product;
-        onCancel: () => void;
-        onSave: (site: SiteInfo, authInfo: AuthInfo) => void;
-    },
-    {
-        requiresCredentials: boolean;
-        username: string;
-        password: string;
-        baseUrl: string;
-        readyToSave: boolean;
-        useCustomSSL: boolean;
-        useContextPath: boolean;
-        customSSLType: string;
-        certPaths: string;
-        pfxPath: string;
-        pfxPassphrase: string;
-        contextPath: string;
-    }
-> {
+export default class AuthForm extends PureComponent<{
+    product: Product;
+    site?: DetailedSiteInfo;
+    auth?: AuthInfo;
+    onCancel: () => void;
+    onSave: (site: SiteInfo, authInfo: AuthInfo) => void;
+}, {
+    requiresCredentials: boolean;
+    username: string;
+    password: string;
+    baseUrl: string;
+    readyToSave: boolean;
+    useCustomSSL: boolean;
+    useContextPath: boolean;
+    customSSLType: string;
+    certPaths: string;
+    pfxPath: string;
+    pfxPassphrase: string;
+    contextPath: string;
+}> {
+
     private sslRadioOptions: any[] = [
         {
             name: 'customSSLType',
@@ -53,20 +53,24 @@ export default class AuthForm extends PureComponent<
         super(props);
 
         this.state = {
-            baseUrl: '',
-            username: '',
-            password: '',
-            requiresCredentials: false,
+            baseUrl: props.site?.baseLinkUrl ?? '',
+            username: props.auth?.username ?? '',
+            password: props.auth?.password ?? '',
+            requiresCredentials: this.isEditing(),
             readyToSave: false,
-            useCustomSSL: false,
-            useContextPath: false,
+            useCustomSSL: props.site?.customSSLCertPaths && props.site?.customSSLCertPaths !== '',
+            useContextPath: props.site?.contextPath && props.site?.contexPath !== '',
             customSSLType: 'customServerSSL',
-            certPaths: '',
-            pfxPath: '',
-            pfxPassphrase: '',
-            contextPath: ''
+            certPaths: props.site?.customSSLCertPaths ?? '',
+            pfxPath: props.site?.pfxPath ?? '',
+            pfxPassphrase: props.site?.pfxPassphrase ?? '',
+            contextPath: props.site?.contextPath ?? '',
         };
     }
+
+    isEditing = (): boolean => {
+        return this.props.site !== undefined;
+    };
 
     isCloudUrl = (url: URL): boolean => {
         return (
@@ -181,10 +185,14 @@ export default class AuthForm extends PureComponent<
         this.setState({ contextPath: e.target.value }, () => this.setReadyToSave(true));
     };
 
+    heading = (): string => {
+        return this.isEditing() ?
+            `Edit ${this.props.product.name} Site` :
+            `Add ${this.props.product.name} Site`;
+    };
+
     render() {
-        const heading = `Add ${this.props.product.name} Site`;
-        let helperText =
-            'You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com';
+        let helperText = "You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com";
         if (this.props.product.key === ProductBitbucket.key) {
             helperText =
                 'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
@@ -194,7 +202,7 @@ export default class AuthForm extends PureComponent<
             <ModalTransition>
                 <Modal
                     onClose={this.props.onCancel}
-                    heading={heading}
+                    heading={this.heading()}
                     shouldCloseOnEscapePress={false}
                     className="modalClass"
                 >
@@ -203,19 +211,29 @@ export default class AuthForm extends PureComponent<
                         isRequired={true}
                         id="baseUrl-input"
                         name="baseUrl-input"
-                        defaultValue=""
-                        validate={FieldValidators.validateRequiredUrl}
-                    >
-                        {(fieldArgs: any) => {
-                            let errDiv = <span />;
-                            if (fieldArgs.error === 'EMPTY') {
-                                errDiv = <ErrorMessage>Base URL is required</ErrorMessage>;
-                            }
-                            if (fieldArgs.error === 'NOT_URL') {
-                                errDiv = <ErrorMessage>Base URL must be a valid absolute URL</ErrorMessage>;
-                            }
-                            if (!fieldArgs.error) {
-                                errDiv = <HelperMessage>{helperText}</HelperMessage>;
+                        defaultValue={this.props.site?.baseLinkUrl ?? ''}
+                        validate={FieldValidators.validateRequiredUrl}>
+                        {
+                            (fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error === 'EMPTY') {
+                                    errDiv = <ErrorMessage>Base URL is required</ErrorMessage>;
+                                }
+                                if (fieldArgs.error === 'NOT_URL') {
+                                    errDiv = <ErrorMessage>Base URL must be a valid absolute URL</ErrorMessage>;
+                                }
+                                if (!fieldArgs.error) {
+                                    errDiv = <HelperMessage>{helperText}</HelperMessage>;
+                                }
+                                return (
+                                    <div>
+                                        <input {...fieldArgs.fieldProps}
+                                            style={{ width: '100%', display: 'block' }}
+                                            className='ac-inputField'
+                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onBaseUrlChange)} />
+                                        {errDiv}
+                                    </div>
+                                );
                             }
                             return (
                                 <div>
@@ -260,9 +278,37 @@ export default class AuthForm extends PureComponent<
                                     isRequired={true}
                                     id="contextPath-input"
                                     name="contextPath-input"
-                                    defaultValue=""
-                                >
-                                    {(fieldArgs: any) => {
+                                    defaultValue={this.props.site?.contextPath ?? ''}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps}
+                                                        style={{ width: '100%', display: 'block' }}
+                                                        className='ac-inputField'
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathChange)} />
+                                                    <HelperMessage>
+                                                        The context path your server is mounted at (e.g. /issues or /jira)
+                                                    </HelperMessage>
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+
+                            }
+                            <Field label='Username'
+                                isRequired={true}
+                                id='username-input'
+                                name='username-input'
+                                defaultValue={(this.props.auth as BasicAuthInfo)?.username ?? ''}
+                                validate={FieldValidators.validateString}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>Username is required</ErrorMessage>;
+                                        }
                                         return (
                                             <div>
                                                 <input
@@ -316,17 +362,16 @@ export default class AuthForm extends PureComponent<
                                 isRequired={true}
                                 id="password-input"
                                 name="password-input"
-                                defaultValue=""
-                                validate={FieldValidators.validateString}
-                            >
-                                {(fieldArgs: any) => {
-                                    let errDiv = <span />;
-                                    if (fieldArgs.error === 'EMPTY') {
-                                        errDiv = <ErrorMessage>Password is required</ErrorMessage>;
-                                    }
-                                    if (!fieldArgs.error && this.props.product.key === ProductBitbucket.key) {
-                                        errDiv = (
-                                            <HelperMessage>
+                                defaultValue={(this.props.auth as BasicAuthInfo)?.password ?? ''}
+                                validate={FieldValidators.validateString}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>Password is required</ErrorMessage>;
+                                        }
+                                        if (!fieldArgs.error && this.props.product.key === ProductBitbucket.key) {
+                                            errDiv = <HelperMessage>
                                                 You can use an app password generated in your profile or your password
                                             </HelperMessage>
                                         );
@@ -389,42 +434,11 @@ export default class AuthForm extends PureComponent<
                                 <Field
                                     label="Custom SSL certificate path(s)"
                                     isRequired={true}
-                                    id="sslCertPaths-input"
-                                    name="sslCertPaths-input"
-                                    defaultValue=""
-                                >
-                                    {(fieldArgs: any) => {
-                                        return (
-                                            <div>
-                                                <input
-                                                    {...fieldArgs.fieldProps}
-                                                    style={{ width: '100%', display: 'block' }}
-                                                    className="ac-inputField"
-                                                    onChange={FieldValidators.chain(
-                                                        fieldArgs.fieldProps.onChange,
-                                                        this.onCertPathsChange
-                                                    )}
-                                                />
-                                                <HelperMessage>
-                                                    The full absolute path to your custom certificates separated by
-                                                    commas
-                                                </HelperMessage>
-                                            </div>
-                                        );
-                                    }}
-                                </Field>
-                            )}
-
-                            {this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL' && (
-                                <div>
-                                    <Field
-                                        label="Custom PFX certificate path"
-                                        isRequired={true}
-                                        id="pfxPath-input"
-                                        name="pfxPath-input"
-                                        defaultValue=""
-                                    >
-                                        {(fieldArgs: any) => {
+                                    id='sslCertPaths-input'
+                                    name='sslCertPaths-input'
+                                    defaultValue={this.props.site?.customSSLCertPaths ?? ''}>
+                                    {
+                                        (fieldArgs: any) => {
                                             return (
                                                 <div>
                                                     <input
@@ -441,33 +455,56 @@ export default class AuthForm extends PureComponent<
                                                     </HelperMessage>
                                                 </div>
                                             );
-                                        }}
+                                        }
+                                    }
+                                </Field>
+
+                            }
+
+                            {this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL' &&
+                                <div>
+                                    <Field label='Custom PFX certificate path'
+                                        isRequired={true}
+                                        id='pfxPath-input'
+                                        name='pfxPath-input'
+                                        defaultValue={this.props.site?.pfxPath ?? ''}>
+                                        {
+                                            (fieldArgs: any) => {
+                                                return (
+                                                    <div>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            style={{ width: '100%', display: 'block' }}
+                                                            className='ac-inputField'
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onPfxPathChange)} />
+                                                        <HelperMessage>
+                                                            The full absolute path to your custom pfx file
+                                                        </HelperMessage>
+                                                    </div>
+                                                );
+                                            }
+                                        }
                                     </Field>
                                     <Field
                                         label="PFX passphrase"
                                         isRequired={false}
                                         id="pfxPassphrase-input"
                                         name="pfxPassphrase-input"
-                                        defaultValue=""
-                                    >
-                                        {(fieldArgs: any) => {
-                                            return (
-                                                <div>
-                                                    <input
-                                                        {...fieldArgs.fieldProps}
-                                                        style={{ width: '100%', display: 'block' }}
-                                                        className="ac-inputField"
-                                                        onChange={FieldValidators.chain(
-                                                            fieldArgs.fieldProps.onChange,
-                                                            this.onPfxPassphraseChange
-                                                        )}
-                                                    />
-                                                    <HelperMessage>
-                                                        The passphrase used to decrypt the pfx file (if required)
-                                                    </HelperMessage>
-                                                </div>
-                                            );
-                                        }}
+                                        defaultValue={this.props.site?.pfxPassphrase ?? ''}>
+                                        {
+                                            (fieldArgs: any) => {
+                                                return (
+                                                    <div>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            style={{ width: '100%', display: 'block' }}
+                                                            className="ac-inputField"
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onPfxPassphraseChange)} />
+                                                        <HelperMessage>
+                                                            The passphrase used to decrypt the pfx file (if required)
+                                                        </HelperMessage>
+                                                    </div>
+                                                );
+                                            }
+                                        }
                                     </Field>
                                 </div>
                             )}

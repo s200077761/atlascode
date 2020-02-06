@@ -12,30 +12,32 @@ import {
     ProductJira,
     SiteInfo
 } from '../../../atlclients/authInfo';
+import { emptySiteAuthInfo, SiteAuthInfo } from '../../../ipc/configMessaging';
 import AuthForm from './AuthForm';
 
 interface AuthProps {
-    sites: DetailedSiteInfo[];
+    sites: SiteAuthInfo[];
     product: Product;
     isRemote: boolean;
     handleDeleteSite: (site: DetailedSiteInfo) => void;
+    handleEditSite?: (site: DetailedSiteInfo, auth: AuthInfo) => void;
     handleSaveSite: (site: SiteInfo, auth: AuthInfo) => void;
     siteExample?: string;
     cloudOrServer?: string;
 }
 
 type ItemData = {
-    site: DetailedSiteInfo;
+    site: SiteAuthInfo;
     delfunc: (site: DetailedSiteInfo) => void;
-    editfunc: (site: DetailedSiteInfo) => void;
+    editfunc: (site: SiteAuthInfo) => void;
 };
 
-const Name = (data: ItemData) => <p style={{ display: 'inline' }}>{data.site.name}</p>;
+const Name = (data: ItemData) => <p style={{ display: 'inline' }}>{data.site.site.name}</p>;
 
 const Delete = (data: ItemData) => {
     return (
         <React.Fragment>
-            <Tooltip content={`Delete ${data.site.name}`}>
+            <Tooltip content={`Delete ${data.site.site.name}`}>
                 <div className="ac-delete" onClick={() => data.delfunc(data.site)}>
                     <TrashIcon label="trash" />
                 </div>
@@ -45,15 +47,18 @@ const Delete = (data: ItemData) => {
 };
 
 const Edit = (data: ItemData) => {
-    return (
-        <React.Fragment>
-            <Tooltip content={`Edit ${data.site.name}`}>
-                <div className='ac-edit' onClick={() => data.editfunc(data.site)}>
-                    <EditIcon label='edit' />
-                </div>
-            </Tooltip>
-        </React.Fragment>
-    );
+    if (data.editfunc) {
+        return (
+            <React.Fragment>
+                <Tooltip content={`Edit ${data.site.site.name}`}>
+                    <div className='ac-edit' onClick={() => data.editfunc(data.site)}>
+                        <EditIcon label='edit' />
+                    </div>
+                </Tooltip>
+            </React.Fragment>
+        );
+    }
+    return (<React.Fragment />);
 };
 
 export const SiteEditor: React.FunctionComponent<AuthProps> = ({
@@ -65,6 +70,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     siteExample,
     cloudOrServer
 }) => {    const [addingSite, setAddingSite] = useState(false);
+    const [editingSite, setEditingSite] = useState(emptySiteAuthInfo);
     const loginText = `Login to ${product.name} Cloud`;
     const addSiteText = `Add Custom ${product.name} Site`;
 
@@ -78,7 +84,17 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
         setAddingSite(false);
     };
 
-    const handleEdit = (site: SiteInfo) => {
+    const handleEdit = (site: SiteAuthInfo) => {
+        if (handleEditSite) {
+            setEditingSite(site);
+        }
+    };
+
+    const completeEdit = (site: DetailedSiteInfo, auth: AuthInfo) => {
+        if (handleEditSite) {
+            handleEditSite(site, auth);
+            setEditingSite(emptySiteAuthInfo);
+        }
     };
 
     const generateLoginButtons = () => {
@@ -125,13 +141,13 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
 
     const getTreeItems = () => {
         if (sites.length > 0) {
-            return sites.map(site => {
+            return sites.map(siteInfo => {
                 return {
-                    id: site.id,
+                    id: siteInfo.site.id,
                     content: {
-                        site: site,
+                        site: siteInfo,
                         delfunc: handleDeleteSite,
-                        editfunc: handleEdit,
+                        editfunc: handleEditSite && siteInfo.site.isCloud ? undefined : handleEdit,
                     }
                 };
             });
@@ -142,9 +158,22 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
 
     return (
         <React.Fragment>
-            {addingSite && <AuthForm onCancel={() => setAddingSite(false)} onSave={handleSave} product={product} />}
+            {addingSite &&
+                <AuthForm
+                    onCancel={() => setAddingSite(false)}
+                    onSave={handleSave}
+                    product={product} />
+            }
+            {(editingSite !== emptySiteAuthInfo) &&
+                <AuthForm
+                    site={editingSite.site}
+                    auth={editingSite.auth}
+                    onCancel={() => setEditingSite(emptySiteAuthInfo)}
+                    onSave={completeEdit}
+                    product={product} />
+            }
             <div className="ac-vpadding">
-                {isRemote && (
+                {isRemote &&
                     <div className="ac-vpadding">
                         <p>Authentication cannot be done while running remotely.</p>
                         <p>

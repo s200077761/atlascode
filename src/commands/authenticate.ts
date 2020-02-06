@@ -9,6 +9,10 @@ export async function authenticateServer(site: SiteInfo, authInfo: AuthInfo) {
     return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
 }
 
+export async function updateServer(site: SiteInfo, authInfo: AuthInfo) {
+    return await Container.loginManager.updatedServerInfo(site, authInfo);
+}
+
 export async function clearAuth(site: DetailedSiteInfo) {
     await Container.clientManager.removeClient(site);
     Container.siteManager.removeSite(site);
