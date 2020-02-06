@@ -8,18 +8,22 @@ import { Logger } from '../../logger';
 
 export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBaseNode {
     public disposables: vscode.Disposable[] = [];
+    private defaultExpanded: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    private _issueKeys: string[] = [];
 
-    constructor(issueKeys: string[], private label: string) {
+     constructor(issueKeys: string[], private label: string) {
         super(undefined, 'No issues found');
-        this.updateJqlEntry(issueKeys);
+        this.defaultExpanded = issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;
+        this._issueKeys = issueKeys;
     }
 
-    private async updateJqlEntry(issueKeys: string[]) {
+    public async updateJqlEntry() {
         // for now we assume all issues share the same site
-        if (issueKeys.length > 0) {
+        if (this._issueKeys.length > 0) {
             try {
-                const issue = await issueForKey(issueKeys[0]);
-                this.setJqlEntry({ id: uuid.v4(), enabled: true, name: 'related issues', query: `issuekey in (${issueKeys.join(',')})`, siteId: issue.siteDetails.id, monitor: false });
+                const issue = await issueForKey(this._issueKeys[0]);
+                this.setJqlEntry({ id: uuid.v4(), enabled: true, name: 'related issues', query: `issuekey in (${this._issueKeys.join(',')})`, siteId: issue.siteDetails.id, monitor: false });
+                await this.executeQuery();
             } catch (e) {
                 Logger.error(new Error(`error fetching related jira issues: ${e}`));
             }
@@ -27,7 +31,7 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
     }
 
     getTreeItem(): vscode.TreeItem {
-        const item = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.Collapsed);
+        const item = new vscode.TreeItem(this.label, this.defaultExpanded);
         item.iconPath = Resources.icons.get('issues');
         return item;
     }
