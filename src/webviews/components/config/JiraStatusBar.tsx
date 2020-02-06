@@ -100,6 +100,24 @@ export default class JiraStatusBar extends React.Component<{ config: IConfig, on
                                 }
                             }
                         </CheckboxField>
+
+                        <CheckboxField
+                            name='jira-status-active-issue'
+                            id='jira-status-active-issue'
+                            value='jira.statusbar.showActiveIssue'>
+                            {
+                                (fieldArgs: any) => {
+                                    return (
+                                        <Checkbox {...fieldArgs.fieldProps}
+                                            label='Show active issue'
+                                            onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                            isDisabled={!this.props.config.jira.statusbar.enabled}
+                                            isChecked={this.props.config.jira.statusbar.showActiveIssue}
+                                        />
+                                    );
+                                }
+                            }
+                        </CheckboxField>
                     </div>
                 </div>
             </div>

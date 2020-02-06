@@ -125,7 +125,7 @@ export class BitbucketContext extends Disposable {
         }
     }
 
-    private getAllRepositoriesRaw(): Repository[] {
+    public getAllRepositoriesRaw(): Repository[] {
         return this._gitApi.repositories;
     }
 
