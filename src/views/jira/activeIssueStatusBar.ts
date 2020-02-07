@@ -71,7 +71,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
             );
     }
 
-    public async handleActiveIssueChange(textOrEditor: TextEditor | string | undefined) {
+    public async handleActiveIssueChange(textOrEditor?: TextEditor | string) {
         if (
             !Container.config.jira.enabled ||
             !Container.config.jira.statusbar.enabled ||
@@ -89,26 +89,24 @@ export class JiraActiveIssueStatusBar implements Disposable {
             return;
         }
 
-        let text: string | undefined = undefined;
-
-        if (typeof textOrEditor === 'string') {
-            text = textOrEditor;
-        } else if (textOrEditor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
-            const { branchName } = JSON.parse(textOrEditor.document.uri.query) as PRFileDiffQueryParams;
-            text = branchName;
-        } else {
-            const scm = Container.bitbucketContext
-                .getAllRepositoriesRaw()
-                .find(repo =>
-                    fs.realpathSync((textOrEditor as TextEditor).document.uri.fsPath).startsWith(repo.rootUri.fsPath)
-                );
-            text = scm?.state.HEAD?.name;
-        }
+        const text = typeof textOrEditor === 'string' ? textOrEditor : this.extractBranchName(textOrEditor);
 
         const parsedIssueKeys = parseJiraIssueKeys(text);
         if (parsedIssueKeys.length > 0) {
             this.updateStatusBarItem(parsedIssueKeys[0]);
         }
+    }
+
+    private extractBranchName(editor: TextEditor): string | undefined {
+        if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
+            const { branchName } = JSON.parse(editor.document.uri.query) as PRFileDiffQueryParams;
+            return branchName;
+        }
+
+        const scm = Container.bitbucketContext
+            .getAllRepositoriesRaw()
+            .find(repo => fs.realpathSync(editor.document.uri.fsPath).startsWith(repo.rootUri.fsPath));
+        return scm?.state.HEAD?.name;
     }
 
     private updateStatusBarItem(issueKey: string) {
