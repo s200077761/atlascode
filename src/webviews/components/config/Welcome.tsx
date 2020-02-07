@@ -94,6 +94,13 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.4.1 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fix certificate handling for Jira clients</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.4.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
