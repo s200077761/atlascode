@@ -1,3 +1,23 @@
+## What's New in 2.4.1
+### Bugs fixed
+* Fix certificate handling for Jira clients
+
+## What's New in 2.4.0
+### Improvements
+* Jira explorer shows issue count for each JQL entry
+* Added ability to search for issues in the Jira explorer
+* Support mentioning users in Jira issue comments
+* Added context menu and toolbar options in pull request diff view to open the file in a new tab for editing
+* Support adding reviewers to existing pull requests
+* Support creating Bitbucket issue to parent repo when working on its fork
+* Improved support for assigning Bitbucket issues
+
+### Bugs fixed
+* Worklog comment is optional now
+* Fixed formatting Jira issues in comments
+* Fixed pull request merge message not being updated when approval changes
+* Fixed pull request and start work screens staying permanently in loading state in some cases
+
 ## What's New in 2.3.2
 ### Improvements
 * Updated README to include complete build instructions

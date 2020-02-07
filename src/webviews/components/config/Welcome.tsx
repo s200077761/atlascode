@@ -94,6 +94,33 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.4.1 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fix certificate handling for Jira clients</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.4.0 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Jira explorer shows issue count for each JQL entry</li>
+                                <li>Added ability to search for issues in the Jira explorer</li>
+                                <li>Support mentioning users in Jira issue comments</li>
+                                <li>Added context menu and toolbar options in pull request diff view to open the file in a new tab for editing</li>
+                                <li>Support adding reviewers to existing pull requests</li>
+                                <li>Support creating Bitbucket issue to parent repo when working on its fork</li>
+                                <li>Improved support for assigning Bitbucket issues</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Worklog comment is optional now</li>
+                                <li>Fixed formatting Jira issues in comments</li>
+                                <li>Fixed pull request merge message not being updated when approval changes</li>
+                                <li>Fixed pull request and start work screens staying permanently in loading state in some cases</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.3.2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>

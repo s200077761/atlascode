@@ -19,14 +19,14 @@ export class LoginManager {
     }
 
     // this is *only* called when login buttons are clicked by the user
-    public async userInitiatedOAuthLogin(site: SiteInfo): Promise<void> {
+    public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
         const provider = oauthProviderForSite(site);
         try {
             if (!provider) {
                 throw new Error(`No provider found for ${site.host}`);
             }
 
-            const resp = await this._dancer.doDance(provider, site);
+            const resp = await this._dancer.doDance(provider, site, callback);
 
             const oauthInfo: OAuthInfo = {
                 access: resp.access,

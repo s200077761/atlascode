@@ -41,6 +41,8 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
     handleUri(uri: Uri): void {
         if (uri.path.endsWith('openSettings')) {
             Container.configWebview.createOrShow();
+        } else if (uri.path.endsWith('openOnboarding')) {
+            Container.onboardingWebview.createOrShow();
         }
     }
 

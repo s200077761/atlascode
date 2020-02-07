@@ -16,6 +16,7 @@ import { SitesAvailableUpdateEvent } from '../siteManager';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { getFeedbackUser, submitFeedback } from './feedbackSubmitter';
 
+export const settingsUrl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -162,7 +163,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Authentication error') });
                             }
                         } else {
-                            authenticateCloud(msg.siteInfo);
+                            authenticateCloud(msg.siteInfo, settingsUrl);
                         }
                         authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }

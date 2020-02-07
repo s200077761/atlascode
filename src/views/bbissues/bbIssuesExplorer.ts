@@ -8,6 +8,8 @@ import { BitbucketIssuesDataProvider } from "../bitbucketIssuesDataProvider";
 import { BitbucketIssuesMonitor } from "./bbIssuesMonitor";
 import { BitbucketExplorer } from "../BitbucketExplorer";
 import { BaseTreeDataProvider } from "../Explorer";
+import { startIssueCreationEvent } from "../../analytics";
+import { ProductBitbucket } from "../../atlclients/authInfo";
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {
@@ -15,7 +17,10 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
 
         Container.context.subscriptions.push(
             commands.registerCommand(Commands.BitbucketIssuesRefresh, this.refresh, this),
-            commands.registerCommand(Commands.CreateBitbucketIssue, Container.createBitbucketIssueWebview.createOrShow, Container.createBitbucketIssueWebview),
+            commands.registerCommand(Commands.CreateBitbucketIssue, (source?: string) => {
+                Container.createBitbucketIssueWebview.createOrShow();
+                startIssueCreationEvent(source || 'explorer', ProductBitbucket).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+            }),
             this.ctx.onDidChangeBitbucketContext(() => this.updateExplorerState())
         );
     }
