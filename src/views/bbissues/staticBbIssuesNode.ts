@@ -8,13 +8,15 @@ import { SimpleNode } from '../nodes/simpleNode';
 
 export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
+    private collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
     constructor(private site: BitbucketSite, private issueKeys: string[]) {
         super();
+        this.collapsibleState = issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;
     }
 
     getTreeItem(): vscode.TreeItem {
-        const item = new vscode.TreeItem('Related Bitbucket issues', vscode.TreeItemCollapsibleState.Collapsed);
+        const item = new vscode.TreeItem('Related Bitbucket issues', this.collapsibleState);
         item.iconPath = Resources.icons.get('issues');
         return item;
     }
