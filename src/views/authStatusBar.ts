@@ -8,7 +8,8 @@ import { Container } from "../container";
 import { Resources } from "../resources";
 
 export class AuthStatusBar extends Disposable {
-  public static StatusBarItemPriority = 100;
+  public static JiraStausBarItemPriority = 100;
+  public static BitbucketStausBarItemPriority = 90;
 
   private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
     string,
@@ -68,7 +69,10 @@ export class AuthStatusBar extends Disposable {
   private ensureStatusItem(product: Product): StatusBarItem {
     let statusBarItem = this._authenticationStatusBarItems.get(product.key);
     if (!statusBarItem) {
-      statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, AuthStatusBar.StatusBarItemPriority);
+      statusBarItem = window.createStatusBarItem(
+        StatusBarAlignment.Left,
+        product.name === 'Jira' ? AuthStatusBar.JiraStausBarItemPriority : AuthStatusBar.BitbucketStausBarItemPriority
+      );
       this._authenticationStatusBarItems.set(product.key, statusBarItem);
     }
     return statusBarItem;

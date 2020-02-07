@@ -21,7 +21,7 @@ import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 
 export class JiraActiveIssueStatusBar implements Disposable {
     // show active issue to the right of auth status bar item
-    private static StatusBarItemPriority = AuthStatusBar.StatusBarItemPriority - 1;
+    private static StatusBarItemPriority = AuthStatusBar.JiraStausBarItemPriority - 1;
     private static OpenActiveIssueCommand = 'openActiveJiraIssue';
     private disposable: Disposable | undefined;
     private statusBarItem: StatusBarItem | undefined;
@@ -85,6 +85,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
 
         textOrEditor = textOrEditor || window.visibleTextEditors?.[0];
         if (textOrEditor === undefined) {
+            this.activeIssueKey ? this.updateStatusBarItem(this.activeIssueKey) : this.showEmptyStateStatusBarItem();
             return;
         }
 
@@ -96,11 +97,11 @@ export class JiraActiveIssueStatusBar implements Disposable {
             const { branchName } = JSON.parse(textOrEditor.document.uri.query) as PRFileDiffQueryParams;
             text = branchName;
         } else {
-            const scm = Container.bitbucketContext.getAllRepositoriesRaw().find(repo => {
-                return fs
-                    .realpathSync((textOrEditor as TextEditor).document.uri.fsPath)
-                    .startsWith(repo.rootUri.fsPath);
-            });
+            const scm = Container.bitbucketContext
+                .getAllRepositoriesRaw()
+                .find(repo =>
+                    fs.realpathSync((textOrEditor as TextEditor).document.uri.fsPath).startsWith(repo.rootUri.fsPath)
+                );
             text = scm?.state.HEAD?.name;
         }
 
@@ -117,6 +118,13 @@ export class JiraActiveIssueStatusBar implements Disposable {
         this.statusBarItem!.show();
 
         this.activeIssueKey = issueKey;
+    }
+
+    private showEmptyStateStatusBarItem() {
+        this.statusBarItem!.text = `$(chevron-right) No active issue`;
+        this.statusBarItem!.tooltip = 'No active Jira issue - click to view issue explorer';
+        this.statusBarItem!.command = 'atlascode.views.jira.customJql.focus';
+        this.statusBarItem!.show();
     }
 
     dispose() {
