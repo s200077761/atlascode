@@ -105,9 +105,9 @@ export class ClientManager implements Disposable {
         let client: any = undefined;
 
         if (isOAuthInfo(info)) {
-          client = new JiraCloudClient(site, jiraTransportFactory, jiraCloudAuthProvider(info.access));
+          client = new JiraCloudClient(site, jiraTransportFactory, jiraCloudAuthProvider(info.access), getAgent);
         } else if (isBasicAuthInfo(info)) {
-          client = new JiraServerClient(site, jiraTransportFactory, jiraServerAuthProvider(info.username, info.password));
+          client = new JiraServerClient(site, jiraTransportFactory, jiraServerAuthProvider(info.username, info.password), getAgent);
         }
 
         return client;
