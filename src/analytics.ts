@@ -306,6 +306,22 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function configureJQLButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'configureJQLButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
 
 //TODO: There is no reference to this function...
 export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {

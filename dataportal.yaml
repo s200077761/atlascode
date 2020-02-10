@@ -534,6 +534,12 @@ ui:
     description: |
       Event when a user clicks a logout button
     attributes:
+  - action: clicked
+    subject: button
+    subjectId: configureJQLButton
+    description: |
+      Event when a user clicks a configure JQL button
+    attributes:
   - id: 14446
     action: clicked
     subject: button
