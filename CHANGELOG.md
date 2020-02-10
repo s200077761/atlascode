@@ -1,3 +1,7 @@
+## What's New in 2.4.2
+### Bugs fixed
+* Fixed certificate handling when adding new Jira sites
+
 ## What's New in 2.4.1
 ### Bugs fixed
 * Fix certificate handling for Jira clients
