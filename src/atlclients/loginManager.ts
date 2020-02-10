@@ -1,7 +1,7 @@
 import { window } from "vscode";
 import { authenticatedEvent } from "../analytics";
 import { AnalyticsClient } from "../analytics-node-client/src";
-import { getAxiosInstance } from "../jira/jira-client/providers";
+import { getAgent, getAxiosInstance } from "../jira/jira-client/providers";
 import { Logger } from "../logger";
 import { SiteManager } from "../siteManager";
 import { AccessibleResource, AuthInfo, BasicAuthInfo, DetailedSiteInfo, isBasicAuthInfo, OAuthInfo, OAuthProvider, oauthProviderForSite, Product, ProductBitbucket, ProductJira, SiteInfo } from "./authInfo";
@@ -154,7 +154,8 @@ export class LoginManager {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
-            }
+            },
+            ...getAgent(site)
         });
         const json = res.data;
 
