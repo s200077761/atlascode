@@ -9,6 +9,7 @@ import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 import {
     ApprovalStatus,
+    BitbucketApi,
     BitbucketIssue,
     Commit,
     FileChange,
@@ -25,6 +26,7 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
 import {
+    isAddReviewer,
     isCheckout,
     isCreateTask,
     isDeleteComment,
@@ -38,8 +40,7 @@ import {
     isPostComment,
     isUpdateApproval,
     isUpdateTitle,
-    Merge,
-    isAddReviewer
+    Merge
 } from '../ipc/prActions';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -324,6 +325,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
     }
 
+    private async fetchChangedFiles(bbApi: BitbucketApi, pr: PullRequest) {
+        const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
+        return fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
+    }
+
     private async postCompleteState() {
         if (!this._pr || !this._panel) {
             return;
@@ -333,27 +339,20 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
 
         const bbApi = await clientForSite(this._pr.site);
-
-        const prDetailsPromises = Promise.all([
-            bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo),
-            bbApi.pullrequests.getCommits(this._pr),
-            bbApi.pullrequests.getComments(this._pr),
+        const commentsPromise = bbApi.pullrequests.getComments(this._pr);
+        const prPromise = bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
+        const commitsPromise = bbApi.pullrequests.getCommits(this._pr);
+        const independentPromises = Promise.all([
+            this.fetchChangedFiles(bbApi, this._pr),
+            bbApi.pullrequests.getTasks(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
-            bbApi.pullrequests.getMergeStrategies(this._pr),
-            bbApi.pullrequests.getChangedFiles(this._pr),
-            bbApi.pullrequests.getTasks(this._pr)
+            bbApi.pullrequests.getMergeStrategies(this._pr)
         ]);
-        const [updatedPr, commits, comments, buildStatuses, mergeStrategies, fileChanges, tasks] = await prDetailsPromises;
-        this._pr = updatedPr;
-        const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
 
-        const issuesPromises = Promise.all([
-            this.fetchRelatedJiraIssues(this._pr, commits, comments),
-            this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
-            this.fetchMainIssue(this._pr)
-        ]);
-        const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
-        const currentUser = await Container.bitbucketContext.currentUser(this._pr.site);
+        const updatedPr = await prPromise;
+        this._pr = updatedPr;
+        const mainIssuePromise = this.fetchMainIssue(updatedPr);
+        const currentUserPromise = Container.bitbucketContext.currentUser(this._pr.site);
 
         let currentBranch = '';
         if (this._pr.workspaceRepo) {
@@ -361,6 +360,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             currentBranch = scm.state.HEAD ? scm.state.HEAD.name! : '';
         }
 
+        const [commits, comments] = await Promise.all([commitsPromise, commentsPromise]);
+        const relatedJiraIssuesPromise = this.fetchRelatedJiraIssues(updatedPr, commits, comments);
+        const relatedBitbucketIssuesPromise = this.fetchRelatedBitbucketIssues(updatedPr, commits, comments);
+
+        //Resolve all the remaining promises
+        const [fileDiffs, tasks, buildStatus, mergeStrategy] = await independentPromises;
+        const [currentUser, relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await Promise.all([
+            currentUserPromise,
+            relatedJiraIssuesPromise,
+            relatedBitbucketIssuesPromise,
+            mainIssuePromise
+        ]);
         const prData: PRData = {
             pr: this._pr,
             fileDiffs: fileDiffs,
@@ -373,8 +384,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             relatedJiraIssues: relatedJiraIssues,
             relatedBitbucketIssues: relatedBitbucketIssues,
             mainIssue: mainIssue,
-            buildStatuses: buildStatuses,
-            mergeStrategies: mergeStrategies
+            buildStatuses: buildStatus,
+            mergeStrategies: mergeStrategy
         };
         this.postMessage(prData);
     }
@@ -465,7 +476,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async updateTitle(pr: PullRequest, text: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(pr, text, pr.data.participants.filter(p => p.role === 'PARTICIPANT').map(p =>  p.accountId));
+        await bbApi.pullrequests.update(
+            pr,
+            text,
+            pr.data.participants.filter(p => p.role === 'PARTICIPANT').map(p => p.accountId)
+        );
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
     }
@@ -482,11 +497,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async addReviewer(pr: PullRequest, accountId: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(
-            pr,
-            pr.data.title,
-            [...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId), accountId]
-        );
+        await bbApi.pullrequests.update(pr, pr.data.title, [
+            ...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId),
+            accountId
+        ]);
         await this.updatePullRequest();
     }
 
