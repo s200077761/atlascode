@@ -21,6 +21,7 @@ import {
 } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
+import { SitesAvailableUpdateEvent } from "../siteManager";
 import { CacheMap, Interval } from '../util/cachemap';
 import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo } from './authInfo';
 

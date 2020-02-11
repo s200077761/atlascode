@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
@@ -27,6 +28,9 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
 
                 let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
                 return newPRs;
+            }).catch(e => {
+                Logger.error(e, 'Error while fetching latest pull requests');
+                return [];
             });
         });
         Promise.all(promises)

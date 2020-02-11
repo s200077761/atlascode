@@ -194,8 +194,9 @@ export default class AuthForm extends PureComponent<{
     render() {
         let helperText = "You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com";
         if (this.props.product.key === ProductBitbucket.key) {
-            helperText =
-                'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
+            helperText = "You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com";
+        } else if (this.isEditing()) {
+            helperText = "Base Url can not be edited.";
         }
 
         return (
@@ -208,7 +209,7 @@ export default class AuthForm extends PureComponent<{
                 >
                     <Field
                         label="Base Url"
-                        isRequired={true}
+                        isRequired={!this.isEditing()}
                         id="baseUrl-input"
                         name="baseUrl-input"
                         defaultValue={this.props.site?.baseLinkUrl ?? ''}
@@ -230,6 +231,7 @@ export default class AuthForm extends PureComponent<{
                                         <input {...fieldArgs.fieldProps}
                                             style={{ width: '100%', display: 'block' }}
                                             className='ac-inputField'
+                                            readOnly={this.isEditing()}
                                             onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onBaseUrlChange)} />
                                         {errDiv}
                                     </div>

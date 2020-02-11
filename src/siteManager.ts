@@ -4,6 +4,7 @@ import {
     DetailedSiteInfo,
     emptySiteInfo,
     isRemoveAuthEvent,
+    isUpdatedAuthEvent,
     Product,
     ProductBitbucket,
     ProductJira,
@@ -92,6 +93,8 @@ export class SiteManager extends Disposable {
             if (deadSites.length > 0) {
                 this._onDidSitesAvailableChange.fire({ sites: this.getSitesAvailable(e.product), product: e.product });
             }
+        } else if (isUpdateAuthEvent(e)) {
+            this._onDidSitesAvailableChange.fire({ sites: this.getSitesAvailable(e.site.product), product: e.site.product });
         }
     }
 
