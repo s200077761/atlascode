@@ -67,6 +67,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this.postMessage(onlineStatus(false));
         }
 
+        Container.jiraActiveIssueStatusBar.handleActiveIssueChange(this._issue.key);
         Container.pmfStats.touchActivity();
     }
 

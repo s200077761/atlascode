@@ -389,6 +389,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 const jiraIssueKeys = parseJiraIssueKeys(branchAndTitleText);
                 if (jiraIssueKeys.length > 0) {
                     try {
+                        Container.jiraActiveIssueStatusBar.handleActiveIssueChange(jiraIssueKeys[0]);
                         return await issueForKey(jiraIssueKeys[0]);
                     } catch (e) {
                         Logger.debug('error fetching main jira issue: ', e);

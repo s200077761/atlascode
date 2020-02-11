@@ -1,6 +1,6 @@
 import { Disposable, env, ExtensionContext, Uri, UriHandler, window } from 'vscode';
 import { AnalyticsClient } from './analytics-node-client/src/index';
-import { CredentialManager as CredentialManager } from './atlclients/authStore';
+import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
@@ -27,6 +27,7 @@ import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 import { WelcomeWebview } from './webviews/welcomeWebview';
+import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -108,6 +109,7 @@ export class Container {
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
         this._context.subscriptions.push((this._pipelineViewManager = new PipelineViewManager(this._context.extensionPath)));
         this._context.subscriptions.push(this._bitbucketIssueViewManager = new BitbucketIssueViewManager(this._context.extensionPath));
+        this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
     }
 
     static get machineId() {
@@ -250,6 +252,11 @@ export class Container {
     private static _authStatusBar: AuthStatusBar;
     static get authStatusBar() {
         return this._authStatusBar;
+    }
+
+    private static _jiraActiveIssueStatusBar: JiraActiveIssueStatusBar;
+    static get jiraActiveIssueStatusBar() {
+        return this._jiraActiveIssueStatusBar;
     }
 
     private static _siteManager: SiteManager;

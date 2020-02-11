@@ -388,6 +388,22 @@ export async function cloneRepositoryButtonEvent(source: string): Promise<UIEven
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function openActiveIssueEvent(): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'cloneRepository',
+            source: 'statusBar'
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
 // Helper methods
 
 async function instanceTrackEvent(site: DetailedSiteInfo, action: string, actionSubject: string, eventProps: any = {}): Promise<TrackEvent> {

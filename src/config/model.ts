@@ -63,6 +63,7 @@ export interface JiraStatusBar {
     showProduct: boolean;
     showUser: boolean;
     showLogin: boolean;
+    showActiveIssue: boolean;
 }
 
 export interface JiraIssueMonitor {
@@ -206,7 +207,8 @@ export const emptyJiraStatusBar: JiraStatusBar = {
     enabled: true,
     showProduct: true,
     showUser: true,
-    showLogin: true
+    showLogin: true,
+    showActiveIssue: true
 };
 
 export const emptyJiraHover: JiraHover = {

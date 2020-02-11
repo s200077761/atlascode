@@ -832,6 +832,12 @@
                     "description": "Shows a login button in the status bar",
                     "scope": "window"
                 },
+                "atlascode.jira.statusbar.showActiveIssue": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows active Jira issue key in the status bar",
+                    "scope": "window"
+                },
                 "atlascode.jira.workingProject": {
                     "type": "object",
                     "properties": {

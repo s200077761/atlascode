@@ -614,3 +614,9 @@ ui:
     description: |
       Event when a user clicks on the clone repository button
     attributes:
+  - action: clicked
+    subject: button
+    subjectId: openActiveIssue
+    description: |
+      Event when a user clicks on active issue id in status bar
+    attributes:
