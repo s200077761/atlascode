@@ -1157,7 +1157,9 @@
         "webview:atlascodeSettings:dark": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
         "webview:atlascodeSettings:light": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
         "webview:viewJiraIssue:dark": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:viewJiraIssue:light": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js"
+        "webview:viewJiraIssue:light": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:viewPullRequestScreen:dark": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:viewPullRequestScreen:light": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js"
     },
     "dependencies": {
         "@atlaskit/avatar": "^17.0.0",

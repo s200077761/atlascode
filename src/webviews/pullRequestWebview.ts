@@ -1,6 +1,5 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import pSettle from 'p-settle';
-import { PRData } from 'src/ipc/prMessaging';
 import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prCommentEvent, prMergeEvent, prTaskEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
@@ -42,6 +41,7 @@ import {
     isUpdateTitle,
     Merge
 } from '../ipc/prActions';
+import { PRData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -330,6 +330,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
     }
 
+    /* 
+        Data is sent to the PR page in parts: starting with the main PR data, and then sending everything else (comments, tasks, etc.) in a first-come-first-serve basis.
+        Promises are arranged in such a way as to avoid waiting on data as much as possible. E.g. while tasks are being waited on, a bunch of other promises are spawned.
+        Many of these promises contain a .then(), when makes this function harder to read, but means the promise will resolve itself without explicitly waiting for it.
+    */
     private async postCompleteState() {
         if (!this._pr || !this._panel) {
             return;
@@ -339,55 +344,72 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
 
         const bbApi = await clientForSite(this._pr.site);
-        const commentsPromise = bbApi.pullrequests.getComments(this._pr);
+
+        //The results of some of these promises are needed for future API calls, so we store them
         const prPromise = bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
-        const commitsPromise = bbApi.pullrequests.getCommits(this._pr);
-        const independentPromises = Promise.all([
-            this.fetchChangedFiles(bbApi, this._pr),
-            bbApi.pullrequests.getTasks(this._pr),
+        const retrieveCommentDataPromise = bbApi.pullrequests.getComments(this._pr);
+        const retrieveCommitDataPromise = bbApi.pullrequests.getCommits(this._pr);
+
+        //Other promises are not needed, but we need to delay the postMessage call until the base PR data is loaded, so we store them
+        const tasksPromise = bbApi.pullrequests.getTasks(this._pr);
+        const diffPromise = this.fetchChangedFiles(bbApi, this._pr);
+
+        this._pr = await prPromise;
+        const quickPromises = Promise.all([
             bbApi.pullrequests.getBuildStatuses(this._pr),
             bbApi.pullrequests.getMergeStrategies(this._pr)
         ]);
 
-        const updatedPr = await prPromise;
-        this._pr = updatedPr;
-        const mainIssuePromise = this.fetchMainIssue(updatedPr);
+        //Use the newly retrieved PR data to get additional data. Meanwhile, several promises that aren't needed for this step are executing concurrently
+        const mainIssuePromise = this.fetchMainIssue(this._pr);
         const currentUserPromise = Container.bitbucketContext.currentUser(this._pr.site);
-
         let currentBranch = '';
         if (this._pr.workspaceRepo) {
             const scm = Container.bitbucketContext.getRepositoryScm(this._pr.workspaceRepo!.rootUri)!;
             currentBranch = scm.state.HEAD ? scm.state.HEAD.name! : '';
         }
 
-        const [commits, comments] = await Promise.all([commitsPromise, commentsPromise]);
-        const relatedJiraIssuesPromise = this.fetchRelatedJiraIssues(updatedPr, commits, comments);
-        const relatedBitbucketIssuesPromise = this.fetchRelatedBitbucketIssues(updatedPr, commits, comments);
+        //Resolve all the basic data promises (no tasks, comments, or commits)
+        const [buildStatus, mergeStrategy] = await quickPromises;
+        const [mainIssue, currentUser] = await Promise.all([mainIssuePromise, currentUserPromise]);
 
-        //Resolve all the remaining promises
-        const [fileDiffs, tasks, buildStatus, mergeStrategy] = await independentPromises;
-        const [currentUser, relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await Promise.all([
-            currentUserPromise,
-            relatedJiraIssuesPromise,
-            relatedBitbucketIssuesPromise,
-            mainIssuePromise
-        ]);
-        const prData: PRData = {
+        //This represents the main PR data; all other data (comments, commits, tasks, etc.) are being sent separately
+        const prWithoutComments: PRData = {
             pr: this._pr,
-            fileDiffs: fileDiffs,
             currentUser: currentUser,
             currentBranch: currentBranch,
             type: 'update',
-            commits: commits,
-            comments: comments.data,
-            tasks: tasks,
-            relatedJiraIssues: relatedJiraIssues,
-            relatedBitbucketIssues: relatedBitbucketIssues,
             mainIssue: mainIssue,
             buildStatuses: buildStatus,
             mergeStrategies: mergeStrategy
         };
-        this.postMessage(prData);
+        this.postMessage(prWithoutComments);
+
+        //We need to wait until the initial PR data is sent before sending anything else, as this first postMessage would wipe other data if sent in the wrong order
+        //Now we can start the process of sending the rest of the data to the PR page
+        retrieveCommentDataPromise.then(paginatedComments => {
+            const comments = paginatedComments.data;
+            this.postMessage({ type: 'updateComments', comments: comments });
+            return comments;
+        });
+        retrieveCommitDataPromise.then(commits => {
+            this.postMessage({ type: 'updateCommits', commits: commits });
+            return commits;
+        });
+        tasksPromise.then(tasks => this.postMessage({ type: 'updateTasks', tasks: tasks }));
+        diffPromise.then(fileDiffs => this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs }));
+
+        //We need to wait for comments and commits to resolve before getting the related issues (the pr promise already resolved by this point)
+        //However, we don't need to wait for postMessage of those comment, so we can proceed once the initial promises are resolved
+        const [paginatedComments, commits] = await Promise.all([retrieveCommentDataPromise, retrieveCommitDataPromise]);
+        Promise.all([
+            this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then(issues =>
+                this.postMessage({ type: 'updateRelatedJiraIssues', relatedJiraIssues: issues })
+            ),
+            this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then(issues =>
+                this.postMessage({ type: 'updateRelatedBitbucketIssues', relatedBitbucketIssues: issues })
+            )
+        ]);
     }
 
     private async fetchMainIssue(

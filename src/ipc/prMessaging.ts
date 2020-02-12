@@ -1,9 +1,21 @@
-import { MinimalIssue } from "@atlassianlabs/jira-pi-common-models/entities";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequest, Reviewer, Task, User, WorkspaceRepo } from "../bitbucket/model";
-import { Branch } from "../typings/git";
-import { Message } from "./messaging";
-
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models/entities';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
+import {
+    BitbucketBranchingModel,
+    BitbucketIssue,
+    BuildStatus,
+    Comment,
+    Commit,
+    FileDiff,
+    MergeStrategy,
+    PullRequest,
+    Reviewer,
+    Task,
+    User,
+    WorkspaceRepo
+} from '../bitbucket/model';
+import { Branch } from '../typings/git';
+import { Message } from './messaging';
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
@@ -23,6 +35,54 @@ export interface PRData extends Message {
 
 export function isPRData(a: Message): a is PRData {
     return (<PRData>a).type === 'update';
+}
+
+export interface UpdateDiff extends Message {
+    fileDiffs: FileDiff[];
+}
+
+export function isUpdateDiff(a: Message): a is UpdateDiff {
+    return (<UpdateDiff>a).type === 'updateDiffs';
+}
+
+export interface UpdateComments extends Message {
+    comments: Comment[];
+}
+
+export function isUpdateComments(a: Message): a is UpdateComments {
+    return (<UpdateComments>a).type === 'updateComments';
+}
+
+export interface UpdateTasks extends Message {
+    tasks: Task[];
+}
+
+export function isUpdateTasks(a: Message): a is UpdateTasks {
+    return (<UpdateTasks>a).type === 'updateTasks';
+}
+
+export interface UpdateCommits extends Message {
+    commits: Commit[];
+}
+
+export function isUpdateCommits(a: Message): a is UpdateCommits {
+    return (<UpdateCommits>a).type === 'updateCommits';
+}
+
+export interface UpdateRelatedJiraIssues extends Message {
+    relatedJiraIssues?: MinimalIssue<DetailedSiteInfo>[];
+}
+
+export function isUpdateRelatedJiraIssues(a: Message): a is UpdateRelatedJiraIssues {
+    return (<UpdateRelatedJiraIssues>a).type === 'updateRelatedJiraIssues';
+}
+
+export interface UpdateRelatedBitbucketIssues extends Message {
+    relatedBitbucketIssues?: BitbucketIssue[];
+}
+
+export function isUpdateRelatedBitbucketIssues(a: Message): a is UpdateRelatedBitbucketIssues {
+    return (<UpdateRelatedBitbucketIssues>a).type === 'updateRelatedBitbucketIssues';
 }
 
 export interface BranchType {
