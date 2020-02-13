@@ -191,7 +191,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handleDeleteComment = (commentId: string) => {
-        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'deleteComment',
             commentId: commentId
@@ -199,7 +198,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handleEditComment = (content: string, commentId: string) => {
-        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'editComment',
             content: content,
@@ -208,7 +206,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handlePostComment = (content: string, parentCommentId?: string) => {
-        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'comment',
             content: content,
@@ -327,17 +324,20 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             case 'update': {
                 if (isPRData(e)) {
                     this.setState(
-                        {
-                            pr: { ...this.state.pr, ...e },
-                            isFileDiffsLoading: false,
-                            isApproveButtonLoading: false,
-                            isMergeButtonLoading: false,
-                            isCheckoutButtonLoading: false,
-                            isReviewersLoading: false,
-                            closeSourceBranch:
-                                this.state.closeSourceBranch === undefined
-                                    ? e.pr!.data.closeSourceBranch
-                                    : this.state.closeSourceBranch
+                        (state, _) => {
+                            console.log(JSON.stringify(state, null, 2));
+                            return {
+                                pr: { ...state.pr, ...e },
+                                isFileDiffsLoading: false,
+                                isApproveButtonLoading: false,
+                                isMergeButtonLoading: false,
+                                isCheckoutButtonLoading: false,
+                                isReviewersLoading: false,
+                                closeSourceBranch:
+                                    this.state.closeSourceBranch === undefined
+                                        ? e.pr!.data.closeSourceBranch
+                                        : this.state.closeSourceBranch
+                            };
                         },
                         () => {
                             this.state.mergeStrategy.value === undefined
