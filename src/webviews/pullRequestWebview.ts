@@ -392,14 +392,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         //We need to wait for comments and commits to resolve before getting the related issues (the pr promise already resolved by this point)
         const [paginatedComments, commits] = await Promise.all([commentsPromise, commitsPromise]);
-        Promise.all([
-            this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then(issues =>
-                this.postMessage({ type: 'updateRelatedJiraIssues', relatedJiraIssues: issues })
-            ),
-            this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then(issues =>
-                this.postMessage({ type: 'updateRelatedBitbucketIssues', relatedBitbucketIssues: issues })
-            )
-        ]);
+        this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then(issues =>
+            this.postMessage({ type: 'updateRelatedJiraIssues', relatedJiraIssues: issues })
+        );
+        this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then(issues =>
+            this.postMessage({ type: 'updateRelatedBitbucketIssues', relatedBitbucketIssues: issues })
+        );
     }
 
     private async fetchMainIssue(

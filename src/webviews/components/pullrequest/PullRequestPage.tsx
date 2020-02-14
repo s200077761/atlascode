@@ -117,6 +117,7 @@ interface ViewState {
     isMergeButtonLoading: boolean;
     isCheckoutButtonLoading: boolean;
     isAnyCommentLoading: boolean;
+    isCommentsLoading: boolean;
     isReviewersLoading: boolean;
     isRelatedJiraIssuesLoading: boolean;
     isRelatedBitbucketIssuesLoading: boolean;
@@ -152,7 +153,8 @@ const emptyState: ViewState = {
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
-    isAnyCommentLoading: true,
+    isAnyCommentLoading: false,
+    isCommentsLoading: true,
     isReviewersLoading: true,
     isRelatedJiraIssuesLoading: true,
     isRelatedBitbucketIssuesLoading: true,
@@ -199,6 +201,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handleDeleteComment = (commentId: string) => {
+        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'deleteComment',
             commentId: commentId
@@ -206,6 +209,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handleEditComment = (content: string, commentId: string) => {
+        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'editComment',
             content: content,
@@ -214,6 +218,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handlePostComment = (content: string, parentCommentId?: string) => {
+        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'comment',
             content: content,
@@ -365,6 +370,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 if (isUpdateComments(e)) {
                     this.setState({
                         comments: e.comments,
+                        isCommentsLoading: false,
                         isAnyCommentLoading: false
                     });
                 }
@@ -550,7 +556,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         return defaultCommitMessage;
     };
 
-    RelatedJiraIssuesPanel = () => {
+    relatedJiraIssuesPanel = () => {
         if (this.state.isRelatedJiraIssuesLoading) {
             return <Spinner size="large" />;
         } else {
@@ -565,7 +571,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         }
     };
 
-    RelatedBitbucketIssuesPanel = () => {
+    relatedBitbucketIssuesPanel = () => {
         if (this.state.isRelatedBitbucketIssuesLoading) {
             return <Spinner size="large" />;
         } else {
@@ -583,7 +589,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         }
     };
 
-    CommitsPanel = () => {
+    commitsPanel = () => {
         return this.state.isCommitsLoading ? (
             <Spinner size="large" />
         ) : (
@@ -593,7 +599,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
     };
 
-    TasksPanel = (pr: PullRequestData) => {
+    tasksPanel = (pr: PullRequestData) => {
         if (this.state.isTasksLoading) {
             return <Spinner size="large" />;
         } else {
@@ -619,7 +625,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         }
     };
 
-    DiffPanel = () => {
+    diffPanel = () => {
         return this.state.isFileDiffsLoading ? (
             <Spinner size="large" />
         ) : (
@@ -633,8 +639,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
     };
 
-    CommentsPanel = () => {
-        return this.state.isAnyCommentLoading ? (
+    commentsPanel = () => {
+        return this.state.isCommentsLoading ? (
             <Spinner size="large" />
         ) : (
             <Panel isDefaultExpanded header={<h3>Comments</h3>}>
@@ -985,12 +991,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
                                 <p dangerouslySetInnerHTML={{ __html: pr.htmlSummary! }} />
                             </Panel>
-                            {this.RelatedJiraIssuesPanel()}
-                            {this.RelatedBitbucketIssuesPanel()}
-                            {this.CommitsPanel()}
-                            {this.TasksPanel(pr)}
-                            {this.DiffPanel()}
-                            {this.CommentsPanel()}
+                            {this.relatedJiraIssuesPanel()}
+                            {this.relatedBitbucketIssuesPanel()}
+                            {this.commitsPanel()}
+                            {this.tasksPanel(pr)}
+                            {this.diffPanel()}
+                            {this.commentsPanel()}
                         </GridColumn>
                     </Grid>
                 </Page>

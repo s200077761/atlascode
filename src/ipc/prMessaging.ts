@@ -67,7 +67,7 @@ export function isUpdateCommits(a: Message): a is UpdateCommits {
 }
 
 export interface UpdateRelatedJiraIssues extends Message {
-    relatedJiraIssues?: MinimalIssue<DetailedSiteInfo>[];
+    relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
 }
 
 export function isUpdateRelatedJiraIssues(a: Message): a is UpdateRelatedJiraIssues {
@@ -75,7 +75,7 @@ export function isUpdateRelatedJiraIssues(a: Message): a is UpdateRelatedJiraIss
 }
 
 export interface UpdateRelatedBitbucketIssues extends Message {
-    relatedBitbucketIssues?: BitbucketIssue[];
+    relatedBitbucketIssues: BitbucketIssue[];
 }
 
 export function isUpdateRelatedBitbucketIssues(a: Message): a is UpdateRelatedBitbucketIssues {
