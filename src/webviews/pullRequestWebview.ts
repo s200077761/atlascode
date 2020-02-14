@@ -347,18 +347,21 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         //The results of some of these promises are needed for future API calls, so we store them
         const prPromise = bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
-        const retrieveCommentDataPromise = bbApi.pullrequests.getComments(this._pr);
-        const retrieveCommitDataPromise = bbApi.pullrequests.getCommits(this._pr);
+        const commentsPromise = bbApi.pullrequests.getComments(this._pr).then(paginatedComments => {
+            this.postMessage({ type: 'updateComments', comments: paginatedComments.data });
+            return paginatedComments;
+        });
+        const commitsPromise = bbApi.pullrequests.getCommits(this._pr);
 
-        //Other promises are not needed, but we need to delay the postMessage call until the base PR data is loaded, so we store them
-        const tasksPromise = bbApi.pullrequests.getTasks(this._pr);
-        const diffPromise = this.fetchChangedFiles(bbApi, this._pr);
+        //Other promises are not needed for later so we don't need to store them
+        bbApi.pullrequests.getTasks(this._pr).then(tasks => this.postMessage({ type: 'updateTasks', tasks: tasks }));
+        this.fetchChangedFiles(bbApi, this._pr).then(fileDiffs =>
+            this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs })
+        );
 
         this._pr = await prPromise;
-        const quickPromises = Promise.all([
-            bbApi.pullrequests.getBuildStatuses(this._pr),
-            bbApi.pullrequests.getMergeStrategies(this._pr)
-        ]);
+        const buildStatusPromise = bbApi.pullrequests.getBuildStatuses(this._pr);
+        const mergeStrategiesPromise = bbApi.pullrequests.getMergeStrategies(this._pr);
 
         //Use the newly retrieved PR data to get additional data. Meanwhile, several promises that aren't needed for this step are executing concurrently
         const mainIssuePromise = this.fetchMainIssue(this._pr);
@@ -369,39 +372,26 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             currentBranch = scm.state.HEAD ? scm.state.HEAD.name! : '';
         }
 
-        //Resolve all the basic data promises (no tasks, comments, or commits)
-        const [buildStatus, mergeStrategy] = await quickPromises;
-        const [mainIssue, currentUser] = await Promise.all([mainIssuePromise, currentUserPromise]);
-
         //This represents the main PR data; all other data (comments, commits, tasks, etc.) are being sent separately
-        const prWithoutComments: PRData = {
+        const basicPRData: PRData = {
             pr: this._pr,
-            currentUser: currentUser,
+            currentUser: await currentUserPromise,
             currentBranch: currentBranch,
             type: 'update',
-            mainIssue: mainIssue,
-            buildStatuses: buildStatus,
-            mergeStrategies: mergeStrategy
+            mainIssue: await mainIssuePromise,
+            buildStatuses: await buildStatusPromise,
+            mergeStrategies: await mergeStrategiesPromise
         };
-        this.postMessage(prWithoutComments);
+        this.postMessage(basicPRData);
 
-        //We need to wait until the initial PR data is sent before sending anything else, as this first postMessage would wipe other data if sent in the wrong order
-        //Now we can start the process of sending the rest of the data to the PR page
-        retrieveCommentDataPromise.then(paginatedComments => {
-            const comments = paginatedComments.data;
-            this.postMessage({ type: 'updateComments', comments: comments });
-            return comments;
-        });
-        retrieveCommitDataPromise.then(commits => {
+        //I don't understand why it's happening, but calling postMessage for the commits promise prior to the basicPRData promise postMessage seems to sometimes cause
+        //the loading spinner for commits to load indefinitely. Irritating, but perhaps something to be dealt with later...
+        commitsPromise.then(commits => {
             this.postMessage({ type: 'updateCommits', commits: commits });
-            return commits;
         });
-        tasksPromise.then(tasks => this.postMessage({ type: 'updateTasks', tasks: tasks }));
-        diffPromise.then(fileDiffs => this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs }));
 
         //We need to wait for comments and commits to resolve before getting the related issues (the pr promise already resolved by this point)
-        //However, we don't need to wait for postMessage of those comment, so we can proceed once the initial promises are resolved
-        const [paginatedComments, commits] = await Promise.all([retrieveCommentDataPromise, retrieveCommitDataPromise]);
+        const [paginatedComments, commits] = await Promise.all([commentsPromise, commitsPromise]);
         Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then(issues =>
                 this.postMessage({ type: 'updateRelatedJiraIssues', relatedJiraIssues: issues })

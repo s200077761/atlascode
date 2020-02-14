@@ -26,6 +26,8 @@ import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
     ApprovalStatus,
     BitbucketIssue,
+    Comment,
+    Commit,
     FileDiff,
     MergeStrategy,
     PullRequestData,
@@ -107,6 +109,9 @@ type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
     pr: PRData;
+    comments: Comment[];
+    tasks: Task[];
+    commits: Commit[];
     isFileDiffsLoading: boolean;
     isApproveButtonLoading: boolean;
     isMergeButtonLoading: boolean;
@@ -140,6 +145,9 @@ const emptyPR: PRData = {
 
 const emptyState: ViewState = {
     pr: emptyPR,
+    comments: [],
+    tasks: [],
+    commits: [],
     isFileDiffsLoading: true,
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
@@ -287,10 +295,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     getNumberOfTasksComplete = () => {
-        if (this.state.pr.tasks) {
-            return this.state.pr.tasks.filter(task => task.isComplete).length;
-        }
-        return 0;
+        return this.state.tasks.filter(task => task.isComplete).length;
     };
 
     onMessageReceived(e: any): boolean {
@@ -325,9 +330,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 if (isPRData(e)) {
                     this.setState(
                         (state, _) => {
-                            console.log(JSON.stringify(state, null, 2));
                             return {
-                                pr: { ...state.pr, ...e },
+                                pr: {
+                                    ...state.pr,
+                                    ...e
+                                },
                                 isFileDiffsLoading: false,
                                 isApproveButtonLoading: false,
                                 isMergeButtonLoading: false,
@@ -356,14 +363,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }
             case 'updateComments': {
                 if (isUpdateComments(e)) {
-                    this.setState((state, _) => {
-                        return {
-                            pr: {
-                                ...state.pr,
-                                comments: e.comments
-                            },
-                            isAnyCommentLoading: false
-                        };
+                    this.setState({
+                        comments: e.comments,
+                        isAnyCommentLoading: false
                     });
                 }
                 break;
@@ -398,28 +400,18 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }
             case 'updateTasks': {
                 if (isUpdateTasks(e)) {
-                    this.setState((state, _) => {
-                        return {
-                            pr: {
-                                ...state.pr,
-                                tasks: e.tasks
-                            },
-                            isTasksLoading: false
-                        };
+                    this.setState({
+                        tasks: e.tasks,
+                        isTasksLoading: false
                     });
                 }
                 break;
             }
             case 'updateCommits': {
                 if (isUpdateCommits(e)) {
-                    this.setState((state, _) => {
-                        return {
-                            pr: {
-                                ...state.pr,
-                                commits: e.commits
-                            },
-                            isCommitsLoading: false
-                        };
+                    this.setState({
+                        commits: e.commits,
+                        isCommitsLoading: false
                     });
                 }
                 break;
@@ -536,7 +528,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         let defaultCommitMessage = `${branchInfo} ${pullRequestInfo}\n\n${title}`;
 
         if (mergeStrategyValue === 'squash') {
-            const commits = this.state.pr.commits || [];
+            const commits = this.state.commits;
             // Minor optimization: if there's exactly 1 commit, and the commit
             // message already matches the pull request title, no need to display the
             // same text twice.
@@ -596,7 +588,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             <Spinner size="large" />
         ) : (
             <Panel isDefaultExpanded header={<h3>Commits</h3>}>
-                <Commits commits={this.state.pr.commits || []} />
+                <Commits commits={this.state.commits} />
             </Panel>
         );
     };
@@ -606,17 +598,16 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             return <Spinner size="large" />;
         } else {
             return (
-                ((this.state.pr.tasks && this.state.pr.tasks.length > 0) || pr.siteDetails.isCloud) && (
+                (this.state.tasks.length > 0 || pr.siteDetails.isCloud) && (
                     <Panel
                         header={
                             <h3>
-                                {this.getNumberOfTasksComplete()} of{' '}
-                                {this.state.pr.tasks ? this.state.pr.tasks.length : 0} Tasks Complete
+                                {this.getNumberOfTasksComplete()} of {this.state.tasks.length} Tasks Complete
                             </h3>
                         }
                     >
                         <TaskList
-                            tasks={this.state.pr.tasks ? this.state.pr.tasks : []}
+                            tasks={this.state.tasks}
                             onDelete={this.handleTaskDelete}
                             onEdit={this.handleTaskEdit}
                             onSave={this.handleTaskCreate}
@@ -637,7 +628,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     fileDiffs={this.state.pr.fileDiffs ?? []}
                     fileDiffsLoading={this.state.isFileDiffsLoading}
                     openDiffHandler={this.handleOpenDiffView}
-                ></DiffList>
+                />
             </Panel>
         );
     };
@@ -648,7 +639,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         ) : (
             <Panel isDefaultExpanded header={<h3>Comments</h3>}>
                 <Comments
-                    comments={this.state.pr.comments!}
+                    comments={this.state.comments}
                     currentUser={this.state.pr.currentUser!}
                     isAnyCommentLoading={this.state.isAnyCommentLoading}
                     onComment={this.handlePostComment}

@@ -23,9 +23,6 @@ export interface PRData extends Message {
     fileDiffs?: FileDiff[];
     currentUser?: User;
     currentBranch: string;
-    commits?: Commit[];
-    comments?: Comment[];
-    tasks?: Task[];
     relatedJiraIssues?: MinimalIssue<DetailedSiteInfo>[];
     relatedBitbucketIssues?: BitbucketIssue[];
     mainIssue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;

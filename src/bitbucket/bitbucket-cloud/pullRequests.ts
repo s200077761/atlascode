@@ -84,8 +84,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests`, {
             pagelen: defaultPagelen,
             fields: '+values.participants',
-            ...queryParams,
-            state: 'MERGED'
+            ...queryParams
         });
 
         const prs: PullRequest[] = data.values!.map((pr: any) =>
