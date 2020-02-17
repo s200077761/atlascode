@@ -49,11 +49,20 @@ export interface PRFileDiffQueryParams extends FileDiffQueryParams {
 export class PullRequestTitlesNode extends AbstractBaseNode {
     private treeItem: vscode.TreeItem;
     public prHref: string;
+    private childrenPromises: Promise<AbstractBaseNode[]>;
 
     constructor(private pr: PullRequest, private commentController: PullRequestCommentController) {
         super();
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
+
+        //If the PR node belongs to a server repo, we don't want to preload it because we can't cache nodes based on update times.
+        //BBServer update times omit actions like comments, task creation, etc. so we don't know if the PR we have is really up to date without
+        //grabbing all the PR data. Due to rate limits imposed by BBServer admins, mass preloading of all nodes is not feasible without
+        //caching.
+        if (pr.site.details.isCloud) {
+            this.childrenPromises = this.fetchDataAndProcessChildren();
+        }
     }
 
     private createTreeItem(): vscode.TreeItem {
@@ -83,36 +92,40 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return this.treeItem;
     }
 
+    async fetchDataAndProcessChildren(): Promise<AbstractBaseNode[] | [SimpleNode]> {
+        if (!this.pr) {
+            return [];
+        }
+
+        this.pr = await this.hydratePullRequest(this.pr);
+
+        const bbApi = await clientForSite(this.pr.site);
+        let promises = Promise.all([
+            bbApi.pullrequests.getChangedFiles(this.pr),
+            bbApi.pullrequests.getCommits(this.pr),
+            bbApi.pullrequests.getComments(this.pr)
+        ]);
+
+        return promises.then(
+            async result => {
+                let [fileChanges, commits, allComments] = result;
+
+                const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
+                children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
+                children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
+                children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
+                return children;
+            },
+            reason => {
+                Logger.debug('error fetching pull request details', reason);
+                return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
+            }
+        );
+    }
+
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!element) {
-            if (!this.pr) {
-                return [];
-            }
-
-            this.pr = await this.hydratePullRequest(this.pr);
-
-            const bbApi = await clientForSite(this.pr.site);
-            let promises = Promise.all([
-                bbApi.pullrequests.getChangedFiles(this.pr),
-                bbApi.pullrequests.getCommits(this.pr),
-                bbApi.pullrequests.getComments(this.pr)
-            ]);
-
-            return promises.then(
-                async result => {
-                    let [fileChanges, commits, allComments] = result;
-
-                    const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
-                    children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
-                    children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
-                    children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
-                    return children;
-                },
-                reason => {
-                    Logger.debug('error fetching pull request details', reason);
-                    return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
-                }
-            );
+            return await (this.childrenPromises ?? this.fetchDataAndProcessChildren());
         } else {
             return element.getChildren();
         }

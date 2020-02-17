@@ -2,12 +2,16 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PaginatedPullRequests, PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { SimpleNode } from '../nodes/simpleNode';
 import { NextPageNode, PullRequestContextValue, PullRequestTitlesNode } from './pullRequestNode';
 
 export class RepositoriesNode extends AbstractBaseNode {
     private treeItem: vscode.TreeItem;
+    private prMap: Map<string, { pr: PullRequest; node: PullRequestTitlesNode }> = new Map<
+        string,
+        { pr: PullRequest; node: PullRequestTitlesNode }
+    >();
     private children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
     private dirty = false;
 
@@ -18,7 +22,7 @@ export class RepositoriesNode extends AbstractBaseNode {
     ) {
         super();
         this.treeItem = this.createTreeItem();
-        this.disposables.push(({
+        this.disposables.push({
             dispose: () => {
                 if (this.children) {
                     this.children.forEach(child => {
@@ -29,19 +33,24 @@ export class RepositoriesNode extends AbstractBaseNode {
                     });
                 }
             }
-        }));
+        });
     }
 
     private createTreeItem(): vscode.TreeItem {
         const directory = path.basename(this.workspaceRepo.rootUri);
-        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+        const item = new vscode.TreeItem(
+            `${directory}`,
+            this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed
+        );
         item.tooltip = this.workspaceRepo.rootUri;
         item.contextValue = PullRequestContextValue;
 
         const site = this.workspaceRepo.mainSiteRemote.site!;
-        item.resourceUri = vscode.Uri.parse(site.details.isCloud
-            ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/pull-requests`
-            : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`);
+        item.resourceUri = vscode.Uri.parse(
+            site.details.isCloud
+                ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/pull-requests`
+                : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`
+        );
 
         return item;
     }
@@ -57,7 +66,9 @@ export class RepositoriesNode extends AbstractBaseNode {
 
         let prs = await this.fetcher(this.workspaceRepo);
         this.children = prs.data.map(pr => this.createChildNode(pr));
-        if (prs.next) { this.children!.push(new NextPageNode(prs)); }
+        if (prs.next) {
+            this.children!.push(new NextPageNode(prs));
+        }
 
         // dispose comments for any PRs that might have been closed during refresh
         previousChildrenHrefs.forEach(prHref => {
@@ -89,11 +100,26 @@ export class RepositoriesNode extends AbstractBaseNode {
             this.children.pop();
         }
         this.children!.push(...prs.data.map(pr => this.createChildNode(pr)));
-        if (prs.next) { this.children!.push(new NextPageNode(prs)); }
+        if (prs.next) {
+            this.children!.push(new NextPageNode(prs));
+        }
     }
 
     private createChildNode(pr: PullRequest): PullRequestTitlesNode {
-        return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
+        //Don't cache BBServer prs; we have no way of knowing they're up to date because the updated time property does
+        //not include PR actions like comments, tasks, etc.
+        if (!pr.site.details.isCloud) {
+            return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
+        }
+
+        const prAndTreeNode = this.prMap.get(pr.data.id);
+        if (prAndTreeNode && pr.data.updatedTs === prAndTreeNode.pr.data.updatedTs) {
+            return prAndTreeNode.node;
+        } else {
+            const prTitlesNode = new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
+            this.prMap.set(pr.data.id, { pr: pr, node: prTitlesNode });
+            return prTitlesNode;
+        }
     }
 
     getTreeItem(): vscode.TreeItem {
