@@ -1,29 +1,51 @@
 import { EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
-import { createEmptyMinimalIssue, emptyUser, isEmptyUser, IssueLinkIssueKeys, MinimalIssue, readIssueLinkIssue, readSearchResults, User } from '@atlassianlabs/jira-pi-common-models';
+import {
+    createEmptyMinimalIssue,
+    emptyUser,
+    isEmptyUser,
+    IssueLinkIssueKeys,
+    MinimalIssue,
+    readIssueLinkIssue,
+    readSearchResults,
+    User
+} from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
 import FormData from 'form-data';
-import * as fs from "fs";
-import { commands, env, window } from "vscode";
-import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from "../analytics";
-import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from "../atlclients/authInfo";
-import { clientForSite } from "../bitbucket/bbUtils";
-import { PullRequestData } from "../bitbucket/model";
-import { Commands } from "../commands";
-import { postComment } from "../commands/jira/postComment";
-import { startWorkOnIssue } from "../commands/jira/startWorkOnIssue";
-import { Container } from "../container";
-import { EditIssueAction, isAddAttachmentsAction, isCreateIssue, isCreateIssueLink, isCreateWorklog, isDeleteByIDAction, isIssueComment, isOpenStartWorkPageAction, isTransitionIssue, isUpdateVoteAction, isUpdateWatcherAction } from "../ipc/issueActions";
-import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { Action, onlineStatus } from "../ipc/messaging";
-import { isOpenPullRequest } from "../ipc/prActions";
-import { fetchEditIssueUI, fetchMinimalIssue } from "../jira/fetchIssue";
-import { parseJiraIssueKeys } from "../jira/issueKeyParser";
-import { transitionIssue } from "../jira/transitionIssue";
-import { Logger } from "../logger";
-import { AbstractIssueEditorWebview } from "./abstractIssueEditorWebview";
-import { InitializingWebview } from "./abstractWebview";
+import * as fs from 'fs';
+import { commands, env } from 'vscode';
+import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
+import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
+import { clientForSite } from '../bitbucket/bbUtils';
+import { PullRequestData } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { postComment } from '../commands/jira/postComment';
+import { startWorkOnIssue } from '../commands/jira/startWorkOnIssue';
+import { Container } from '../container';
+import {
+    EditIssueAction,
+    isAddAttachmentsAction,
+    isCreateIssue,
+    isCreateIssueLink,
+    isCreateWorklog,
+    isDeleteByIDAction,
+    isIssueComment,
+    isOpenStartWorkPageAction,
+    isTransitionIssue,
+    isUpdateVoteAction,
+    isUpdateWatcherAction
+} from '../ipc/issueActions';
+import { EditIssueData, emptyEditIssueData } from '../ipc/issueMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { isOpenPullRequest } from '../ipc/prActions';
+import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
+import { parseJiraIssueKeys } from '../jira/issueKeyParser';
+import { transitionIssue } from '../jira/transitionIssue';
+import { Logger } from '../logger';
+import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
+import { InitializingWebview } from './abstractWebview';
 
-export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
+export class JiraIssueWebview extends AbstractIssueEditorWebview
+    implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
@@ -36,10 +58,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
     }
 
     public get title(): string {
-        return "Jira Issue";
+        return 'Jira Issue';
     }
     public get id(): string {
-        return "viewIssueScreen";
+        return 'viewIssueScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -95,7 +117,9 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             }
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
 
-            if (this._panel) { this._panel.title = `Jira Issue ${this._issue.key}`; }
+            if (this._panel) {
+                this._panel.title = `Jira Issue ${this._issue.key}`;
+            }
 
             // const currentBranches = Container.bitbucketContext ?
             //     Container.bitbucketContext.getAllRepositores()
@@ -124,7 +148,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this.updateWatchers();
             this.updateVoters();
             this.updateRelatedPullRequests();
-
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
@@ -141,7 +164,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
             const epicFieldInfo = this._editUIData.epicFieldInfo;
 
-            const res = await client.searchForIssuesUsingJqlGet(`cf[${epicFieldInfo.epicLink.cfid}] = "${this._issue.key}" order by lastViewed DESC`, fields);
+            const res = await client.searchForIssuesUsingJqlGet(
+                `cf[${epicFieldInfo.epicLink.cfid}] = "${this._issue.key}" order by lastViewed DESC`,
+                fields
+            );
             const searchResults = await readSearchResults(res, site, epicFieldInfo);
             this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
         }
@@ -154,7 +180,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this._currentUser = user;
             this.postMessage({ type: 'currentUserUpdate', currentUser: user });
         }
-
     }
 
     async updateRelatedPullRequests() {
@@ -171,8 +196,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
             this._editUIData.fieldValues['watches'] = watches;
             this.postMessage({
-                type: 'fieldValueUpdate'
-                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+                type: 'fieldValueUpdate',
+                fieldValues: { watches: this._editUIData.fieldValues['watches'] }
             });
         }
     }
@@ -184,8 +209,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
             this._editUIData.fieldValues['votes'] = votes;
             this.postMessage({
-                type: 'fieldValueUpdate'
-                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
+                type: 'fieldValueUpdate',
+                fieldValues: { votes: this._editUIData.fieldValues['votes'] }
             });
         }
     }
@@ -242,8 +267,9 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
                     await env.clipboard.writeText(linkUrl);
-                    window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
-                    issueUrlCopiedEvent(this._issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    issueUrlCopiedEvent(this._issue.siteDetails.id).then(e => {
+                        Container.analyticsClient.sendTrackEvent(e);
+                    });
                     break;
                 }
                 case 'editIssue': {
@@ -256,13 +282,25 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues, nonce: msg.nonce });
 
                         Object.keys(newFieldValues).forEach(key => {
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, key, this.fieldNameForKey(key)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                key,
+                                this.fieldNameForKey(key)
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         });
 
                         commands.executeCommand(Commands.RefreshJiraExplorer);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
-                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error updating issue'), fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)), nonce: msg.nonce });
+                        this.postMessage({
+                            type: 'error',
+                            reason: this.formatErrorReason(e, 'Error updating issue'),
+                            fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)),
+                            nonce: msg.nonce
+                        });
                     }
                     break;
                 }
@@ -274,12 +312,16 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             this._editUIData.fieldValues['comment'].comments.push(res);
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'comment': this._editUIData.fieldValues['comment'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { comment: this._editUIData.fieldValues['comment'], nonce: msg.nonce }
                             });
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding comment'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error adding comment'),
+                                nonce: msg.nonce
+                            });
                         }
                     }
                     break;
@@ -300,17 +342,21 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this._editUIData.fieldValues['subtasks'].push(picked);
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'subtasks': this._editUIData.fieldValues['subtasks'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { subtasks: this._editUIData.fieldValues['subtasks'], nonce: msg.nonce }
                             });
-                            issueCreatedEvent(msg.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueCreatedEvent(msg.site, resp.key).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                             commands.executeCommand(Commands.RefreshJiraExplorer);
-
                         } catch (e) {
                             Logger.error(new Error(`error creating issue: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error creating issue'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -324,18 +370,30 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             this._editUIData.fieldValues['issuelinks'] = resp;
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: {
+                                    issuelinks: this._editUIData.fieldValues['issuelinks'],
+                                    nonce: msg.nonce
+                                }
                             });
 
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'issuelinks',
+                                this.fieldNameForKey('issuelinks')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                             commands.executeCommand(Commands.RefreshJiraExplorer);
-
                         } catch (e) {
                             Logger.error(new Error(`error creating issue link: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue issue link'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error creating issue issue link'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -348,28 +406,45 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
                             //await client.deleteIssuelink(msg.objectWithId.id);
 
-                            if (!this._editUIData.fieldValues['issuelinks']
-                                || !Array.isArray(this._editUIData.fieldValues['issuelinks'])
+                            if (
+                                !this._editUIData.fieldValues['issuelinks'] ||
+                                !Array.isArray(this._editUIData.fieldValues['issuelinks'])
                             ) {
                                 this._editUIData.fieldValues['issuelinks'] = [];
                             }
 
-                            this._editUIData.fieldValues['issuelinks'] = this._editUIData.fieldValues['issuelinks'].filter((link: any) => link.id !== msg.objectWithId.id);
+                            this._editUIData.fieldValues['issuelinks'] = this._editUIData.fieldValues[
+                                'issuelinks'
+                            ].filter((link: any) => link.id !== msg.objectWithId.id);
 
-                            await client.editIssue(this._issue.key, { ['issuelinks']: this._editUIData.fieldValues['issuelinks'] });
+                            await client.editIssue(this._issue.key, {
+                                ['issuelinks']: this._editUIData.fieldValues['issuelinks']
+                            });
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: {
+                                    issuelinks: this._editUIData.fieldValues['issuelinks'],
+                                    nonce: msg.nonce
+                                }
                             });
                             commands.executeCommand(Commands.RefreshJiraExplorer);
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'issuelinks',
+                                this.fieldNameForKey('issuelinks')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error deleting issuelink: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting issuelink'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error deleting issuelink'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -387,25 +462,35 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             }
                             const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
 
-                            if (!this._editUIData.fieldValues['worklog']
-                                || !this._editUIData.fieldValues['worklog'].worklogs
-                                || !Array.isArray(this._editUIData.fieldValues['worklog'].worklogs)
+                            if (
+                                !this._editUIData.fieldValues['worklog'] ||
+                                !this._editUIData.fieldValues['worklog'].worklogs ||
+                                !Array.isArray(this._editUIData.fieldValues['worklog'].worklogs)
                             ) {
                                 this._editUIData.fieldValues['worklog'].worklogs = [];
                             }
 
                             this._editUIData.fieldValues['worklog'].worklogs.push(resp);
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { worklog: this._editUIData.fieldValues['worklog'], nonce: msg.nonce }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'worklog', this.fieldNameForKey('worklog')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'worklog',
+                                this.fieldNameForKey('worklog')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error creating worklog: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating worklog'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error creating worklog'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -416,30 +501,42 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             let client = await Container.clientManager.jiraClient(msg.site);
                             await client.addWatcher(msg.issueKey, msg.watcher.accountId);
 
-                            if (!this._editUIData.fieldValues['watches']
-                                || !this._editUIData.fieldValues['watches'].watchers
-                                || !Array.isArray(this._editUIData.fieldValues['watches'].watchers)
+                            if (
+                                !this._editUIData.fieldValues['watches'] ||
+                                !this._editUIData.fieldValues['watches'].watchers ||
+                                !Array.isArray(this._editUIData.fieldValues['watches'].watchers)
                             ) {
                                 this._editUIData.fieldValues['watches'].watchers = [];
                             }
 
                             this._editUIData.fieldValues['watches'].watchers.push(msg.watcher);
-                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues['watches'].watchers.length;
+                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues[
+                                'watches'
+                            ].watchers.length;
                             if (msg.watcher.accountId === this._currentUser.accountId) {
                                 this._editUIData.fieldValues['watches'].isWatching = true;
                             }
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { watches: this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'watches',
+                                this.fieldNameForKey('watches')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error adding watcher: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding watcher'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error adding watcher'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -449,13 +546,16 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         try {
                             let client = await Container.clientManager.jiraClient(msg.site);
                             await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
-                            if (!this._editUIData.fieldValues['watches']
-                                || !this._editUIData.fieldValues['watches'].watchers
-                                || !Array.isArray(this._editUIData.fieldValues['watches'].watchers)
+                            if (
+                                !this._editUIData.fieldValues['watches'] ||
+                                !this._editUIData.fieldValues['watches'].watchers ||
+                                !Array.isArray(this._editUIData.fieldValues['watches'].watchers)
                             ) {
                                 this._editUIData.fieldValues['watches'].watchers = [];
                             }
-                            const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex((user: User) => user.accountId === msg.watcher.accountId);
+                            const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex(
+                                (user: User) => user.accountId === msg.watcher.accountId
+                            );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
                             }
@@ -464,20 +564,30 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 this._editUIData.fieldValues['watches'].isWatching = false;
                             }
 
-                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues['watches'].watchers.length;
-
+                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues[
+                                'watches'
+                            ].watchers.length;
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { watches: this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'watches',
+                                this.fieldNameForKey('watches')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error removing watcher: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing watcher'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error removing watcher'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -488,28 +598,40 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             let client = await Container.clientManager.jiraClient(msg.site);
                             await client.addVote(msg.issueKey);
 
-                            if (!this._editUIData.fieldValues['votes']
-                                || !this._editUIData.fieldValues['votes'].voters
-                                || !Array.isArray(this._editUIData.fieldValues['votes'].voters)
+                            if (
+                                !this._editUIData.fieldValues['votes'] ||
+                                !this._editUIData.fieldValues['votes'].voters ||
+                                !Array.isArray(this._editUIData.fieldValues['votes'].voters)
                             ) {
                                 this._editUIData.fieldValues['votes'].voters = [];
                             }
 
                             this._editUIData.fieldValues['votes'].voters.push(msg.voter);
-                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues['votes'].voters.length;
+                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues[
+                                'votes'
+                            ].voters.length;
                             this._editUIData.fieldValues['votes'].hasVoted = true;
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { votes: this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'votes',
+                                this.fieldNameForKey('votes')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error adding vote: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding vote'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error adding vote'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -519,32 +641,45 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         try {
                             let client = await Container.clientManager.jiraClient(msg.site);
                             await client.removeVote(msg.issueKey);
-                            if (!this._editUIData.fieldValues['votes']
-                                || !this._editUIData.fieldValues['votes'].voters
-                                || !Array.isArray(this._editUIData.fieldValues['votes'].voters)
+                            if (
+                                !this._editUIData.fieldValues['votes'] ||
+                                !this._editUIData.fieldValues['votes'].voters ||
+                                !Array.isArray(this._editUIData.fieldValues['votes'].voters)
                             ) {
                                 this._editUIData.fieldValues['votes'].voters = [];
                             }
-                            const foundIndex: number = this._editUIData.fieldValues['votes'].voters.findIndex((user: User) => user.accountId === msg.voter.accountId);
+                            const foundIndex: number = this._editUIData.fieldValues['votes'].voters.findIndex(
+                                (user: User) => user.accountId === msg.voter.accountId
+                            );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['votes'].voters.splice(foundIndex, 1);
                             }
 
                             this._editUIData.fieldValues['votes'].hasVoted = false;
-                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues['votes'].voters.length;
-
+                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues[
+                                'votes'
+                            ].voters.length;
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: { votes: this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'votes',
+                                this.fieldNameForKey('votes')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error removing vote: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing vote'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error removing vote'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -556,19 +691,17 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             let formData = new FormData();
                             msg.files.forEach((file: any) => {
-                                formData.append('file'
-                                    , fs.createReadStream(file.path)
-                                    , {
-                                        filename: file.name,
-                                        contentType: file.type,
-                                    }
-                                );
+                                formData.append('file', fs.createReadStream(file.path), {
+                                    filename: file.name,
+                                    contentType: file.type
+                                });
                             });
 
                             const resp = await client.addAttachments(msg.issueKey, formData);
 
-                            if (!this._editUIData.fieldValues['attachment']
-                                || !Array.isArray(this._editUIData.fieldValues['attachment'])
+                            if (
+                                !this._editUIData.fieldValues['attachment'] ||
+                                !Array.isArray(this._editUIData.fieldValues['attachment'])
                             ) {
                                 this._editUIData.fieldValues['attachment'] = [];
                             }
@@ -577,18 +710,29 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 this._editUIData.fieldValues['attachment'].push(attachment);
                             });
 
-
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: {
+                                    attachment: this._editUIData.fieldValues['attachment'],
+                                    nonce: msg.nonce
+                                }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'attachment',
+                                this.fieldNameForKey('attachment')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error adding attachments: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding attachments'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error adding attachments'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -599,25 +743,40 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             let client = await Container.clientManager.jiraClient(msg.site);
                             await client.deleteAttachment(msg.objectWithId.id);
 
-                            if (!this._editUIData.fieldValues['attachment']
-                                || !Array.isArray(this._editUIData.fieldValues['attachment'])
+                            if (
+                                !this._editUIData.fieldValues['attachment'] ||
+                                !Array.isArray(this._editUIData.fieldValues['attachment'])
                             ) {
                                 this._editUIData.fieldValues['attachment'] = [];
                             }
 
-                            this._editUIData.fieldValues['attachment'] = this._editUIData.fieldValues['attachment'].filter((file: any) => file.id !== msg.objectWithId.id);
+                            this._editUIData.fieldValues['attachment'] = this._editUIData.fieldValues[
+                                'attachment'
+                            ].filter((file: any) => file.id !== msg.objectWithId.id);
 
                             this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
+                                type: 'fieldValueUpdate',
+                                fieldValues: {
+                                    attachment: this._editUIData.fieldValues['attachment'],
+                                    nonce: msg.nonce
+                                }
                             });
-                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                            issueUpdatedEvent(
+                                this._issue.siteDetails,
+                                this._issue.key,
+                                'attachment',
+                                this.fieldNameForKey('attachment')
+                            ).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             Logger.error(new Error(`error deleting attachments: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting attachments'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error deleting attachments'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -631,12 +790,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             this._editUIData.fieldValues['status'] = msg.transition.to;
                             // we need to force an update in case any new tranisitions are available
                             await this.forceUpdateIssue(true);
-
                         } catch (e) {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error transitioning issue'), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error transitioning issue'),
+                                nonce: msg.nonce
+                            });
                         }
-
                     }
                     break;
                 }
@@ -661,13 +822,22 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isOpenPullRequest(msg)) {
                         handled = true;
                         // TODO: [VSCODE-606] abstract madness for calling Commands.BitbucketShowPullRequestDetails into a reusable function
-                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
+                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(
+                            p => p.data.url === msg.prHref
+                        );
                         if (pr) {
                             const bbApi = await clientForSite(pr.site);
-                            commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo));
+                            commands.executeCommand(
+                                Commands.BitbucketShowPullRequestDetails,
+                                await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo)
+                            );
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`), nonce: msg.nonce });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`),
+                                nonce: msg.nonce
+                            });
                         }
                     }
                     break;
@@ -684,12 +854,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         }
 
         const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
-        const relatedPrs = await Promise.all(prs.map(async pr => {
-            const issueKeys = [...parseJiraIssueKeys(pr.data.title), ...parseJiraIssueKeys(pr.data.rawSummary)];
-            return issueKeys.find(key => key.toLowerCase() === this._issue.key.toLowerCase()) !== undefined
-                ? pr
-                : undefined;
-        }));
+        const relatedPrs = await Promise.all(
+            prs.map(async pr => {
+                const issueKeys = [...parseJiraIssueKeys(pr.data.title), ...parseJiraIssueKeys(pr.data.rawSummary)];
+                return issueKeys.find(key => key.toLowerCase() === this._issue.key.toLowerCase()) !== undefined
+                    ? pr
+                    : undefined;
+            })
+        );
 
         return relatedPrs.filter(pr => pr !== undefined).map(p => p!.data);
     }
