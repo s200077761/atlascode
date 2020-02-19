@@ -92,7 +92,7 @@ export function isLogoutAuthAction(a: Action): a is LogoutAuthAction {
 }
 
 export function isEditAuthAction(a: Action): a is EditAuthAction {
-    return (<EditAuthAction>a).detailedSiteInfo !== undefined  // SiteInfo or DetailedSiteInfo?
+    return (<EditAuthAction>a).detailedSiteInfo !== undefined
         && (<EditAuthAction>a).authInfo !== undefined
         && (<EditAuthAction>a).action === 'edit';
 }
