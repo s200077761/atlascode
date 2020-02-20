@@ -51,7 +51,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     public prHref: string;
     private childrenPromises: Promise<AbstractBaseNode[]>;
 
-    constructor(private pr: PullRequest, private commentController: PullRequestCommentController) {
+    constructor(
+        private pr: PullRequest,
+        private commentController: PullRequestCommentController,
+        shouldPreload: boolean
+    ) {
         super();
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
@@ -60,7 +64,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         //BBServer update times omit actions like comments, task creation, etc. so we don't know if the PR we have is really up to date without
         //grabbing all the PR data. Due to rate limits imposed by BBServer admins, mass preloading of all nodes is not feasible without
         //caching.
-        if (pr.site.details.isCloud) {
+        if (shouldPreload) {
             this.childrenPromises = this.fetchDataAndProcessChildren();
         }
     }
@@ -90,6 +94,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     getTreeItem(): vscode.TreeItem {
         return this.treeItem;
+    }
+
+    getPR() {
+        return this.pr;
     }
 
     async fetchDataAndProcessChildren(): Promise<AbstractBaseNode[] | [SimpleNode]> {
@@ -125,6 +133,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!element) {
+            //If the promise is undefined, we didn't begin preloading in the constructor, so we need to make the full call here
             return await (this.childrenPromises ?? this.fetchDataAndProcessChildren());
         } else {
             return element.getChildren();
