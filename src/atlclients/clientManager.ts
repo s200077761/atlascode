@@ -196,31 +196,6 @@ export class ClientManager implements Disposable {
         return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
     }
 
-    // TODO: [VSCODE-598] Get rid of getValidAccessToken method
-    public async getValidAccessToken(site: DetailedSiteInfo): Promise<string> {
-        if (!site.isCloud) {
-            return Promise.reject(`site ${site.name} is not a cloud instance`);
-        }
-
-        let client: any = this._clients.getItem(this.keyForSite(site));
-        let info = await Container.credentialManager.getAuthInfo(site);
-        let newAccessToken: string | undefined = undefined;
-
-        if (isOAuthInfo(info)) {
-            if (!client) {
-                try {
-                    newAccessToken = await Container.credentialManager.refreshAccessToken(site);
-                } catch (e) {
-                    Logger.debug(`error refreshing token ${e}`);
-                    return Promise.reject(e);
-                }
-            } else {
-                newAccessToken = info.access;
-            }
-        }
-        return newAccessToken ? newAccessToken : Promise.reject('authInfo is not a valid OAuthInfo instance');
-    }
-
     public async removeClient(site: DetailedSiteInfo) {
         this._clients.deleteItem(this.keyForSite(site));
     }
