@@ -1,7 +1,13 @@
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
 import * as vscode from 'vscode';
 import { commands, ConfigurationChangeEvent, ConfigurationTarget, env, Uri } from 'vscode';
-import { authenticateButtonEvent, customJQLCreatedEvent, editButtonEvent, featureChangeEvent, logoutButtonEvent } from '../analytics';
+import {
+    authenticateButtonEvent,
+    customJQLCreatedEvent,
+    editButtonEvent,
+    featureChangeEvent,
+    logoutButtonEvent
+} from '../analytics';
 import {
     DetailedSiteInfo,
     isBasicAuthInfo,
@@ -27,7 +33,7 @@ import {
     isSaveSettingsAction,
     isSubmitFeedbackAction
 } from '../ipc/configActions';
-import { ConfigInspect, ConfigWorkspaceFolder } from '../ipc/configMessaging';
+import { ConfigInspect, ConfigWorkspaceFolder, SiteAuthInfo } from '../ipc/configMessaging';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { SitesAvailableUpdateEvent } from '../siteManager';
@@ -154,7 +160,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         this.postMessage({
             type: 'sitesAvailableUpdate',
             jiraSites: await this.siteAuthInfoForProduct(ProductJira),
-            bitbucketSites: await this.siteAuthInfoForProduct(ProductBitbucket),
+            bitbucketSites: await this.siteAuthInfoForProduct(ProductBitbucket)
         });
     }
 
@@ -207,9 +213,14 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                         } catch (e) {
                             let err = new Error(`Authentication error: ${e}`);
                             Logger.error(err);
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Authentication error') });
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Authentication error')
+                            });
                         }
-                        editButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                        editButtonEvent(this.id).then(e => {
+                            Container.analyticsClient.sendUIEvent(e);
+                        });
                     }
                     break;
                 }

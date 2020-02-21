@@ -1,4 +1,4 @@
-import Button from "@atlaskit/button";
+import Button from '@atlaskit/button';
 import EditIcon from '@atlaskit/icon/glyph/edit';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import TableTree from '@atlaskit/table-tree';
@@ -38,7 +38,7 @@ const Delete = (data: ItemData) => {
     return (
         <React.Fragment>
             <Tooltip content={`Delete ${data.site.site.name}`}>
-                <div className="ac-delete" onClick={() => data.delfunc(data.site)}>
+                <div className="ac-delete" onClick={() => data.delfunc(data.site.site)}>
                     <TrashIcon label="trash" />
                 </div>
             </Tooltip>
@@ -51,14 +51,14 @@ const Edit = (data: ItemData) => {
         return (
             <React.Fragment>
                 <Tooltip content={`Edit ${data.site.site.name}`}>
-                    <div className='ac-edit' onClick={() => data.editfunc(data.site)}>
-                        <EditIcon label='edit' />
+                    <div className="ac-edit" onClick={() => data.editfunc(data.site)}>
+                        <EditIcon label="edit" />
                     </div>
                 </Tooltip>
             </React.Fragment>
         );
     }
-    return (<React.Fragment />);
+    return <React.Fragment />;
 };
 
 export const SiteEditor: React.FunctionComponent<AuthProps> = ({
@@ -66,10 +66,12 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     product,
     isRemote,
     handleDeleteSite,
+    handleEditSite,
     handleSaveSite,
     siteExample,
     cloudOrServer
-}) => {    const [addingSite, setAddingSite] = useState(false);
+}) => {
+    const [addingSite, setAddingSite] = useState(false);
     const [editingSite, setEditingSite] = useState(emptySiteAuthInfo);
     const loginText = `Login to ${product.name} Cloud`;
     const addSiteText = `Add Custom ${product.name} Site`;
@@ -147,33 +149,29 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
                     content: {
                         site: siteInfo,
                         delfunc: handleDeleteSite,
-                        editfunc: handleEditSite && siteInfo.site.isCloud ? undefined : handleEdit,
+                        editfunc: handleEditSite && siteInfo.site.isCloud ? undefined : handleEdit
                     }
                 };
             });
         } else {
-            return [{ id: 1, content: { site: `No sites currently authenticated` } }];
+            return [{ id: 1, content: { site: { site: { name: `No sites currently authenticated` } } } }];
         }
     };
 
     return (
         <React.Fragment>
-            {addingSite &&
-                <AuthForm
-                    onCancel={() => setAddingSite(false)}
-                    onSave={handleSave}
-                    product={product} />
-            }
-            {(editingSite !== emptySiteAuthInfo) &&
+            {addingSite && <AuthForm onCancel={() => setAddingSite(false)} onSave={handleSave} product={product} />}
+            {editingSite !== emptySiteAuthInfo && (
                 <AuthForm
                     site={editingSite.site}
                     auth={editingSite.auth}
                     onCancel={() => setEditingSite(emptySiteAuthInfo)}
                     onSave={completeEdit}
-                    product={product} />
-            }
+                    product={product}
+                />
+            )}
             <div className="ac-vpadding">
-                {isRemote &&
+                {isRemote && (
                     <div className="ac-vpadding">
                         <p>Authentication cannot be done while running remotely.</p>
                         <p>

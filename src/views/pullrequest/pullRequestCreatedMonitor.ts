@@ -28,7 +28,8 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
 
                 let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
                 return newPRs;
-            }).catch(e => {
+            })
+            .catch(e => {
                 Logger.error(e, 'Error while fetching latest pull requests');
                 return [];
             });

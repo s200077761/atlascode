@@ -147,7 +147,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 <Grid>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.jiraCloudSites}
+                                                            sites={this.state.jiraCloudSites.map(s => {
+                                                                return { site: s, auth: undefined };
+                                                            })}
                                                             product={ProductJira}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}
@@ -158,7 +160,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     </GridColumn>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.jiraServerSites}
+                                                            sites={this.state.jiraServerSites.map(s => {
+                                                                return { site: s, auth: undefined };
+                                                            })}
                                                             product={ProductJira}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}
@@ -178,7 +182,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 <Grid>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.bitbucketCloudSites}
+                                                            sites={this.state.bitbucketCloudSites.map(s => {
+                                                                return { site: s, auth: undefined };
+                                                            })}
                                                             product={ProductBitbucket}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}
@@ -189,7 +195,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     </GridColumn>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.bitbucketServerSites}
+                                                            sites={this.state.bitbucketServerSites.map(s => {
+                                                                return { site: s, auth: undefined };
+                                                            })}
                                                             product={ProductBitbucket}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}

@@ -67,7 +67,9 @@ export async function authenticatedEvent(site: DetailedSiteInfo): Promise<TrackE
 }
 
 export async function editedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'edited', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: site.product.name } });
+    return instanceTrackEvent(site, 'edited', 'atlascode', {
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+    });
 }
 
 export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent> {

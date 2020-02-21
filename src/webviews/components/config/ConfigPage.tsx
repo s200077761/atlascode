@@ -500,6 +500,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                             product={ProductJira}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}
+                                                            handleEditSite={this.handleEdit}
                                                             handleSaveSite={this.handleLogin}
                                                         />
                                                     </Panel>
@@ -517,7 +518,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                             jqlFetcher={this.handleFetchJqlOptions}
                                                             jiraFilterFetcher={this.handleFetchFilterOptions}
                                                             jiraFilterSearcher={this.handleSearchFilterOptions}
-                                                            sites={this.state.jiraSites}
+                                                            sites={this.state.jiraSites.map(siteAuth => siteAuth.site)}
                                                             filters={this.state.jiraFilters}
                                                             filterSearches={this.state.jiraFilterSearches}
                                                             onConfigChange={this.onConfigChange}
@@ -616,12 +617,56 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                         />
                                                     </Panel>
 
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBIssue)} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket issues explorer and notifications')}>
-                                                    <BitbucketIssuesConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
-                                                </Panel>
+                                                    <Panel
+                                                        {...this.shouldDefaultExpand(SettingSource.BBIssue)}
+                                                        header={panelHeader(
+                                                            'Bitbucket Issues Explorer',
+                                                            'configure the Bitbucket issues explorer and notifications'
+                                                        )}
+                                                    >
+                                                        <BitbucketIssuesConfig
+                                                            config={this.state.config!}
+                                                            onConfigChange={this.onConfigChange}
+                                                        />
+                                                    </Panel>
 
-                                                <Panel header={panelHeader('Context Menus', 'configure the context menus in editor')}>
-                                                    <BitbucketContextMenus config={this.state.config!} onConfigChange={this.onConfigChange} />
+                                                    <Panel
+                                                        header={panelHeader(
+                                                            'Context Menus',
+                                                            'configure the context menus in editor'
+                                                        )}
+                                                    >
+                                                        <BitbucketContextMenus
+                                                            config={this.state.config!}
+                                                            onConfigChange={this.onConfigChange}
+                                                        />
+                                                    </Panel>
+                                                    <Panel
+                                                        header={panelHeader(
+                                                            'Status Bar',
+                                                            'configure the status bar display for Bitbucket'
+                                                        )}
+                                                    >
+                                                        <BBStatusBar
+                                                            config={this.state.config!}
+                                                            onConfigChange={this.onConfigChange}
+                                                        />
+                                                    </Panel>
+                                                </TabPanel>
+                                            )}
+                                            <TabPanel>
+                                                <Panel
+                                                    isDefaultExpanded
+                                                    header={
+                                                        <div>
+                                                            <p className="subheader">miscellaneous settings</p>
+                                                        </div>
+                                                    }
+                                                >
+                                                    <WelcomeConfig
+                                                        config={this.state.config!}
+                                                        onConfigChange={this.onConfigChange}
+                                                    />
                                                 </Panel>
                                                 <Panel
                                                     isDefaultExpanded

@@ -160,7 +160,9 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                editedEvent(siteDetails).then(e => { this._analyticsClient.sendTrackEvent(e); });
+                editedEvent(siteDetails).then(e => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
             } catch (err) {
                 const errorString = `Error authenticating with ${site.product.name}: ${err}`;
                 Logger.error(new Error(errorString));
