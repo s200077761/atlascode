@@ -1,18 +1,28 @@
 import debounce from 'lodash.debounce';
-import { v4 } from "uuid";
-import { ConfigurationTarget } from "vscode";
-import { AccessibleResourceV1, AuthInfoV1, DetailedSiteInfo, OAuthInfo, OAuthProvider, Product, ProductBitbucket, ProductJira, UserInfo } from "../atlclients/authInfo";
-import { CredentialManager } from "../atlclients/authStore";
-import { OAuthRefesher } from "../atlclients/oauthRefresher";
-import { configuration, JQLEntry, SiteJQLV1 } from "../config/configuration";
-import { JiraJQLListKey } from "../constants";
-import { Container } from "../container";
-import { getAxiosInstance } from "../jira/jira-client/providers";
-import { Logger } from "../logger";
-import { SiteManager } from "../siteManager";
-import { keychain } from "../util/keychain";
+import { v4 } from 'uuid';
+import { ConfigurationTarget } from 'vscode';
+import {
+    AccessibleResourceV1,
+    AuthInfoV1,
+    DetailedSiteInfo,
+    OAuthInfo,
+    OAuthProvider,
+    Product,
+    ProductBitbucket,
+    ProductJira,
+    UserInfo
+} from '../atlclients/authInfo';
+import { CredentialManager } from '../atlclients/authStore';
+import { OAuthRefesher } from '../atlclients/oauthRefresher';
+import { configuration, JQLEntry, SiteJQLV1 } from '../config/configuration';
+import { JiraJQLListKey } from '../constants';
+import { Container } from '../container';
+import { getAxiosInstance } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
+import { SiteManager } from '../siteManager';
+import { keychain } from '../util/keychain';
 
-const keychainServiceNameV1 = "atlascode-authinfo";
+const keychainServiceNameV1 = 'atlascode-authinfo';
 const WorkingProjectToken = 'currentProject()';
 
 export class V1toV2Migrator {
@@ -21,11 +31,13 @@ export class V1toV2Migrator {
     private _workingProject: any | undefined;
     private _defaultSiteId: string | undefined;
 
-    constructor(private _siteManager: SiteManager,
+    constructor(
+        private _siteManager: SiteManager,
         private _credentialManager: CredentialManager,
         private _deleteV1: boolean,
         workingProject?: any,
-        workingSite?: AccessibleResourceV1) {
+        workingSite?: AccessibleResourceV1
+    ) {
         this._workingProject = workingProject;
         this._defaultSiteId = workingSite ? workingSite.id : undefined;
     }
@@ -40,7 +52,11 @@ export class V1toV2Migrator {
         let svcName = keychainServiceNameV1;
 
         if (!this._debouncedKeychain[productKey]) {
-            this._debouncedKeychain[productKey] = debounce(async () => await keychain!.getPassword(svcName, productKey), 500, { leading: true });
+            this._debouncedKeychain[productKey] = debounce(
+                async () => await keychain!.getPassword(svcName, productKey),
+                500,
+                { leading: true }
+            );
         }
         return await this._debouncedKeychain[productKey]();
     }
@@ -48,7 +64,7 @@ export class V1toV2Migrator {
     private async migrateForOauthProvider(provider: OAuthProvider) {
         Logger.debug('converting auth provider', provider);
         try {
-            let infoEntry = await this.getV1JsonAuthInfoFromKeychain(provider) || undefined;
+            let infoEntry = (await this.getV1JsonAuthInfoFromKeychain(provider)) || undefined;
             Logger.debug(`legacy auth info for provider? ${infoEntry !== undefined}`);
             if (infoEntry) {
                 let info: AuthInfoV1 = JSON.parse(infoEntry);
@@ -80,7 +96,7 @@ export class V1toV2Migrator {
 
         for (const resource of info.accessibleResources!) {
             Logger.debug('processing resource', resource.name);
-            let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
+            let apiUri = provider === OAuthProvider.JiraCloudStaging ? 'api.stg.atlassian.com' : 'api.atlassian.com';
             Logger.debug('trying to get base url', provider);
 
             // TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
@@ -93,7 +109,11 @@ export class V1toV2Migrator {
             const baseUrl: URL = new URL(baseUrlString);
             const baseApiUrl = `https://${apiUri}/ex/jira/${resource.id}/rest`;
 
-            const user: UserInfo | undefined = await this.getNewUserInfo(ProductJira, `${baseApiUrl}/api/2`, accessToken);
+            const user: UserInfo | undefined = await this.getNewUserInfo(
+                ProductJira,
+                `${baseApiUrl}/api/2`,
+                accessToken
+            );
 
             if (!user) {
                 return;
@@ -102,7 +122,7 @@ export class V1toV2Migrator {
             const newInfo: OAuthInfo = {
                 access: accessToken,
                 refresh: info.refresh,
-                user: user,
+                user: user
             };
 
             let newSite: DetailedSiteInfo = {
@@ -115,7 +135,7 @@ export class V1toV2Migrator {
                 product: ProductJira,
                 isCloud: true,
                 userId: info.user.id,
-                credentialId: Buffer.from(resource.id + '::' + info.user.id).toString('base64'),
+                credentialId: Buffer.from(resource.id + '::' + info.user.id).toString('base64')
             };
 
             await this._credentialManager.saveAuthInfo(newSite, newInfo);
@@ -123,7 +143,6 @@ export class V1toV2Migrator {
             Logger.debug('added site', newSite);
             const projectKey = this._workingProject ? this._workingProject.key : undefined;
             if (this._defaultSiteId === resource.id) {
-
                 newJQL.push(...this.migrateCommonJQL(resource.id, projectKey));
             }
 
@@ -143,7 +162,9 @@ export class V1toV2Migrator {
         const v1Opened: string = configuration.get<string>('jira.explorer.openIssueJql');
 
         if (v1Assigned.trim() !== '') {
-            const query = projectKey ? v1Assigned.replace(WorkingProjectToken, `"${projectKey}"`) : v1Assigned.replace(`project = ${WorkingProjectToken}`, '');
+            const query = projectKey
+                ? v1Assigned.replace(WorkingProjectToken, `"${projectKey}"`)
+                : v1Assigned.replace(`project = ${WorkingProjectToken}`, '');
             const name = projectKey ? `My ${projectKey} Issues` : 'My Issues';
             newJql.push({
                 id: v4(),
@@ -156,7 +177,9 @@ export class V1toV2Migrator {
         }
 
         if (v1Opened.trim() !== '') {
-            const query = projectKey ? v1Opened.replace(WorkingProjectToken, `"${projectKey}"`) : v1Opened.replace(`project = ${WorkingProjectToken}`, '');
+            const query = projectKey
+                ? v1Opened.replace(WorkingProjectToken, `"${projectKey}"`)
+                : v1Opened.replace(`project = ${WorkingProjectToken}`, '');
             const name = projectKey ? `Open ${projectKey} Issues` : 'Open Issues';
             newJql.push({
                 id: v4(),
@@ -178,16 +201,19 @@ export class V1toV2Migrator {
         }
 
         return newJql;
-
     }
 
     private migrateCustomJQL(siteId: string): JQLEntry[] {
         const newJql: JQLEntry[] = [];
-        const v1Custom: SiteJQLV1[] = configuration.get<SiteJQLV1[]>('jira.customJql').filter(entry => entry.siteId === siteId);
+        const v1Custom: SiteJQLV1[] = configuration
+            .get<SiteJQLV1[]>('jira.customJql')
+            .filter(entry => entry.siteId === siteId);
         const projectKey = this._workingProject ? Container.config.jira.workingProject.key : undefined;
         v1Custom.forEach(siteJql => {
             siteJql.jql.forEach(jqlEntry => {
-                const query = projectKey ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`) : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
+                const query = projectKey
+                    ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`)
+                    : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
                 newJql.push({
                     id: jqlEntry.id,
                     enabled: jqlEntry.enabled,
@@ -197,16 +223,18 @@ export class V1toV2Migrator {
                     siteId: siteId
                 });
             });
-
         });
 
         return newJql;
     }
 
     private async migrateBitbucketData(info: AuthInfoV1, provider: OAuthProvider, accessToken: string) {
-        const host = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
-        const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
-        const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
+        const host = provider === OAuthProvider.BitbucketCloud ? 'bitbucket.org' : 'staging.bb-inf.net';
+        const baseApiUrl =
+            provider === OAuthProvider.BitbucketCloud
+                ? 'https://api.bitbucket.org/2.0'
+                : 'https://api-staging.bb-inf.net/2.0';
+        const siteName = provider === OAuthProvider.BitbucketCloud ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
         const user: UserInfo | undefined = await this.getNewUserInfo(ProductBitbucket, baseApiUrl, accessToken);
 
         if (!user) {
@@ -216,12 +244,12 @@ export class V1toV2Migrator {
         const newInfo: OAuthInfo = {
             access: accessToken,
             refresh: info.refresh,
-            user: user,
+            user: user
         };
 
         // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
         const newSite = {
-            avatarUrl: "",
+            avatarUrl: '',
             baseApiUrl: baseApiUrl,
             baseLinkUrl: `https://${host}`,
             host: host,
@@ -230,42 +258,45 @@ export class V1toV2Migrator {
             product: ProductBitbucket,
             isCloud: true,
             userId: info.user.id,
-            credentialId: Buffer.from(provider + '::' + info.user.id).toString('base64'),
+            credentialId: Buffer.from(provider + '::' + info.user.id).toString('base64')
         };
 
         this._siteManager.addSites([newSite]);
         await this._credentialManager.saveAuthInfo(newSite, newInfo);
     }
 
-    private async getNewUserInfo(product: Product, baseApiUrl: string, accessToken: string): Promise<UserInfo | undefined> {
+    private async getNewUserInfo(
+        product: Product,
+        baseApiUrl: string,
+        accessToken: string
+    ): Promise<UserInfo | undefined> {
         let user: UserInfo | undefined = undefined;
         try {
             const client = getAxiosInstance();
 
-            const userUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user` : `${baseApiUrl}/myself`;
-            const emailUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user/emails` : '';
+            const userUrl = product.key === ProductBitbucket.key ? `${baseApiUrl}/user` : `${baseApiUrl}/myself`;
+            const emailUrl = product.key === ProductBitbucket.key ? `${baseApiUrl}/user/emails` : '';
 
             const userRes = await client(userUrl, {
-                method: "GET",
+                method: 'GET',
                 headers: {
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`
                 }
             });
-
 
             if (product.key === ProductJira.key) {
                 user = {
                     id: userRes.data.accountId,
                     displayName: userRes.data.displayName,
-                    avatarUrl: userRes.data.avatarUrls["48x48"],
-                    email: userRes.data.emailAddress,
+                    avatarUrl: userRes.data.avatarUrls['48x48'],
+                    email: userRes.data.emailAddress
                 };
             } else {
                 const emailRes = await client(emailUrl, {
-                    method: "GET",
+                    method: 'GET',
                     headers: {
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                         Authorization: `Bearer ${accessToken}`
                     }
                 });
@@ -282,10 +313,9 @@ export class V1toV2Migrator {
                     id: userRes.data.account_id,
                     displayName: userRes.data.display_name,
                     avatarUrl: userRes.data.links.avatar.href,
-                    email: email,
+                    email: email
                 };
             }
-
         } catch (e) {
             //ignore
         }
@@ -307,7 +337,9 @@ export function migrateAllWorkspaceCustomJQLS(deleteV1: boolean): void {
         const projectKey = Container.config.jira.workingProject ? Container.config.jira.workingProject.key : undefined;
         inspect.workspaceValue.forEach((siteJql: SiteJQLV1) => {
             siteJql.jql.forEach(jqlEntry => {
-                const query = projectKey ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`) : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
+                const query = projectKey
+                    ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`)
+                    : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
                 newJql.push({
                     id: jqlEntry.id,
                     enabled: jqlEntry.enabled,
@@ -317,7 +349,6 @@ export function migrateAllWorkspaceCustomJQLS(deleteV1: boolean): void {
                     siteId: siteJql.siteId
                 });
             });
-
         });
     }
 

@@ -3,7 +3,7 @@ import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
-import { API as GitApi, Repository } from "../typings/git";
+import { API as GitApi, Repository } from '../typings/git';
 import { CacheMap, Interval } from '../util/cachemap';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
@@ -35,7 +35,7 @@ export class BitbucketContext extends Disposable {
         this._currentUsers = new CacheMap();
 
         Container.context.subscriptions.push(
-            Container.siteManager.onDidSitesAvailableChange((e) => {
+            Container.siteManager.onDidSitesAvailableChange(e => {
                 if (e.product.key === ProductBitbucket.key) {
                     this.updateUsers(e.sites);
                     this.refreshRepos();
@@ -73,10 +73,12 @@ export class BitbucketContext extends Disposable {
 
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
-            const prs = await Promise.all(this.getBitbucketRepositories().map(async repo => {
-                const bbClient = await clientForSite(repo.mainSiteRemote.site!);
-                return (await bbClient.pullrequests.getRecentAllStatus(repo)).data;
-            }));
+            const prs = await Promise.all(
+                this.getBitbucketRepositories().map(async repo => {
+                    const bbClient = await clientForSite(repo.mainSiteRemote.site!);
+                    return (await bbClient.pullrequests.getRecentAllStatus(repo)).data;
+                })
+            );
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);
         }
@@ -92,16 +94,18 @@ export class BitbucketContext extends Disposable {
         this._pullRequestCache.clear();
         this._repoMap.clear();
 
-        await Promise.all(Container.siteManager.getSitesAvailable(ProductBitbucket).map(async site => {
-            try {
-                const bbApi = await Container.clientManager.bbClient(site);
-                const mirrorHosts = await bbApi.repositories.getMirrorHosts();
-                this._mirrorsCache.setItem(site.host, mirrorHosts);
-            } catch {
-                // log and ignore error
-                Logger.debug('Failed to fetch mirror sites');
-            }
-        }));
+        await Promise.all(
+            Container.siteManager.getSitesAvailable(ProductBitbucket).map(async site => {
+                try {
+                    const bbApi = await Container.clientManager.bbClient(site);
+                    const mirrorHosts = await bbApi.repositories.getMirrorHosts();
+                    this._mirrorsCache.setItem(site.host, mirrorHosts);
+                } catch {
+                    // log and ignore error
+                    Logger.debug('Failed to fetch mirror sites');
+                }
+            })
+        );
 
         this.getAllRepositoriesRaw().forEach(repo => {
             if (repo.state.remotes.length > 0) {
@@ -146,7 +150,9 @@ export class BitbucketContext extends Disposable {
     }
 
     public getBitbucketCloudRepositories(): WorkspaceRepo[] {
-        return this.getAllRepositories().filter(wsRepo => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true);
+        return this.getAllRepositories().filter(
+            wsRepo => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true
+        );
     }
 
     public getRepository(repoUri: Uri): WorkspaceRepo | undefined {

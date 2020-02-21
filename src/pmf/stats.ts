@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { parse, format, addMonths, subMonths, addWeeks, addDays, isAfter, isBefore } from "date-fns";
+import { parse, format, addMonths, subMonths, addWeeks, addDays, isAfter, isBefore } from 'date-fns';
 
 const PmfStatsKey = 'pmfStats';
 const FormatYYYYMMDD = 'YYYY-MM-DD';
@@ -10,7 +10,7 @@ type PmfStatsData = {
     snoozeUntil: string;
     activityByDay: {
         [k: string]: number;
-    }
+    };
 };
 
 const fallbackData: PmfStatsData = {

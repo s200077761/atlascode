@@ -14,7 +14,9 @@ import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 const createBitbucketIssueNode = new CreateBitbucketIssueNode();
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
-    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
+    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<
+        AbstractBaseNode | undefined
+    >();
     readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, BitbucketIssuesRepositoryNode> | undefined = undefined;
 
@@ -31,7 +33,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             }),
             ctx.onDidChangeBitbucketContext(() => {
                 this.refresh();
-            }),
+            })
         );
     }
 

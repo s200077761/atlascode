@@ -1,19 +1,29 @@
-import { emptyProject } from "@atlassianlabs/jira-pi-common-models/emptyEntities";
-import { Project } from "@atlassianlabs/jira-pi-common-models/entities";
-import { Disposable } from "vscode";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Container } from "../container";
-import { Logger } from "../logger";
+import { emptyProject } from '@atlassianlabs/jira-pi-common-models/emptyEntities';
+import { Project } from '@atlassianlabs/jira-pi-common-models/entities';
+import { Disposable } from 'vscode';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { Container } from '../container';
+import { Logger } from '../logger';
 
-type OrderBy = "category" | "-category" | "+category" | "key" | "-key" | "+key" | "name" | "-name" | "+name" | "owner" | "-owner" | "+owner";
+type OrderBy =
+    | 'category'
+    | '-category'
+    | '+category'
+    | 'key'
+    | '-key'
+    | '+key'
+    | 'name'
+    | '-name'
+    | '+name'
+    | 'owner'
+    | '-owner'
+    | '+owner';
 export class JiraProjectManager extends Disposable {
-
     constructor() {
         super(() => this.dispose());
     }
 
-    dispose() {
-    }
+    dispose() {}
 
     public async getProjectForKey(site: DetailedSiteInfo, projectKey: string): Promise<Project | undefined> {
         if (projectKey.trim() === '') {
@@ -50,7 +60,6 @@ export class JiraProjectManager extends Disposable {
             const client = await Container.clientManager.jiraClient(site);
             const order = orderBy !== undefined ? orderBy : 'key';
             foundProjects = await client.getProjects(query, order);
-
         } catch (e) {
             Logger.debug(`Failed to fetch projects ${e}`);
         }

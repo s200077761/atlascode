@@ -43,7 +43,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             selectedIssue: undefined,
             editorContainerClassname: 'ac-hidden',
             defaultIssueValue: undefined,
-            selectedLinkType: (props.linkTypes.length > 0) ? props.linkTypes[0] : undefined
+            selectedLinkType: props.linkTypes.length > 0 ? props.linkTypes[0] : undefined
         };
     }
 
@@ -92,7 +92,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             isEditing: false,
             defaultIssueValue: undefined,
             selectedIssue: undefined,
-            selectedLinkType: (this.props.linkTypes.length > 0) ? this.props.linkTypes[0] : undefined,
+            selectedLinkType: this.props.linkTypes.length > 0 ? this.props.linkTypes[0] : undefined
         });
     };
 
@@ -101,31 +101,31 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             isEditing: false,
             defaultIssueValue: undefined,
             selectedIssue: undefined,
-            selectedLinkType: (this.props.linkTypes.length > 0) ? this.props.linkTypes[0] : undefined,
+            selectedLinkType: this.props.linkTypes.length > 0 ? this.props.linkTypes[0] : undefined
         });
 
         this.props.onSave({
             type: this.state.selectedLinkType!,
-            issueKey: this.state.selectedIssue!.key,
+            issueKey: this.state.selectedIssue!.key
         });
-
     };
 
     render() {
         return (
             <React.Fragment>
-                <div className='label-and-button'>
-                    <label className='ac-field-label' htmlFor='issuelinks-editor'>{this.props.label}</label>
-                    <button className='ac-inline-add-button'
+                <div className="label-and-button">
+                    <label className="ac-field-label" htmlFor="issuelinks-editor">
+                        {this.props.label}
+                    </label>
+                    <button
+                        className="ac-inline-add-button"
                         onClick={this.handleOpenInlineEditor}
                         disabled={this.state.isEditing || this.state.isLoading}
                     />
                 </div>
-                {this.state.isLoading &&
-                    <Spinner size="small" />
-                }
+                {this.state.isLoading && <Spinner size="small" />}
                 <div className={this.state.editorContainerClassname}>
-                    {this.state.isEditing &&
+                    {this.state.isEditing && (
                         <React.Fragment>
                             <div style={{ width: '30%' }}>
                                 <Select
@@ -140,7 +140,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
                                     onChange={this.handleIssueLinkTypeChange}
                                 />
                             </div>
-                            <div className='ac-inline-edit-main_container-left-margin'>
+                            <div className="ac-inline-edit-main_container-left-margin">
                                 <div style={{ width: '100%' }}>
                                     <AsyncSelect
                                         defaultValue={this.state.defaultIssueValue}
@@ -153,25 +153,24 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
                                         isLoading={this.state.isIssueLoading}
                                         isDisabled={this.state.isIssueLoading}
                                         onChange={this.handleIssueChange}
-                                        components={{ Option: SelectFieldHelper.IssueSuggestionOption, SingleValue: SelectFieldHelper.IssueSuggestionValue }}
+                                        components={{
+                                            Option: SelectFieldHelper.IssueSuggestionOption,
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue
+                                        }}
                                     />
                                 </div>
                             </div>
-                            <div className='ac-inline-edit-buttons-container'>
+                            <div className="ac-inline-edit-buttons-container">
                                 <button
-                                    type='button'
-                                    className='ac-inline-save-button'
+                                    type="button"
+                                    className="ac-inline-save-button"
                                     onClick={this.handleSave}
                                     disabled={this.state.selectedIssue === undefined}
                                 />
-                                <button
-                                    type='button'
-                                    className='ac-inline-cancel-button'
-                                    onClick={this.handleCancel}
-                                />
+                                <button type="button" className="ac-inline-cancel-button" onClick={this.handleCancel} />
                             </div>
                         </React.Fragment>
-                    }
+                    )}
                 </div>
             </React.Fragment>
         );

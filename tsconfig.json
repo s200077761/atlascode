@@ -4,10 +4,7 @@
         "outDir": "build/extension",
         "module": "esnext",
         "target": "es6",
-        "lib": [
-            "esnext",
-            "dom"
-        ],
+        "lib": ["esnext", "dom"],
         "skipLibCheck": true,
         "sourceMap": true,
         "allowJs": true,
@@ -23,15 +20,9 @@
         "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": true,
         "jsxFactory": "React.createElement",
-        "typeRoots": [
-            "node_modules/@types",
-            "src/typings/"
-        ]
+        "typeRoots": ["node_modules/@types", "src/typings/"]
     },
-    "include": [
-        "**/src/**/*",
-        "webpack.*.js"
-    ],
+    "include": ["**/src/**/*", "webpack.*.js"],
     "exclude": [
         "out",
         "node_modules",
@@ -41,6 +32,6 @@
         "webpack",
         "jest",
         "src/setupTests.ts",
-        ".vscode-test",
+        ".vscode-test"
     ]
 }

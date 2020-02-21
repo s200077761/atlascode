@@ -3,7 +3,6 @@ import * as http from 'http';
 import { Disposable } from 'vscode';
 
 export class UIWebsocket implements Disposable {
-
     private _port: number;
     private _srv: http.Server | undefined;
     private _ws: server | undefined;
@@ -16,26 +15,26 @@ export class UIWebsocket implements Disposable {
     public start(messageHandler: (e: any) => any): void {
         const port = this._port;
         const clients = this._clients;
-        this._srv = http.createServer(function (request, response) {
+        this._srv = http.createServer(function(request, response) {
             // process HTTP request. Since we're writing just WebSockets
             // server we don't have to implement anything.
         });
-        this._srv.listen(this._port, function () {
-            console.log((new Date()) + ` UI Websocket listening on port ${port}`);
+        this._srv.listen(this._port, function() {
+            console.log(new Date() + ` UI Websocket listening on port ${port}`);
         });
 
         this._ws = new server({ httpServer: this._srv });
 
-        this._ws.on('request', function (request) {
-            console.log((new Date()) + ` Connection from origin ${request.origin}.`);
+        this._ws.on('request', function(request) {
+            console.log(new Date() + ` Connection from origin ${request.origin}.`);
             var connection = request.accept(undefined, request.origin);
             // we need to know client index to remove them on 'close' event
             var index = clients.push(connection) - 1;
-            console.log((new Date()) + ' Connection accepted.');
+            console.log(new Date() + ' Connection accepted.');
 
             // user sent some message
             connection.on('message', (message: IMessage) => {
-                console.log((new Date()) + ` got message ${message}.`);
+                console.log(new Date() + ` got message ${message}.`);
                 if (message.utf8Data) {
                     try {
                         const json = JSON.parse(message.utf8Data);
@@ -47,11 +46,10 @@ export class UIWebsocket implements Disposable {
             });
 
             connection.on('close', (code: number, desc: string) => {
-                console.log((new Date()) + ` Peer ${connection.remoteAddress} disconnected.`);
+                console.log(new Date() + ` Peer ${connection.remoteAddress} disconnected.`);
                 // remove user from the list of connected clients
                 clients.splice(index, 1);
             });
-
         });
     }
 
@@ -65,12 +63,12 @@ export class UIWebsocket implements Disposable {
     public dispose() {
         try {
             if (this._ws) {
-                console.log((new Date()) + ` shutting down websocket`);
+                console.log(new Date() + ` shutting down websocket`);
                 this._ws.shutDown();
             }
 
             if (this._srv) {
-                console.log((new Date()) + ` shutting down websocket http`);
+                console.log(new Date() + ` shutting down websocket http`);
                 this._srv.close();
             }
         } catch (e) {

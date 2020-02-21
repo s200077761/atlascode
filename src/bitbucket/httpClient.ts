@@ -15,8 +15,8 @@ export class HTTPClient {
         this.transport = axios.create({
             timeout: ConnectionTimeout,
             headers: {
-                "Accept-Encoding": "gzip, deflate",
-                "Content-Type": "application/json",
+                'Accept-Encoding': 'gzip, deflate',
+                'Content-Type': 'application/json',
                 Authorization: this.authHeader
             },
             ...this.agent
@@ -29,18 +29,16 @@ export class HTTPClient {
         this.transport.interceptors.response.use(
             response => response,
             async error => {
-                return error.response
-                    ? Promise.reject(await this.errorHandler(error.response))
-                    : Promise.reject(error);
+                return error.response ? Promise.reject(await this.errorHandler(error.response)) : Promise.reject(error);
             }
         );
     }
 
     async get(urlSlug: string, queryParams?: any) {
-        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
         const res = await this.transport(url, {
-            method: "GET"
+            method: 'GET'
         });
         return { data: res.data, headers: res.headers };
     }
@@ -50,7 +48,7 @@ export class HTTPClient {
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
-            method: "GET",
+            method: 'GET',
             // axios tries to parse response as JSON by default
             // prevent that and pass through the raw data
             transformResponse: data => data
@@ -63,22 +61,22 @@ export class HTTPClient {
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
-            method: "GET",
+            method: 'GET',
             headers: {
-                "accept": "application/octet-stream"
+                accept: 'application/octet-stream'
             }
         });
         return { data: res.data, headers: res.headers };
     }
 
     async post(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
         try {
             const res = await this.transport(url, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                     Authorization: this.authHeader
                 },
                 data: JSON.stringify(body),
@@ -96,11 +94,11 @@ export class HTTPClient {
     }
 
     async put(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
-            method: "PUT",
+            method: 'PUT',
             data: JSON.stringify(body)
         });
 
@@ -108,11 +106,11 @@ export class HTTPClient {
     }
 
     async delete(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
-            method: "DELETE",
+            method: 'DELETE',
             data: JSON.stringify(body)
         });
 
@@ -140,12 +138,11 @@ export class HTTPClient {
     }
 }
 
-// ClientError wraps Error with a toJSON() method so that it can be passed as 
+// ClientError wraps Error with a toJSON() method so that it can be passed as
 // part of a message to the webviews because Error fields are not enumerable
 // by default
 export class ClientError implements Error {
-
-    constructor(public name: string, public message: string) { }
+    constructor(public name: string, public message: string) {}
 
     toJSON() {
         return {

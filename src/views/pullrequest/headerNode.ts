@@ -4,7 +4,6 @@ import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 
 export class PullRequestHeaderNode extends AbstractBaseNode {
-
     constructor(public description: string) {
         super();
     }
@@ -25,7 +24,6 @@ export class PullRequestHeaderNode extends AbstractBaseNode {
 }
 
 export class CreatePullRequestNode extends AbstractBaseNode {
-
     getTreeItem(): TreeItem {
         let treeItem = new TreeItem('Create pull request...', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('pullrequests');
@@ -36,6 +34,5 @@ export class CreatePullRequestNode extends AbstractBaseNode {
         };
 
         return treeItem;
-
     }
 }

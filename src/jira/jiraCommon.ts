@@ -1,12 +1,8 @@
-
-
 export const epicsDisabled: EpicFieldInfo = {
-    epicLink: { name: "", id: "", cfid: 0 },
-    epicName: { name: "", id: "", cfid: 0 },
+    epicLink: { name: '', id: '', cfid: 0 },
+    epicName: { name: '', id: '', cfid: 0 },
     epicsEnabled: false
 };
-
-
 
 export interface CFIdName {
     id: string;
@@ -20,12 +16,4 @@ export interface EpicFieldInfo {
     epicsEnabled: boolean;
 }
 
-
-
-export interface JiraSettings {
-
-}
-
-
-
-
+export interface JiraSettings {}

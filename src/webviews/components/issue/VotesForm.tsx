@@ -23,11 +23,10 @@ const emptyForm = {
 };
 
 export default class VotesForm extends React.Component<MyProps, MyState> {
-
     constructor(props: any) {
         super(props);
         this.state = {
-            ...emptyForm,
+            ...emptyForm
         };
     }
 
@@ -49,39 +48,44 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
 
     getEmptyVoters = () => {
         const data = [
-            <Avatar size='large' />
-            , <Avatar size='large' />
-            , <Avatar size='large' />
-            , <Avatar size='large' />
+            <Avatar size="large" />,
+            <Avatar size="large" />,
+            <Avatar size="large" />,
+            <Avatar size="large" />
         ];
 
-        return (<div>
-            <AvatarGroup
-                appearance="stack"
-                data={data}
-                size="large"
-            />
-            <span>No voters yet</span>
-        </div>);
+        return (
+            <div>
+                <AvatarGroup appearance="stack" data={data} size="large" />
+                <span>No voters yet</span>
+            </div>
+        );
     };
 
     getStartStop = (): JSX.Element => {
         if (this.props.votes.hasVoted) {
             return (
-                <div className='ac-icon-with-text ac-inline-watcher-hover' style={{ cursor: 'pointer' }} onClick={this.toggleVote}>
-                    <StarFilledIcon label='starfilledicon' size='medium' />
+                <div
+                    className="ac-icon-with-text ac-inline-watcher-hover"
+                    style={{ cursor: 'pointer' }}
+                    onClick={this.toggleVote}
+                >
+                    <StarFilledIcon label="starfilledicon" size="medium" />
                     <span style={{ marginLeft: '8px' }}>Remove vote</span>
                 </div>
             );
         }
 
         return (
-            <div className='ac-icon-with-text ac-inline-watcher-hover' style={{ cursor: 'pointer' }} onClick={this.toggleVote}>
-                <StarIcon label='staricon' size='medium' />
+            <div
+                className="ac-icon-with-text ac-inline-watcher-hover"
+                style={{ cursor: 'pointer' }}
+                onClick={this.toggleVote}
+            >
+                <StarIcon label="staricon" size="medium" />
                 <span style={{ marginLeft: '8px' }}>Vote for this issue</span>
             </div>
         );
-
     };
 
     getVoters = (): JSX.Element => {
@@ -90,33 +94,27 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
         }
 
         let voterList = this.props.votes.voters.map(voter => {
-            let avatar = (voter.avatarUrls && voter.avatarUrls['24x24']) ? voter.avatarUrls['24x24'] : '';
+            let avatar = voter.avatarUrls && voter.avatarUrls['24x24'] ? voter.avatarUrls['24x24'] : '';
             return (
-                <div className='ac-inline-watcher ac-inline-watcher-hover'>
-                    <Avatar size='small' src={avatar} />
-                    <div className='ac-inline-watcher-name'>{voter.displayName}</div>
+                <div className="ac-inline-watcher ac-inline-watcher-hover">
+                    <Avatar size="small" src={avatar} />
+                    <div className="ac-inline-watcher-name">{voter.displayName}</div>
                 </div>
             );
         });
 
         return (
             <div>
-                <div className='ac-inline-watcher-list-heading'>voted for this issue</div>
+                <div className="ac-inline-watcher-list-heading">voted for this issue</div>
                 {voterList}
             </div>
         );
     };
     render() {
         return (
-            <div className='ac-inline-items-container'>
-                {this.props.allowVoting &&
-                    <div className='ac-inline-item'>
-                        {this.getStartStop()}
-                    </div>
-                }
-                <div className='ac-inline-item'>
-                    {this.getVoters()}
-                </div>
+            <div className="ac-inline-items-container">
+                {this.props.allowVoting && <div className="ac-inline-item">{this.getStartStop()}</div>}
+                <div className="ac-inline-item">{this.getVoters()}</div>
             </div>
         );
     }

@@ -1476,22 +1476,28 @@ export abstract class AbstractIssueEditorPage<
                                     label="Worklog comment"
                                     isRequired={false}
                                     id={`${field.key}.comment`}
-                                    name={`${field.key}.comment`}>
-                                    {
-                                        (fieldArgs: any) => {
-                                            return (
-                                                <textarea {...fieldArgs.fieldProps}
-                                                    style={{ width: '100%', display: 'block' }}
-                                                    className='ac-textarea'
-                                                    rows={5}
-                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                                        const subField = { ...field, ...{ key: `${field.key}.comment` } };
+                                    name={`${field.key}.comment`}
+                                >
+                                    {(fieldArgs: any) => {
+                                        return (
+                                            <textarea
+                                                {...fieldArgs.fieldProps}
+                                                style={{ width: '100%', display: 'block' }}
+                                                className="ac-textarea"
+                                                rows={5}
+                                                onChange={FieldValidators.chain(
+                                                    fieldArgs.fieldProps.onChange,
+                                                    (val: any) => {
+                                                        const subField = {
+                                                            ...field,
+                                                            ...{ key: `${field.key}.comment` }
+                                                        };
                                                         this.handleInlineInputEdit(subField, val);
-                                                    })}
-                                                />
-                                            );
-                                        }
-                                    }
+                                                    }
+                                                )}
+                                            />
+                                        );
+                                    }}
                                 </Field>
                             </React.Fragment>
                         )}

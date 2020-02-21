@@ -36,40 +36,40 @@ export class Logger {
     }
 
     static info(message?: any, ...params: any[]): void {
-        if (this.level !== OutputLevel.Info && this.level !== OutputLevel.Debug) { return; }
+        if (this.level !== OutputLevel.Info && this.level !== OutputLevel.Debug) {
+            return;
+        }
 
         if (this.output !== undefined) {
-            this.output.appendLine(
-                ([this.timestamp, message, ...params]).join(' ')
-            );
+            this.output.appendLine([this.timestamp, message, ...params].join(' '));
         }
     }
 
     static debug(message?: any, ...params: any[]): void {
-        if (this.level !== OutputLevel.Debug) { return; }
+        if (this.level !== OutputLevel.Debug) {
+            return;
+        }
 
         if (Container.isDebugging) {
             console.log(this.timestamp, ConsolePrefix, message, ...params);
         }
 
         if (this.output !== undefined) {
-            this.output.appendLine(
-                ([this.timestamp, message, ...params]).join(' ')
-            );
+            this.output.appendLine([this.timestamp, message, ...params].join(' '));
         }
     }
 
     static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        if (this.level === OutputLevel.Silent) { return; }
+        if (this.level === OutputLevel.Silent) {
+            return;
+        }
 
         if (Container.isDebugging) {
             console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
         }
 
         if (this.output !== undefined) {
-            this.output.appendLine(
-                ([this.timestamp, classOrMethod, ...params, ex]).join(' ')
-            );
+            this.output.appendLine([this.timestamp, classOrMethod, ...params, ex].join(' '));
         }
     }
 
