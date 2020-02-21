@@ -251,8 +251,8 @@ export default class EditJQL extends PureComponent<
                                 isDisabled={
                                     !!this.props.jqlEntry.filterId ||
                                     this.state.nameValue.trim().length < 1 ||
-                                        this.state.inputValue.trim().length < 1 ||
-                                        this.state.jqlError !== null
+                                    this.state.inputValue.trim().length < 1 ||
+                                    this.state.jqlError !== null
                                 }
                                 onClick={this.onSave}
                             >
@@ -266,8 +266,8 @@ export default class EditJQL extends PureComponent<
                                     isDisabled={
                                         !!this.props.jqlEntry.filterId ||
                                         this.state.nameValue.trim().length < 1 ||
-                                            this.state.inputValue.trim().length < 1 ||
-                                            this.state.jqlError !== null
+                                        this.state.inputValue.trim().length < 1 ||
+                                        this.state.jqlError !== null
                                     }
                                     onClick={this.onRestoreDefault}
                                 >
