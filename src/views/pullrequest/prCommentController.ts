@@ -210,7 +210,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
                 if (checkoutSucceeded) {
                     const pathURI = vscode.Uri.parse(`${wsRepo.rootUri}/${path}`);
-                    commands.executeCommand('vscode.open', pathURI, {viewColumn: -2}); // -2 represents displays the new file 'beside' the current editor
+                    commands.executeCommand('vscode.open', pathURI, { viewColumn: -2 }); // -2 represents displays the new file 'beside' the current editor
                 }
             })
         );

@@ -7,16 +7,15 @@ import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 
 export class WelcomeWebview extends AbstractReactWebview {
-
     constructor(extensionPath: string) {
         super(extensionPath);
     }
 
     public get title(): string {
-        return "Atlassian Welcome";
+        return 'Atlassian Welcome';
     }
     public get id(): string {
-        return "atlascodeWelcomeScreen";
+        return 'atlascodeWelcomeScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -58,7 +57,9 @@ export class WelcomeWebview extends AbstractReactWebview {
                 }
                 case 'docsLink': {
                     handled = true;
-                    env.openExternal(Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code`));
+                    env.openExternal(
+                        Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code`)
+                    );
                     break;
                 }
                 case 'submitFeedback': {

@@ -1,8 +1,23 @@
 'use strict';
 export * from './model';
 
-import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { extensionId, JiraCreateSiteAndProjectKey, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey } from '../constants';
+import {
+    ConfigurationChangeEvent,
+    ConfigurationTarget,
+    Disposable,
+    Event,
+    EventEmitter,
+    ExtensionContext,
+    Uri,
+    workspace,
+    WorkspaceConfiguration
+} from 'vscode';
+import {
+    extensionId,
+    JiraCreateSiteAndProjectKey,
+    JiraLegacyWorkingSiteConfigurationKey,
+    JiraV1WorkingProjectConfigurationKey
+} from '../constants';
 import { SiteIdAndProjectKey } from './model';
 
 /*
@@ -32,7 +47,9 @@ export class Configuration extends Disposable {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         // only fire if it's a config for our extension
-        if (!e.affectsConfiguration(extensionId, null!)) { return; }
+        if (!e.affectsConfiguration(extensionId, null!)) {
+            return;
+        }
 
         this._onDidChange.fire(e);
     }
@@ -47,11 +64,11 @@ export class Configuration extends Disposable {
     get<T>(section?: string, resource?: Uri | null, defaultValue?: T): T {
         return defaultValue === undefined
             ? workspace
-                .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                .get<T>(section === undefined ? extensionId : section)!
+                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
+                  .get<T>(section === undefined ? extensionId : section)!
             : workspace
-                .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                .get<T>(section === undefined ? extensionId : section, defaultValue)!;
+                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
+                  .get<T>(section === undefined ? extensionId : section, defaultValue)!;
     }
 
     // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
@@ -65,23 +82,29 @@ export class Configuration extends Disposable {
     }
 
     // inspect returns details of the given config section
-    inspect<T>(section?: string, resource?: Uri | null): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T, workspaceFolderValue?: T } {
+    inspect<T>(
+        section?: string,
+        resource?: Uri | null
+    ): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } {
         const inspect = workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
             .inspect<T>(section === undefined ? extensionId : section);
 
-        return (inspect) ? inspect : { key: "" };
+        return inspect ? inspect : { key: '' };
     }
 
     // update does what it sounds like
-    public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null): Promise<void> {
+    public async update(
+        section: string,
+        value: any,
+        target: ConfigurationTarget,
+        resource?: Uri | null
+    ): Promise<void> {
         const inspect = this.inspect(section, resource);
         if (
-            value === undefined
-            && (
-                (target === ConfigurationTarget.Global && inspect.globalValue === undefined)
-                || (target === ConfigurationTarget.Workspace && inspect.workspaceValue === undefined)
-            )
+            value === undefined &&
+            ((target === ConfigurationTarget.Global && inspect.globalValue === undefined) ||
+                (target === ConfigurationTarget.Workspace && inspect.workspaceValue === undefined))
         ) {
             return undefined;
         }
@@ -149,15 +172,18 @@ export class Configuration extends Disposable {
     async updateEffective(section: string, value: any, resource: Uri | null = null, force?: boolean): Promise<void> {
         const inspect = this.inspect(section, resource);
 
-
         if (inspect.workspaceFolderValue !== undefined) {
-            if (value === inspect.workspaceFolderValue) { return undefined; }
+            if (value === inspect.workspaceFolderValue) {
+                return undefined;
+            }
 
             return configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
         }
 
         if (inspect.workspaceValue !== undefined) {
-            if (value === inspect.workspaceValue) { return undefined; }
+            if (value === inspect.workspaceValue) {
+                return undefined;
+            }
 
             return configuration.update(section, value, ConfigurationTarget.Workspace);
         }

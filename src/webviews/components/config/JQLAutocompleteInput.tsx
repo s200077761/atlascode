@@ -1,31 +1,23 @@
-import DropList, { Group, Item } from "@atlaskit/droplist";
-import FieldBase, { Label } from "@atlaskit/field-base";
-import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
-import CrossCircleIcon from "@atlaskit/icon/glyph/cross-circle";
-import Input from "@atlaskit/input";
-import { akColorG400, akColorR400 } from "@atlaskit/util-shared-styles";
-import jQuery from "jquery";
-import debounce from "lodash.debounce";
-import React, { PureComponent } from "react";
+import DropList, { Group, Item } from '@atlaskit/droplist';
+import FieldBase, { Label } from '@atlaskit/field-base';
+import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle';
+import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle';
+import Input from '@atlaskit/input';
+import { akColorG400, akColorR400 } from '@atlaskit/util-shared-styles';
+import jQuery from 'jquery';
+import debounce from 'lodash.debounce';
+import React, { PureComponent } from 'react';
 import styled from 'styled-components';
-var JQLAutocomplete = require("@deviniti/jql-autocomplete");
+var JQLAutocomplete = require('@deviniti/jql-autocomplete');
 
-const JqlInvalidIcon = <CrossCircleIcon
-    size="medium"
-    primaryColor={akColorR400}
-    label="JQL valid"
-/>;
+const JqlInvalidIcon = <CrossCircleIcon size="medium" primaryColor={akColorR400} label="JQL valid" />;
 
-const JqlValidIcon = <CheckCircleIcon
-    size="medium"
-    primaryColor={akColorG400}
-    label="JQL invalid"
-/>;
+const JqlValidIcon = <CheckCircleIcon size="medium" primaryColor={akColorG400} label="JQL invalid" />;
 
 const FieldBaseWrapper = styled.div`
-  span {
+    span {
         padding: 7px 6px;
-  };
+    }
 `;
 
 export class JQLAutocompleteInput extends PureComponent<
@@ -50,7 +42,7 @@ export class JQLAutocompleteInput extends PureComponent<
         suggestions: string[];
         focusedItemIndex: number | undefined;
     }
-    > {
+> {
     private constructorData: any;
     private jql: any;
     private jqlTimer: NodeJS.Timer | undefined;
@@ -60,7 +52,7 @@ export class JQLAutocompleteInput extends PureComponent<
         jql: this.props.initialValue,
         isOpen: false,
         suggestions: [],
-        focusedItemIndex: undefined,
+        focusedItemIndex: undefined
     };
 
     componentDidMount() {
@@ -68,20 +60,11 @@ export class JQLAutocompleteInput extends PureComponent<
             //API requires jquery... TODO change jql-autocomplete API
             input: jQuery(`#${this.props.inputId}`),
             render: this.setSuggestions,
-            getSuggestions: debounce(
-                (
-                    fieldName: string,
-                    onSuccess: (results: any) => {},
-                    fieldValue = ""
-                ) => {
-                    this.props
-                        .getSuggestionsRequest(fieldName, fieldValue)
-                        .then((response: any) => {
-                            onSuccess(response.results);
-                        });
-                },
-                400
-            )
+            getSuggestions: debounce((fieldName: string, onSuccess: (results: any) => {}, fieldValue = '') => {
+                this.props.getSuggestionsRequest(fieldName, fieldValue).then((response: any) => {
+                    onSuccess(response.results);
+                });
+            }, 400)
         };
         this.jql = new JQLAutocomplete(this.constructorData);
 
@@ -102,7 +85,7 @@ export class JQLAutocompleteInput extends PureComponent<
         const Icon = !this.props.jqlError ? JqlValidIcon : JqlInvalidIcon;
         return (
             <div
-                style={{ width: "100%", cursor: "default" }}
+                style={{ width: '100%', cursor: 'default' }}
                 onKeyDown={this.handleKeyboardInteractions}
                 ref={element => {
                     this.containerNode = element;
@@ -129,9 +112,9 @@ export class JQLAutocompleteInput extends PureComponent<
                                     isEditing
                                     defaultValue={this.props.initialValue}
                                     onInput={this.handleInputChange}
-                                    autocomplete={"off"}
+                                    autocomplete={'off'}
                                     id={this.props.inputId}
-                                    style={{ paddingLeft: 8, cursor: "auto", marginTop: 8 }}
+                                    style={{ paddingLeft: 8, cursor: 'auto', marginTop: 8 }}
                                 />
                             </FieldBase>
                         </FieldBaseWrapper>
@@ -145,10 +128,10 @@ export class JQLAutocompleteInput extends PureComponent<
 
     renderItems = () => {
         return this.state.suggestions.map((item: any, index: number) => {
-            const createMarkup = function () {
+            const createMarkup = function() {
                 return { __html: item.text };
             };
-            const ItemText = function () {
+            const ItemText = function() {
                 return <span dangerouslySetInnerHTML={createMarkup()} />;
             };
             return (
@@ -167,7 +150,7 @@ export class JQLAutocompleteInput extends PureComponent<
     handleKeyboardInteractions = (event: any) => {
         const isSelectOpen = this.state.isOpen;
         switch (event.key) {
-            case "ArrowDown":
+            case 'ArrowDown':
                 event.preventDefault();
                 if (!isSelectOpen) {
                     this.onOpenChange({ event, isOpen: true });
@@ -175,27 +158,25 @@ export class JQLAutocompleteInput extends PureComponent<
                 this.focusNextItem();
                 return true;
                 break;
-            case "ArrowUp":
+            case 'ArrowUp':
                 event.preventDefault();
                 if (isSelectOpen) {
                     this.focusPreviousItem();
                 }
                 return true;
                 break;
-            case "Enter":
+            case 'Enter':
                 if (isSelectOpen) {
                     event.preventDefault();
                     if (this.state.focusedItemIndex !== undefined) {
-                        this.handleItemSelect(
-                            this.state.suggestions[this.state.focusedItemIndex!]
-                        );
+                        this.handleItemSelect(this.state.suggestions[this.state.focusedItemIndex!]);
                     } else {
                         this.onOpenChange({ event, isOpen: false });
                     }
                 }
                 return true;
                 break;
-            case "Tab":
+            case 'Tab':
                 this.onOpenChange({ event, isOpen: false });
                 return true;
                 break;
@@ -214,10 +195,7 @@ export class JQLAutocompleteInput extends PureComponent<
 
     focusNextItem = () => {
         const { focusedItemIndex, suggestions } = this.state;
-        const nextItemIndex = this.getNextFocusable(
-            focusedItemIndex!,
-            suggestions.length
-        );
+        const nextItemIndex = this.getNextFocusable(focusedItemIndex!, suggestions.length);
         this.setState({
             focusedItemIndex: nextItemIndex
         });
@@ -226,10 +204,7 @@ export class JQLAutocompleteInput extends PureComponent<
 
     focusPreviousItem = () => {
         const { focusedItemIndex, suggestions } = this.state;
-        const nextItemIndex = this.getPrevFocusable(
-            focusedItemIndex!,
-            suggestions.length
-        );
+        const nextItemIndex = this.getPrevFocusable(focusedItemIndex!, suggestions.length);
         this.setState({
             focusedItemIndex: nextItemIndex
         });
@@ -261,9 +236,7 @@ export class JQLAutocompleteInput extends PureComponent<
     };
 
     scrollToFocused = (index: number) => {
-        const scrollable = this.containerNode.querySelector(
-            '[data-role="droplistContent"]'
-        );
+        const scrollable = this.containerNode.querySelector('[data-role="droplistContent"]');
         let item;
 
         if (scrollable && index !== undefined) {
@@ -271,8 +244,7 @@ export class JQLAutocompleteInput extends PureComponent<
         }
 
         if (item && scrollable) {
-            scrollable.scrollTop =
-                item.offsetTop - scrollable.clientHeight + item.clientHeight;
+            scrollable.scrollTop = item.offsetTop - scrollable.clientHeight + item.clientHeight;
         }
     };
 

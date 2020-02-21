@@ -1,9 +1,9 @@
 import * as gup from 'git-url-parse';
-import { DetailedSiteInfo, ProductBitbucket } from "../atlclients/authInfo";
-import { bbAPIConnectivityError } from "../constants";
-import { Container } from "../container";
-import { Remote, Repository } from "../typings/git";
-import { BitbucketApi, BitbucketSite, WorkspaceRepo } from "./model";
+import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
+import { bbAPIConnectivityError } from '../constants';
+import { Container } from '../container';
+import { Remote, Repository } from '../typings/git';
+import { BitbucketApi, BitbucketSite, WorkspaceRepo } from './model';
 
 const bbServerRepoRegEx = new RegExp(/(?<type>users|projects)\/(?<owner>.*)\/repos/);
 
@@ -44,13 +44,16 @@ export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefin
     }
 
     const hostname = parsed.source;
-    if (hostname.includes('bitbucket.org') || hostname.includes('bitbucket_org') || hostname.includes('bitbucket-org')) {
+    if (
+        hostname.includes('bitbucket.org') ||
+        hostname.includes('bitbucket_org') ||
+        hostname.includes('bitbucket-org')
+    ) {
         return Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
     }
 
     return undefined;
 }
-
 
 export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefined {
     const parsed = parseGitUrl(urlForRemote(remote));
@@ -64,7 +67,11 @@ export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefine
     }
 
     const hostname = parsed.source;
-    if (hostname.includes('bitbucket.org') || hostname.includes('bitbucket_org') || hostname.includes('bitbucket-org')) {
+    if (
+        hostname.includes('bitbucket.org') ||
+        hostname.includes('bitbucket_org') ||
+        hostname.includes('bitbucket-org')
+    ) {
         const site = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
         if (site) {
             return {
@@ -79,9 +86,7 @@ export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefine
 }
 
 export function urlForRemote(remote: Remote): string {
-    return remote
-        ? remote.fetchUrl! || remote.pushUrl!
-        : '';
+    return remote ? remote.fetchUrl! || remote.pushUrl! : '';
 }
 
 export async function clientForRemote(remote: Remote): Promise<BitbucketApi> {
@@ -113,10 +118,10 @@ export function firstBitbucketRemote(repo: Repository): Remote {
     const remotes = getBitbucketRemotes(repo);
 
     let remote: Remote | undefined;
-    if (remote = remotes.find(r => r.name === 'origin')) {
+    if ((remote = remotes.find(r => r.name === 'origin'))) {
         return remote;
     }
-    if (remote = remotes.find(r => r.name === 'upstream')) {
+    if ((remote = remotes.find(r => r.name === 'upstream'))) {
         return remote;
     }
     return remotes[0];
@@ -128,9 +133,8 @@ export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
         remote: r
     }));
 
-    const firstRemote = getBitbucketRemotes(repository).length > 0
-        ? firstBitbucketRemote(repository)
-        : repository.state.remotes[0];
+    const firstRemote =
+        getBitbucketRemotes(repository).length > 0 ? firstBitbucketRemote(repository) : repository.state.remotes[0];
 
     const mainSiteRemote = {
         site: bitbucketSiteForRemote(firstRemote),

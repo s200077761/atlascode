@@ -1,5 +1,14 @@
-import { HTTPClient } from "../httpClient";
-import { BitbucketIssue, BitbucketSite, Comment, emptyBitbucketSite, PaginatedBitbucketIssues, PaginatedComments, UnknownUser, WorkspaceRepo } from "../model";
+import { HTTPClient } from '../httpClient';
+import {
+    BitbucketIssue,
+    BitbucketSite,
+    Comment,
+    emptyBitbucketSite,
+    PaginatedBitbucketIssues,
+    PaginatedComments,
+    UnknownUser,
+    WorkspaceRepo
+} from '../model';
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -8,9 +17,7 @@ export const maxItemsSupported = {
 };
 
 export class BitbucketIssuesApiImpl {
-
-    constructor(private client: HTTPClient) {
-    }
+    constructor(private client: HTTPClient) {}
 
     // ---- BEGIN - Actions NOT on a specific issue ----
     // ---- => ensure Bitbucket issues are enabled for the repo
@@ -21,19 +28,16 @@ export class BitbucketIssuesApiImpl {
             return { workspaceRepo: workspaceRepo, site: emptyBitbucketSite, data: [], next: undefined };
         }
 
-        if (!await this.bitbucketIssuesEnabled(site)) {
+        if (!(await this.bitbucketIssuesEnabled(site))) {
             return { workspaceRepo, site, data: [], next: undefined };
         }
 
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/issues`,
-            {
-                pagelen: defaultPageLength,
-                q: 'state="new" OR state="open" OR state="on hold"'
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues`, {
+            pagelen: defaultPageLength,
+            q: 'state="new" OR state="open" OR state="on hold"'
+        });
 
         const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 
@@ -43,18 +47,15 @@ export class BitbucketIssuesApiImpl {
     async getAvailableComponents(site: BitbucketSite): Promise<any[] | undefined> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/components`,
-            {
-                pagelen: defaultPageLength
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/components`, {
+            pagelen: defaultPageLength
+        });
 
         return data.values;
     }
 
     async getIssuesForKeys(site: BitbucketSite, issueKeys: string[]): Promise<BitbucketIssue[]> {
-        if (!await this.bitbucketIssuesEnabled(site)) {
+        if (!(await this.bitbucketIssuesEnabled(site))) {
             return [];
         }
 
@@ -62,9 +63,9 @@ export class BitbucketIssuesApiImpl {
 
         const keyNumbers = issueKeys.map(key => key.replace('#', ''));
 
-        const results = await Promise.all(keyNumbers.map(key => this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/issues/${key}`
-        )));
+        const results = await Promise.all(
+            keyNumbers.map(key => this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues/${key}`))
+        );
 
         return results.filter(result => !!result).map(result => ({ site, data: result.data }));
     }
@@ -75,20 +76,17 @@ export class BitbucketIssuesApiImpl {
             return { workspaceRepo: workspaceRepo, site: emptyBitbucketSite, data: [], next: undefined };
         }
 
-        if (!await this.bitbucketIssuesEnabled(site)) {
+        if (!(await this.bitbucketIssuesEnabled(site))) {
             return { workspaceRepo, site, data: [], next: undefined };
         }
 
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/issues`,
-            {
-                pagelen: 2,
-                q: '(state="new" OR state="open" OR state="on hold")',
-                sort: '-created_on'
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues`, {
+            pagelen: 2,
+            q: '(state="new" OR state="open" OR state="on hold")',
+            sort: '-created_on'
+        });
 
         const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 
@@ -98,15 +96,12 @@ export class BitbucketIssuesApiImpl {
     async bitbucketIssuesEnabled(site: BitbucketSite): Promise<boolean> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}`
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}`);
 
         return !!data.has_issues;
     }
 
     // ---- END - Actions NOT on a specific issue ----
-
 
     // ---- BEGIN - Issue specific actions ----
     // ---- => Bitbucket issues enabled for the repo
@@ -114,9 +109,7 @@ export class BitbucketIssuesApiImpl {
     async refetch(issue: BitbucketIssue): Promise<BitbucketIssue> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`,
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`);
 
         return { ...issue, data: data };
     }
@@ -145,12 +138,12 @@ export class BitbucketIssuesApiImpl {
                 inline: comment.inline,
                 user: comment.user
                     ? {
-                        accountId: comment.user.account_id!,
-                        displayName: comment.user.display_name!,
-                        url: comment.user.links!.html!.href!,
-                        avatarUrl: comment.user.links!.avatar!.href!,
-                        mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`
-                    }
+                          accountId: comment.user.account_id!,
+                          displayName: comment.user.display_name!,
+                          url: comment.user.links!.html!.href!,
+                          avatarUrl: comment.user.links!.avatar!.href!,
+                          mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`
+                      }
                     : UnknownUser,
                 children: []
             })),
@@ -171,39 +164,44 @@ export class BitbucketIssuesApiImpl {
 
         const changes: any[] = (data.values || []).reverse();
 
-        const updatedChanges: any[] = changes
-            .map(change => {
-                let content = '';
-                if (change.changes!.state) {
-                    content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${change.changes!.state!.new}</strong></em></li>`;
-                }
-                if (change.changes!.kind) {
-                    content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${change.changes!.kind!.new}</strong></em></li>`;
-                }
-                if (change.changes!.priority) {
-                    content += `<li><em>changed issue priority from <strong>${change.changes!.priority!.old}</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
-                }
+        const updatedChanges: any[] = changes.map(change => {
+            let content = '';
+            if (change.changes!.state) {
+                content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${
+                    change.changes!.state!.new
+                }</strong></em></li>`;
+            }
+            if (change.changes!.kind) {
+                content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${
+                    change.changes!.kind!.new
+                }</strong></em></li>`;
+            }
+            if (change.changes!.priority) {
+                content += `<li><em>changed issue priority from <strong>${
+                    change.changes!.priority!.old
+                }</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
+            }
+            //@ts-ignore
+            if (change.changes!.attachment && change.changes!.attachment!.new) {
                 //@ts-ignore
-                if (change.changes!.attachment && change.changes!.attachment!.new) {
-                    //@ts-ignore
-                    content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
-                }
-                //@ts-ignore
-                if (change.changes!.assignee_account_id) {
-                    content += `<li><em>updated assignee</em></li>`;
-                }
-                if (change.changes!.content) {
-                    content += `<li><em>updated description</em></li>`;
-                }
-                if (change.changes!.title) {
-                    content += `<li><em>updated title</em></li>`;
-                }
+                content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
+            }
+            //@ts-ignore
+            if (change.changes!.assignee_account_id) {
+                content += `<li><em>updated assignee</em></li>`;
+            }
+            if (change.changes!.content) {
+                content += `<li><em>updated description</em></li>`;
+            }
+            if (change.changes!.title) {
+                content += `<li><em>updated title</em></li>`;
+            }
 
-                if (content === '') {
-                    content += `<li><em>updated issue</em></li>`;
-                }
-                return { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
-            });
+            if (content === '') {
+                content += `<li><em>updated issue</em></li>`;
+            }
+            return { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
+        });
 
         const updatedChangesAsComments: Comment[] = updatedChanges.map(change => ({
             id: change.id as string,
@@ -216,12 +214,12 @@ export class BitbucketIssuesApiImpl {
             updatedTs: change.created_on!,
             user: change.user
                 ? {
-                    accountId: change.user.account_id!,
-                    displayName: change.user.display_name!,
-                    url: change.user.links!.html!.href!,
-                    avatarUrl: change.user.links!.avatar!.href!,
-                    mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`
-                }
+                      accountId: change.user.account_id!,
+                      displayName: change.user.display_name!,
+                      url: change.user.links!.html!.href!,
+                      avatarUrl: change.user.links!.avatar!.href!,
+                      mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`
+                  }
                 : UnknownUser,
             children: [],
             tasks: []
@@ -233,83 +231,76 @@ export class BitbucketIssuesApiImpl {
     async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
-            {
-                type: 'issue_change',
-                changes: {
-                    state: {
-                        new: newStatus
-                    }
-                },
-                content: {
-                    raw: content
+        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`, {
+            type: 'issue_change',
+            changes: {
+                state: {
+                    new: newStatus
                 }
+            },
+            content: {
+                raw: content
             }
-        );
+        });
     }
 
     async postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
-            {
-                type: 'issue_change',
-                changes: {
-                    component: {
-                        new: newComponent
-                    }
+        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`, {
+            type: 'issue_change',
+            changes: {
+                component: {
+                    new: newComponent
                 }
             }
-        );
+        });
     }
 
     async postComment(issue: BitbucketIssue, content: string): Promise<void> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`,
-            {
-                type: 'issue_comment',
-                content: {
-                    raw: content
-                }
+        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`, {
+            type: 'issue_comment',
+            content: {
+                raw: content
             }
-        );
+        });
     }
 
     async assign(issue: BitbucketIssue, account_id?: string): Promise<void> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.put(
-            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`,
-            {
-                type: 'issue',
-                assignee: account_id
-                    ? {
-                        type: 'user',
-                        account_id: account_id
-                    }
-                    : null
+        await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`, {
+            type: 'issue',
+            assignee: account_id
+                ? {
+                      type: 'user',
+                      account_id: account_id
+                  }
+                : null
         });
     }
 
-    async create(site: BitbucketSite, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {
+    async create(
+        site: BitbucketSite,
+        title: string,
+        description: string,
+        kind: string,
+        priority: string
+    ): Promise<BitbucketIssue> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/issues`,
-            {
-                type: 'issue',
-                title: title,
-                content: {
-                    raw: description
-                },
-                //@ts-ignore
-                kind: kind, priority: priority
-            }
-        );
+        const { data } = await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues`, {
+            type: 'issue',
+            title: title,
+            content: {
+                raw: description
+            },
+            //@ts-ignore
+            kind: kind,
+            priority: priority
+        });
 
         return { site, data };
     }
@@ -323,5 +314,4 @@ export class BitbucketIssuesApiImpl {
     }
 
     // ---- END - Issue specific actions ----
-
 }

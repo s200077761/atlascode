@@ -1,16 +1,15 @@
-import { ConfigurationChangeEvent, commands } from "vscode";
-import { Container } from "../../container";
-import { configuration } from "../../config/configuration";
-import { PipelinesTree } from "./PipelinesTree";
-import { setCommandContext, CommandContext, PipelinesTreeViewId } from "../../constants";
-import { BitbucketContext } from "../../bitbucket/bbContext";
-import { PipelinesMonitor } from "./PipelinesMonitor";
-import { Commands } from "../../commands";
-import { BitbucketExplorer } from "../BitbucketExplorer";
-import { BaseTreeDataProvider } from "../Explorer";
+import { ConfigurationChangeEvent, commands } from 'vscode';
+import { Container } from '../../container';
+import { configuration } from '../../config/configuration';
+import { PipelinesTree } from './PipelinesTree';
+import { setCommandContext, CommandContext, PipelinesTreeViewId } from '../../constants';
+import { BitbucketContext } from '../../bitbucket/bbContext';
+import { PipelinesMonitor } from './PipelinesMonitor';
+import { Commands } from '../../commands';
+import { BitbucketExplorer } from '../BitbucketExplorer';
+import { BaseTreeDataProvider } from '../Explorer';
 
 export class PipelinesExplorer extends BitbucketExplorer {
-
     constructor(ctx: BitbucketContext) {
         super(ctx);
 
@@ -55,6 +54,9 @@ export class PipelinesExplorer extends BitbucketExplorer {
 
     private updateExplorerState() {
         const hasCloudRepos = this.ctx.getBitbucketCloudRepositories().length > 0;
-        setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled && hasCloudRepos);
+        setCommandContext(
+            CommandContext.PipelineExplorer,
+            Container.config.bitbucket.pipelines.explorerEnabled && hasCloudRepos
+        );
     }
 }

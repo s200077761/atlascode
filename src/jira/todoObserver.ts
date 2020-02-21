@@ -1,7 +1,7 @@
-import { CodeLens, Range, Position, TextDocument, CancellationToken } from "vscode";
-import { parseJiraIssueKeys } from "./issueKeyParser";
-import { Container } from "../container";
-import { Commands } from "../commands";
+import { CodeLens, Range, Position, TextDocument, CancellationToken } from 'vscode';
+import { parseJiraIssueKeys } from './issueKeyParser';
+import { Container } from '../container';
+import { Commands } from '../commands';
 
 interface LensMatch {
     document: TextDocument;
@@ -64,4 +64,3 @@ function findTodos(document: TextDocument) {
     }
     return matches;
 }
-

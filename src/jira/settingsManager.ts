@@ -1,14 +1,43 @@
 import { EpicFieldInfo } from '@atlassianlabs/jira-pi-common-models';
 import { IssueLinkType } from '@atlassianlabs/jira-pi-common-models/entities';
 import { Fields, readField } from '@atlassianlabs/jira-pi-meta-models/jira-meta';
-import { Disposable } from "vscode";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { epicsDisabled } from "./jiraCommon";
+import { Disposable } from 'vscode';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { Container } from '../container';
+import { Logger } from '../logger';
+import { epicsDisabled } from './jiraCommon';
 
-export const detailedIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
-export const minimalDefaultIssueFields: string[] = ["summary", "issuetype", "status", "priority", "description", "created", "updated", "parent", "subtasks", "issuelinks"];
+export const detailedIssueFields: string[] = [
+    'summary',
+    'description',
+    'comment',
+    'issuetype',
+    'parent',
+    'subtasks',
+    'issuelinks',
+    'status',
+    'created',
+    'reporter',
+    'assignee',
+    'labels',
+    'attachment',
+    'status',
+    'priority',
+    'components',
+    'fixVersions'
+];
+export const minimalDefaultIssueFields: string[] = [
+    'summary',
+    'issuetype',
+    'status',
+    'priority',
+    'description',
+    'created',
+    'updated',
+    'parent',
+    'subtasks',
+    'issuelinks'
+];
 
 export class JiraSettingsManager extends Disposable {
     private _epicStore: Map<string, EpicFieldInfo> = new Map<string, EpicFieldInfo>();
@@ -81,20 +110,26 @@ export class JiraSettingsManager extends Disposable {
             let epicName = undefined;
             let epicLink = undefined;
 
-            Object.values(allFields).filter(field => {
-                if (field.schema && field.schema.custom && (field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label'
-                    || field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link')) {
-                    return field;
-                }
-                return undefined;
-            }).forEach(field => {
-                // cfid example: customfield_10013
-                if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label') {
-                    epicName = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
-                } else if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link') {
-                    epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
-                }
-            });
+            Object.values(allFields)
+                .filter(field => {
+                    if (
+                        field.schema &&
+                        field.schema.custom &&
+                        (field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label' ||
+                            field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link')
+                    ) {
+                        return field;
+                    }
+                    return undefined;
+                })
+                .forEach(field => {
+                    // cfid example: customfield_10013
+                    if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label') {
+                        epicName = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
+                    } else if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link') {
+                        epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
+                    }
+                });
 
             if (epicName && epicLink) {
                 epicFields = {
@@ -103,7 +138,6 @@ export class JiraSettingsManager extends Disposable {
                     epicsEnabled: true
                 };
             }
-
         }
 
         return epicFields;
@@ -124,7 +158,7 @@ export class JiraSettingsManager extends Disposable {
         let allFields = await client.getFields();
         if (allFields) {
             allFields.forEach(field => {
-                const key = (field.key) ? field.key : field.id;
+                const key = field.key ? field.key : field.id;
                 fields[key] = readField(field);
             });
         }

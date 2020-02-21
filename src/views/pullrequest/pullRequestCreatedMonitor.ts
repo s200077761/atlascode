@@ -1,8 +1,8 @@
 import * as path from 'path';
-import * as vscode from "vscode";
-import { BitbucketContext } from "../../bitbucket/bbContext";
+import * as vscode from 'vscode';
+import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { Commands } from "../../commands";
+import { Commands } from '../../commands';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
@@ -34,15 +34,23 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             .then(allPRs => {
                 if (allPRs.length === 1) {
                     let repoName = path.basename(allPRs[0].site.repoSlug);
-                    vscode.window.showInformationMessage(`New pull request "${allPRs[0].data.title}" for repo "${repoName}"`, 'Show')
+                    vscode.window
+                        .showInformationMessage(
+                            `New pull request "${allPRs[0].data.title}" for repo "${repoName}"`,
+                            'Show'
+                        )
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
                                 vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, allPRs[0]);
                             }
                         });
                 } else if (allPRs.length > 0) {
-                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.site.repoSlug)))].join(", ");
-                    vscode.window.showInformationMessage(`New pull requests found for the following repositories: ${repoNames}`, 'Show')
+                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.site.repoSlug)))].join(', ');
+                    vscode.window
+                        .showInformationMessage(
+                            `New pull requests found for the following repositories: ${repoNames}`,
+                            'Show'
+                        )
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
                                 vscode.commands.executeCommand('workbench.view.extension.atlascode-drawer');

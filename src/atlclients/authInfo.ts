@@ -1,6 +1,5 @@
 'use strict';
 
-
 export enum AuthChangeType {
     Update = 'update',
     Remove = 'remove'
@@ -27,12 +26,12 @@ export interface Product {
 
 export const ProductJira = {
     name: 'Jira',
-    key: 'jira',
+    key: 'jira'
 };
 
 export const ProductBitbucket = {
     name: 'Bitbucket',
-    key: 'bitbucket',
+    key: 'bitbucket'
 };
 
 export enum OAuthProvider {
@@ -123,12 +122,12 @@ export const emptyUserInfo: UserInfo = {
     id: 'empty',
     displayName: 'empty',
     email: 'empty',
-    avatarUrl: 'empty',
+    avatarUrl: 'empty'
 };
 
 export const emptyProduct: Product = {
     name: 'empty',
-    key: 'empty',
+    key: 'empty'
 };
 
 export const emptySiteInfo: DetailedSiteInfo = {
@@ -141,7 +140,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     product: emptyProduct,
     isCloud: true,
     userId: 'empty',
-    credentialId: 'emtpy',
+    credentialId: 'emtpy'
 };
 
 export const emptyAccessibleResource: AccessibleResource = {
@@ -161,12 +160,15 @@ export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
 };
 
 export const emptyAuthInfo: AuthInfo = {
-    user: emptyUserInfo,
+    user: emptyUserInfo
 };
 
 export function isUpdateAuthEvent(a: AuthInfoEvent): a is UpdateAuthInfoEvent {
-    return a && (<UpdateAuthInfoEvent>a).type === AuthChangeType.Update
-        && isDetailedSiteInfo((<UpdateAuthInfoEvent>a).site);
+    return (
+        a &&
+        (<UpdateAuthInfoEvent>a).type === AuthChangeType.Update &&
+        isDetailedSiteInfo((<UpdateAuthInfoEvent>a).site)
+    );
 }
 
 export function isRemoveAuthEvent(a: AuthInfoEvent): a is RemoveAuthInfoEvent {
@@ -174,29 +176,33 @@ export function isRemoveAuthEvent(a: AuthInfoEvent): a is RemoveAuthInfoEvent {
 }
 
 export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
-    return a && (<DetailedSiteInfo>a).id !== undefined
-        && (<DetailedSiteInfo>a).name !== undefined
-        && (<DetailedSiteInfo>a).host !== undefined
-        && (<DetailedSiteInfo>a).baseLinkUrl !== undefined
-        && (<DetailedSiteInfo>a).baseApiUrl !== undefined;
+    return (
+        a &&
+        (<DetailedSiteInfo>a).id !== undefined &&
+        (<DetailedSiteInfo>a).name !== undefined &&
+        (<DetailedSiteInfo>a).host !== undefined &&
+        (<DetailedSiteInfo>a).baseLinkUrl !== undefined &&
+        (<DetailedSiteInfo>a).baseApiUrl !== undefined
+    );
 }
 
 export function isEmptySiteInfo(a: any): boolean {
-    return a && (<DetailedSiteInfo>a).id === 'empty'
-        && (<DetailedSiteInfo>a).name === 'empty'
-        && (<DetailedSiteInfo>a).host === 'empty'
-        && (<DetailedSiteInfo>a).baseLinkUrl === 'empty'
-        && (<DetailedSiteInfo>a).baseApiUrl === 'empty';
+    return (
+        a &&
+        (<DetailedSiteInfo>a).id === 'empty' &&
+        (<DetailedSiteInfo>a).name === 'empty' &&
+        (<DetailedSiteInfo>a).host === 'empty' &&
+        (<DetailedSiteInfo>a).baseLinkUrl === 'empty' &&
+        (<DetailedSiteInfo>a).baseApiUrl === 'empty'
+    );
 }
 
 export function isOAuthInfo(a: any): a is OAuthInfo {
-    return a && (<OAuthInfo>a).access !== undefined
-        && (<OAuthInfo>a).refresh !== undefined;
+    return a && (<OAuthInfo>a).access !== undefined && (<OAuthInfo>a).refresh !== undefined;
 }
 
 export function isBasicAuthInfo(a: any): a is BasicAuthInfo {
-    return a && (<BasicAuthInfo>a).username !== undefined
-        && (<BasicAuthInfo>a).password !== undefined;
+    return a && (<BasicAuthInfo>a).username !== undefined && (<BasicAuthInfo>a).password !== undefined;
 }
 
 export function getSecretForAuthInfo(info: any): string {
@@ -208,7 +214,7 @@ export function getSecretForAuthInfo(info: any): string {
         return info.password;
     }
 
-    return "";
+    return '';
 }
 
 export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined {

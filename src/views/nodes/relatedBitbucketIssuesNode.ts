@@ -13,9 +13,16 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<AbstractBaseNode | undefined> {
+    public static async create(
+        pr: PullRequest,
+        commits: Commit[],
+        allComments: Comment[]
+    ): Promise<AbstractBaseNode | undefined> {
         // TODO: [VSCODE-503] handle related issues across cloud/server
-        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
+        if (
+            !Container.siteManager.productHasAtLeastOneSite(ProductBitbucket) ||
+            !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled
+        ) {
             return undefined;
         }
         const issueKeys = await extractBitbucketIssueKeys(pr, commits, allComments);

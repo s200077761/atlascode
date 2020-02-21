@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
-import { Container } from "../container";
+import { Container } from '../container';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
-import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
-import { Logger } from "../logger";
-import { Pipeline, PipelineStep } from "../pipelines/model";
-import { PipelineInfo } from "../views/pipelines/PipelinesTree";
-import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
+import { PipelineData, StepMessageData } from '../ipc/pipelinesMessaging';
+import { Logger } from '../logger';
+import { Pipeline, PipelineStep } from '../pipelines/model';
+import { PipelineInfo } from '../views/pipelines/PipelinesTree';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
     private _pipelineInfo: PipelineInfo | undefined = undefined;
@@ -17,12 +17,11 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
     }
 
     public get title(): string {
-        return "Bitbucket Pipeline";
+        return 'Bitbucket Pipeline';
     }
 
     public get id(): string {
-        return "pipelineSummaryScreen";
-
+        return 'pipelineSummaryScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -43,7 +42,7 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
     }
 
     public async invalidate() {
-        if (this._pipelineInfo === undefined || this._pipelineInfo.pipelineUuid === "") {
+        if (this._pipelineInfo === undefined || this._pipelineInfo.pipelineUuid === '') {
             return;
         }
 
@@ -74,15 +73,17 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
             this.updateSteps(steps);
 
             steps.map(step => {
-                bbApi.pipelines!.getStepLog(this._pipelineInfo!.site, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
-                    const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
-                    logs.map((log, ix) => {
-                        if (ix < commands.length) {
-                            commands[ix].logs = log;
-                            this.updateSteps(steps);
-                        }
+                bbApi
+                    .pipelines!.getStepLog(this._pipelineInfo!.site, this._pipelineInfo!.pipelineUuid, step.uuid)
+                    .then(logs => {
+                        const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
+                        logs.map((log, ix) => {
+                            if (ix < commands.length) {
+                                commands[ix].logs = log;
+                                this.updateSteps(steps);
+                            }
+                        });
                     });
-                });
             });
         } catch (e) {
             Logger.error(e);
@@ -94,15 +95,17 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
     }
 
     public async updatePipeline(pipeline: Pipeline) {
-        if (this._panel) { this._panel.title = `Result for Pipeline ${pipeline.build_number}`; }
+        if (this._panel) {
+            this._panel.title = `Result for Pipeline ${pipeline.build_number}`;
+        }
         const msg = pipeline as PipelineData;
-        msg.type = "updatePipeline";
+        msg.type = 'updatePipeline';
         this.postMessage(msg);
     }
 
     public async updateSteps(steps: PipelineStep[]) {
         const msg = { steps: steps } as StepMessageData;
-        msg.type = "updateSteps";
+        msg.type = 'updateSteps';
         this.postMessage(msg);
     }
 

@@ -1,14 +1,13 @@
-import { CacheMap } from "../../util/cachemap";
-import { HTTPClient } from "../httpClient";
-import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi, UnknownUser } from "../model";
-import { CloudPullRequestApi, maxItemsSupported } from "./pullRequests";
+import { CacheMap } from '../../util/cachemap';
+import { HTTPClient } from '../httpClient';
+import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi, UnknownUser } from '../model';
+import { CloudPullRequestApi, maxItemsSupported } from './pullRequests';
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private repoCache: CacheMap = new CacheMap();
     private branchingModelCache: CacheMap = new CacheMap();
 
-    constructor(private client: HTTPClient) {
-    }
+    constructor(private client: HTTPClient) {}
 
     async getMirrorHosts(): Promise<string[]> {
         return [];
@@ -24,9 +23,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}`
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}`);
 
         const repo = CloudRepositoriesApi.toRepo(data);
         this.repoCache.setItem(cacheKey, repo);
@@ -34,11 +31,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
     }
 
     async getDevelopmentBranch(site: BitbucketSite): Promise<string> {
-
-        const [repo, branchingModel] = await Promise.all([
-            this.get(site),
-            this.getBranchingModel(site)
-        ]);
+        const [repo, branchingModel] = await Promise.all([this.get(site), this.getBranchingModel(site)]);
 
         return branchingModel?.development?.branch?.name ?? repo.mainbranch!;
     }
@@ -46,13 +39,10 @@ export class CloudRepositoriesApi implements RepositoriesApi {
     async getBranches(site: BitbucketSite): Promise<string[]> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/refs/branches`,
-            {
-                pagelen: 100,
-                fields: 'values.name'
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/refs/branches`, {
+            pagelen: 100,
+            fields: 'values.name'
+        });
 
         return data.values.map((val: any) => val.name);
     }
@@ -67,9 +57,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/branching-model`
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/branching-model`);
 
         this.branchingModelCache.setItem(cacheKey, data);
         return data;
@@ -78,14 +66,11 @@ export class CloudRepositoriesApi implements RepositoriesApi {
     async getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/commits`,
-            {
-                include: includeRef,
-                exclude: excludeRef,
-                pagelen: maxItemsSupported.commits
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/commits`, {
+            include: includeRef,
+            exclude: excludeRef,
+            pagelen: maxItemsSupported.commits
+        });
 
         const commits: any[] = data.values || [];
 
@@ -94,11 +79,9 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             message: commit.message!,
             ts: commit.date!,
             url: commit.links!.html!.href!,
-            htmlSummary: commit.summary ? commit.summary.html! : "",
-            rawSummary: commit.summary ? commit.summary.raw! : "",
-            author: commit.author
-                ? CloudPullRequestApi.toUserModel(commit.author!.user)
-                : UnknownUser
+            htmlSummary: commit.summary ? commit.summary.html! : '',
+            rawSummary: commit.summary ? commit.summary.raw! : '',
+            author: commit.author ? CloudPullRequestApi.toUserModel(commit.author!.user) : UnknownUser
         }));
     }
 

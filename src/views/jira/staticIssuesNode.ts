@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Resources } from '../../resources';
-import { JQLTreeDataProvider } from "./jqlTreeDataProvider";
+import { JQLTreeDataProvider } from './jqlTreeDataProvider';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import uuid from 'uuid';
 import { issueForKey } from '../../jira/issueForKey';
@@ -19,7 +19,14 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
         if (issueKeys.length > 0) {
             try {
                 const issue = await issueForKey(issueKeys[0]);
-                this.setJqlEntry({ id: uuid.v4(), enabled: true, name: 'related issues', query: `issuekey in (${issueKeys.join(',')})`, siteId: issue.siteDetails.id, monitor: false });
+                this.setJqlEntry({
+                    id: uuid.v4(),
+                    enabled: true,
+                    name: 'related issues',
+                    query: `issuekey in (${issueKeys.join(',')})`,
+                    siteId: issue.siteDetails.id,
+                    monitor: false
+                });
             } catch (e) {
                 Logger.error(new Error(`error fetching related jira issues: ${e}`));
             }

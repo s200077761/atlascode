@@ -1,4 +1,4 @@
-import { Action } from "./messaging";
+import { Action } from './messaging';
 
 export interface CopyPipelineLinkAction extends Action {
     action: 'copyPipelineLink';

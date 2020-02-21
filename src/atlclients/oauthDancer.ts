@@ -15,7 +15,16 @@ import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { Resources } from '../resources';
 import { ConnectionTimeout, Time } from '../util/time';
-import { AccessibleResource, emptyUserInfo, OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo, UserInfo } from './authInfo';
+import {
+    AccessibleResource,
+    emptyUserInfo,
+    OAuthProvider,
+    OAuthResponse,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo,
+    UserInfo
+} from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
 import { settingsUrl } from '../webviews/configWebview';
@@ -51,7 +60,7 @@ export class OAuthDancer implements Disposable {
         this._axios = axios.create({
             timeout: ConnectionTimeout,
             headers: {
-                "Accept-Encoding": "gzip, deflate"
+                'Accept-Encoding': 'gzip, deflate'
             }
         });
 
@@ -125,30 +134,52 @@ export class OAuthDancer implements Disposable {
         let app = express();
 
         app.get('/' + OAuthProvider.BitbucketCloud, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.BitbucketCloud, strategy: BitbucketProdStrategy, req: req, res: res });
+            this._oauthResponseEventEmitter.emit('response', {
+                provider: OAuthProvider.BitbucketCloud,
+                strategy: BitbucketProdStrategy,
+                req: req,
+                res: res
+            });
         });
 
         app.get('/' + OAuthProvider.BitbucketCloudStaging, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.BitbucketCloudStaging, strategy: BitbucketStagingStrategy, req: req, res: res });
+            this._oauthResponseEventEmitter.emit('response', {
+                provider: OAuthProvider.BitbucketCloudStaging,
+                strategy: BitbucketStagingStrategy,
+                req: req,
+                res: res
+            });
         });
 
         app.get('/' + OAuthProvider.JiraCloud, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.JiraCloud, strategy: JiraProdStrategy, req: req, res: res });
+            this._oauthResponseEventEmitter.emit('response', {
+                provider: OAuthProvider.JiraCloud,
+                strategy: JiraProdStrategy,
+                req: req,
+                res: res
+            });
         });
 
         app.get('/' + OAuthProvider.JiraCloudStaging, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.JiraCloudStaging, strategy: JiraStagingStrategy, req: req, res: res });
+            this._oauthResponseEventEmitter.emit('response', {
+                provider: OAuthProvider.JiraCloudStaging,
+                strategy: JiraStagingStrategy,
+                req: req,
+                res: res
+            });
         });
 
         app.get('/timeout', (req, res) => {
             let provider = req.query.provider;
             this._authErrors.set(provider, `'Authorization did not complete in the time alotted for '${provider}'`);
-            Logger.debug("oauth timed out", req.query);
-            res.send(Resources.html.get('authFailureHtml')!({
-                errMessage: 'Authorization did not complete in the time alotted.',
-                actionMessage: 'Please try again.',
-                vscodeurl: settingsUrl
-            }));
+            Logger.debug('oauth timed out', req.query);
+            res.send(
+                Resources.html.get('authFailureHtml')!({
+                    errMessage: 'Authorization did not complete in the time alotted.',
+                    actionMessage: 'Please try again.',
+                    vscodeurl: settingsUrl
+                })
+            );
         });
 
         return app;
@@ -165,40 +196,53 @@ export class OAuthDancer implements Disposable {
         const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
             const myState = state;
             const responseListener = async (respEvent: ResponseEvent) => {
-                const product = (respEvent.provider.startsWith('jira')) ? ProductJira : ProductBitbucket;
+                const product = respEvent.provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
-                if (respEvent.req.query && respEvent.req.query.code && respEvent.req.query.state && respEvent.req.query.state === myState) {
+                if (
+                    respEvent.req.query &&
+                    respEvent.req.query.code &&
+                    respEvent.req.query.state &&
+                    respEvent.req.query.state === myState
+                ) {
                     try {
                         const agent = getAgent(site);
-                        let tokens: Tokens = { accessToken: "", refreshToken: "" };
+                        let tokens: Tokens = { accessToken: '', refreshToken: '' };
                         let accessibleResources: AccessibleResource[] = [];
                         let user: UserInfo = emptyUserInfo;
 
                         if (product === ProductJira) {
                             tokens = await this.getJiraTokens(respEvent.strategy, respEvent.req.query.code, agent);
-                            accessibleResources = await this.getJiraResources(respEvent.strategy, tokens.accessToken, agent);
+                            accessibleResources = await this.getJiraResources(
+                                respEvent.strategy,
+                                tokens.accessToken,
+                                agent
+                            );
                             if (accessibleResources.length > 0) {
-                                user = await this.getJiraUser(respEvent.provider, tokens.accessToken, accessibleResources[0], agent);
+                                user = await this.getJiraUser(
+                                    respEvent.provider,
+                                    tokens.accessToken,
+                                    accessibleResources[0],
+                                    agent
+                                );
                             } else {
                                 throw new Error(`No accessible resources found for ${provider}`);
                             }
-
                         } else {
                             if (provider === OAuthProvider.BitbucketCloud) {
                                 accessibleResources.push({
                                     id: OAuthProvider.BitbucketCloud,
                                     name: ProductBitbucket.name,
                                     scopes: [],
-                                    avatarUrl: "",
-                                    url: "https://bitbucket.org"
+                                    avatarUrl: '',
+                                    url: 'https://bitbucket.org'
                                 });
                             } else {
                                 accessibleResources.push({
                                     id: OAuthProvider.BitbucketCloudStaging,
                                     name: ProductBitbucket.name,
                                     scopes: [],
-                                    avatarUrl: "",
-                                    url: "https://staging.bb-inf.net"
+                                    avatarUrl: '',
+                                    url: 'https://staging.bb-inf.net'
                                 });
                             }
 
@@ -208,10 +252,12 @@ export class OAuthDancer implements Disposable {
 
                         this._authsInFlight.delete(respEvent.provider);
 
-                        respEvent.res.send(Resources.html.get('authSuccessHtml')!({
-                            product: product,
-                            vscodeurl: callback
-                        }));
+                        respEvent.res.send(
+                            Resources.html.get('authSuccessHtml')!({
+                                product: product,
+                                vscodeurl: callback
+                            })
+                        );
 
                         const oauthResponse: OAuthResponse = {
                             access: tokens.accessToken,
@@ -221,15 +267,16 @@ export class OAuthDancer implements Disposable {
                         };
                         this.maybeShutdown();
                         resolve(oauthResponse);
-
                     } catch (err) {
                         this._authsInFlight.delete(respEvent.provider);
 
-                        respEvent.res.send(Resources.html.get('authFailureHtml')!({
-                            errMessage: `Error authenticating with ${provider}: ${err}`,
-                            actionMessage: 'Give it a moment and try again.',
-                            vscodeurl: settingsUrl
-                        }));
+                        respEvent.res.send(
+                            Resources.html.get('authFailureHtml')!({
+                                errMessage: `Error authenticating with ${provider}: ${err}`,
+                                actionMessage: 'Give it a moment and try again.',
+                                vscodeurl: settingsUrl
+                            })
+                        );
 
                         reject(`Error authenticating with ${provider}: ${err}`);
                     }
@@ -250,24 +297,26 @@ export class OAuthDancer implements Disposable {
             this._srv = http.createServer(this._app);
             const listenPromise = promisify(this._srv.listen.bind(this._srv));
             try {
-                await listenPromise(31415, () => { });
+                await listenPromise(31415, () => {});
                 Logger.debug('auth server started on port 31415');
             } catch (err) {
                 Logger.error(new Error(`Unable to start auth listener on localhost:31415: ${err}`));
                 return Promise.reject(`Unable to start auth listener on localhost:31415: ${err}`);
             }
 
-
             this.startShutdownChecker();
         }
 
         vscode.env.openExternal(vscode.Uri.parse(this.getAuthorizeURL(provider, state)));
 
-        return pTimeout<OAuthResponse, OAuthResponse>(cancelPromise, this._browserTimeout, (): Promise<OAuthResponse> => {
-            vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
-            return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
-        });
-
+        return pTimeout<OAuthResponse, OAuthResponse>(
+            cancelPromise,
+            this._browserTimeout,
+            (): Promise<OAuthResponse> => {
+                vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
+                return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
+            }
+        );
     }
 
     private async getJiraTokens(strategy: any, code: string, agent: { [k: string]: any }): Promise<Tokens> {
@@ -280,16 +329,16 @@ export class OAuthDancer implements Disposable {
             }
 
             const tokenResponse = await this._axios(strategy.tokenURL, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json'
                 },
                 data: JSON.stringify({
                     grant_type: 'authorization_code',
                     client_id: strategy.clientID,
                     client_secret: strategy.clientSecret,
                     code: code,
-                    redirect_uri: strategy.callbackURL,
+                    redirect_uri: strategy.callbackURL
                 }),
                 ...agent
             });
@@ -308,13 +357,13 @@ export class OAuthDancer implements Disposable {
             const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
 
             const tokenResponse = await this._axios(strategy.tokenURL, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     Authorization: `Basic ${basicAuth}`
                 },
                 data: `grant_type=authorization_code&code=${code}`,
-                ...agent,
+                ...agent
             });
 
             const data = tokenResponse.data;
@@ -326,18 +375,22 @@ export class OAuthDancer implements Disposable {
         }
     }
 
-    private async getJiraResources(strategy: any, accessToken: string, agent: { [k: string]: any }): Promise<AccessibleResource[]> {
+    private async getJiraResources(
+        strategy: any,
+        accessToken: string,
+        agent: { [k: string]: any }
+    ): Promise<AccessibleResource[]> {
         try {
             const resources: AccessibleResource[] = [];
 
             const resourcesResponse = await this._axios(strategy.accessibleResourcesURL, {
-                method: "GET",
+                method: 'GET',
                 headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
                     Authorization: `Bearer ${accessToken}`
                 },
-                ...agent,
+                ...agent
             });
 
             resourcesResponse.data.forEach((resource: AccessibleResource) => {
@@ -352,19 +405,24 @@ export class OAuthDancer implements Disposable {
         }
     }
 
-    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent: { [k: string]: any }): Promise<UserInfo> {
+    private async getJiraUser(
+        provider: OAuthProvider,
+        accessToken: string,
+        resource: AccessibleResource,
+        agent: { [k: string]: any }
+    ): Promise<UserInfo> {
         try {
-            let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
+            let apiUri = provider === OAuthProvider.JiraCloudStaging ? 'api.stg.atlassian.com' : 'api.atlassian.com';
             const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
 
             const userResponse = await this._axios(url, {
-                method: "GET",
+                method: 'GET',
                 headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
                     Authorization: `Bearer ${accessToken}`
                 },
-                ...agent,
+                ...agent
             });
 
             const data = userResponse.data;
@@ -373,7 +431,7 @@ export class OAuthDancer implements Disposable {
                 id: data.accountId,
                 displayName: data.displayName,
                 email: data.emailAddress,
-                avatarUrl: data.avatarUrls["48x48"],
+                avatarUrl: data.avatarUrls['48x48']
             };
         } catch (err) {
             const newErr = new Error(`Error fetching Jira user: ${err}`);
@@ -385,25 +443,25 @@ export class OAuthDancer implements Disposable {
     private async getBitbucketUser(strategy: any, accessToken: string, agent: { [k: string]: any }): Promise<UserInfo> {
         try {
             const userResponse = await this._axios(strategy.profileURL, {
-                method: "GET",
+                method: 'GET',
                 headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
                     Authorization: `Bearer ${accessToken}`
                 },
-                ...agent,
+                ...agent
             });
 
             let email = 'do-not-reply@atlassian.com';
             try {
                 const emailsResponse = await this._axios(strategy.emailsURL, {
-                    method: "GET",
+                    method: 'GET',
                     headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
                         Authorization: `Bearer ${accessToken}`
                     },
-                    ...agent,
+                    ...agent
                 });
 
                 if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
@@ -422,7 +480,7 @@ export class OAuthDancer implements Disposable {
                 id: userData.account_id,
                 displayName: userData.display_name,
                 email: email,
-                avatarUrl: userData.links.avatar.href,
+                avatarUrl: userData.links.avatar.href
             };
         } catch (err) {
             const newErr = new Error(`Error fetching Bitbucket user: ${err}`);
@@ -446,7 +504,7 @@ export class OAuthDancer implements Disposable {
     }
 
     private forceShutdownAll() {
-        this._authsInFlight.forEach((promise) => {
+        this._authsInFlight.forEach(promise => {
             promise.cancel();
         });
 
