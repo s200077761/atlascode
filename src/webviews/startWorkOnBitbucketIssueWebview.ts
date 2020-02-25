@@ -81,7 +81,6 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                     handled = true;
                     const linkUrl = this._state.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
-                    vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     bbIssueUrlCopiedEvent().then(e => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });

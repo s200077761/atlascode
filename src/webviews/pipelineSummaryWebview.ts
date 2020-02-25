@@ -123,7 +123,6 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
                     handled = true;
                     if (isCopyPipelineLinkAction(e)) {
                         await vscode.env.clipboard.writeText(e.href!);
-                        vscode.window.showInformationMessage(`Copied pipeline link to clipboard - ${e.href}`);
                     }
                     break;
                 }

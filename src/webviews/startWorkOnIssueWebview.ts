@@ -89,7 +89,6 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                     handled = true;
                     const linkUrl = `${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
-                    vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     issueUrlCopiedEvent(this._state.siteDetails.id).then(e => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });

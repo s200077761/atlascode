@@ -12,7 +12,7 @@ import {
 import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
 import FormData from 'form-data';
 import * as fs from 'fs';
-import { commands, env, window } from 'vscode';
+import { commands, env } from 'vscode';
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -267,7 +267,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
                     await env.clipboard.writeText(linkUrl);
-                    window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     issueUrlCopiedEvent(this._issue.siteDetails.id).then(e => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
