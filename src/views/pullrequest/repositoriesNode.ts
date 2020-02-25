@@ -106,12 +106,14 @@ export class RepositoriesNode extends AbstractBaseNode {
         currentChildren?: (PullRequestTitlesNode | NextPageNode)[]
     ): PullRequestTitlesNode[] {
         const prMap = new Map<string, { pr: PullRequest; node: PullRequestTitlesNode }>();
+        let numPRs = pullRequests.length;
         if (currentChildren) {
             const prNodes = currentChildren.filter(
                 child => child instanceof PullRequestTitlesNode
             ) as PullRequestTitlesNode[];
             prNodes.forEach(child => {
                 const pr = child.getPR();
+                numPRs++; //There were calls made for each of these PRs at some point, so to avoid rate-limit issues, we track these too
                 prMap.set(pr.data.id, { pr: pr, node: child });
             });
         }
@@ -122,23 +124,15 @@ export class RepositoriesNode extends AbstractBaseNode {
             if (!pr.site.details.isCloud) {
                 //We can preload server PRs even without caching if there are less than 10 of them. Otherwise, probably not a good idea because of
                 //varying bbserver rate limits
-                return new PullRequestTitlesNode(
-                    pr,
-                    Container.bitbucketContext.prCommentController,
-                    pullRequests.length <= 10
-                );
+                return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController, numPRs <= 10);
             }
 
             const prAndTreeNode = prMap.get(pr.data.id);
             if (prAndTreeNode && pr.data.updatedTs === prAndTreeNode.pr.data.updatedTs) {
                 return prAndTreeNode.node;
             } else {
-                //If there are more than 150 open pull requests, stop preloading them. We don't want to run into rate limit issues for bbcloud
-                return new PullRequestTitlesNode(
-                    pr,
-                    Container.bitbucketContext.prCommentController,
-                    pullRequests.length <= 150
-                );
+                //If there are more than 25 open pull requests, stop preloading them. We don't want to run into rate limit issues for bbcloud
+                return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController, numPRs <= 25);
             }
         });
     }

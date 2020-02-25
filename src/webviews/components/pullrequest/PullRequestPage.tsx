@@ -50,6 +50,7 @@ import {
     OpenBuildStatusAction,
     OpenDiffViewAction,
     PostComment,
+    Ready,
     RefreshPullRequest,
     UpdateApproval,
     UpdateTitle
@@ -104,7 +105,8 @@ type Emit =
     | OpenBuildStatusAction
     | RefreshPullRequest
     | FetchUsers
-    | OpenDiffViewAction;
+    | OpenDiffViewAction
+    | Ready;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -179,6 +181,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     constructor(props: any) {
         super(props);
         this.state = emptyState;
+
+        //This only executes once the javascript on the page is loaded, which ensures the controller doesn't
+        //send data before this page is able to receive it.
+        this.postMessage({
+            action: 'ready'
+        });
     }
 
     handleApprove = (status: ApprovalStatus) => {
@@ -669,7 +677,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     render() {
         if (!this.state.pr.pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
         } else if (!this.state.pr.pr && !this.state.isOnline) {
             return (

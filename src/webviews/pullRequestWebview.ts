@@ -52,6 +52,7 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _pr: PullRequest | undefined = undefined;
+    private readyForData: boolean = false;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -239,6 +240,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     }
                     break;
                 }
+                case 'ready': {
+                    this.readyForData = true;
+                    break;
+                }
                 case 'refreshPR': {
                     handled = true;
                     this.invalidate();
@@ -343,21 +348,32 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             this._panel.title = `Pull Request #${this._pr.data.id}`;
         }
 
+        //This promise gets resolved when this.readyForData is true (which occurs when the webview is finished loading)
+        const readyForDataPromise = this.isReadyForData();
         const bbApi = await clientForSite(this._pr.site);
 
         //The results of some of these promises are needed for future API calls, so we store them
         const prPromise = bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
-        const commentsPromise = bbApi.pullrequests.getComments(this._pr).then(paginatedComments => {
+        const commentsPromise = bbApi.pullrequests.getComments(this._pr).then(async paginatedComments => {
+            await readyForDataPromise;
             this.postMessage({ type: 'updateComments', comments: paginatedComments.data });
             return paginatedComments;
         });
-        const commitsPromise = bbApi.pullrequests.getCommits(this._pr);
+        const commitsPromise = bbApi.pullrequests.getCommits(this._pr).then(async commits => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateCommits', commits: commits });
+            return commits;
+        });
 
         //Other promises are not needed for later so we don't need to store them
-        bbApi.pullrequests.getTasks(this._pr).then(tasks => this.postMessage({ type: 'updateTasks', tasks: tasks }));
-        this.fetchChangedFiles(bbApi, this._pr).then(fileDiffs =>
-            this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs })
-        );
+        bbApi.pullrequests.getTasks(this._pr).then(async tasks => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateTasks', tasks: tasks });
+        });
+        this.fetchChangedFiles(bbApi, this._pr).then(async fileDiffs => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs });
+        });
 
         this._pr = await prPromise;
         const buildStatusPromise = bbApi.pullrequests.getBuildStatuses(this._pr);
@@ -382,13 +398,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             buildStatuses: await buildStatusPromise,
             mergeStrategies: await mergeStrategiesPromise
         };
+        await readyForDataPromise; //We can't send data until this promise is resolved
         this.postMessage(basicPRData);
-
-        //I don't understand why it's happening, but calling postMessage for the commits promise prior to the basicPRData promise postMessage seems to sometimes cause
-        //the loading spinner for commits to load indefinitely. Irritating, but perhaps something to be dealt with later...
-        commitsPromise.then(commits => {
-            this.postMessage({ type: 'updateCommits', commits: commits });
-        });
 
         //We need to wait for comments and commits to resolve before getting the related issues (the pr promise already resolved by this point)
         const [paginatedComments, commits] = await Promise.all([commentsPromise, commitsPromise]);
@@ -398,6 +409,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then(issues =>
             this.postMessage({ type: 'updateRelatedBitbucketIssues', relatedBitbucketIssues: issues })
         );
+    }
+
+    //Checks every 100ms if this.readyForData === true and resolves when it is
+    private isReadyForData() {
+        const checker = (resolve: () => void) => {
+            if (this.readyForData) {
+                resolve();
+            } else {
+                setTimeout(_ => checker(resolve), 100);
+            }
+        };
+
+        return new Promise(checker);
     }
 
     private async fetchMainIssue(
