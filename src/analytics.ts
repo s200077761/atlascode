@@ -9,7 +9,7 @@ import { Container } from './container';
 // Go to https://bitbucket.org/atlassianlabs/dataportal-cli/src/master/ and follow the instructions there.
 
 // Performing the above allows us to keep the analytics metatdata in source control. Therefore editing metadata directly
-// in the data-portal is discourage. However, the cannonical place for the metadata is 
+// in the data-portal is discourage. However, the cannonical place for the metadata is
 // https://data-portal.us-east-1.prod.public.atl-paas.net/analytics/registry?filter=externalProductIntegrations
 
 export const Registry = {
@@ -21,15 +21,15 @@ export const Registry = {
 
 class AnalyticsPlatform {
     private static nodeJsPlatformMapping = {
-        'aix': 'desktop',
-        'android': 'android',
-        'darwin': 'mac',
-        'freebsd': 'desktop',
-        'linux': 'linux',
-        'openbsd': 'desktop',
-        'sunos': 'desktop',
-        'win32': 'windows',
-        'cygwin': 'windows'
+        aix: 'desktop',
+        android: 'android',
+        darwin: 'mac',
+        freebsd: 'desktop',
+        linux: 'linux',
+        openbsd: 'desktop',
+        sunos: 'desktop',
+        win32: 'windows',
+        cygwin: 'windows'
     };
 
     static for(p: string): string {
@@ -44,11 +44,15 @@ export async function installedEvent(version: string): Promise<TrackEvent> {
 }
 
 export async function upgradedEvent(version: string, previousVersion: string): Promise<TrackEvent> {
-    return trackEvent('upgraded', 'atlascode', { attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion } });
+    return trackEvent('upgraded', 'atlascode', {
+        attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion }
+    });
 }
 
 export async function launchedEvent(location: string): Promise<TrackEvent> {
-    return trackEvent('launched', 'atlascode', { attributes: { machineId: Container.machineId, extensionLocation: location } });
+    return trackEvent('launched', 'atlascode', {
+        attributes: { machineId: Container.machineId, extensionLocation: location }
+    });
 }
 
 export async function featureChangeEvent(featureId: string, enabled: boolean): Promise<TrackEvent> {
@@ -57,11 +61,15 @@ export async function featureChangeEvent(featureId: string, enabled: boolean): P
 }
 
 export async function authenticatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'authenticated', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: site.product.name } });
+    return instanceTrackEvent(site, 'authenticated', 'atlascode', {
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+    });
 }
 
 export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'unauthenticated', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: site.product.name } });
+    return instanceTrackEvent(site, 'unauthenticated', 'atlascode', {
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+    });
 }
 
 // Jira issue events
@@ -86,8 +94,16 @@ export async function issueWorkStartedEvent(site: DetailedSiteInfo): Promise<Tra
     return instanceTrackEvent(site, 'workStarted', 'issue');
 }
 
-export async function issueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'updated', 'issue', { actionSubjectId: issueKey, attributes: { fieldName: fieldName, fieldKey: fieldKey } });
+export async function issueUpdatedEvent(
+    site: DetailedSiteInfo,
+    issueKey: string,
+    fieldName: string,
+    fieldKey: string
+): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'updated', 'issue', {
+        actionSubjectId: issueKey,
+        attributes: { fieldName: fieldName, fieldKey: fieldKey }
+    });
 }
 
 export async function startIssueCreationEvent(source: string, product: Product): Promise<TrackEvent> {
@@ -181,11 +197,19 @@ export async function pmfClosed(): Promise<TrackEvent> {
 
 // Screen Events
 
-export async function viewScreenEvent(screenName: string, site?: DetailedSiteInfo, product?: Product): Promise<ScreenEvent> {
-    let screenEvent = instanceType({
-        origin: 'desktop',
-        platform: AnalyticsPlatform.for(process.platform),
-    }, site, product);
+export async function viewScreenEvent(
+    screenName: string,
+    site?: DetailedSiteInfo,
+    product?: Product
+): Promise<ScreenEvent> {
+    let screenEvent = instanceType(
+        {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform)
+        },
+        site,
+        product
+    );
 
     if (screenName === 'atlascodeWelcomeScreen') {
         screenEvent = excludeFromActivity(screenEvent);
@@ -197,7 +221,7 @@ export async function viewScreenEvent(screenName: string, site?: DetailedSiteInf
         screenEvent: screenEvent
     };
 
-    const tenantId: string | undefined = (site) ? site.id : undefined;
+    const tenantId: string | undefined = site ? site.id : undefined;
 
     return anyUserOrAnonymous<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId));
 }
@@ -322,7 +346,6 @@ export async function configureJQLButtonEvent(source: string): Promise<UIEvent> 
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
-
 //TODO: There is no reference to this function...
 export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {
     const e = {
@@ -406,11 +429,16 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
 
 // Helper methods
 
-async function instanceTrackEvent(site: DetailedSiteInfo, action: string, actionSubject: string, eventProps: any = {}): Promise<TrackEvent> {
-
-    let event: TrackEvent = (site.isCloud && site.product.key === ProductJira.key) ?
-        await tenantTrackEvent(site.id, action, actionSubject, instanceType(eventProps, site))
-        : await trackEvent(action, actionSubject, instanceType(eventProps, site));
+async function instanceTrackEvent(
+    site: DetailedSiteInfo,
+    action: string,
+    actionSubject: string,
+    eventProps: any = {}
+): Promise<TrackEvent> {
+    let event: TrackEvent =
+        site.isCloud && site.product.key === ProductJira.key
+            ? await tenantTrackEvent(site.id, action, actionSubject, instanceType(eventProps, site))
+            : await trackEvent(action, actionSubject, instanceType(eventProps, site));
 
     return event;
 }
@@ -424,7 +452,12 @@ async function trackEvent(action: string, actionSubject: string, eventProps: any
     return anyUserOrAnonymous<TrackEvent>(e);
 }
 
-async function tenantTrackEvent(tenentId: string, action: string, actionSubject: string, eventProps: any = {}): Promise<TrackEvent> {
+async function tenantTrackEvent(
+    tenentId: string,
+    action: string,
+    actionSubject: string,
+    eventProps: any = {}
+): Promise<TrackEvent> {
     const e = {
         tenantIdType: 'cloudId',
         tenantId: tenentId,
@@ -488,7 +521,6 @@ function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Pro
     }
 
     return newObj;
-
 }
 
 function excludeFromActivity(eventProps: Object): Object {

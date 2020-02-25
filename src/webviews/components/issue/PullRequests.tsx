@@ -1,13 +1,16 @@
-import * as React from "react";
+import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Button from '@atlaskit/button';
-import Lozenge from "@atlaskit/lozenge";
-import { PullRequestData } from "../../../bitbucket/model";
+import Lozenge from '@atlaskit/lozenge';
+import { PullRequestData } from '../../../bitbucket/model';
 
-export default class PullRequests extends React.Component<{
-    pullRequests: PullRequestData[]
-    onClick: (pr: any) => any;
-}, {}> {
+export default class PullRequests extends React.Component<
+    {
+        pullRequests: PullRequestData[];
+        onClick: (pr: any) => any;
+    },
+    {}
+> {
     private avatar(pr: PullRequestData): any {
         const url = pr.author.avatarUrl;
         if (url) {
@@ -19,28 +22,29 @@ export default class PullRequests extends React.Component<{
     private prState(pr: any): any {
         switch (pr.state) {
             case 'MERGED':
-                return <Lozenge appearance='success'>Merged</Lozenge>;
+                return <Lozenge appearance="success">Merged</Lozenge>;
             case 'SUPERSEDED':
-                return <Lozenge appearance='moved'>Superseded</Lozenge>;
+                return <Lozenge appearance="moved">Superseded</Lozenge>;
             case 'OPEN':
-                return <Lozenge appearance='inprogress'>Open</Lozenge>;
+                return <Lozenge appearance="inprogress">Open</Lozenge>;
             case 'DECLINED':
-                return <Lozenge appearance='removed'>Declined</Lozenge>;
+                return <Lozenge appearance="removed">Declined</Lozenge>;
             default:
                 return <div />;
         }
     }
 
     render() {
-        return (
-            this.props.pullRequests.map((pr: PullRequestData) => {
-                return <div style={{ display: 'flex', alignItems: 'center' }} >
-
+        return this.props.pullRequests.map((pr: PullRequestData) => {
+            return (
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                     {this.avatar(pr)}
-                    <Button appearance='link' onClick={() => this.props.onClick(pr)}>{`${pr.destination!.repo!.displayName} - Pull request #${pr.id}`}</Button>
+                    <Button appearance="link" onClick={() => this.props.onClick(pr)}>{`${
+                        pr.destination!.repo!.displayName
+                    } - Pull request #${pr.id}`}</Button>
                     {this.prState(pr)}
-                </div>;
-            })
-        );
+                </div>
+            );
+        });
     }
 }

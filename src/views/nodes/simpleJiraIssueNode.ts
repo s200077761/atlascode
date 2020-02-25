@@ -4,7 +4,6 @@ import { emptySiteInfo } from '../../atlclients/authInfo';
 import { IssueNode } from './issueNode';
 
 export class SimpleJiraIssueNode extends IssueNode {
-
     private command: Command | undefined;
 
     constructor(private text: string, command?: Command) {
@@ -21,7 +20,6 @@ export class SimpleJiraIssueNode extends IssueNode {
         }
 
         return treeItem;
-
     }
 
     async getChildren(element?: IssueNode): Promise<IssueNode[]> {

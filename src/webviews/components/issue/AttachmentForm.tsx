@@ -13,31 +13,33 @@ type ItemData = {
 };
 
 const Delete = (data: ItemData) => {
-    return (<div className='ac-delete' onClick={() => data.delfunc(data.file)}>
-        <TrashIcon label='trash' />
-    </div>);
+    return (
+        <div className="ac-delete" onClick={() => data.delfunc(data.file)}>
+            <TrashIcon label="trash" />
+        </div>
+    );
 };
 
 const Thumbnail = (data: ItemData) => {
     if (data.file.isImage) {
         return (
-            <div className='ac-attachment-thumb-img-inline'>
-                <img
-                    src={data.file.preview}
-                />
+            <div className="ac-attachment-thumb-img-inline">
+                <img src={data.file.preview} />
             </div>
         );
     }
 
-    return (<div className='ac-attachment-thumb-img-inline'>
-        <FileIcon label="no preview" />
-    </div>);
+    return (
+        <div className="ac-attachment-thumb-img-inline">
+            <FileIcon label="no preview" />
+        </div>
+    );
 };
-const Filename = (data: ItemData) => <p style={{ display: "inline" }}>{data.file.name}</p>;
+const Filename = (data: ItemData) => <p style={{ display: 'inline' }}>{data.file.name}</p>;
 const Size = (data: ItemData) => {
-    const numSize = (typeof data.file.size === 'number') ? data.file.size : parseFloat(data.file.size);
+    const numSize = typeof data.file.size === 'number' ? data.file.size : parseFloat(data.file.size);
     const size = filesize(numSize);
-    return (<p style={{ display: "inline" }}>{size}</p>);
+    return <p style={{ display: 'inline' }}>{size}</p>;
 };
 
 interface FileWithPreview extends FileWithPath {
@@ -80,48 +82,46 @@ const filesReducer = (state: FileWithPreview[], action: ActionType) => {
     }
 };
 
-const dialogEditor = (files: any[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any, scheme: string) => {
+const dialogEditor = (
+    files: any[],
+    dispatch: any,
+    getRootProps: (props?: any | undefined) => any,
+    getInputProps: (props?: any | undefined) => any,
+    scheme: string
+) => {
     return (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone' })}>
-                <div className='ac-attachment-instructions'>
-                    <img className='ac-attachment-filesbg' src={`${scheme}images/files-bg.png`} />
-                    <div className='ac-attachment-drag-and-button'>
-                        <div className='ac-attachment-drag-text'>
+                <div className="ac-attachment-instructions">
+                    <img className="ac-attachment-filesbg" src={`${scheme}images/files-bg.png`} />
+                    <div className="ac-attachment-drag-and-button">
+                        <div className="ac-attachment-drag-text">
                             <span>Drag and drop your files anywhere or</span>
                         </div>
                         <input {...getInputProps()} />
-                        <p className='ac-attachment-upload-button'>Click to upload</p>
+                        <p className="ac-attachment-upload-button">Click to upload</p>
                     </div>
                 </div>
             </div>
-            <div className='ac-attachment-thumbs-container'>
-                {
-                    files.map(file => (
-                        <div className='ac-attachment-thumb' key={file.name}>
-                            <div className='ac-attachment-thumb-item'>
-                                <div className='ac-attachment-thumb-inner'>
-                                    <div className='ac-attachment-thumb-img-wrapper'>
-                                        {file.isImage &&
-                                            <img
-                                                src={file.preview}
-                                                className='ac-attachment-thumb-img'
-                                            />
-                                        }
-                                        {!file.isImage &&
-                                            <FileIcon label="no preview" />
-                                        }
-                                        <div className='ac-attachment-overlay-container'>
-                                            <div className='ac-attachment-overlay'>
-                                                <div className='ac-attachment-filename-container'>
-                                                    <div className='ac-attachment-filename'>
-                                                        {file.name}
-                                                    </div>
-                                                </div>
-                                                <div className='ac-attachment-delete-container'>
-                                                    <div className='ac-attachment-delete' onClick={() => dispatch({ type: 'removeFile', payload: file })}>
-                                                        <TrashIcon label='trash' />
-                                                    </div>
+            <div className="ac-attachment-thumbs-container">
+                {files.map(file => (
+                    <div className="ac-attachment-thumb" key={file.name}>
+                        <div className="ac-attachment-thumb-item">
+                            <div className="ac-attachment-thumb-inner">
+                                <div className="ac-attachment-thumb-img-wrapper">
+                                    {file.isImage && <img src={file.preview} className="ac-attachment-thumb-img" />}
+                                    {!file.isImage && <FileIcon label="no preview" />}
+                                    <div className="ac-attachment-overlay-container">
+                                        <div className="ac-attachment-overlay">
+                                            <div className="ac-attachment-filename-container">
+                                                <div className="ac-attachment-filename">{file.name}</div>
+                                            </div>
+                                            <div className="ac-attachment-delete-container">
+                                                <div
+                                                    className="ac-attachment-delete"
+                                                    onClick={() => dispatch({ type: 'removeFile', payload: file })}
+                                                >
+                                                    <TrashIcon label="trash" />
                                                 </div>
                                             </div>
                                         </div>
@@ -129,23 +129,28 @@ const dialogEditor = (files: any[], dispatch: any, getRootProps: (props?: any | 
                                 </div>
                             </div>
                         </div>
-                    ))
-                }
+                    </div>
+                ))}
             </div>
         </div>
     );
 };
 
-const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any) => {
+const inlineEditor = (
+    files: FileWithPreview[],
+    dispatch: any,
+    getRootProps: (props?: any | undefined) => any,
+    getInputProps: (props?: any | undefined) => any
+) => {
     return (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone-inline' })}>
-                <div className='ac-attachment-instructions'>
-                    <div className='ac-attachment-filesbg-inline'>
-                        <UploadIcon label='upload' />
+                <div className="ac-attachment-instructions">
+                    <div className="ac-attachment-filesbg-inline">
+                        <UploadIcon label="upload" />
                     </div>
-                    <div className='ac-attachment-drag-and-button'>
-                        <div className='ac-attachment-drag-text-inline'>
+                    <div className="ac-attachment-drag-and-button">
+                        <div className="ac-attachment-drag-text-inline">
                             <span>Drop files or click to browse</span>
                         </div>
                         <input {...getInputProps()} />
@@ -160,7 +165,7 @@ const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (pr
                         id: file.path,
                         content: {
                             file: file,
-                            delfunc: () => dispatch({ type: 'removeFile', payload: file }),
+                            delfunc: () => dispatch({ type: 'removeFile', payload: file })
                         }
                     };
                 })}
@@ -180,24 +185,27 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
                 } else {
                     return Object.assign(file, { preview: '', isImage: false });
                 }
-
             });
 
             dispatch({ type: 'addFiles', payload: newFiles });
         }
     });
 
-    useEffect(() => () => {
-        // Make sure to revoke the data uris to avoid memory leaks
-        files.forEach(file => URL.revokeObjectURL(file.preview));
-    }, [files]);
+    useEffect(
+        () => () => {
+            // Make sure to revoke the data uris to avoid memory leaks
+            files.forEach(file => URL.revokeObjectURL(file.preview));
+        },
+        [files]
+    );
 
-    useEffect(() => { onFilesChanged(files, field); }, [field, files, onFilesChanged]);
+    useEffect(() => {
+        onFilesChanged(files, field);
+    }, [field, files, onFilesChanged]);
 
     if (isInline) {
         return inlineEditor(files, dispatch, getRootProps, getInputProps);
     }
 
     return dialogEditor(files, dispatch, getRootProps, getInputProps, scheme);
-
 };

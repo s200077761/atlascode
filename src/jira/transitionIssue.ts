@@ -1,13 +1,18 @@
-import { isIssueKeyAndSite, isMinimalIssue, MinimalIssueOrKeyAndSite, Transition } from "@atlassianlabs/jira-pi-common-models";
-import * as vscode from "vscode";
-import { issueTransitionedEvent } from "../analytics";
-import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
-import { Commands } from "../commands";
-import { Container } from "../container";
-import { Logger } from "../logger";
+import {
+    isIssueKeyAndSite,
+    isMinimalIssue,
+    MinimalIssueOrKeyAndSite,
+    Transition
+} from '@atlassianlabs/jira-pi-common-models';
+import * as vscode from 'vscode';
+import { issueTransitionedEvent } from '../analytics';
+import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
+import { Commands } from '../commands';
+import { Container } from '../container';
+import { Logger } from '../logger';
 
 export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>, transition: Transition) {
-    let issueKey: string = "";
+    let issueKey: string = '';
     let site: DetailedSiteInfo = emptySiteInfo;
 
     if (isMinimalIssue(issueOrKey)) {
@@ -36,7 +41,9 @@ async function performTranstion(issueKey: string, transition: Transition, site: 
 
         vscode.commands.executeCommand(Commands.RefreshJiraExplorer);
 
-        issueTransitionedEvent(site, issueKey).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        issueTransitionedEvent(site, issueKey).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
     } catch (err) {
         Logger.error(err);
         throw err;

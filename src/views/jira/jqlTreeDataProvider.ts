@@ -18,7 +18,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     private _jqlEntry: JQLEntry | undefined;
     private _jqlSite: DetailedSiteInfo | undefined;
 
-    private _emptyState = "No issues";
+    private _emptyState = 'No issues';
     private _emptyStateCommand: Command | undefined;
     protected _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
     public get onDidChangeTreeData(): Event<AbstractBaseNode> {
@@ -32,7 +32,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             this._jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
         }
 
-        if (emptyState && emptyState !== "") {
+        if (emptyState && emptyState !== '') {
             this._emptyState = emptyState;
         }
 
@@ -48,9 +48,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     setEmptyState(text: string) {
-        this._emptyState = text.trim() === ''
-            ? 'No issues'
-            : text;
+        this._emptyState = text.trim() === '' ? 'No issues' : text;
     }
 
     refresh() {
@@ -68,7 +66,13 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
     async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            return [new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })];
+            return [
+                new SimpleJiraIssueNode('Please login to Jira', {
+                    command: Commands.ShowConfigPage,
+                    title: 'Login to Jira',
+                    arguments: [ProductJira]
+                })
+            ];
         }
         if (parent) {
             return parent.getChildren();
@@ -86,12 +90,12 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         if (Container.siteManager.productHasAtLeastOneSite(ProductJira) && this._jqlEntry && this._jqlSite) {
             const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
 
-            // We already have everything that matches the JQL. The subtasks likely include things that 
+            // We already have everything that matches the JQL. The subtasks likely include things that
             // don't match the query so we get rid of them.
             newIssues.forEach(i => {
                 i.subtasks = [];
             });
-    
+
             if (Container.config.jira.explorer.nestSubtasks) {
                 this._issues = await this.constructIssueTree(newIssues);
             } else {
@@ -100,7 +104,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
             return this.flattenIssueList(this._issues);
         }
-        
+
         return [];
     }
 
@@ -113,7 +117,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             } else if (isMinimalIssue(issue) && Array.isArray(issue.epicChildren) && issue.epicChildren.length > 0) {
                 //Issue is an epic, so append the issue and the flattened subtasks
                 return [...issueAccumulator, issue, ...this.flattenIssueList(issue.epicChildren)];
-            } 
+            }
             //The issue is a regular issue, so just append the issue
             return [...issueAccumulator, issue];
         }, []);
@@ -123,7 +127,9 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return node.getTreeItem();
     }
 
-    private async constructIssueTree(jqlIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+    private async constructIssueTree(
+        jqlIssues: MinimalIssue<DetailedSiteInfo>[]
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         // epics don't have children filled in and children only have a ref to the parent key
         // we need to fill in the children and fetch the parents of any orphans
         const [epics, epicChildrenKeys] = await this.resolveEpics(jqlIssues);
@@ -146,7 +152,9 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return [...rootIssues, ...epics];
     }
 
-    private async fetchMissingParentIssues(newIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+    private async fetchMissingParentIssues(
+        newIssues: MinimalIssue<DetailedSiteInfo>[]
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (newIssues.length < 1) {
             return [];
         }
@@ -156,18 +164,20 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
         const site = newIssues[0].siteDetails;
         const parentIssues = await Promise.all(
-            missingParentKeys
-                .map(async issueKey => {
-                    const parent = await fetchMinimalIssue(issueKey, site);
-                    // we only need the parent information here, we already have all the subtasks that satisfy the jql query
-                    parent.subtasks = [];
-                    return parent;
-                }));
+            missingParentKeys.map(async issueKey => {
+                const parent = await fetchMinimalIssue(issueKey, site);
+                // we only need the parent information here, we already have all the subtasks that satisfy the jql query
+                parent.subtasks = [];
+                return parent;
+            })
+        );
 
         return parentIssues;
     }
 
-    private async resolveEpics(allIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<[MinimalIssue<DetailedSiteInfo>[], string[]]> {
+    private async resolveEpics(
+        allIssues: MinimalIssue<DetailedSiteInfo>[]
+    ): Promise<[MinimalIssue<DetailedSiteInfo>[], string[]]> {
         const allIssueKeys = allIssues.map(i => i.key);
         const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
         const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
@@ -181,20 +191,22 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }
 
         let finalEpics: MinimalIssue<DetailedSiteInfo>[] = await Promise.all(
-            epics
-                .map(async epic => {
-                    if (epic.epicChildren.length < 1) {
-                        epic.epicChildren = allIssues.filter(i => i.epicLink === epic.key);
-                    }
+            epics.map(async epic => {
+                if (epic.epicChildren.length < 1) {
+                    epic.epicChildren = allIssues.filter(i => i.epicLink === epic.key);
+                }
 
-                    epicChildKeys.push(...epic.epicChildren.map(child => child.key));
-                    return epic;
-                }));
+                epicChildKeys.push(...epic.epicChildren.map(child => child.key));
+                return epic;
+            })
+        );
 
         return [finalEpics, epicChildKeys];
     }
 
-    private async fetchEpicIssues(childIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+    private async fetchEpicIssues(
+        childIssues: MinimalIssue<DetailedSiteInfo>[]
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (childIssues.length < 1) {
             return [];
         }
@@ -202,18 +214,18 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const parentKeys: string[] = Array.from(new Set(childIssues.map(i => i.epicLink!)));
 
         const parentIssues = await Promise.all(
-            parentKeys
-                .map(async issueKey => {
-                    const parent = await fetchMinimalIssue(issueKey, site);
-                    return parent;
-                }));
+            parentKeys.map(async issueKey => {
+                const parent = await fetchMinimalIssue(issueKey, site);
+                return parent;
+            })
+        );
 
         return parentIssues;
     }
 
     private nodesForIssues(): IssueNode[] {
         if (this._issues && this._issues.length > 0) {
-            return this._issues.map((issue) => new IssueNode(issue));
+            return this._issues.map(issue => new IssueNode(issue));
         } else {
             return [new SimpleJiraIssueNode(this._emptyState)];
         }

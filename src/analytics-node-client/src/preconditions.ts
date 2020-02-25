@@ -1,6 +1,6 @@
 'use strict';
 
-import { TrackEvent, UIEvent, ScreenEvent } from "./types";
+import { TrackEvent, UIEvent, ScreenEvent } from './types';
 import * as tenantTypes from './constants/tenant-type';
 import * as userTypes from './constants/user-type';
 
@@ -31,7 +31,15 @@ function validateUIEvent({ userIdType, userId, anonymousId, tenantIdType, tenant
     }
 }
 
-function validateScreenEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, name, screenEvent }: ScreenEvent) {
+function validateScreenEvent({
+    userIdType,
+    userId,
+    anonymousId,
+    tenantIdType,
+    tenantId,
+    name,
+    screenEvent
+}: ScreenEvent) {
     try {
         requireValidUserData({ userIdType, userId, anonymousId });
         requireValidTenantData({ tenantId, tenantIdType });
@@ -45,7 +53,7 @@ function validateScreenEvent({ userIdType, userId, anonymousId, tenantIdType, te
     }
 }
 
-function requireValidTenantData({ tenantId, tenantIdType }: { tenantId: string, tenantIdType: string }) {
+function requireValidTenantData({ tenantId, tenantIdType }: { tenantId: string; tenantIdType: string }) {
     if (tenantId) {
         requireValue(tenantIdType, 'tenantIdType');
     }
@@ -60,17 +68,23 @@ function requireValidTenantData({ tenantId, tenantIdType }: { tenantId: string, 
     }
 }
 
-function requireValidUserData({ userIdType, userId, anonymousId }: { userIdType: string, userId?: string, anonymousId?: string }) {
+function requireValidUserData({
+    userIdType,
+    userId,
+    anonymousId
+}: {
+    userIdType: string;
+    userId?: string;
+    anonymousId?: string;
+}) {
     validateUserIdType({ userIdType, userId });
 
     if (!userId && !anonymousId) {
-        throw new Error(
-            'At least one set of identifiers must be passed - userIdType and userId, or anonymousId'
-        );
+        throw new Error('At least one set of identifiers must be passed - userIdType and userId, or anonymousId');
     }
 }
 
-function validateUserIdType({ userIdType, userId }: { userIdType: string, userId?: string }) {
+function validateUserIdType({ userIdType, userId }: { userIdType: string; userId?: string }) {
     if (userId) {
         requireValue(userIdType, 'userIdType');
     }

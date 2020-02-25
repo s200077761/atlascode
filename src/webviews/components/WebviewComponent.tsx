@@ -11,7 +11,7 @@ interface VsCodeApi {
 
 declare function acquireVsCodeApi(): VsCodeApi;
 
-export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends React.Component<P, S> { }
+export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends React.Component<P, S> {}
 // WebviewComponent is the base React component for creating a webview in vscode.
 // This handles comms between vscode and react.
 // Generic Types:
@@ -104,9 +104,13 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
         this._api.postMessage(e);
     }
 
-    protected postMessageWithEventPromise(send: any, waitForEvent: string, timeout: number, nonce?: string): Promise<any> {
+    protected postMessageWithEventPromise(
+        send: any,
+        waitForEvent: string,
+        timeout: number,
+        nonce?: string
+    ): Promise<any> {
         this._api.postMessage(send);
         return OnMessageEventPromise(waitForEvent, timeout, nonce);
     }
-
 }

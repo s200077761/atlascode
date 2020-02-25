@@ -1,15 +1,16 @@
-import { version } from "vscode";
-import { SiteManager } from "../siteManager";
-import { CredentialManager } from "../atlclients/authStore";
-import { AuthInfo, ProductJira, ProductBitbucket } from "../atlclients/authInfo";
+import { version } from 'vscode';
+import { SiteManager } from '../siteManager';
+import { CredentialManager } from '../atlclients/authStore';
+import { AuthInfo, ProductJira, ProductBitbucket } from '../atlclients/authInfo';
 
-const keychainServiceNameV2 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV2" : "atlascode-authinfoV2";
+const keychainServiceNameV2 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV2' : 'atlascode-authinfoV2';
 
 export class V2toV3Migrator {
-    constructor(private _siteManager: SiteManager,
+    constructor(
+        private _siteManager: SiteManager,
         private _credentialManager: CredentialManager,
-        private _deletePreviousVersion: boolean) {
-    }
+        private _deletePreviousVersion: boolean
+    ) {}
 
     public async convertLegacyAuthInfo() {
         const jiraSites = this._siteManager.getSitesAvailable(ProductJira);
@@ -34,8 +35,14 @@ export class V2toV3Migrator {
         }
     }
 
-    private async getV2CredentialsFromKeychain(productKey: string, credentialId: string): Promise<AuthInfo | undefined> {
-        const infoDict: ({ [k: string]: AuthInfo } | undefined) = await this._credentialManager.getRawKeychainItem(keychainServiceNameV2, productKey);
+    private async getV2CredentialsFromKeychain(
+        productKey: string,
+        credentialId: string
+    ): Promise<AuthInfo | undefined> {
+        const infoDict: { [k: string]: AuthInfo } | undefined = await this._credentialManager.getRawKeychainItem(
+            keychainServiceNameV2,
+            productKey
+        );
         if (infoDict) {
             return infoDict[credentialId];
         }

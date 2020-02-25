@@ -1,5 +1,5 @@
-import { AuthInfo, DetailedSiteInfo, SiteInfo } from "../atlclients/authInfo";
-import { Action } from "./messaging";
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../atlclients/authInfo';
+import { Action } from './messaging';
 
 export enum FeedbackType {
     Bug = 'bug',
@@ -62,9 +62,12 @@ export interface FetchSearchJiraFiltersAction extends Action {
 }
 
 export function isFetchJqlDataAction(a: Action): a is FetchJqlDataAction {
-    return a && (<FetchJqlDataAction>a).site !== undefined
-        && (<FetchJqlDataAction>a).path !== undefined
-        && (<FetchJqlDataAction>a).path !== '';
+    return (
+        a &&
+        (<FetchJqlDataAction>a).site !== undefined &&
+        (<FetchJqlDataAction>a).path !== undefined &&
+        (<FetchJqlDataAction>a).path !== ''
+    );
 }
 
 export function isFetchJiraFiltersAction(a: Action): a is FetchJiraFiltersAction {
@@ -72,24 +75,27 @@ export function isFetchJiraFiltersAction(a: Action): a is FetchJiraFiltersAction
 }
 
 export function isFetchSearchJiraFiltersAction(a: Action): a is FetchSearchJiraFiltersAction {
-    return a && (<FetchSearchJiraFiltersAction>a).site !== undefined
-        && (<FetchSearchJiraFiltersAction>a).query !== undefined;
+    return (
+        a &&
+        (<FetchSearchJiraFiltersAction>a).site !== undefined &&
+        (<FetchSearchJiraFiltersAction>a).query !== undefined
+    );
 }
 
 export function isLogoutAuthAction(a: Action): a is LogoutAuthAction {
-    return (<LogoutAuthAction>a).detailedSiteInfo !== undefined
-        && (<LogoutAuthAction>a).action === 'logout';
+    return (<LogoutAuthAction>a).detailedSiteInfo !== undefined && (<LogoutAuthAction>a).action === 'logout';
 }
 
 export function isLoginAuthAction(a: Action): a is LoginAuthAction {
-    return (<LoginAuthAction>a).siteInfo !== undefined
-        && (<LoginAuthAction>a).authInfo !== undefined
-        && (<LoginAuthAction>a).action === 'login';
+    return (
+        (<LoginAuthAction>a).siteInfo !== undefined &&
+        (<LoginAuthAction>a).authInfo !== undefined &&
+        (<LoginAuthAction>a).action === 'login'
+    );
 }
 
 export function isSaveSettingsAction(a: Action): a is SaveSettingsAction {
-    return a && (<SaveSettingsAction>a).changes !== undefined
-        && (<SaveSettingsAction>a).target !== undefined;
+    return a && (<SaveSettingsAction>a).changes !== undefined && (<SaveSettingsAction>a).target !== undefined;
 }
 
 export function isOpenJsonAction(a: Action): a is OpenJsonAction {

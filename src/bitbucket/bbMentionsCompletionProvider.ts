@@ -3,9 +3,7 @@ import { PRFileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 import { clientForSite } from './bbUtils';
 
-
 export class BitbucketMentionsCompletionProvider implements CompletionItemProvider {
-
     async provideCompletionItems(doc: TextDocument, pos: Position) {
         const activePullRequestUri = window.visibleTextEditors
             .map(textEditor => textEditor.document.uri)
@@ -24,8 +22,9 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
         const bbApi = await clientForSite(site);
         const users = await bbApi.pullrequests.getReviewers(site, triggerWord.slice(1));
 
-        users.push(...participants.filter(participant =>
-            !users.some(user => user.accountId === participant.accountId)));
+        users.push(
+            ...participants.filter(participant => !users.some(user => user.accountId === participant.accountId))
+        );
 
         return users.map(user => {
             const item = new CompletionItem(user.displayName, CompletionItemKind.Constant);

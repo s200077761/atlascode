@@ -57,10 +57,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
 
-
-        Container.context.subscriptions.push(
-            Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this),
-        );
+        Container.context.subscriptions.push(Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this));
 
         // Note: this is supe rlightweight and does nothing until you call start()
         this.ws = new UIWebsocket(13988);
@@ -84,7 +81,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
 
     hide() {
-        if (this._panel === undefined) { return; }
+        if (this._panel === undefined) {
+            return;
+        }
 
         this._panel.dispose();
     }
@@ -100,7 +99,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     enableFindWidget: true,
                     enableCommandUris: true,
                     enableScripts: true,
-                    localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build')), Uri.file(path.join(this._extensionPath, 'images'))]
+                    localResourceRoots: [
+                        Uri.file(path.join(this._extensionPath, 'build')),
+                        Uri.file(path.join(this._extensionPath, 'images'))
+                    ]
                 }
             );
 
@@ -115,7 +117,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
                 this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
-                this.ws,
+                this.ws
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);
@@ -123,7 +125,6 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this._panel.webview.html = this._getHtmlForWebview(this.id);
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
-
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
@@ -135,13 +136,17 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.postMessage({ type: 'pmfStatus', showPMF: shouldShowSurvey });
 
             if (shouldShowSurvey) {
-                viewScreenEvent("atlascodePmfBanner", this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                viewScreenEvent('atlascodePmfBanner', this.siteOrUndefined).then(e => {
+                    Container.analyticsClient.sendScreenEvent(e);
+                });
             }
 
             this.invalidate().then(() => {
                 if (!this._viewEventSent) {
                     this._viewEventSent = true;
-                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then(e => {
+                        Container.analyticsClient.sendScreenEvent(e);
+                    });
                 }
             });
         }
@@ -157,17 +162,23 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     return true;
                 }
                 case 'pmfOpen': {
-                    viewScreenEvent("atlascodePmf", this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                    viewScreenEvent('atlascodePmf', this.siteOrUndefined).then(e => {
+                        Container.analyticsClient.sendScreenEvent(e);
+                    });
                     return true;
                 }
                 case 'pmfLater': {
                     Container.pmfStats.snoozeSurvey();
-                    pmfSnoozed().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    pmfSnoozed().then(e => {
+                        Container.analyticsClient.sendTrackEvent(e);
+                    });
                     return true;
                 }
                 case 'pmfNever': {
                     Container.pmfStats.touchSurveyed();
-                    pmfClosed().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    pmfClosed().then(e => {
+                        Container.analyticsClient.sendTrackEvent(e);
+                    });
                     return true;
                 }
                 case 'pmfSubmit': {
@@ -184,20 +195,25 @@ export abstract class AbstractReactWebview implements ReactWebview {
 
     protected formatErrorReason(e: any, title?: string): any {
         if (e.response) {
-            if (e.response.data && e.response.data !== "") {
-                return (title) ? { ...e.response.data, ...{ title: title } } : e.response.data;
+            if (e.response.data && e.response.data !== '') {
+                return title ? { ...e.response.data, ...{ title: title } } : e.response.data;
             }
-        } else if (e.message && e.stderr) { // git errors
-            return (title) ? { title: title, errorMessages: [e.message, e.stderr] } : { title: e.message, errorMessages: [e.stderr] };
+        } else if (e.message && e.stderr) {
+            // git errors
+            return title
+                ? { title: title, errorMessages: [e.message, e.stderr] }
+                : { title: e.message, errorMessages: [e.stderr] };
         } else if (e.message) {
-            return (title) ? { title: title, errorMessages: [e.message] } : e.message;
+            return title ? { title: title, errorMessages: [e.message] } : e.message;
         }
 
-        return (title) ? { title: title, errorMessages: [`${e}`] } : e;
+        return title ? { title: title, errorMessages: [`${e}`] } : e;
     }
 
     protected postMessage(message: any) {
-        if (this._panel === undefined) { return false; }
+        if (this._panel === undefined) {
+            return false;
+        }
 
         const result = this._panel!.webview.postMessage(message);
 
@@ -209,7 +225,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
 
     protected onPanelDisposed() {
-        if (this._disposablePanel) { this._disposablePanel.dispose(); }
+        if (this._disposablePanel) {
+            this._disposablePanel.dispose();
+        }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
     }
@@ -223,12 +241,18 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
 
     private _getHtmlForWebview(viewName: string) {
-        const manifest = JSON.parse(fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString());
+        const manifest = JSON.parse(
+            fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString()
+        );
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];
 
-        const scriptUri = Uri.file(path.join(this._extensionPath, 'build', mainScript)).with({ scheme: 'vscode-resource' });
-        const styleUri = Uri.file(path.join(this._extensionPath, 'build', mainStyle)).with({ scheme: 'vscode-resource' });
+        const scriptUri = Uri.file(path.join(this._extensionPath, 'build', mainScript)).with({
+            scheme: 'vscode-resource'
+        });
+        const styleUri = Uri.file(path.join(this._extensionPath, 'build', mainStyle)).with({
+            scheme: 'vscode-resource'
+        });
         const tmpl = Resources.html.get('reactHtml');
 
         if (tmpl) {
@@ -236,11 +260,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
-                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' }),
+                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' })
             });
         } else {
             return Resources.htmlNotFound({ resource: 'reactHtml' });
         }
-
     }
 }
