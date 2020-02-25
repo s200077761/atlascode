@@ -31,8 +31,15 @@ export interface TransitionIssueAction extends Action {
 export interface IssueCommentAction extends Action {
     action: 'comment';
     issue: IssueKeyAndSite<DetailedSiteInfo>;
-    comment: string;
+    commentBody: string;
+    commentId?: string;
     restriction?: CommentVisibility;
+}
+
+export interface IssueDeleteCommentAction extends Action {
+    action: 'deleteComment';
+    issue: IssueKeyAndSite<DetailedSiteInfo>;
+    commentId: string;
 }
 
 export interface IssueAssignAction extends Action {
@@ -165,7 +172,11 @@ export function isSetIssueType(a: Action): a is SetIssueTypeAction {
 }
 
 export function isIssueComment(a: Action): a is IssueCommentAction {
-    return (<IssueCommentAction>a).comment !== undefined && (<IssueCommentAction>a).issue !== undefined;
+    return (<IssueCommentAction>a).commentBody !== undefined && (<IssueCommentAction>a).issue !== undefined;
+}
+
+export function isIssueDeleteComment(a: Action): a is IssueDeleteCommentAction {
+    return (<IssueDeleteCommentAction>a).commentId !== undefined && (<IssueDeleteCommentAction>a).issue !== undefined;
 }
 
 export function isIssueAssign(a: Action): a is IssueAssignAction {

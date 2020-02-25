@@ -1,5 +1,6 @@
 import { EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
 import {
+    Comment,
     createEmptyMinimalIssue,
     emptyUser,
     isEmptyUser,
@@ -29,6 +30,7 @@ import {
     isCreateWorklog,
     isDeleteByIDAction,
     isIssueComment,
+    isIssueDeleteComment,
     isOpenStartWorkPageAction,
     isTransitionIssue,
     isUpdateVoteAction,
@@ -320,8 +322,23 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                     if (isIssueComment(msg)) {
                         handled = true;
                         try {
-                            const res = await postComment(msg.issue, msg.comment, msg.restriction);
-                            this._editUIData.fieldValues['comment'].comments.push(res);
+                            if (msg.commentId) {
+                                const res = await postComment(
+                                    msg.issue,
+                                    msg.commentBody,
+                                    msg.commentId,
+                                    msg.restriction
+                                );
+                                const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
+                                comments.splice(
+                                    comments.findIndex(value => value.id === msg.commentId),
+                                    1,
+                                    res
+                                );
+                            } else {
+                                const res = await postComment(msg.issue, msg.commentBody, undefined, msg.restriction);
+                                this._editUIData.fieldValues['comment'].comments.push(res);
+                            }
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
@@ -331,7 +348,34 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({
                                 type: 'error',
-                                reason: this.formatErrorReason(e, 'Error adding comment'),
+                                reason: this.formatErrorReason(e, 'Error posting comment'),
+                                nonce: msg.nonce
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'deleteComment': {
+                    if (isIssueDeleteComment(msg)) {
+                        handled = true;
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.issue.siteDetails);
+                            await client.deleteComment(msg.issue.key, msg.commentId);
+                            const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
+                            comments.splice(
+                                comments.findIndex(value => value.id === msg.commentId),
+                                1
+                            );
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: { comment: this._editUIData.fieldValues['comment'], nonce: msg.nonce }
+                            });
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting comment: ${e}`));
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Error deleting comment'),
                                 nonce: msg.nonce
                             });
                         }

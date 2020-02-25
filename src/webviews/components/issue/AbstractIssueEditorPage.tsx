@@ -106,7 +106,7 @@ export abstract class AbstractIssueEditorPage<
     private commentInputRef: HTMLTextAreaElement;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {};
-    protected handleCommentSave = (newValue: string, restriction?: CommentVisibility) => {};
+    protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {};
 
     // react-select has issues and doesn't stop propagation on click events when you provide
     // a custom option component.  e.g. it calls this twice, so we have to debounce.
@@ -219,12 +219,12 @@ export abstract class AbstractIssueEditorPage<
     };
 
     private handleExternalCommentSave = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue, undefined);
+        this.handleCreateComment(this.state.commentInputValue);
         this.setState({ commentInputValue: '' });
     };
 
     private handleInternalCommentSave = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue, JsdInternalCommentVisibility);
+        this.handleCreateComment(this.state.commentInputValue, JsdInternalCommentVisibility);
         this.setState({ commentInputValue: '' });
     };
 
