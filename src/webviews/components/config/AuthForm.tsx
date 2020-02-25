@@ -181,7 +181,7 @@ export default class AuthForm extends PureComponent<
     };
 
     onContextPathEnableChange = (e: any) => {
-        this.setState({ useContextPath: e.target.checked });
+        this.setState({ useContextPath: e.target.checked }, () => this.setReadyToSave(true));
     };
 
     onContextPathChange = (e: any) => {
