@@ -7,12 +7,12 @@ import * as FieldValidators from '../fieldValidators';
 
 export type SummaryAndIssueType = {
     summary: string;
-    issuetype: { id: string; };
+    issuetype: { id: string };
 };
 
 type Props = {
-    subtaskTypes: IssueType[],
-    label: string,
+    subtaskTypes: IssueType[];
+    label: string;
     onSave: (val: SummaryAndIssueType) => void;
     isLoading: boolean;
 };
@@ -30,15 +30,20 @@ interface State {
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><img src={props.data.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
+            <img src={props.data.iconUrl} width="24" height="24" />
+            <span style={{ marginLeft: '10px' }}>{props.label}</span>
+        </div>
     </Option>
 );
 
 const IconValue = (props: any) => (
     <components.SingleValue {...props}>
-        <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
-    </components.SingleValue >
-
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src={props.data.iconUrl} width="16" height="16" />
+            <span style={{ marginLeft: '10px' }}>{props.data.name}</span>
+        </div>
+    </components.SingleValue>
 );
 
 export default class InlineSubtaskEditor extends React.Component<Props, State> {
@@ -52,7 +57,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
             isLoading: false,
             inputValue: '',
             editorContainerClassname: 'ac-hidden',
-            selectedIssueType: (props.subtaskTypes.length > 0) ? props.subtaskTypes[0] : emptyIssueType
+            selectedIssueType: props.subtaskTypes.length > 0 ? props.subtaskTypes[0] : emptyIssueType
         };
     }
 
@@ -91,32 +96,30 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
     };
 
     handleSave = (val: string) => {
-        this.setState({ inputValue: "", isEditing: false, editorContainerClassname: 'ac-hidden' });
+        this.setState({ inputValue: '', isEditing: false, editorContainerClassname: 'ac-hidden' });
 
-        this.props.onSave(
-            {
-                summary: val,
-                issuetype: { id: this.state.selectedIssueType.id }
-            }
-        );
-
+        this.props.onSave({
+            summary: val,
+            issuetype: { id: this.state.selectedIssueType.id }
+        });
     };
 
     render() {
         return (
             <React.Fragment>
-                <div className='label-and-button'>
-                    <label className='ac-field-label' htmlFor='subtasks-editor'>{this.props.label}</label>
-                    <button className='ac-inline-add-button'
+                <div className="label-and-button">
+                    <label className="ac-field-label" htmlFor="subtasks-editor">
+                        {this.props.label}
+                    </label>
+                    <button
+                        className="ac-inline-add-button"
                         onClick={this.handleOpenInlineEditor}
                         disabled={this.state.isEditing || this.state.isLoading}
                     />
                 </div>
-                {this.state.isLoading &&
-                    <Spinner size="small" />
-                }
+                {this.state.isLoading && <Spinner size="small" />}
                 <div className={this.state.editorContainerClassname}>
-                    {this.state.isEditing &&
+                    {this.state.isEditing && (
                         <div style={{ width: '30%' }}>
                             <Select
                                 defaultValue={this.state.selectedIssueType}
@@ -130,19 +133,23 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
                                 onChange={this.handleIssueTypeChange}
                             />
                         </div>
-                    }
+                    )}
                     <EdiText
-                        type='text'
+                        type="text"
                         value={this.state.inputValue}
                         onSave={this.handleSave}
                         onCancel={this.handleCancelInlineEdit}
                         validation={FieldValidators.isValidString}
-                        validationMessage='sub-task summary is required'
-                        inputProps={{ className: 'ac-inputField', placeholder: 'What needs to be done?', style: { width: '100%' } }}
-                        mainContainerClassName='ac-inline-edit-main_container-left-margin'
-                        editButtonClassName='ac-hidden'
-                        cancelButtonClassName='ac-inline-cancel-button'
-                        saveButtonClassName='ac-inline-save-button'
+                        validationMessage="sub-task summary is required"
+                        inputProps={{
+                            className: 'ac-inputField',
+                            placeholder: 'What needs to be done?',
+                            style: { width: '100%' }
+                        }}
+                        mainContainerClassName="ac-inline-edit-main_container-left-margin"
+                        editButtonClassName="ac-hidden"
+                        cancelButtonClassName="ac-inline-cancel-button"
+                        saveButtonClassName="ac-inline-save-button"
                         editing={this.state.isEditing}
                     />
                 </div>

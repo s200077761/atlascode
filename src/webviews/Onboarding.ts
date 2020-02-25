@@ -1,5 +1,11 @@
 import { commands, env, version } from 'vscode';
-import { authenticateButtonEvent, doneButtonEvent, logoutButtonEvent, moreSettingsButtonEvent, featureChangeEvent } from '../analytics';
+import {
+    authenticateButtonEvent,
+    doneButtonEvent,
+    logoutButtonEvent,
+    moreSettingsButtonEvent,
+    featureChangeEvent
+} from '../analytics';
 import { DetailedSiteInfo, isBasicAuthInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
@@ -10,7 +16,9 @@ import { Logger } from '../logger';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { AbstractReactWebview } from './abstractWebview';
 import { configuration } from '../config/configuration';
-const onboardingUrl = version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openOnboarding' : 'vscode://atlassian.atlascode/openOnboarding';
+const onboardingUrl = version.endsWith('-insider')
+    ? 'vscode-insiders://atlassian.atlascode/openOnboarding'
+    : 'vscode://atlassian.atlascode/openOnboarding';
 
 interface ChangeEnabledAction extends Action {
     changes: {
@@ -18,21 +26,20 @@ interface ChangeEnabledAction extends Action {
     };
 }
 export class OnboardingWebview extends AbstractReactWebview {
-
     constructor(extensionPath: string) {
         super(extensionPath);
 
         Container.context.subscriptions.push(
-            Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this)
         );
     }
 
     public get title(): string {
-        return "Getting Started";
+        return 'Getting Started';
     }
 
     public get id(): string {
-        return "atlascodeOnboardingScreen";
+        return 'atlascodeOnboardingScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -76,10 +83,15 @@ export class OnboardingWebview extends AbstractReactWebview {
     }
 
     private separateCloudFromServer(siteList: DetailedSiteInfo[]): [DetailedSiteInfo[], DetailedSiteInfo[]] {
-        return siteList.reduce((cloudAndServerSites: [DetailedSiteInfo[], DetailedSiteInfo[]], currentSite) => {
-            currentSite.isCloud ? cloudAndServerSites[0].push(currentSite) : cloudAndServerSites[1].push(currentSite);
-            return cloudAndServerSites;
-        }, [[], []]);
+        return siteList.reduce(
+            (cloudAndServerSites: [DetailedSiteInfo[], DetailedSiteInfo[]], currentSite) => {
+                currentSite.isCloud
+                    ? cloudAndServerSites[0].push(currentSite)
+                    : cloudAndServerSites[1].push(currentSite);
+                return cloudAndServerSites;
+            },
+            [[], []]
+        );
     }
 
     private isChangeEnabledAction(a: Action): a is ChangeEnabledAction {
@@ -91,22 +103,30 @@ export class OnboardingWebview extends AbstractReactWebview {
         if (!handled) {
             switch (msg.action) {
                 case 'openSettings': {
-                    moreSettingsButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                    moreSettingsButtonEvent(this.id).then(e => {
+                        Container.analyticsClient.sendUIEvent(e);
+                    });
                     commands.executeCommand(Commands.ShowConfigPage);
                     break;
                 }
                 case 'closePage': {
-                    doneButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                    doneButtonEvent(this.id).then(e => {
+                        Container.analyticsClient.sendUIEvent(e);
+                    });
                     this.hide();
                     break;
                 }
                 case 'changeEnabled': {
-                    if(this.isChangeEnabledAction(msg)){
+                    if (this.isChangeEnabledAction(msg)) {
                         for (const key in msg.changes) {
                             const value = msg.changes[key];
                             await configuration.updateEffective(key, value, null, true);
                             this.invalidate();
-                            featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
+                            featureChangeEvent(key, value).then(e => {
+                                Container.analyticsClient
+                                    .sendTrackEvent(e)
+                                    .catch(r => Logger.debug('error sending analytics'));
+                            });
                         }
                     }
                 }
@@ -119,12 +139,17 @@ export class OnboardingWebview extends AbstractReactWebview {
                             } catch (e) {
                                 let err = new Error(`Authentication error: ${e}`);
                                 Logger.error(err);
-                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Authentication error') });
+                                this.postMessage({
+                                    type: 'error',
+                                    reason: this.formatErrorReason(e, 'Authentication error')
+                                });
                             }
                         } else {
                             authenticateCloud(msg.siteInfo, onboardingUrl);
                         }
-                        authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                        authenticateButtonEvent(this.id).then(e => {
+                            Container.analyticsClient.sendUIEvent(e);
+                        });
                     }
                     break;
                 }
@@ -132,7 +157,9 @@ export class OnboardingWebview extends AbstractReactWebview {
                     handled = true;
                     if (isLogoutAuthAction(msg)) {
                         clearAuth(msg.detailedSiteInfo);
-                        logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                        logoutButtonEvent(this.id).then(e => {
+                            Container.analyticsClient.sendUIEvent(e);
+                        });
                     }
                     break;
                 }

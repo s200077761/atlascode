@@ -1,8 +1,16 @@
-import { Disposable, Event, EventEmitter, Memento } from "vscode";
-import { AuthInfoEvent, DetailedSiteInfo, emptySiteInfo, isRemoveAuthEvent, Product, ProductBitbucket, ProductJira, SiteInfo } from "./atlclients/authInfo";
-import { configuration } from "./config/configuration";
-import { Container } from "./container";
-
+import { Disposable, Event, EventEmitter, Memento } from 'vscode';
+import {
+    AuthInfoEvent,
+    DetailedSiteInfo,
+    emptySiteInfo,
+    isRemoveAuthEvent,
+    Product,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo
+} from './atlclients/authInfo';
+import { configuration } from './config/configuration';
+import { Container } from './container';
 
 export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
@@ -30,9 +38,7 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(ProductJira.key, []);
         this._sitesAvailable.set(ProductBitbucket.key, []);
 
-        this._disposable = Disposable.from(
-            Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this)
-        );
+        this._disposable = Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this));
     }
 
     dispose() {
@@ -164,11 +170,12 @@ export class SiteManager extends Disposable {
             return site;
         }
 
-        return this.getSitesAvailable(product)
-            .find(site => Container.bitbucketContext
-                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !== undefined
+        return this.getSitesAvailable(product).find(site =>
+            Container.bitbucketContext
+                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !==
+                  undefined
                 : false
-            );
+        );
     }
 
     public getSiteForId(product: Product, id: string): DetailedSiteInfo | undefined {

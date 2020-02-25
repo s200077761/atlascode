@@ -10,31 +10,19 @@ const {
 } = require('../../src/preconditions');
 
 describe('unit/preconditions', () => {
-
     const userId = 'my-user-id';
     const userIdType = 'atlassianAccount';
     const tenantId = 'my-tenant-id';
     const tenantIdType = 'cloudId';
     const anonymousId = 'my-anonymous-id';
 
+    const trackFields = ['source', 'action', 'actionSubject'];
 
-    const trackFields = [
-        'source',
-        'action',
-        'actionSubject'
-    ];
+    const uiFields = ['action', 'actionSubject'];
 
-    const uiFields = [
-        'action',
-        'actionSubject'
-    ];
+    const screenFields = ['origin', 'platform'];
 
-    const screenFields = [
-        'origin',
-        'platform'
-    ];
-
-    trackFields.forEach((trackField) => {
+    trackFields.forEach(trackField => {
         it(`fails if a track event's ${trackField} is null`, () => {
             const trackEvent = buildTrackEvent({ [trackField]: null });
 
@@ -44,14 +32,15 @@ describe('unit/preconditions', () => {
                 tenantId,
                 tenantIdType,
                 trackEvent
-            }).then(() => fail('Expected exception to be thrown'))
-                .catch((err) => {
+            })
+                .then(() => fail('Expected exception to be thrown'))
+                .catch(err => {
                     expect(err.message).toEqual(`Value trackEvent.${trackField} cannot be undefined`);
                 });
         });
     });
 
-    uiFields.forEach((uiField) => {
+    uiFields.forEach(uiField => {
         it(`fails if a UI event's ${uiField} is null`, () => {
             const uiEvent = buildUIEvent({ [uiField]: null });
 
@@ -61,14 +50,15 @@ describe('unit/preconditions', () => {
                 tenantId,
                 tenantIdType,
                 uiEvent
-            }).then(() => fail('Expected exception to be thrown'))
-                .catch((err) => {
+            })
+                .then(() => fail('Expected exception to be thrown'))
+                .catch(err => {
                     expect(err.message).toEqual(`Value uiEvent.${uiField} cannot be undefined`);
                 });
         });
     });
 
-    screenFields.forEach((screenField) => {
+    screenFields.forEach(screenField => {
         it(`fails if a screen event's ${screenField} is null`, () => {
             const screenEvent = buildScreenEvent({ [screenField]: null });
 
@@ -79,8 +69,9 @@ describe('unit/preconditions', () => {
                 tenantIdType,
                 name: 'my-name',
                 screenEvent
-            }).then(() => fail('Expected exception to be thrown'))
-                .catch((err) => {
+            })
+                .then(() => fail('Expected exception to be thrown'))
+                .catch(err => {
                     expect(err.message).toEqual(`Value screenEvent.${screenField} cannot be undefined`);
                 });
         });
@@ -93,12 +84,12 @@ describe('unit/preconditions', () => {
             tenantId,
             tenantIdType,
             screenEvent: buildScreenEvent()
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Value name cannot be undefined');
             });
     });
-
 
     it('fails if an unknown userType is specified', () => {
         expect(() => {
@@ -201,13 +192,13 @@ describe('unit/preconditions', () => {
         });
     });
 
-
     it('user data is validated in track events', () => {
         return validateTrackEvent({
             userIdType: 'blah',
             userId
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Unknown userIdType blah');
             });
     });
@@ -218,19 +209,20 @@ describe('unit/preconditions', () => {
             userId,
             tenantId,
             tenantIdType: 'foobar'
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Unknown tenantIdType foobar');
             });
     });
-
 
     it('user data is validated in UI events', () => {
         return validateUIEvent({
             userIdType: 'blah',
             userId
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Unknown userIdType blah');
             });
     });
@@ -241,19 +233,20 @@ describe('unit/preconditions', () => {
             userId,
             tenantId,
             tenantIdType: 'foobar'
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Unknown tenantIdType foobar');
             });
     });
-
 
     it('user data is validated in screen events', () => {
         return validateScreenEvent({
             userIdType: 'blah',
             userId
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Unknown userIdType blah');
             });
     });
@@ -264,8 +257,9 @@ describe('unit/preconditions', () => {
             userId,
             tenantId,
             tenantIdType: 'foobar'
-        }).then(() => fail('Expected exception to be thrown'))
-            .catch((err) => {
+        })
+            .then(() => fail('Expected exception to be thrown'))
+            .catch(err => {
                 expect(err.message).toEqual('Unknown tenantIdType foobar');
             });
     });

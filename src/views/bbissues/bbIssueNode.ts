@@ -4,7 +4,7 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, PaginatedBitbucketIssues, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Resources } from '../../resources';
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { SimpleNode } from '../nodes/simpleNode';
 
 export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
@@ -22,12 +22,17 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
             this._children.pop();
         }
         this._children!.push(...issues.data.map(i => new BitbucketIssueNode(i)));
-        if (issues.next) { this._children!.push(new NextPageNode(issues)); }
+        if (issues.next) {
+            this._children!.push(new NextPageNode(issues));
+        }
     }
 
     getTreeItem(): vscode.TreeItem {
         const directory = path.basename(this.workspaceRepo.rootUri);
-        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+        const item = new vscode.TreeItem(
+            `${directory}`,
+            this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed
+        );
         item.tooltip = this.workspaceRepo.rootUri;
 
         return item;
@@ -44,7 +49,9 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
                 return [new SimpleNode('No open issues for this repository')];
             }
             this._children = issues.data.map(i => new BitbucketIssueNode(i));
-            if (issues.next) { this._children!.push(new NextPageNode(issues)); }
+            if (issues.next) {
+                this._children!.push(new NextPageNode(issues));
+            }
         }
         return this._children;
     }
@@ -59,7 +66,8 @@ export class BitbucketIssueNode extends AbstractBaseNode {
         const treeItem = new vscode.TreeItem(`#${this.issue.data.id} ${this.issue.data.title!}`);
         treeItem.command = {
             command: Commands.ShowBitbucketIssue,
-            title: 'Open bitbucket issue', arguments: [this.issue]
+            title: 'Open bitbucket issue',
+            arguments: [this.issue]
         };
         treeItem.contextValue = 'bitbucketIssue';
         treeItem.resourceUri = vscode.Uri.parse(this.issue.data.links!.html!.href!);

@@ -1,6 +1,4 @@
-import {
-    Disposable
-} from 'vscode';
+import { Disposable } from 'vscode';
 import { ReactWebview, isInitializable } from './abstractWebview';
 
 // AbstractMultiViewManager is a base class for managing a single webview type that can display in multiple tabs at once.
@@ -8,7 +6,6 @@ import { ReactWebview, isInitializable } from './abstractWebview';
 // Generic Types:
 // T = the type of data used to determine which view to display.
 export abstract class AbstractMultiViewManager<T> implements Disposable {
-
     private _viewMap: Map<string, ReactWebview> = new Map<string, ReactWebview>();
     private _extensionPath: string;
     private _listeners: Map<string, Disposable> = new Map<string, Disposable>();
@@ -31,16 +28,19 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
 
         // We listen for panel dispose events from the webview so we can dispose of them and remove them from this manager
         // as their displayable panels come and go.
-        this._listeners.set(key, view.onDidPanelDispose()(() => {
-            let view = this._viewMap.get(key);
+        this._listeners.set(
+            key,
+            view.onDidPanelDispose()(() => {
+                let view = this._viewMap.get(key);
 
-            if (view) {
-                view.dispose();
-                this._viewMap.delete(key);
-            }
+                if (view) {
+                    view.dispose();
+                    this._viewMap.delete(key);
+                }
 
-            this._listeners.delete(key);
-        }, this));
+                this._listeners.delete(key);
+            }, this)
+        );
         this._viewMap.set(key, view);
 
         await view.createOrShow();
@@ -48,7 +48,6 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
         if (isInitializable(view)) {
             view.initialize(data);
         }
-
     }
 
     public async refreshAll(): Promise<void> {
@@ -66,5 +65,4 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
 
         this._viewMap.clear();
     }
-
 }

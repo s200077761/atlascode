@@ -1,17 +1,17 @@
 import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
 import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common/agent';
 import axios, { AxiosInstance } from 'axios';
-import * as fs from "fs";
+import * as fs from 'fs';
 import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
 import { SiteInfo } from '../../atlclients/authInfo';
-import { addCurlLogging } from "../../atlclients/interceptors";
+import { addCurlLogging } from '../../atlclients/interceptors';
 import { configuration } from '../../config/configuration';
-import { Container } from "../../container";
+import { Container } from '../../container';
 import { Resources } from '../../resources';
-import { ConnectionTimeout } from "../../util/time";
+import { ConnectionTimeout } from '../../util/time';
 
-var tunnel = require("tunnel");
+var tunnel = require('tunnel');
 
 export const jiraTransportFactory: TransportFactory = () => {
     return getAxiosInstance();
@@ -36,7 +36,6 @@ export function getAxiosInstance(): AxiosInstance {
 }
 
 export const jiraCloudAuthProvider = (token: string): AuthorizationProvider => {
-
     return (method: string, url: string) => {
         return Promise.resolve(`Bearer ${token}`);
     };
@@ -97,11 +96,11 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                                     host: host,
                                     port: numPort
                                 }
-                            }), proxy: false
+                            }),
+                            proxy: false
                         };
                     }
                 }
-
             } else {
                 const useCharles = configuration.get<boolean>('enableCharles');
                 if (useCharles) {
@@ -119,7 +118,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                             httpsAgent: tunnel.httpsOverHttp({
                                 ca: [pemFile],
                                 proxy: {
-                                    host: "127.0.0.1",
+                                    host: '127.0.0.1',
                                     port: 8888
                                 }
                             })
@@ -128,7 +127,6 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                 }
             }
         }
-
     } catch (err) {
         agent = {};
     }

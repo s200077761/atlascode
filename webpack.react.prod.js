@@ -11,31 +11,32 @@ const TerserPlugin = require('terser-webpack-plugin');
 const autoprefixer = require('autoprefixer');
 
 const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
+const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
 module.exports = {
     bail: true,
-    mode: "production",
-    entry: resolveApp("./src/webviews/components/index.tsx"),
+    mode: 'production',
+    entry: resolveApp('./src/webviews/components/index.tsx'),
     output: {
         path: path.resolve(__dirname, 'build'),
         filename: 'static/js/[name].[chunkhash:8].js',
-        chunkFilename: 'static/js/[name].[chunkhash:8].chunk.js',
+        chunkFilename: 'static/js/[name].[chunkhash:8].chunk.js'
     },
     optimization: {
-        minimizer: [new OptimizeCSSAssetsPlugin({}),
-        new TerserPlugin({
-            extractComments: false,
-            terserOptions: {
-                compress: {
-                    comparisons: false,
-                },
-                output: {
-                    comments: false,
-                    ascii_only: true
+        minimizer: [
+            new OptimizeCSSAssetsPlugin({}),
+            new TerserPlugin({
+                extractComments: false,
+                terserOptions: {
+                    compress: {
+                        comparisons: false
+                    },
+                    output: {
+                        comments: false,
+                        ascii_only: true
+                    }
                 }
-            }
-        })
+            })
         ],
         splitChunks: {
             cacheGroups: {
@@ -43,36 +44,33 @@ module.exports = {
                     name: 'main',
                     test: /\.css$/,
                     chunks: 'all',
-                    enforce: true,
-                },
-            },
+                    enforce: true
+                }
+            }
         }
     },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"],
-        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp("./tsconfig.json") })],
+        extensions: ['.ts', '.tsx', '.js', '.json'],
+        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })]
     },
     plugins: [
         new MiniCssExtractPlugin({
-            filename: '[name].css',
+            filename: '[name].css'
         }),
         new ManifestPlugin({
-            fileName: 'asset-manifest.json',
+            fileName: 'asset-manifest.json'
         }),
         new webpack.IgnorePlugin(/iconv-loader\.js/),
-        new webpack.WatchIgnorePlugin([
-            /\.js$/,
-            /\.d\.ts$/
-        ]),
+        new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
         new ForkTsCheckerWebpackPlugin({
             watch: resolveApp('src'),
             tsconfig: resolveApp('tsconfig.json'),
-            eslint: true,
+            eslint: true
         }),
         new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
 
-        new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+        new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
     ],
     module: {
         rules: [
@@ -80,9 +78,7 @@ module.exports = {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
                 exclude: /node_modules/,
-                use: [
-                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }
-                ],
+                use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }]
             },
             {
                 test: /\.css$/,
@@ -93,15 +89,15 @@ module.exports = {
                             // you can specify a publicPath here
                             // by default it uses publicPath in webpackOptions.output
                             publicPath: '../',
-                            hmr: false,
-                        },
+                            hmr: false
+                        }
                     },
                     {
                         loader: require.resolve('css-loader'),
                         options: {
                             importLoaders: 1,
-                            sourceMap: true,
-                        },
+                            sourceMap: true
+                        }
                     },
                     {
                         loader: 'postcss-loader',
@@ -112,17 +108,14 @@ module.exports = {
                             plugins: () => [
                                 require('postcss-flexbugs-fixes'),
                                 autoprefixer({
-                                    overrideBrowserslist: [
-                                        'last 4 Chrome versions'
-                                    ],
-                                    flexbox: 'no-2009',
-                                }),
-                            ],
+                                    overrideBrowserslist: ['last 4 Chrome versions'],
+                                    flexbox: 'no-2009'
+                                })
+                            ]
                         }
-
                     }
-                ],
+                ]
             }
         ]
-    },
+    }
 };

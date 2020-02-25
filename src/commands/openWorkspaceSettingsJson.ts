@@ -9,11 +9,7 @@ export function openWorkspaceSettingsJson(rootPath: string) {
     const editor = new vscode.WorkspaceEdit();
 
     // set filepath for settings.json
-    const filePath = path.join(
-        rootPath,
-        ".vscode",
-        "settings.json"
-    );
+    const filePath = path.join(rootPath, '.vscode', 'settings.json');
 
     const openPath = vscode.Uri.file(filePath);
     // create settings.json if it does not exist

@@ -9,10 +9,4 @@ function analyticsClient(args: any) {
     return new AnalyticsClient(args);
 }
 
-export {
-    TrackEvent, UIEvent, ScreenEvent,
-    analyticsClient,
-    AnalyticsClient,
-    tenantTypes,
-    userTypes
-};
+export { TrackEvent, UIEvent, ScreenEvent, analyticsClient, AnalyticsClient, tenantTypes, userTypes };

@@ -6,19 +6,30 @@ import { BitbucketIssue } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { StateRenderer } from './StatusMenu';
 
-type ItemData = { issue: BitbucketIssue, postMessage: (e: OpenBitbucketIssueAction) => void };
+type ItemData = { issue: BitbucketIssue; postMessage: (e: OpenBitbucketIssueAction) => void };
 
-const IssueKey = (data: ItemData) =>
-    <div className='ac-flex-space-between'>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openBitbucketIssue', issue: data.issue })}>
+const IssueKey = (data: ItemData) => (
+    <div className="ac-flex-space-between">
+        <Button
+            appearance="subtle-link"
+            onClick={() => data.postMessage({ action: 'openBitbucketIssue', issue: data.issue })}
+        >
             #{data.issue.data.id}
         </Button>
-    </div>;
-const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue.data.title}</p>;
-const Priority = (data: ItemData) => <Tooltip content={`priority: ${data.issue.data.priority}`}><p>{data.issue.data.priority}</p></Tooltip>;
-const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}>{StateRenderer[data.issue.data.state!]}</p>;
+    </div>
+);
+const Summary = (data: ItemData) => <p style={{ display: 'inline' }}>{data.issue.data.title}</p>;
+const Priority = (data: ItemData) => (
+    <Tooltip content={`priority: ${data.issue.data.priority}`}>
+        <p>{data.issue.data.priority}</p>
+    </Tooltip>
+);
+const StatusColumn = (data: ItemData) => <p style={{ display: 'inline' }}>{StateRenderer[data.issue.data.state!]}</p>;
 
-export default class BitbucketIssueList extends React.Component<{ issues: BitbucketIssue[], postMessage: (e: OpenBitbucketIssueAction) => void }, {}> {
+export default class BitbucketIssueList extends React.Component<
+    { issues: BitbucketIssue[]; postMessage: (e: OpenBitbucketIssueAction) => void },
+    {}
+> {
     constructor(props: any) {
         super(props);
     }

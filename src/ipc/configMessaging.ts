@@ -1,6 +1,6 @@
-import { Message } from "./messaging";
-import { IConfig } from "../config/model";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Message } from './messaging';
+import { IConfig } from '../config/model';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 export interface FeedbackUser {
     userName: string;
@@ -34,7 +34,7 @@ export const emptyConfigData: ConfigData = {
         emailAddress: ''
     },
     isRemote: false,
-    showTunnelOption: false,
+    showTunnelOption: false
 };
 
 export interface ConfigUpdate extends Message {

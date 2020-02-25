@@ -76,16 +76,26 @@ export class Container {
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push((this._onboardingWebview = new OnboardingWebview(context.extensionPath)));
-        context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
-        context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
-        context.subscriptions.push((this._createBitbucketIssueWebview = new CreateBitbucketIssueWebview(context.extensionPath)));
+        context.subscriptions.push(
+            (this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath))
+        );
+        context.subscriptions.push(
+            (this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath))
+        );
+        context.subscriptions.push(
+            (this._createBitbucketIssueWebview = new CreateBitbucketIssueWebview(context.extensionPath))
+        );
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
-        context.subscriptions.push(this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath));
-        context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
+        context.subscriptions.push(
+            (this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath))
+        );
+        context.subscriptions.push(
+            (this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath))
+        );
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
-        context.subscriptions.push(this._jqlManager = new JQLManager());
+        context.subscriptions.push((this._jqlManager = new JQLManager()));
 
         this._pmfStats = new PmfStats(context);
 
@@ -107,8 +117,12 @@ export class Container {
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
-        this._context.subscriptions.push((this._pipelineViewManager = new PipelineViewManager(this._context.extensionPath)));
-        this._context.subscriptions.push(this._bitbucketIssueViewManager = new BitbucketIssueViewManager(this._context.extensionPath));
+        this._context.subscriptions.push(
+            (this._pipelineViewManager = new PipelineViewManager(this._context.extensionPath))
+        );
+        this._context.subscriptions.push(
+            (this._bitbucketIssueViewManager = new BitbucketIssueViewManager(this._context.extensionPath))
+        );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
     }
 
@@ -123,7 +137,7 @@ export class Container {
                 const args = process.execArgv;
 
                 this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
-            } catch { }
+            } catch {}
         }
 
         return this._isDebugging;
@@ -283,5 +297,4 @@ export class Container {
     static get pmfStats() {
         return this._pmfStats;
     }
-
 }

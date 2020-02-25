@@ -1,7 +1,7 @@
-import { ConfigurationChangeEvent, Disposable } from "vscode";
-import { Time } from "../util/time";
-import { Container } from "../container";
-import { configuration } from "../config/configuration";
+import { ConfigurationChangeEvent, Disposable } from 'vscode';
+import { Time } from '../util/time';
+import { Container } from '../container';
+import { configuration } from '../config/configuration';
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
@@ -10,10 +10,12 @@ export class RefreshTimer implements Disposable {
     private _refreshInterval = defaultRefreshInterval;
     private _active: boolean = true;
 
-    constructor(private _enabledConfigPath: string | undefined, private _intervalConfigPath: string, private _refresh: () => void) {
-        Container.context.subscriptions.push(
-            configuration.onDidChange(this.onConfigurationChanged, this)
-        );
+    constructor(
+        private _enabledConfigPath: string | undefined,
+        private _intervalConfigPath: string,
+        private _refresh: () => void
+    ) {
+        Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this.reloadConfiguration();
     }
 
@@ -23,10 +25,11 @@ export class RefreshTimer implements Disposable {
     }
 
     isEnabled(): boolean {
-        return this._active &&
-            (this._enabledConfigPath === undefined ||
-                configuration.get<boolean>(this._enabledConfigPath)) &&
-            this._refreshInterval > 0;
+        return (
+            this._active &&
+            (this._enabledConfigPath === undefined || configuration.get<boolean>(this._enabledConfigPath)) &&
+            this._refreshInterval > 0
+        );
     }
 
     dispose() {
@@ -42,8 +45,10 @@ export class RefreshTimer implements Disposable {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        if (configuration.changed(e, this._intervalConfigPath) ||
-            (this._enabledConfigPath !== undefined && configuration.changed(e, this._enabledConfigPath))) {
+        if (
+            configuration.changed(e, this._intervalConfigPath) ||
+            (this._enabledConfigPath !== undefined && configuration.changed(e, this._enabledConfigPath))
+        ) {
             this.reloadConfiguration();
         }
     }

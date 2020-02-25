@@ -1,11 +1,11 @@
-import PQueue from "p-queue/dist";
-import { v4 } from "uuid";
-import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, Event, EventEmitter } from "vscode";
-import { DetailedSiteInfo, ProductJira } from "../atlclients/authInfo";
-import { configuration } from "../config/configuration";
-import { JQLEntry } from "../config/model";
-import { Container } from "../container";
-import { Logger } from "../logger";
+import PQueue from 'p-queue/dist';
+import { v4 } from 'uuid';
+import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, Event, EventEmitter } from 'vscode';
+import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
+import { configuration } from '../config/configuration';
+import { JQLEntry } from '../config/model';
+import { Container } from '../container';
+import { Logger } from '../logger';
 
 export type JQLUpdateEvent = {
     jqlEntries: JQLEntry[];
@@ -23,9 +23,7 @@ export class JQLManager extends Disposable {
     constructor() {
         super(() => this.dispose());
 
-        this._disposable = Disposable.from(
-            configuration.onDidChange(this.onConfigurationChanged, this)
-        );
+        this._disposable = Disposable.from(configuration.onDidChange(this.onConfigurationChanged, this));
     }
 
     dispose() {
@@ -42,8 +40,8 @@ export class JQLManager extends Disposable {
 
             const filterList = allList.filter(item => item.filterId);
 
-            await Promise.all(filterList.map(
-                async f => {
+            await Promise.all(
+                filterList.map(async f => {
                     const site = Container.siteManager.getSiteForId(ProductJira, f.siteId);
                     if (site) {
                         try {
@@ -60,8 +58,8 @@ export class JQLManager extends Disposable {
                             Logger.error(e, `Error fetching filter "${f.name}"`);
                         }
                     }
-                }
-            ));
+                })
+            );
 
             configuration.updateEffective('jira.jqlList', allList);
         });
@@ -80,7 +78,8 @@ export class JQLManager extends Disposable {
             const allList = Container.config.jira.jqlList;
 
             for (const site of sites) {
-                if (!allList.some(j => j.siteId === site.id)) { // only initialize if there are no jql entries for this site
+                if (!allList.some(j => j.siteId === site.id)) {
+                    // only initialize if there are no jql entries for this site
                     const newEntry = await this.defaultJQLForSite(site);
                     allList.push(newEntry);
                 }
@@ -105,7 +104,7 @@ export class JQLManager extends Disposable {
             name: `My ${site.name} Issues`,
             query: query,
             siteId: site.id,
-            monitor: true,
+            monitor: true
         };
     }
 

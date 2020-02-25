@@ -1,6 +1,6 @@
-import { BitbucketIssue, Comment, User } from "../bitbucket/model";
-import { Message } from "./messaging";
-import { RepoData } from "./prMessaging";
+import { BitbucketIssue, Comment, User } from '../bitbucket/model';
+import { Message } from './messaging';
+import { RepoData } from './prMessaging';
 
 export interface BitbucketIssueMessageData extends Message {
     issue: BitbucketIssue;

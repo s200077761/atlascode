@@ -1,7 +1,6 @@
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 
-
 export async function authenticateCloud(site: SiteInfo, callback: string) {
     Container.loginManager.userInitiatedOAuthLogin(site, callback);
 }

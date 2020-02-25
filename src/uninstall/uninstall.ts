@@ -1,17 +1,17 @@
-import { AnalyticsClient, TrackEvent } from "../analytics-node-client/src";
-import { v4 } from "uuid";
+import { AnalyticsClient, TrackEvent } from '../analytics-node-client/src';
+import { v4 } from 'uuid';
 
 class AnalyticsPlatform {
     private static nodeJsPlatformMapping = {
-        'aix': 'desktop',
-        'android': 'android',
-        'darwin': 'mac',
-        'freebsd': 'desktop',
-        'linux': 'linux',
-        'openbsd': 'desktop',
-        'sunos': 'desktop',
-        'win32': 'windows',
-        'cygwin': 'windows'
+        aix: 'desktop',
+        android: 'android',
+        darwin: 'mac',
+        freebsd: 'desktop',
+        linux: 'linux',
+        openbsd: 'desktop',
+        sunos: 'desktop',
+        win32: 'windows',
+        cygwin: 'windows'
     };
 
     static for(p: string): string {
@@ -26,7 +26,10 @@ function handleUninstall() {
         }
 
         const { version } = require('../../package.json');
-        const machineId = require('crypto').createHash('sha256').update(macAddress, 'utf8').digest('hex');
+        const machineId = require('crypto')
+            .createHash('sha256')
+            .update(macAddress, 'utf8')
+            .digest('hex');
 
         const e = {
             tenantIdType: null,

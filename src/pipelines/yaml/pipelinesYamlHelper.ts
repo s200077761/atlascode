@@ -1,20 +1,29 @@
-import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands } from "vscode";
-import { Resources } from "../../resources";
+import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands } from 'vscode';
+import { Resources } from '../../resources';
 
 export const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
 
-export const YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION = "yaml.schemas";
+export const YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION = 'yaml.schemas';
 
-export const BB_PIPELINES_FILENAME = "bitbucket-pipelines.yml";
+export const BB_PIPELINES_FILENAME = 'bitbucket-pipelines.yml';
 
 export async function addPipelinesSchemaToYamlConfig() {
     const config = workspace.getConfiguration().inspect(YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION);
 
-    await addPipelinesSchemaToConfigAtScope(Uri.file(Resources.pipelinesSchemaPath).toString(), BB_PIPELINES_FILENAME, ConfigurationTarget.Global, config!.globalValue);
-
+    await addPipelinesSchemaToConfigAtScope(
+        Uri.file(Resources.pipelinesSchemaPath).toString(),
+        BB_PIPELINES_FILENAME,
+        ConfigurationTarget.Global,
+        config!.globalValue
+    );
 }
 
-async function addPipelinesSchemaToConfigAtScope(key: string, value: string, scope: ConfigurationTarget, valueAtScope: any) {
+async function addPipelinesSchemaToConfigAtScope(
+    key: string,
+    value: string,
+    scope: ConfigurationTarget,
+    valueAtScope: any
+) {
     let newValue: any = {};
     if (valueAtScope) {
         newValue = Object.assign({}, valueAtScope);
@@ -33,7 +42,11 @@ async function addPipelinesSchemaToConfigAtScope(key: string, value: string, sco
 export async function activateYamlExtension() {
     const ext: Extension<any> | undefined = extensions.getExtension(VSCODE_YAML_EXTENSION_ID);
     if (!ext) {
-        window.showWarningMessage('Please install \'YAML Support by Red Hat\' via the Extensions pane.', 'install yaml extension')
+        window
+            .showWarningMessage(
+                "Please install 'YAML Support by Red Hat' via the Extensions pane.",
+                'install yaml extension'
+            )
             .then(sel => {
                 commands.executeCommand('workbench.extensions.installExtension', VSCODE_YAML_EXTENSION_ID);
             });
@@ -42,7 +55,9 @@ export async function activateYamlExtension() {
     const yamlPlugin = await ext.activate();
 
     if (!yamlPlugin || !yamlPlugin.registerContributor) {
-        window.showWarningMessage('The installed Red Hat YAML extension doesn\'t support Intellisense. Please upgrade \'YAML Support by Red Hat\' via the Extensions pane.');
+        window.showWarningMessage(
+            "The installed Red Hat YAML extension doesn't support Intellisense. Please upgrade 'YAML Support by Red Hat' via the Extensions pane."
+        );
         return;
     }
     return yamlPlugin;
