@@ -278,8 +278,20 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                     try {
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                         await client.editIssue(this._issue!.key, newFieldValues);
-                        this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
-                        this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues, nonce: msg.nonce });
+                        if (
+                            Object.keys(newFieldValues).some(
+                                fieldKey => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined
+                            )
+                        ) {
+                            this.forceUpdateIssue();
+                        } else {
+                            this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
+                            this.postMessage({
+                                type: 'fieldValueUpdate',
+                                fieldValues: newFieldValues,
+                                nonce: msg.nonce
+                            });
+                        }
 
                         Object.keys(newFieldValues).forEach(key => {
                             issueUpdatedEvent(
