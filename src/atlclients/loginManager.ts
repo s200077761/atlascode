@@ -246,7 +246,7 @@ export class LoginManager {
         }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
-        this._siteManager.addSites([siteDetails]);
+        this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
     }

@@ -47,6 +47,16 @@ export class SiteManager extends Disposable {
         this._onDidSitesAvailableChange.dispose();
     }
 
+    public addOrUpdateSite(newSite: DetailedSiteInfo) {
+        let allSites = this.readSitesFromGlobalStore(newSite.product.key);
+        const oldSite = allSites?.find(site => site.id === newSite.id && site.userId === newSite.userId);
+        if (oldSite) {
+            this.updateSite(oldSite, newSite);
+        } else {
+            this.addSites([newSite]);
+        }
+    }
+
     public addSites(newSites: DetailedSiteInfo[]) {
         if (newSites.length === 0) {
             return;
@@ -68,7 +78,11 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(productKey, allSites);
 
         if (notify) {
-            this._onDidSitesAvailableChange.fire({ sites: allSites, newSites: newSites, product: allSites[0].product });
+            this._onDidSitesAvailableChange.fire({
+                sites: allSites,
+                newSites: newSites,
+                product: allSites[0].product
+            });
         }
     }
 
@@ -91,7 +105,10 @@ export class SiteManager extends Disposable {
             const deadSites = this.getSitesAvailable(e.product).filter(site => site.credentialId === e.credentialId);
             deadSites.forEach(s => this.removeSite(s));
             if (deadSites.length > 0) {
-                this._onDidSitesAvailableChange.fire({ sites: this.getSitesAvailable(e.product), product: e.product });
+                this._onDidSitesAvailableChange.fire({
+                    sites: this.getSitesAvailable(e.product),
+                    product: e.product
+                });
             }
         } else if (isUpdateAuthEvent(e)) {
             this._onDidSitesAvailableChange.fire({
