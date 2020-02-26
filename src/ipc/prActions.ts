@@ -42,6 +42,14 @@ export function isDeleteTask(a: Action): a is DeleteTask {
     return (<DeleteTask>a).action === 'deleteTask';
 }
 
+export function isReady(a: Action): a is Ready {
+    return (<Ready>a).action === 'ready';
+}
+
+export interface Ready extends Action {
+    action: 'ready';
+}
+
 export interface DeleteComment extends Action {
     commentId: string;
 }
