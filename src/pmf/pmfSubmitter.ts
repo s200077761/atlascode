@@ -1,37 +1,31 @@
 import { format } from 'date-fns';
-import { pmfSubmitted } from "../analytics";
-import { Container } from "../container";
-import { PMFData } from "../ipc/messaging";
-import { getAxiosInstance } from "../jira/jira-client/providers";
+import { pmfSubmitted } from '../analytics';
+import { Container } from '../container';
+import { PMFData } from '../ipc/messaging';
+import { getAxiosInstance } from '../jira/jira-client/providers';
 
 const devPMF = {
-    collectorId: "235854834",
-    pmf: "fh68whZDMCBDYPTv2WD8W8dTXhRUaBWQ-PXTpgkvQNRGWo2W3SKsizTjZCaNvqQBi0.t0-1zSJyryfvH9VCmKT2wF7kpoGC.9ioZ8vV5NrUIHS9XJTiGYreWJ.aq1fzU",
-    pageId: "77775470",
-    q1Id: "287301718",
-    q2Id: "287328853",
-    q3Id: "287329058",
-    q4Id: "287329180",
-    q1Choices: [
-        "1925556954",
-        "1925556955",
-        "1925556956"
-    ]
+    collectorId: '235854834',
+    pmf:
+        'fh68whZDMCBDYPTv2WD8W8dTXhRUaBWQ-PXTpgkvQNRGWo2W3SKsizTjZCaNvqQBi0.t0-1zSJyryfvH9VCmKT2wF7kpoGC.9ioZ8vV5NrUIHS9XJTiGYreWJ.aq1fzU',
+    pageId: '77775470',
+    q1Id: '287301718',
+    q2Id: '287328853',
+    q3Id: '287329058',
+    q4Id: '287329180',
+    q1Choices: ['1925556954', '1925556955', '1925556956']
 };
 
 const prodPMF = {
-    collectorId: "236281099",
-    pmf: "fh68whZDMCBDYPTv2WD8W8dTXhRUaBWQ-PXTpgkvQNRGWo2W3SKsizTjZCaNvqQBi0.t0-1zSJyryfvH9VCmKT2wF7kpoGC.9ioZ8vV5NrUIHS9XJTiGYreWJ.aq1fzU",
-    pageId: "78407137",
-    q1Id: "289181506",
-    q2Id: "289181510",
-    q3Id: "289181511",
-    q4Id: "289181512",
-    q1Choices: [
-        "1935869265",
-        "1935869266",
-        "1935869267"
-    ]
+    collectorId: '236281099',
+    pmf:
+        'fh68whZDMCBDYPTv2WD8W8dTXhRUaBWQ-PXTpgkvQNRGWo2W3SKsizTjZCaNvqQBi0.t0-1zSJyryfvH9VCmKT2wF7kpoGC.9ioZ8vV5NrUIHS9XJTiGYreWJ.aq1fzU',
+    pageId: '78407137',
+    q1Id: '289181506',
+    q2Id: '289181510',
+    q3Id: '289181511',
+    q4Id: '289181512',
+    q1Choices: ['1935869265', '1935869266', '1935869267']
 };
 
 interface PMFPayload {
@@ -47,10 +41,10 @@ interface PMFPayload {
             id: string;
             questions: [
                 {
-                    answers: PMFChoice[] | PMFText[],
+                    answers: PMFChoice[] | PMFText[];
                     id: string;
                 }
-            ]
+            ];
         }
     ];
 }
@@ -63,14 +57,21 @@ interface PMFText {
     text: string;
 }
 
-function newPMFPayload(aaid: string, version: string, date: string, pageId: string, q1Id: string, q1Choice: string): PMFPayload {
+function newPMFPayload(
+    aaid: string,
+    version: string,
+    date: string,
+    pageId: string,
+    q1Id: string,
+    q1Choice: string
+): PMFPayload {
     return {
         custom_variables: {
             aaid: aaid,
-            subproduct: "atlascode",
+            subproduct: 'atlascode',
             version: version
         },
-        custom_value: "atlascode",
+        custom_value: 'atlascode',
         date_created: date,
         pages: [
             {
@@ -100,7 +101,14 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
 
     let pmfIds = Container.isDebugging ? devPMF : prodPMF;
 
-    let payload = newPMFPayload(aaid, Container.version, format(new Date(), 'YYYY-MM-DD[T]HH:mm:ssZZ'), pmfIds.pageId, pmfIds.q1Id, pmfIds.q1Choices[pmfData.q1]);
+    let payload = newPMFPayload(
+        aaid,
+        Container.version,
+        format(new Date(), 'YYYY-MM-DD[T]HH:mm:ssZZ'),
+        pmfIds.pageId,
+        pmfIds.q1Id,
+        pmfIds.q1Choices[pmfData.q1]
+    );
 
     if (pmfData.q2) {
         payload.pages[0].questions.push({
@@ -138,17 +146,17 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
     const transport = getAxiosInstance();
 
     transport(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${pmfIds.pmf}`
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${pmfIds.pmf}`
         },
         data: JSON.stringify(payload)
-
     });
 
-    pmfSubmitted(pmfData.q1).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+    pmfSubmitted(pmfData.q1).then(e => {
+        Container.analyticsClient.sendTrackEvent(e);
+    });
 }
 
 async function getAAID(): Promise<string | undefined> {

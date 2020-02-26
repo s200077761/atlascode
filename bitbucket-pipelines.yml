@@ -1,37 +1,37 @@
 image: node:11.13.0
 
 pipelines:
-  default:
-    - step:
-        caches:
-          - node
-        script:
-          - apt-get update && apt-get install -y libsecret-1-dev
-          - yarn
-          - npm run vscode:prepublish
-  tags:
-    "*":
-      - step:
-          caches:
-            - node
-          script:
-            - apt-get update && apt-get install -y libsecret-1-dev
-            - npm install -g vsce
-            - npm -no-git-tag-version --allow-same-version -f version ${BITBUCKET_TAG}
-            - yarn
-            - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --yarn
-            - vsce publish -p ${MSKEY} --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --packagePath atlascode-${BITBUCKET_TAG}.vsix --yarn
-            #- curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
-  custom:
-    nightly:
-      - step:
-          caches:
-            - node
-          script:
-            - apt-get update && apt-get install -y libsecret-1-dev
-            - npm install -g vsce
-            - export NIGHTLY_VERSION="$(./nightlyver.sh ${BITBUCKET_COMMIT})"
-            - npm -no-git-tag-version -f version ${NIGHTLY_VERSION}
-            - yarn
-            - vsce package
-            - curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${NIGHTLY_VERSION}.vsix"
+    default:
+        - step:
+              caches:
+                  - node
+              script:
+                  - apt-get update && apt-get install -y libsecret-1-dev
+                  - npm install
+                  - npm run vscode:prepublish
+    tags:
+        '*':
+            - step:
+                  caches:
+                      - node
+                  script:
+                      - apt-get update && apt-get install -y libsecret-1-dev
+                      - npm install -g vsce
+                      - npm -no-git-tag-version --allow-same-version -f version ${BITBUCKET_TAG}
+                      - npm install
+                      - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --yarn
+                      - vsce publish -p ${MSKEY} --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --packagePath atlascode-${BITBUCKET_TAG}.vsix --yarn
+                      #- curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
+    custom:
+        nightly:
+            - step:
+                  caches:
+                      - node
+                  script:
+                      - apt-get update && apt-get install -y libsecret-1-dev
+                      - npm install -g vsce
+                      - export NIGHTLY_VERSION="$(./nightlyver.sh ${BITBUCKET_COMMIT})"
+                      - npm -no-git-tag-version -f version ${NIGHTLY_VERSION}
+                      - npm install
+                      - vsce package
+                      - curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${NIGHTLY_VERSION}.vsix"

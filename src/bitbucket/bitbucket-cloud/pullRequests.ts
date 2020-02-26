@@ -1,11 +1,28 @@
-import PQueue from "p-queue/dist";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Logger } from "../../logger";
-import { CacheMap } from "../../util/cachemap";
-import { Time } from "../../util/time";
-import { HTTPClient } from "../httpClient";
-import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
-import { CloudRepositoriesApi } from "./repositories";
+import PQueue from 'p-queue/dist';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Logger } from '../../logger';
+import { CacheMap } from '../../util/cachemap';
+import { Time } from '../../util/time';
+import { HTTPClient } from '../httpClient';
+import {
+    BitbucketSite,
+    BuildStatus,
+    Comment,
+    Commit,
+    CreatePullRequestData,
+    FileChange,
+    FileStatus,
+    MergeStrategy,
+    PaginatedComments,
+    PaginatedPullRequests,
+    PullRequest,
+    PullRequestApi,
+    Task,
+    UnknownUser,
+    User,
+    WorkspaceRepo
+} from '../model';
+import { CloudRepositoriesApi } from './repositories';
 
 export const maxItemsSupported = {
     commits: 100,
@@ -16,9 +33,9 @@ export const maxItemsSupported = {
 export const defaultPagelen = 25;
 
 const mergeStrategyLabels = {
-    'merge_commit': 'Merge commit',
-    'squash': 'Squash',
-    'fast_forward': 'Fast forward'
+    merge_commit: 'Merge commit',
+    squash: 'Squash',
+    fast_forward: 'Fast forward'
 };
 
 const TEAM_MEMBERS_CACHE_LIMIT = 4000;
@@ -29,13 +46,10 @@ export class CloudPullRequestApi implements PullRequestApi {
     private fileContentCache: CacheMap = new CacheMap();
     private queue = new PQueue({ concurrency: 1 });
 
-    constructor(private client: HTTPClient) {
-    }
+    constructor(private client: HTTPClient) {}
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
-        const { data } = await this.client.get(
-            '/user'
-        );
+        const { data } = await this.client.get('/user');
 
         return CloudPullRequestApi.toUserModel(data);
     }
@@ -57,23 +71,25 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
+    async getList(
+        workspaceRepo: WorkspaceRepo,
+        queryParams?: { pagelen?: number; sort?: string; q?: string }
+    ): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
         if (!site) {
             return { workspaceRepo, site: site!, data: [] };
         }
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests`,
-            {
-                pagelen: defaultPagelen,
-                fields: '+values.participants',
-                ...queryParams
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests`, {
+            pagelen: defaultPagelen,
+            fields: '+values.participants',
+            ...queryParams
+        });
 
-        const prs: PullRequest[] = data.values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(pr, site, workspaceRepo));
+        const prs: PullRequest[] = data.values!.map((pr: any) =>
+            CloudPullRequestApi.toPullRequestData(pr, site, workspaceRepo)
+        );
         const next = data.next;
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
@@ -84,15 +100,15 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(
-            workspaceRepo,
-            { q: `state="OPEN" and author.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
+        return this.getList(workspaceRepo, {
+            q: `state="OPEN" and author.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`
+        });
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(
-            workspaceRepo,
-            { q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
+        return this.getList(workspaceRepo, {
+            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`
+        });
     }
 
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -101,28 +117,31 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
         const { data } = await this.client.get(paginatedPullRequests.next);
 
-        const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
+        const prs = data.values!.map((pr: any) =>
+            CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo)
+        );
         return { ...paginatedPullRequests, data: prs, next: data.next };
     }
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(
-            workspaceRepo,
-            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
+        return this.getList(workspaceRepo, {
+            pagelen: 2,
+            sort: '-created_on',
+            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`
+        });
     }
 
     async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(
-            workspaceRepo,
-            { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
+        return this.getList(workspaceRepo, {
+            sort: '-created_on',
+            q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"'
+        });
     }
 
     async get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}`,
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}`);
 
         return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
@@ -130,12 +149,9 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
-            {
-                fields: 'destination.branch.merge_strategies,destination.branch.default_merge_strategy'
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`, {
+            fields: 'destination.branch.merge_strategies,destination.branch.default_merge_strategy'
+        });
 
         return data.destination.branch.merge_strategies.map((strategy: string) => ({
             label: mergeStrategyLabels[strategy],
@@ -148,7 +164,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`
         );
 
         if (!data.values) {
@@ -256,7 +272,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         //TODO: This is querying an internal API. Some day this API will hopefully be public, at which point we need to update this
         try {
             let { data } = await this.client.get(
-                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`
             );
 
             if (!data.values) {
@@ -315,7 +331,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                         raw: task.content
                     },
                     id: task.id,
-                    state: task.isComplete ? "RESOLVED" : "UNRESOLVED"
+                    state: task.isComplete ? 'RESOLVED' : 'UNRESOLVED'
                 }
             );
 
@@ -343,15 +359,16 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     convertDataToTask(taskData: any, site: BitbucketSite): Task {
-        const taskBelongsToUser: boolean = taskData && taskData.creator && taskData.creator.account_id === site.details.userId;
+        const taskBelongsToUser: boolean =
+            taskData && taskData.creator && taskData.creator.account_id === site.details.userId;
         return {
             commentId: taskData.comment?.id,
             creator: CloudPullRequestApi.toUserModel(taskData.creator),
             created: taskData.created_on,
             updated: taskData.updated_on,
-            isComplete: taskData.state !== "UNRESOLVED",
-            editable: taskBelongsToUser && taskData.state === "UNRESOLVED",
-            deletable: taskBelongsToUser && taskData.state === "UNRESOLVED",
+            isComplete: taskData.state !== 'UNRESOLVED',
+            editable: taskBelongsToUser && taskData.state === 'UNRESOLVED',
+            deletable: taskBelongsToUser && taskData.state === 'UNRESOLVED',
             id: taskData.id,
             content: taskData.content.raw
         };
@@ -361,13 +378,10 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         const commentsAndTaskPromise = Promise.all([
-            this.client.get(
-                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
-                {
-                    pagelen: maxItemsSupported.comments
-                }
-            ),
-            await this.getTasks(pr),
+            this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`, {
+                pagelen: maxItemsSupported.comments
+            }),
+            await this.getTasks(pr)
         ]);
         const [commentResp, tasks] = await commentsAndTaskPromise;
         let { data } = commentResp;
@@ -398,7 +412,9 @@ export class CloudPullRequestApi implements PullRequestApi {
             } as any;
         });
 
-        const convertedComments = await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site))));
+        const convertedComments = await Promise.all(
+            comments.map(commentData => this.convertDataToComment(commentData, pr.site))
+        );
 
         let commentIdMap = new Map<string, number>();
         for (let i = 0; i < convertedComments.length; i++) {
@@ -444,7 +460,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
 
         const result: Comment[] = [];
-        commentsTreeMap.forEach((val) => {
+        commentsTreeMap.forEach(val => {
             if (!val.parentId) {
                 result.push(val);
             }
@@ -464,12 +480,14 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
 
         const statuses = data.values || [];
-        return statuses.filter((status: any) => status.type === 'build').map((status: any) => ({
-            name: status.name!,
-            state: status.state!,
-            url: status.url!,
-            ts: status.created_on!
-        }));
+        return statuses
+            .filter((status: any) => status.type === 'build')
+            .map((status: any) => ({
+                name: status.name!,
+                state: status.state!,
+                url: status.url!,
+                ts: status.created_on!
+            }));
     }
 
     async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
@@ -485,13 +503,11 @@ export class CloudPullRequestApi implements PullRequestApi {
                 return;
             }
 
-            let { data } = await this.client.get(
-                `/teams/${ownerSlug}/members`,
-                {
-                    pagelen: 100,
-                    fields: 'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href'
-                }
-            );
+            let { data } = await this.client.get(`/teams/${ownerSlug}/members`, {
+                pagelen: 100,
+                fields:
+                    'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href'
+            });
             const teamMembers = data.values || [];
 
             // DO NOT cache data for very large teams
@@ -506,19 +522,22 @@ export class CloudPullRequestApi implements PullRequestApi {
                 teamMembers.push(...(data.values || []));
             }
 
-            this.teamMembersCache.setItem(cacheKey, teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m)));
+            this.teamMembersCache.setItem(
+                cacheKey,
+                teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m))
+            );
         });
 
         if (query && query.length > 0) {
             const cacheItem = this.teamMembersCache.getItem<User[]>(cacheKey);
             if (cacheItem !== undefined && cacheItem.length > 0) {
-                return cacheItem.filter(user => user.displayName.toLowerCase().includes(query.toLowerCase())).slice(0, 20);
+                return cacheItem
+                    .filter(user => user.displayName.toLowerCase().includes(query.toLowerCase()))
+                    .slice(0, 20);
             }
 
             // fall back to calling API using nickname query param if the cache is not populated
-            const { data } = await this.client.get(
-                `/teams/${ownerSlug}/members?q=nickname="${query}"`
-            );
+            const { data } = await this.client.get(`/teams/${ownerSlug}/members?q=nickname="${query}"`);
 
             return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         }
@@ -528,12 +547,9 @@ export class CloudPullRequestApi implements PullRequestApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
-            {
-                pagelen: maxItemsSupported.reviewers
-            }
-        );
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/default-reviewers`, {
+            pagelen: maxItemsSupported.reviewers
+        });
 
         const result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         this.defaultReviewersCache.setItem(cacheKey, result);
@@ -541,7 +557,11 @@ export class CloudPullRequestApi implements PullRequestApi {
         return result;
     }
 
-    async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {
+    async create(
+        site: BitbucketSite,
+        workspaceRepo: WorkspaceRepo,
+        createPrData: CreatePullRequestData
+    ): Promise<PullRequest> {
         let prBody = {
             type: 'pullrequest',
             title: createPrData.title,
@@ -570,10 +590,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests`,
-            prBody
-        );
+        const { data } = await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests`, prBody);
 
         return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
@@ -589,23 +606,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             }))
         };
 
-        await this.client.put(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
-            prBody
-        );
+        await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`, prBody);
     }
 
     async updateApproval(pr: PullRequest, status: string) {
         const { ownerSlug, repoSlug } = pr.site;
-        status === "APPROVED"
-            ? await this.client.post(
-                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                {}
-            )
-            : await this.client.delete(
-                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                {}
-            );
+        status === 'APPROVED'
+            ? await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`, {})
+            : await this.client.delete(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`, {});
     }
 
     async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
@@ -621,17 +629,15 @@ export class CloudPullRequestApi implements PullRequestApi {
             };
         }
 
-        await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/merge`,
-            body
-        );
+        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/merge`, body);
     }
 
     async postComment(
         site: BitbucketSite,
-        prId: string, text: string,
+        prId: string,
+        text: string,
         parentCommentId?: string,
-        inline?: { from?: number, to?: number, path: string }
+        inline?: { from?: number; to?: number; path: string }
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
         const { data } = await this.client.post(
@@ -657,9 +663,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             return cachedValue;
         }
 
-        const { data } = await this.client.getRaw(
-            `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`
-        );
+        const { data } = await this.client.getRaw(`/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`);
 
         this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
 
@@ -680,9 +684,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             deletable: commentBelongsToUser && !data.deleted,
             editable: commentBelongsToUser && !data.deleted,
             inline: data.inline,
-            user: data.user
-                ? CloudPullRequestApi.toUserModel(data.user)
-                : UnknownUser,
+            user: data.user ? CloudPullRequestApi.toUserModel(data.user) : UnknownUser,
             children: [],
             tasks: []
         };
@@ -710,8 +712,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 source: source,
                 destination: destination,
                 title: pr.title!,
-                htmlSummary: pr.summary ? pr.summary.html! : "",
-                rawSummary: pr.summary ? pr.summary!.raw! : "",
+                htmlSummary: pr.summary ? pr.summary.html! : '',
+                rawSummary: pr.summary ? pr.summary!.raw! : '',
                 ts: pr.created_on!,
                 updatedTs: pr.updated_on!,
                 state: pr.state!,
@@ -723,12 +725,8 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     static toPullRequestRepo(prRepo: any) {
         const repo = CloudRepositoriesApi.toRepo(prRepo.repository);
-        const branchName = prRepo && prRepo.branch && prRepo.branch.name
-            ? prRepo.branch.name
-            : 'BRANCH_NOT_FOUND';
-        const commitHash = prRepo && prRepo.commit && prRepo.commit.hash
-            ? prRepo.commit.hash
-            : 'COMMIT_HASH_NOT_FOUND';
+        const branchName = prRepo && prRepo.branch && prRepo.branch.name ? prRepo.branch.name : 'BRANCH_NOT_FOUND';
+        const commitHash = prRepo && prRepo.commit && prRepo.commit.hash ? prRepo.commit.hash : 'COMMIT_HASH_NOT_FOUND';
 
         return {
             repo: repo,

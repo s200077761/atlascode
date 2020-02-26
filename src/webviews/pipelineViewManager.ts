@@ -1,6 +1,6 @@
-import { PipelineSummaryWebview } from "./pipelineSummaryWebview";
+import { PipelineSummaryWebview } from './pipelineSummaryWebview';
 import { AbstractMultiViewManager } from './multiViewManager';
-import { PipelineInfo } from "../views/pipelines/PipelinesTree";
+import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 
 export class PipelineViewManager extends AbstractMultiViewManager<PipelineInfo> {
     constructor(extensionPath: string) {
@@ -8,7 +8,7 @@ export class PipelineViewManager extends AbstractMultiViewManager<PipelineInfo> 
     }
 
     dataKey(pipeline: PipelineInfo): string {
-        return (pipeline.pipelineUuid);
+        return pipeline.pipelineUuid;
     }
 
     createView(extensionPath: string) {

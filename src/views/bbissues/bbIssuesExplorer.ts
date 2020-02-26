@@ -1,15 +1,15 @@
-import { ConfigurationChangeEvent, commands } from "vscode";
-import { Container } from "../../container";
-import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, BitbucketIssuesTreeViewId } from "../../constants";
-import { BitbucketContext } from "../../bitbucket/bbContext";
-import { Commands } from "../../commands";
-import { BitbucketIssuesDataProvider } from "../bitbucketIssuesDataProvider";
-import { BitbucketIssuesMonitor } from "./bbIssuesMonitor";
-import { BitbucketExplorer } from "../BitbucketExplorer";
-import { BaseTreeDataProvider } from "../Explorer";
-import { startIssueCreationEvent } from "../../analytics";
-import { ProductBitbucket } from "../../atlclients/authInfo";
+import { ConfigurationChangeEvent, commands } from 'vscode';
+import { Container } from '../../container';
+import { configuration } from '../../config/configuration';
+import { setCommandContext, CommandContext, BitbucketIssuesTreeViewId } from '../../constants';
+import { BitbucketContext } from '../../bitbucket/bbContext';
+import { Commands } from '../../commands';
+import { BitbucketIssuesDataProvider } from '../bitbucketIssuesDataProvider';
+import { BitbucketIssuesMonitor } from './bbIssuesMonitor';
+import { BitbucketExplorer } from '../BitbucketExplorer';
+import { BaseTreeDataProvider } from '../Explorer';
+import { startIssueCreationEvent } from '../../analytics';
+import { ProductBitbucket } from '../../atlclients/authInfo';
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {
@@ -19,7 +19,9 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
             commands.registerCommand(Commands.BitbucketIssuesRefresh, this.refresh, this),
             commands.registerCommand(Commands.CreateBitbucketIssue, (source?: string) => {
                 Container.createBitbucketIssueWebview.createOrShow();
-                startIssueCreationEvent(source || 'explorer', ProductBitbucket).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                startIssueCreationEvent(source || 'explorer', ProductBitbucket).then(e => {
+                    Container.analyticsClient.sendTrackEvent(e);
+                });
             }),
             this.ctx.onDidChangeBitbucketContext(() => this.updateExplorerState())
         );
@@ -60,6 +62,9 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
 
     private updateExplorerState() {
         const hasCloudRepos = this.ctx.getBitbucketCloudRepositories().length > 0;
-        setCommandContext(CommandContext.BitbucketIssuesExplorer, Container.config.bitbucket.issues.explorerEnabled && hasCloudRepos);
+        setCommandContext(
+            CommandContext.BitbucketIssuesExplorer,
+            Container.config.bitbucket.issues.explorerEnabled && hasCloudRepos
+        );
     }
 }

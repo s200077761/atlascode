@@ -3,7 +3,7 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Resources } from '../../resources';
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { SimpleNode } from '../nodes/simpleNode';
 
 export class StaticBitbucketIssuesNode extends AbstractBaseNode {
@@ -12,7 +12,8 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
 
     constructor(private site: BitbucketSite, private issueKeys: string[]) {
         super();
-        this.collapsibleState = issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;
+        this.collapsibleState =
+            issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;
     }
 
     getTreeItem(): vscode.TreeItem {
@@ -31,7 +32,14 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
             if (issues.length === 0) {
                 return [new SimpleNode('No issues found')];
             }
-            this._children = issues.map(i => new SimpleNode(`#${i.data.id} ${i.data.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] }));
+            this._children = issues.map(
+                i =>
+                    new SimpleNode(`#${i.data.id} ${i.data.title!}`, {
+                        command: Commands.ShowBitbucketIssue,
+                        title: 'Open bitbucket issue',
+                        arguments: [i]
+                    })
+            );
         }
         return this._children;
     }

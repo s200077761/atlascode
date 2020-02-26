@@ -5,18 +5,18 @@ import * as vscode from 'vscode';
 import * as keytarType from 'keytar';
 
 function getNodeModule<T>(moduleName: string): T | undefined {
-	const vscodeRequire = eval('require');
-	try {
-		return vscodeRequire(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
-	} catch (err) {
-		// Not in ASAR.
-	}
-	try {
-		return vscodeRequire(`${vscode.env.appRoot}/node_modules/${moduleName}`);
-	} catch (err) {
-		// Not available.
-	}
-	return undefined;
+    const vscodeRequire = eval('require');
+    try {
+        return vscodeRequire(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
+    } catch (err) {
+        // Not in ASAR.
+    }
+    try {
+        return vscodeRequire(`${vscode.env.appRoot}/node_modules/${moduleName}`);
+    } catch (err) {
+        // Not available.
+    }
+    return undefined;
 }
 
 export const keychain = getNodeModule<typeof keytarType>('keytar');

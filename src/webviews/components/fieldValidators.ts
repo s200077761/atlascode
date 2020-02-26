@@ -2,7 +2,7 @@
 export const chain = (...fns: any[]) => (...args: any[]) => fns.forEach(fn => fn(...args));
 
 export function validateSingleSelect(value: string, state?: any): string | undefined {
-    return (value !== undefined) ? undefined : "EMPTY";
+    return value !== undefined ? undefined : 'EMPTY';
 }
 
 export function validateMultiSelect(value: string, state: any): string | undefined {
@@ -11,7 +11,7 @@ export function validateMultiSelect(value: string, state: any): string | undefin
 }
 
 export function validateString(value: string, state?: any): string | undefined {
-    return (value === undefined || value.trim().length < 1) ? 'EMPTY' : undefined;
+    return value === undefined || value.trim().length < 1 ? 'EMPTY' : undefined;
 }
 
 export function isValidString(value: string): boolean {
@@ -19,7 +19,7 @@ export function isValidString(value: string): boolean {
 }
 
 export function validateEmail(value: string, state?: any): string | undefined {
-    return (value === undefined || value.length < 1 || !/^\S+@\S+$/.test(value)) ? 'EMPTY' : undefined;
+    return value === undefined || value.length < 1 || !/^\S+@\S+$/.test(value) ? 'EMPTY' : undefined;
 }
 
 export function validateNumber(value: any, state?: any): string | undefined {
@@ -34,9 +34,8 @@ export function validateNumber(value: any, state?: any): string | undefined {
             numVal = parseFloat(value);
         }
 
-        err = (isNaN(numVal)) ? 'NOT_NUMBER' : undefined;
+        err = isNaN(numVal) ? 'NOT_NUMBER' : undefined;
     }
-
 
     return err;
 }

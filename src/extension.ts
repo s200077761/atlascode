@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import * as semver from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
@@ -10,13 +10,17 @@ import { Commands, registerCommands } from './commands';
 import { configuration, Configuration, IConfig } from './config/configuration';
 import { AuthInfoVersionKey, CommandContext, GlobalStateVersionKey, setCommandContext } from './constants';
 import { Container } from './container';
-import { provideCodeLenses } from "./jira/todoObserver";
+import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
 import { migrateAllWorkspaceCustomJQLS, V1toV2Migrator } from './migrations/v1tov2';
 import { V2JiraServerUserIdFixer } from './migrations/v2JiraServerUserIdFixer';
 import { V2toV3Migrator } from './migrations/v2tov3';
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
-import { activateYamlExtension, addPipelinesSchemaToYamlConfig, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
+import {
+    activateYamlExtension,
+    addPipelinesSchemaToYamlConfig,
+    BB_PIPELINES_FILENAME
+} from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
 
@@ -41,8 +45,14 @@ export async function activate(context: ExtensionContext) {
 
         await migrateConfig(context.globalState);
 
-        setCommandContext(CommandContext.IsJiraAuthenticated, Container.siteManager.productHasAtLeastOneSite(ProductJira));
-        setCommandContext(CommandContext.IsBBAuthenticated, Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
+        setCommandContext(
+            CommandContext.IsJiraAuthenticated,
+            Container.siteManager.productHasAtLeastOneSite(ProductJira)
+        );
+        setCommandContext(
+            CommandContext.IsBBAuthenticated,
+            Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)
+        );
 
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (gitExtension) {
@@ -52,12 +62,11 @@ export async function activate(context: ExtensionContext) {
         } else {
             Logger.error(new Error('vscode.git extension not found'));
         }
-
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
 
-    if(previousVersion === undefined && window.state.focused){
+    if (previousVersion === undefined && window.state.focused) {
         commands.executeCommand(Commands.ShowOnboardingPage); //This is shown to users who have never opened our extension before
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
@@ -69,12 +78,20 @@ export async function activate(context: ExtensionContext) {
 
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
-    context.subscriptions.push(languages.registerCompletionItemProvider({ scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` }, new PipelinesYamlCompletionProvider()));
+    context.subscriptions.push(
+        languages.registerCompletionItemProvider(
+            { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
+            new PipelinesYamlCompletionProvider()
+        )
+    );
 
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();
 
-    Logger.info(`Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
+    Logger.info(
+        `Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration[0] * 1000 +
+            Math.floor(duration[1] / 1000000)} ms`
+    );
 }
 
 async function migrateConfig(globalState: Memento): Promise<void> {
@@ -82,11 +99,13 @@ async function migrateConfig(globalState: Memento): Promise<void> {
 
     if (!authModelVersion || authModelVersion < 2) {
         const cfg = configuration.get<IConfig>();
-        const migrator = new V1toV2Migrator(Container.siteManager,
+        const migrator = new V1toV2Migrator(
+            Container.siteManager,
             Container.credentialManager,
             !Container.isDebugging,
             Container.config.jira.workingProject,
-            cfg.jira.workingSite);
+            cfg.jira.workingSite
+        );
         await migrator.convertLegacyAuthInfo();
         await globalState.update(AuthInfoVersionKey, 2);
         await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
@@ -101,23 +120,25 @@ async function migrateConfig(globalState: Memento): Promise<void> {
         await v2JiraServerUserIdFixer.fix();
 
         // Migrate from V2 to V3
-        const migrator = new V2toV3Migrator(Container.siteManager,
-            Container.credentialManager,
-            !Container.isDebugging);
+        const migrator = new V2toV3Migrator(Container.siteManager, Container.credentialManager, !Container.isDebugging);
         await migrator.convertLegacyAuthInfo();
         await globalState.update(AuthInfoVersionKey, 3);
     }
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
-    if ((previousVersion === undefined || semver.gt(version, previousVersion)) &&
+    if (
+        (previousVersion === undefined || semver.gt(version, previousVersion)) &&
         Container.config.showWelcomeOnInstall &&
-        window.state.focused) {
-        window.showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes').then(userChoice => {
-            if (userChoice === 'Release notes') {
-                commands.executeCommand(Commands.ShowWelcomePage);
-            }
-        });
+        window.state.focused
+    ) {
+        window
+            .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
+            .then(userChoice => {
+                if (userChoice === 'Release notes') {
+                    commands.executeCommand(Commands.ShowWelcomePage);
+                }
+            });
     }
 }
 
@@ -126,18 +147,23 @@ async function sendAnalytics(version: string, globalState: Memento) {
     globalState.update(GlobalStateVersionKey, version);
 
     if (previousVersion === undefined) {
-        installedEvent(version).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        installedEvent(version).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         return;
     }
 
     if (semver.gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
-        upgradedEvent(version, previousVersion).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        upgradedEvent(version, previousVersion).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
     }
 
-    launchedEvent(env.remoteName ? env.remoteName : "local").then(e => { Container.analyticsClient.sendTrackEvent(e); });
+    launchedEvent(env.remoteName ? env.remoteName : 'local').then(e => {
+        Container.analyticsClient.sendTrackEvent(e);
+    });
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {
-}
+export function deactivate() {}

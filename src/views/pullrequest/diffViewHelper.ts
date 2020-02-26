@@ -13,7 +13,7 @@ export interface DiffViewArgs {
         fileDisplayName: string;
         fileChangeStatus: FileStatus;
         numberOfComments: number;
-    }
+    };
 }
 
 export async function getInlineComments(allComments: Comment[]): Promise<Map<string, Comment[][]>> {
@@ -26,7 +26,7 @@ export async function getInlineComments(allComments: Comment[]): Promise<Map<str
         threads.get(val.inline!.path)!.push(traverse(val));
     });
     return threads;
-};
+}
 
 function traverse(n: Comment): Comment[] {
     let result: Comment[] = [];
@@ -35,9 +35,14 @@ function traverse(n: Comment): Comment[] {
         result.push(...traverse(n.children[i]));
     }
     return result;
-};
+}
 
-export async function getArgsForDiffView(allComments: PaginatedComments, fileChange: FileChange, pr: PullRequest, commentController: PullRequestCommentController): Promise<DiffViewArgs> {
+export async function getArgsForDiffView(
+    allComments: PaginatedComments,
+    fileChange: FileChange,
+    pr: PullRequest,
+    commentController: PullRequestCommentController
+): Promise<DiffViewArgs> {
     const remotePrefix = pr.workspaceRepo ? `${pr.workspaceRepo.mainSiteRemote.remote.name}/` : '';
     // Use merge base to diff from common ancestor of source and destination.
     // This will help ignore any unrelated changes in destination branch.

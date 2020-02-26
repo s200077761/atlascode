@@ -1,11 +1,11 @@
-import Page, { Grid, GridColumn } from "@atlaskit/page";
-import { emptyProject, Project } from "@atlassianlabs/jira-pi-common-models";
-import { CreateMetaTransformerProblems } from "@atlassianlabs/jira-pi-meta-models/ui-meta";
+import Page, { Grid, GridColumn } from '@atlaskit/page';
+import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
+import { CreateMetaTransformerProblems } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import * as React from 'react';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
-import { Action, HostErrorMessage } from "../../../ipc/messaging";
+import { Action, HostErrorMessage } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
-import { WebviewComponent } from "../WebviewComponent";
+import { WebviewComponent } from '../WebviewComponent';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 
@@ -34,10 +34,14 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 break;
             }
             case 'screenRefresh': {
-                this.setState({ problems: e.problems, project: e.project, isErrorBannerOpen: false, errorDetails: undefined });
+                this.setState({
+                    problems: e.problems,
+                    project: e.project,
+                    isErrorBannerOpen: false,
+                    errorDetails: undefined
+                });
                 break;
             }
-
         }
         return true;
     }
@@ -63,7 +67,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 );
             });
             issueTypeProblems.push(
-                <tr className='issuetype-row'>
+                <tr className="issuetype-row">
                     <td>
                         <div className="ac-icon-with-text">
                             <img src={problem.issueType.iconUrl} />
@@ -78,7 +82,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 <tr>
                     <td colSpan={3}>
                         <h4 style={{ marginTop: '3px', marginBottom: '5px;' }}>Non-renderable Fields:</h4>
-                        <table className='field-problem-table'>
+                        <table className="field-problem-table">
                             <tr>
                                 <th>Field Name</th>
                                 <th>Key</th>
@@ -91,7 +95,6 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                     </td>
                 </tr>
             );
-
         });
 
         return (
@@ -99,11 +102,16 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 <Grid>
                     <GridColumn medium={20}>
                         <div>
-                            {this.state.isErrorBannerOpen &&
-                                <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
-                            }
-                            <h2>Create Issue Problem Report: {this.state.project.name} ({this.state.project.key})</h2>
-                            <table className='problem-table'>
+                            {this.state.isErrorBannerOpen && (
+                                <ErrorBanner
+                                    onDismissError={this.handleDismissError}
+                                    errorDetails={this.state.errorDetails}
+                                />
+                            )}
+                            <h2>
+                                Create Issue Problem Report: {this.state.project.name} ({this.state.project.key})
+                            </h2>
+                            <table className="problem-table">
                                 <tr>
                                     <th>Issue Type</th>
                                     <th>Is Renderable</th>
@@ -114,7 +122,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                         </div>
                     </GridColumn>
                 </Grid>
-            </Page >
+            </Page>
         );
     }
 }

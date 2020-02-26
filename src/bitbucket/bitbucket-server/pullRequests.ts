@@ -3,15 +3,31 @@ import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
 import { HTTPClient } from '../httpClient';
-import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
+import {
+    BitbucketSite,
+    BuildStatus,
+    Comment,
+    Commit,
+    CreatePullRequestData,
+    FileChange,
+    FileStatus,
+    MergeStrategy,
+    PaginatedComments,
+    PaginatedPullRequests,
+    PullRequest,
+    PullRequestApi,
+    Task,
+    UnknownUser,
+    User,
+    WorkspaceRepo
+} from '../model';
 import { ServerRepositoriesApi } from './repositories';
 
 export class ServerPullRequestApi implements PullRequestApi {
     private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
-    constructor(private client: HTTPClient) {
-    }
+    constructor(private client: HTTPClient) {}
 
     async getList(workspaceRepo: WorkspaceRepo, queryParams?: any): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
@@ -20,25 +36,23 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests`,
-            {
-                markup: true,
-                avatarSize: 64,
-                ...queryParams
-            }
+        const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests`, {
+            markup: true,
+            avatarSize: 64,
+            ...queryParams
+        });
+        const prs: PullRequest[] = data.values!.map((pr: any) =>
+            ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo)
         );
-        const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo));
-        const next = data.isLastPage === true
-            ? undefined
-            : this.client.generateUrl(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    ...queryParams,
-                    start: data.nextPageStart
-                }
-            );
+        const next =
+            data.isLastPage === true
+                ? undefined
+                : this.client.generateUrl(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests`, {
+                      markup: true,
+                      avatarSize: 64,
+                      ...queryParams,
+                      start: data.nextPageStart
+                  });
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
             return { workspaceRepo, site, data: prs, next: next };
@@ -49,24 +63,18 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
-        return this.getList(
-            workspaceRepo,
-            {
-                'username.1': currentUser,
-                'role.1': 'AUTHOR'
-            }
-        );
+        return this.getList(workspaceRepo, {
+            'username.1': currentUser,
+            'role.1': 'AUTHOR'
+        });
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
-        return this.getList(
-            workspaceRepo,
-            {
-                'username.1': currentUser,
-                'role.1': 'REVIEWER'
-            }
-        );
+        return this.getList(workspaceRepo, {
+            'username.1': currentUser,
+            'role.1': 'REVIEWER'
+        });
     }
 
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -75,28 +83,30 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
         const { data } = await this.client.get(paginatedPullRequests.next);
 
-        const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(pr, 0, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
+        const prs: PullRequest[] = data.values!.map((pr: any) =>
+            ServerPullRequestApi.toPullRequestModel(
+                pr,
+                0,
+                paginatedPullRequests.site,
+                paginatedPullRequests.workspaceRepo
+            )
+        );
         return { ...paginatedPullRequests, data: prs, next: undefined };
     }
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
-        return this.getList(
-            workspaceRepo,
-            {
-                'username.1': currentUser,
-                'role.1': 'REVIEWER',
-                limit: 2
-            }
-        );
+        return this.getList(workspaceRepo, {
+            'username.1': currentUser,
+            'role.1': 'REVIEWER',
+            limit: 2
+        });
     }
 
     async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(
-            workspaceRepo,
-            {
-                'state': 'ALL'
-            });
+        return this.getList(workspaceRepo, {
+            state: 'ALL'
+        });
     }
 
     async get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest> {
@@ -136,7 +146,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`,
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`
         );
 
         if (!data.values) {
@@ -156,42 +166,33 @@ export class ServerPullRequestApi implements PullRequestApi {
     async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
-        let { data } = await this.client.post(
-            `/rest/api/latest/tasks`,
-            {
-                anchor: {
-                    id: commentId,
-                    type: "COMMENT"
-                },
-                pendingSync: true,
-                permittedOperations: {},
-                pullRequestId: prId,
-                repositoryId: repo.id,
-                state: "OPEN",
-                text: content
-            }
-        );
+        let { data } = await this.client.post(`/rest/api/latest/tasks`, {
+            anchor: {
+                id: commentId,
+                type: 'COMMENT'
+            },
+            pendingSync: true,
+            permittedOperations: {},
+            pullRequestId: prId,
+            repositoryId: repo.id,
+            state: 'OPEN',
+            text: content
+        });
 
         return this.convertDataToTask(data, site);
     }
     async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
-        const { data } = await this.client.put(
-            `/rest/api/1.0/tasks/${task.id}`,
-            {
-                id: task.id,
-                text: task.content,
-                state: task.isComplete ? "RESOLVED" : "OPEN"
-            }
-        );
+        const { data } = await this.client.put(`/rest/api/1.0/tasks/${task.id}`, {
+            id: task.id,
+            text: task.content,
+            state: task.isComplete ? 'RESOLVED' : 'OPEN'
+        });
 
         return this.convertDataToTask(data, site);
     }
 
     async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
-        await this.client.delete(
-            `/rest/api/1.0/tasks/${task.id}`,
-            {}
-        );
+        await this.client.delete(`/rest/api/1.0/tasks/${task.id}`, {});
     }
 
     convertDataToTask(taskData: any, site: BitbucketSite): Task {
@@ -202,7 +203,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             creator: ServerPullRequestApi.toUser(site.details, taskData.author),
             created: taskData.createdDate,
             updated: taskData.createdDate, //This field doesn't exist in the BBServer API response
-            isComplete: taskData.state !== "OPEN",
+            isComplete: taskData.state !== 'OPEN',
             editable: taskBelongsToUser && taskData.permittedOperations.editable,
             deletable: taskBelongsToUser && taskData.permittedOperations.deletable,
             id: taskData.id,
@@ -227,14 +228,16 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         let accumulatedDiffStats = data.diffs as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.get(this.client.generateUrl(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    start: data.nextPageStart
-                }
-            ));
+            const nextPage = await this.client.get(
+                this.client.generateUrl(
+                    `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
+                    {
+                        markup: true,
+                        avatarSize: 64,
+                        start: data.nextPageStart
+                    }
+                )
+            );
             data = nextPage.data;
             accumulatedDiffStats.push(...(data.diffs || []));
         }
@@ -315,13 +318,10 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
         const userSlug = site.userId;
-        const { data } = await this.client.get(
-            `/rest/api/1.0/users/${userSlug}`,
-            {
-                markup: true,
-                avatarSize: 64
-            }
-        );
+        const { data } = await this.client.get(`/rest/api/1.0/users/${userSlug}`, {
+            markup: true,
+            avatarSize: 64
+        });
 
         return ServerPullRequestApi.toUser(site, data);
     }
@@ -343,14 +343,16 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedCommits = data.values as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.get(this.client.generateUrl(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/commits`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    start: data.nextPageStart
-                }
-            ));
+            const nextPage = await this.client.get(
+                this.client.generateUrl(
+                    `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/commits`,
+                    {
+                        markup: true,
+                        avatarSize: 64,
+                        start: data.nextPageStart
+                    }
+                )
+            );
             data = nextPage.data;
             accumulatedCommits.push(...(data.values || []));
         }
@@ -360,9 +362,9 @@ export class ServerPullRequestApi implements PullRequestApi {
             ts: commit.authorTimestamp,
             hash: commit.id,
             message: commit.message,
-            url: "",
-            htmlSummary: "",
-            rawSummary: ""
+            url: '',
+            htmlSummary: '',
+            rawSummary: ''
         }));
     }
 
@@ -415,7 +417,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     avatarSize: 64
                 }
             ),
-            await this.getTasks(pr),
+            await this.getTasks(pr)
         ]);
         const [commentResp, tasks] = await commentsAndTaskPromise;
         let { data } = commentResp;
@@ -426,28 +428,35 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedActivities = data.values as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.get(this.client.generateUrl(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    start: data.nextPageStart
-                }
-            ));
+            const nextPage = await this.client.get(
+                this.client.generateUrl(
+                    `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
+                    {
+                        markup: true,
+                        avatarSize: 64,
+                        start: data.nextPageStart
+                    }
+                )
+            );
             data = nextPage.data;
             accumulatedActivities.push(...(data.values || []));
         }
 
         const activities = accumulatedActivities
             .filter(activity => activity.action === 'COMMENTED')
-            .filter(activity => activity.commentAnchor
-                ? activity.commentAnchor.diffType === 'EFFECTIVE' && activity.commentAnchor.orphaned === false
-                : true
+            .filter(activity =>
+                activity.commentAnchor
+                    ? activity.commentAnchor.diffType === 'EFFECTIVE' && activity.commentAnchor.orphaned === false
+                    : true
             );
 
         return {
-            data: (await Promise.all(
-                activities.map(activity => this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks)))
+            data: (
+                await Promise.all(
+                    activities.map(activity =>
+                        this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks)
+                    )
+                )
             )
                 .filter(comment => this.shouldDisplayComment(comment))
                 .sort((a, b) => {
@@ -478,7 +487,12 @@ export class ServerPullRequestApi implements PullRequestApi {
         return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
     }
 
-    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[]): Promise<Comment> {
+    private async toNestedCommentModel(
+        site: BitbucketSite,
+        comment: any,
+        commentAnchor: any,
+        tasks: Task[]
+    ): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
         let tasksInComment: Task[] = [];
         let tasksNotInComment: Task[] = [];
@@ -490,7 +504,11 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         }
         commentModel.tasks = tasksInComment;
-        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)));
+        commentModel.children = await Promise.all(
+            (comment.comments || []).map((c: any) =>
+                this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)
+            )
+        );
         return commentModel;
     }
 
@@ -509,10 +527,10 @@ export class ServerPullRequestApi implements PullRequestApi {
             editable: data.permittedOperations.editable && commentBelongsToUser && !data.deleted,
             inline: commentAnchor
                 ? {
-                    path: commentAnchor.path,
-                    from: commentAnchor.fileType === 'TO' ? undefined : commentAnchor.line,
-                    to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined
-                }
+                      path: commentAnchor.path,
+                      from: commentAnchor.fileType === 'TO' ? undefined : commentAnchor.line,
+                      to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined
+                  }
                 : undefined,
             user: user,
             children: [],
@@ -528,20 +546,17 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = site;
 
         if (query && query.length > 0) {
-            const { data } = await this.client.get(
-                `/rest/api/1.0/users`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    'permission.1': 'REPO_READ',
-                    'permission.1.projectKey': ownerSlug,
-                    'permission.1.repositorySlug': repoSlug,
-                    filter: query,
-                    limit: 10
-                }
-            );
+            const { data } = await this.client.get(`/rest/api/1.0/users`, {
+                markup: true,
+                avatarSize: 64,
+                'permission.1': 'REPO_READ',
+                'permission.1.projectKey': ownerSlug,
+                'permission.1.repositorySlug': repoSlug,
+                filter: query,
+                limit: 10
+            });
 
-            return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));;
+            return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));
         }
 
         const cacheKey = `${ownerSlug}::${repoSlug}`;
@@ -565,13 +580,19 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        const result = (Array.isArray(data) ? data : []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));;
+        const result = (Array.isArray(data) ? data : []).map((val: any) =>
+            ServerPullRequestApi.toUser(site.details, val)
+        );
         this.defaultReviewersCache.setItem(cacheKey, result);
 
         return result;
     }
 
-    async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {
+    async create(
+        site: BitbucketSite,
+        workspaceRepo: WorkspaceRepo,
+        createPrData: CreatePullRequestData
+    ): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.post(
@@ -641,9 +662,10 @@ export class ServerPullRequestApi implements PullRequestApi {
     async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
         const { ownerSlug, repoSlug } = pr.site;
 
-        const body = mergeStrategy === undefined
-            ? {}
-            : { autoSubject: false, strategyId: mergeStrategy, message: commitMessage };
+        const body =
+            mergeStrategy === undefined
+                ? {}
+                : { autoSubject: false, strategyId: mergeStrategy, message: commitMessage };
 
         await this.client.post(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/merge`,
@@ -654,10 +676,11 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async postComment(
         site: BitbucketSite,
-        prId: string, text: string,
+        prId: string,
+        text: string,
         parentCommentId?: string,
-        inline?: { from?: number, to?: number, path: string },
-        lineMeta?: "ADDED" | "REMOVED"
+        inline?: { from?: number; to?: number; path: string },
+        lineMeta?: 'ADDED' | 'REMOVED'
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
@@ -668,11 +691,11 @@ export class ServerPullRequestApi implements PullRequestApi {
                 text: text,
                 anchor: inline
                     ? {
-                        line: inline!.to || inline!.from,
-                        lineType: lineMeta || "CONTEXT",
-                        fileType: inline!.to ? "TO" : "FROM",
-                        path: inline!.path
-                    }
+                          line: inline!.to || inline!.from,
+                          lineType: lineMeta || 'CONTEXT',
+                          fileType: inline!.to ? 'TO' : 'FROM',
+                          path: inline!.path
+                      }
                     : undefined
             },
             {
@@ -692,12 +715,9 @@ export class ServerPullRequestApi implements PullRequestApi {
             return cachedValue;
         }
 
-        const { data } = await this.client.getRaw(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${path}`,
-            {
-                at: commitHash
-            }
-        );
+        const { data } = await this.client.getRaw(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${path}`, {
+            at: commitHash
+        });
 
         this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
 
@@ -725,7 +745,12 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    static toPullRequestModel(data: any, taskCount: number, site: BitbucketSite, workspaceRepo?: WorkspaceRepo): PullRequest {
+    static toPullRequestModel(
+        data: any,
+        taskCount: number,
+        site: BitbucketSite,
+        workspaceRepo?: WorkspaceRepo
+    ): PullRequest {
         const source = ServerPullRequestApi.toPullRequestRepo(site, data.fromRef, undefined!);
         const destination = ServerPullRequestApi.toPullRequestRepo(site, data.toRef, undefined!);
 
@@ -739,18 +764,16 @@ export class ServerPullRequestApi implements PullRequestApi {
                 url: data.links.self[0].href,
                 author: this.toUser(site.details, data.author.user),
                 reviewers: [],
-                participants: data.reviewers.map((reviewer: any) => (
-                    {
-                        ...this.toUser(site.details, reviewer.user),
-                        role: reviewer.role,
-                        status: reviewer.status
-                    }
-                )),
+                participants: data.reviewers.map((reviewer: any) => ({
+                    ...this.toUser(site.details, reviewer.user),
+                    role: reviewer.role,
+                    status: reviewer.status
+                })),
                 source: source,
                 destination: destination,
                 title: data.title,
-                htmlSummary: data.descriptionAsHtml ? data.descriptionAsHtml : "",
-                rawSummary: data.description ? data.description : "",
+                htmlSummary: data.descriptionAsHtml ? data.descriptionAsHtml : '',
+                rawSummary: data.description ? data.description : '',
                 ts: data.createdDate,
                 updatedTs: data.updatedDate,
                 state: data.state,
@@ -770,12 +793,8 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     static toPullRequestRepo(site: BitbucketSite, prRepo: any, defaultBranch: string) {
         const repo = ServerRepositoriesApi.toRepo(site, prRepo.repository, defaultBranch);
-        const branchName = prRepo && prRepo.displayId
-            ? prRepo.displayId
-            : 'BRANCH_NOT_FOUND';
-        const commitHash = prRepo && prRepo.latestCommit
-            ? prRepo.latestCommit
-            : 'COMMIT_HASH_NOT_FOUND';
+        const branchName = prRepo && prRepo.displayId ? prRepo.displayId : 'BRANCH_NOT_FOUND';
+        const commitHash = prRepo && prRepo.latestCommit ? prRepo.latestCommit : 'COMMIT_HASH_NOT_FOUND';
 
         return {
             repo: repo,
@@ -784,5 +803,3 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 }
-
-

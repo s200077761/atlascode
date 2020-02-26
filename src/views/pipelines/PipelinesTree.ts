@@ -1,19 +1,28 @@
-import { distanceInWordsToNow, format } from "date-fns";
+import { distanceInWordsToNow, format } from 'date-fns';
 import path from 'path';
-import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
+import {
+    commands,
+    ConfigurationChangeEvent,
+    Disposable,
+    Event,
+    EventEmitter,
+    TreeItem,
+    TreeItemCollapsibleState,
+    Uri
+} from 'vscode';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
-import { Commands } from "../../commands";
-import { configuration } from "../../config/configuration";
-import { Container } from "../../container";
-import { Pipeline } from "../../pipelines/model";
-import { Resources } from "../../resources";
-import { BaseTreeDataProvider } from "../Explorer";
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
-import { SimpleNode } from "../nodes/simpleNode";
-import { descriptionForState, filtersActive, iconUriForPipeline, shouldDisplay } from "./Helpers";
+import { Commands } from '../../commands';
+import { configuration } from '../../config/configuration';
+import { Container } from '../../container';
+import { Pipeline } from '../../pipelines/model';
+import { Resources } from '../../resources';
+import { BaseTreeDataProvider } from '../Explorer';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
+import { emptyBitbucketNodes } from '../nodes/bitbucketEmptyNodeList';
+import { SimpleNode } from '../nodes/simpleNode';
+import { descriptionForState, filtersActive, iconUriForPipeline, shouldDisplay } from './Helpers';
 
 const defaultPageLength = 25;
 
@@ -35,15 +44,19 @@ export class PipelinesTree extends BaseTreeDataProvider {
 
         this._disposable = Disposable.from(
             this._onDidChangeTreeData,
-            commands.registerCommand(Commands.PipelinesNextPage, (repo) => { this.fetchNextPage(repo); }),
+            commands.registerCommand(Commands.PipelinesNextPage, repo => {
+                this.fetchNextPage(repo);
+            }),
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        if (configuration.changed(e, 'bitbucket.pipelines.hideEmpty') ||
+        if (
+            configuration.changed(e, 'bitbucket.pipelines.hideEmpty') ||
             configuration.changed(e, 'bitbucket.pipelines.hideFiltered') ||
-            configuration.changed(e, 'bitbucket.pipelines.branchFilters')) {
+            configuration.changed(e, 'bitbucket.pipelines.branchFilters')
+        ) {
             this.refresh();
         }
     }
@@ -74,9 +87,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
             });
         }
 
-        return this._childrenMap.size === 0
-            ? emptyBitbucketNodes
-            : Array.from(this._childrenMap.values());
+        return this._childrenMap.size === 0 ? emptyBitbucketNodes : Array.from(this._childrenMap.values());
     }
 
     public refresh() {
@@ -100,7 +111,10 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
     getTreeItem(): TreeItem {
         const directory = path.basename(this.workspaceRepo.rootUri);
-        const item = new TreeItem(`${directory}`, this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed);
+        const item = new TreeItem(
+            `${directory}`,
+            this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed
+        );
         item.tooltip = this.workspaceRepo.rootUri;
         return item;
     }
@@ -118,14 +132,20 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!this.workspaceRepo.mainSiteRemote.site) {
-            return Promise.resolve([new SimpleNode(`Please login to ${ProductBitbucket.name}`, { command: Commands.ShowConfigPage, title: "Login to Bitbucket", arguments: [ProductBitbucket] })]);
+            return Promise.resolve([
+                new SimpleNode(`Please login to ${ProductBitbucket.name}`, {
+                    command: Commands.ShowConfigPage,
+                    title: 'Login to Bitbucket',
+                    arguments: [ProductBitbucket]
+                })
+            ]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
             if (!this._pipelines) {
                 this._pipelines = await this.fetchPipelines();
             }
             if (this._pipelines.length === 0 && !filtersActive()) {
-                return [new SimpleNode("No pipelines results for this repository")];
+                return [new SimpleNode('No pipelines results for this repository')];
             }
 
             const filteredPipelines = this._pipelines.filter(pipeline => shouldDisplay(pipeline.target.ref_name));
@@ -135,13 +155,22 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             } else if (filtersActive() && filteredPipelines.length === 0) {
                 const firstPipeTime: string = this._pipelines[0].created_on;
                 const lastPipeTime: string = this._pipelines[this._pipelines.length - 1].created_on;
-                nodes = [new SimpleNode(`No pipelines matching your filters from ${format(firstPipeTime, 'YYYY-MM-DD h:mm A')} to ${format(lastPipeTime, 'YYYY-MM-DD h:mm A')}`)];
+                nodes = [
+                    new SimpleNode(
+                        `No pipelines matching your filters from ${format(
+                            firstPipeTime,
+                            'YYYY-MM-DD h:mm A'
+                        )} to ${format(lastPipeTime, 'YYYY-MM-DD h:mm A')}`
+                    )
+                ];
             } else {
                 nodes = filteredPipelines.map(pipeline => new PipelineNode(this, pipeline));
             }
 
             if (this._morePages && filtersActive()) {
-                nodes.push(new NextPageNode(this.workspaceRepo, this._pipelines[this._pipelines.length - 1].created_on)); //Pass the last-retrieved pipeline date
+                nodes.push(
+                    new NextPageNode(this.workspaceRepo, this._pipelines[this._pipelines.length - 1].created_on)
+                ); //Pass the last-retrieved pipeline date
             } else if (this._morePages) {
                 nodes.push(new NextPageNode(this.workspaceRepo));
             }
@@ -160,7 +189,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             const bbApi = await clientForSite(site);
             const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(site, {
                 page: `${this._page}`,
-                pagelen: defaultPageLength,
+                pagelen: defaultPageLength
             });
             pipelines = paginatedPipelines.values;
             const numPages = paginatedPipelines.size / defaultPageLength;
@@ -185,7 +214,7 @@ export class PipelineNode extends AbstractBaseNode {
     getTreeItem() {
         //Labels show up before descriptions, and descriptions are grayed out
         const label = `${descriptionForState(this.pipeline, true)}`;
-        let description = "";
+        let description = '';
         if (this.pipeline.created_on) {
             description = `${distanceInWordsToNow(this.pipeline.created_on)} ago`;
         }
@@ -194,9 +223,15 @@ export class PipelineNode extends AbstractBaseNode {
         item.description = description;
         item.contextValue = PipelineBuildContextValue;
         item.tooltip = label;
-        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ site: this.pipeline.site, pipelineUuid: this.pipeline.uuid } as PipelineInfo] };
+        item.command = {
+            command: Commands.ShowPipeline,
+            title: 'Show Pipeline',
+            arguments: [{ site: this.pipeline.site, pipelineUuid: this.pipeline.uuid } as PipelineInfo]
+        };
         item.iconPath = iconUriForPipeline(this.pipeline);
-        item.resourceUri = Uri.parse(`${this.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.pipeline.build_number}`);
+        item.resourceUri = Uri.parse(
+            `${this.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.pipeline.build_number}`
+        );
         return item;
     }
 
@@ -214,7 +249,9 @@ class NextPageNode extends AbstractBaseNode {
 
     getTreeItem() {
         const treeItem = this._resultsSince
-            ? new TreeItem(`Load more (showing filtered results since ${format(this._resultsSince, 'YYYY-MM-DD h:mm A')})`)
+            ? new TreeItem(
+                  `Load more (showing filtered results since ${format(this._resultsSince, 'YYYY-MM-DD h:mm A')})`
+              )
             : new TreeItem('Load more', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');
         treeItem.command = {
@@ -225,4 +262,3 @@ class NextPageNode extends AbstractBaseNode {
         return treeItem;
     }
 }
-

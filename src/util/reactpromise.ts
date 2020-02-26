@@ -1,4 +1,3 @@
-
 export function OnMessageEventPromise(eventName: string, timeout: number, nonce?: string): Promise<any> {
     return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {

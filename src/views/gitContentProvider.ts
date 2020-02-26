@@ -8,9 +8,11 @@ import { PRFileDiffQueryParams } from './pullrequest/pullRequestNode';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
-    get onDidChange(): vscode.Event<vscode.Uri> { return this._onDidChange.event; }
+    get onDidChange(): vscode.Event<vscode.Uri> {
+        return this._onDidChange.event;
+    }
 
-    constructor(private bbContext: BitbucketContext) { }
+    constructor(private bbContext: BitbucketContext) {}
 
     async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
         const { repoUri, repoHref, branchName, path, commitHash } = JSON.parse(uri.query) as PRFileDiffQueryParams;
@@ -45,7 +47,11 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                 (async () => {
                     const parsedRepo = parseGitUrl(urlForRemote(wsRepo.mainSiteRemote.remote));
                     const parsedSourceRepo = parseGitUrl(repoHref).toString(parsedRepo.protocol);
-                    const site = bitbucketSiteForRemote({ name: 'DUMMY', fetchUrl: parsedSourceRepo, isReadOnly: true });
+                    const site = bitbucketSiteForRemote({
+                        name: 'DUMMY',
+                        fetchUrl: parsedSourceRepo,
+                        isReadOnly: true
+                    });
                     if (site) {
                         const bbApi = await clientForSite(site);
                         const fileContent = await bbApi.pullrequests.getFileContent(site, commitHash, path);
@@ -55,7 +61,9 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                 })()
             ]);
         } catch (err) {
-            vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
+            vscode.window.showErrorMessage(
+                `We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`
+            );
         }
 
         return content || '';

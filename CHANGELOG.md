@@ -1,3 +1,11 @@
+## What's New in 2.4.2
+### Bugs fixed
+* Fixed certificate handling when adding new Jira sites
+
+## What's New in 2.4.1
+### Bugs fixed
+* Fix certificate handling for Jira clients
+
 ## What's New in 2.4.0
 ### Improvements
 * Jira explorer shows issue count for each JQL entry

@@ -37,7 +37,10 @@ export class JiraExplorer extends Explorer implements Refreshable {
         this._disposables.forEach(d => d.dispose());
     }
 
-    public async findIssue(issueKey: string, jqlRoot?: BaseTreeDataProvider): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
+    public async findIssue(
+        issueKey: string,
+        jqlRoot?: BaseTreeDataProvider
+    ): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
         let dp = jqlRoot;
         if (dp === undefined) {
             dp = this.treeDataProvder as CustomJQLRoot;
@@ -75,7 +78,10 @@ export class JiraExplorer extends Explorer implements Refreshable {
         return issue;
     }
 
-    async findIssueInChildren(issueKey: string, parent: IssueNode): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
+    async findIssueInChildren(
+        issueKey: string,
+        parent: IssueNode
+    ): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
         let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
         const children = await parent.getChildren();
 

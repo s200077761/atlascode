@@ -5,14 +5,33 @@ import { prCreatedEvent, Registry, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { clientForSite } from '../bitbucket/bbUtils';
-import { BitbucketIssue, BitbucketSite, Commit, FileDiff, FileStatus, isBitbucketIssue, PullRequest, User } from '../bitbucket/model';
+import {
+    BitbucketIssue,
+    BitbucketSite,
+    Commit,
+    FileDiff,
+    FileStatus,
+    isBitbucketIssue,
+    PullRequest,
+    User
+} from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { isOpenBitbucketIssueAction, isUpdateDiffAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { CreatePullRequest, FetchDetails, FetchIssue, isCreatePullRequest, isFetchDefaultReviewers, isFetchDetails, isFetchIssue, isFetchUsers, isOpenDiffPreview } from '../ipc/prActions';
+import {
+    CreatePullRequest,
+    FetchDetails,
+    FetchIssue,
+    isCreatePullRequest,
+    isFetchDefaultReviewers,
+    isFetchDetails,
+    isFetchIssue,
+    isFetchUsers,
+    isOpenDiffPreview
+} from '../ipc/prActions';
 import { RepoData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -30,10 +49,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     public get title(): string {
-        return "Create pull request";
+        return 'Create pull request';
     }
     public get id(): string {
-        return "createPullRequestScreen";
+        return 'createPullRequestScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -67,62 +86,81 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         try {
             const repos = Container.bitbucketContext.getBitbucketRepositories();
 
-            const state: RepoData[] = await Promise.all(repos.map(async wsRepo => {
-                const site = wsRepo.mainSiteRemote.site!;
-                const bbApi = await clientForSite(site);
-                const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
+            const state: RepoData[] = await Promise.all(
+                repos.map(async wsRepo => {
+                    const site = wsRepo.mainSiteRemote.site!;
+                    const bbApi = await clientForSite(site);
+                    const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
-                const [, repo, developmentBranch] = await Promise.all([
-                    scm.fetch(),
-                    bbApi.repositories.get(site),
-                    bbApi.repositories.getDevelopmentBranch(site)
-                ]);
+                    const [, repo, developmentBranch] = await Promise.all([
+                        scm.fetch(),
+                        bbApi.repositories.get(site),
+                        bbApi.repositories.getDevelopmentBranch(site)
+                    ]);
 
-                let parentBranches: Ref[] = [];
-                const parentRemoteName = `${repo.parentFullName} (parent repo)`;
-                if (repo.parentFullName && !wsRepo.siteRemotes.some(s => s.remote.name === parentRemoteName)) {
-                    const parentSite: BitbucketSite = {
-                        ...site,
-                        ownerSlug: repo.parentFullName.slice(0, repo.parentFullName.lastIndexOf('/')),
-                        repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1)
+                    let parentBranches: Ref[] = [];
+                    const parentRemoteName = `${repo.parentFullName} (parent repo)`;
+                    if (repo.parentFullName && !wsRepo.siteRemotes.some(s => s.remote.name === parentRemoteName)) {
+                        const parentSite: BitbucketSite = {
+                            ...site,
+                            ownerSlug: repo.parentFullName.slice(0, repo.parentFullName.lastIndexOf('/')),
+                            repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1)
+                        };
+
+                        wsRepo.siteRemotes.push({
+                            remote: { name: parentRemoteName, fetchUrl: '', isReadOnly: true },
+                            site: parentSite
+                        });
+
+                        const remoteBranches = await bbApi.repositories.getBranches(parentSite);
+                        parentBranches = remoteBranches.map(name => ({
+                            type: RefType.RemoteHead,
+                            name: name,
+                            remote: parentRemoteName
+                        }));
+                    }
+
+                    return {
+                        workspaceRepo: wsRepo,
+                        href: repo.url,
+                        avatarUrl: repo.avatarUrl,
+                        localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                        remoteBranches: [
+                            ...parentBranches,
+                            ...scm.state.refs
+                                .filter(
+                                    ref =>
+                                        ref.type === RefType.RemoteHead &&
+                                        ref.name &&
+                                        scm.state.remotes.find(rem => ref.name!.startsWith(rem.name))
+                                )
+                                .map(ref => ({
+                                    ...ref,
+                                    remote: scm.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name
+                                }))
+                        ],
+                        branchTypes: [],
+                        developmentBranch: developmentBranch,
+                        hasLocalChanges:
+                            scm.state.workingTreeChanges.length +
+                                scm.state.indexChanges.length +
+                                scm.state.mergeChanges.length >
+                            0,
+                        isCloud: site.details.isCloud
                     };
-
-                    wsRepo.siteRemotes.push({
-                        remote: { name: parentRemoteName, fetchUrl: '', isReadOnly: true },
-                        site: parentSite
-                    });
-
-                    const remoteBranches = await bbApi.repositories.getBranches(parentSite);
-                    parentBranches = remoteBranches.map(name => (
-                        { type: RefType.RemoteHead, name: name, remote: parentRemoteName }
-                    ));
-                }
-
-                return {
-                    workspaceRepo: wsRepo,
-                    href: repo.url,
-                    avatarUrl: repo.avatarUrl,
-                    localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                    remoteBranches: [
-                        ...parentBranches,
-                        ...scm.state.refs
-                            .filter(ref => ref.type === RefType.RemoteHead && ref.name && scm.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
-                            .map(ref => ({ ...ref, remote: scm.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
-                    ],
-                    branchTypes: [],
-                    developmentBranch: developmentBranch,
-                    hasLocalChanges: scm.state.workingTreeChanges.length + scm.state.indexChanges.length + scm.state.mergeChanges.length > 0,
-                    isCloud: site.details.isCloud
-                };
-            }));
+                })
+            );
 
             if (state.length > 0) {
                 this.postMessage({ type: 'createPullRequestData', repositories: state });
             } else {
                 const bbSites = Container.siteManager.getSitesAvailable(ProductBitbucket);
-                const reason = bbSites.length === 0
-                    ? 'Authenticate with Bitbucket and try again'
-                    : `No Bitbucket repositories found in the current workspace in VS Code corresponding to the authenticated Bitbucket instances: ${bbSites.map(site => site.host).join(', ')}`;
+                const reason =
+                    bbSites.length === 0
+                        ? 'Authenticate with Bitbucket and try again'
+                        : `No Bitbucket repositories found in the current workspace in VS Code corresponding to the authenticated Bitbucket instances: ${bbSites
+                              .map(site => site.host)
+                              .join(', ')}`;
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket repos') });
             }
         } catch (e) {
@@ -131,7 +169,6 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         } finally {
             this.isRefeshing = false;
         }
-
     }
 
     async createOrShow(): Promise<void> {
@@ -219,7 +256,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (isUpdateDiffAction(e)) {
                         handled = true;
                         try {
-                            let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
+                            let fileDiffs: FileDiff[] = await this.generateDiff(
+                                e.repoData,
+                                e.destinationBranch,
+                                e.sourceBranch
+                            );
                             this.postMessage({ type: 'diffResult', fileDiffs: fileDiffs });
                         } catch (e) {
                             Logger.error(new Error(`error fetching changed files: ${e}`));
@@ -292,11 +333,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return commonCommit;
     }
 
-    getFilePaths(namestatusWords: string[], status: FileStatus): { lhsFilePath: string, rhsFilePath: string } {
+    getFilePaths(namestatusWords: string[], status: FileStatus): { lhsFilePath: string; rhsFilePath: string } {
         if (status === FileStatus.ADDED) {
-            return { lhsFilePath: "", rhsFilePath: namestatusWords[1] };
+            return { lhsFilePath: '', rhsFilePath: namestatusWords[1] };
         } else if (status === FileStatus.DELETED) {
-            return { lhsFilePath: namestatusWords[1], rhsFilePath: "" };
+            return { lhsFilePath: namestatusWords[1], rhsFilePath: '' };
         } else if (status === FileStatus.MODIFIED) {
             return { lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1] };
         } else if (status === FileStatus.RENAMED) {
@@ -335,39 +376,41 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
             const filePath = numstatWords.slice(2).join(' ');
             const firstLetterOfStatus = namestatusWords[0].slice(0, 1) as FileStatus;
-            const fileStatus = (Object.values(FileStatus).includes(firstLetterOfStatus) ? firstLetterOfStatus : 'X') as FileStatus;
+            const fileStatus = (Object.values(FileStatus).includes(firstLetterOfStatus)
+                ? firstLetterOfStatus
+                : 'X') as FileStatus;
             const { lhsFilePath, rhsFilePath } = this.getFilePaths(namestatusWords, fileStatus);
-            fileDiffs.push(
-                {
-                    linesAdded: +numstatWords[0],
-                    linesRemoved: +numstatWords[1],
-                    file: filePath,
-                    status: fileStatus,
-                    similarity: fileStatus === FileStatus.RENAMED ? +namestatusWords[0].slice(1) : undefined,
-                    lhsQueryParams:
-                        {
-                            lhs: true,
-                            repoUri: repo.workspaceRepo.rootUri,
-                            branchName: destinationBranch.name,
-                            commitHash: forkPoint,
-                            path: lhsFilePath,
-                        } as FileDiffQueryParams,
-                    rhsQueryParams:
-                        {
-                            lhs: false,
-                            repoUri: repo.workspaceRepo.rootUri,
-                            branchName: sourceBranch.name,
-                            commitHash: sourceBranch.commit,
-                            path: rhsFilePath,
-                        } as FileDiffQueryParams
-                }
-            );
+            fileDiffs.push({
+                linesAdded: +numstatWords[0],
+                linesRemoved: +numstatWords[1],
+                file: filePath,
+                status: fileStatus,
+                similarity: fileStatus === FileStatus.RENAMED ? +namestatusWords[0].slice(1) : undefined,
+                lhsQueryParams: {
+                    lhs: true,
+                    repoUri: repo.workspaceRepo.rootUri,
+                    branchName: destinationBranch.name,
+                    commitHash: forkPoint,
+                    path: lhsFilePath
+                } as FileDiffQueryParams,
+                rhsQueryParams: {
+                    lhs: false,
+                    repoUri: repo.workspaceRepo.rootUri,
+                    branchName: sourceBranch.name,
+                    commitHash: sourceBranch.commit,
+                    path: rhsFilePath
+                } as FileDiffQueryParams
+            });
         }
 
         return fileDiffs;
     }
 
-    async openDiffPreview(lhsQueryParam: FileDiffQueryParams, rhsQueryParam: FileDiffQueryParams, fileDisplayName: string) {
+    async openDiffPreview(
+        lhsQueryParam: FileDiffQueryParams,
+        rhsQueryParam: FileDiffQueryParams,
+        fileDisplayName: string
+    ) {
         const lhsQuery = {
             query: JSON.stringify(lhsQueryParam)
         };
@@ -377,7 +420,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
         const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQuery);
         const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQuery);
-        viewScreenEvent(Registry.screen.pullRequestPreviewDiffScreen, undefined, ProductBitbucket).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+        viewScreenEvent(Registry.screen.pullRequestPreviewDiffScreen, undefined, ProductBitbucket).then(e => {
+            Container.analyticsClient.sendScreenEvent(e);
+        });
         vscode.commands.executeCommand('vscode.diff', lhsUri, rhsUri, fileDisplayName);
     }
 
@@ -400,7 +445,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     const wsRepo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
                     if (wsRepo.mainSiteRemote.site) {
                         const bbApi = await clientForSite(wsRepo.mainSiteRemote.site);
-                        const bbIssues = await bbApi.issues!.getIssuesForKeys(wsRepo.mainSiteRemote.site, [bbIssueKeys[0]]);
+                        const bbIssues = await bbApi.issues!.getIssuesForKeys(wsRepo.mainSiteRemote.site, [
+                            bbIssueKeys[0]
+                        ]);
                         if (bbIssues.length > 0) {
                             issue = bbIssues[0];
                         }
@@ -431,7 +478,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const { workspaceRepo, sourceSiteRemote, destinationSite, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges, closeSourceBranch, issue } = createPullRequestAction;
+        const {
+            workspaceRepo,
+            sourceSiteRemote,
+            destinationSite,
+            reviewers,
+            title,
+            summary,
+            sourceBranch,
+            destinationBranch,
+            pushLocalChanges,
+            closeSourceBranch,
+            issue
+        } = createPullRequestAction;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(`${destinationBranch.remote}/`, '');
 
@@ -444,23 +503,21 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         const bbApi = await clientForSite(destinationSite);
 
         await bbApi.pullrequests
-            .create(
-                destinationSite,
-                workspaceRepo,
-                {
-                    title: title,
-                    summary: summary,
-                    sourceSite: sourceSiteRemote.site!,
-                    sourceBranchName: sourceBranchName,
-                    destinationBranchName: destinationBranchName,
-                    closeSourceBranch: closeSourceBranch,
-                    reviewerAccountIds: reviewers.map(reviewer => reviewer.accountId)
-                }
-            )
+            .create(destinationSite, workspaceRepo, {
+                title: title,
+                summary: summary,
+                sourceSite: sourceSiteRemote.site!,
+                sourceBranchName: sourceBranchName,
+                destinationBranchName: destinationBranchName,
+                closeSourceBranch: closeSourceBranch,
+                reviewerAccountIds: reviewers.map(reviewer => reviewer.accountId)
+            })
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-                prCreatedEvent(destinationSite.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                prCreatedEvent(destinationSite.details).then(e => {
+                    Container.analyticsClient.sendTrackEvent(e);
+                });
             });
 
         await this.updateIssue(destinationSite, issue);

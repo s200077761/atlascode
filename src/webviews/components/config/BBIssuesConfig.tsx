@@ -6,7 +6,10 @@ import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class BitbucketIssuesConfig extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class BitbucketIssuesConfig extends React.Component<
+    { config: IConfig; onConfigChange: (changes: changeObject, removes?: string[]) => void },
+    {}
+> {
     constructor(props: any) {
         super(props);
     }
@@ -33,22 +36,22 @@ export default class BitbucketIssuesConfig extends React.Component<{ config: ICo
         return (
             <div>
                 <CheckboxField
-                    name='bb-issues-explorer-enabled'
-                    id='bb-issues-explorer-enabled'
-                    value='bitbucket.issues.explorerEnabled'>
-                    {
-                        (fieldArgs: any) => {
-                            return (
-                                <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Bitbucket issues explorer'
-                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isChecked={this.props.config.bitbucket.issues.explorerEnabled}
-                                />
-                            );
-                        }
-                    }
+                    name="bb-issues-explorer-enabled"
+                    id="bb-issues-explorer-enabled"
+                    value="bitbucket.issues.explorerEnabled"
+                >
+                    {(fieldArgs: any) => {
+                        return (
+                            <Checkbox
+                                {...fieldArgs.fieldProps}
+                                label="Enable Bitbucket issues explorer"
+                                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                isChecked={this.props.config.bitbucket.issues.explorerEnabled}
+                            />
+                        );
+                    }}
                 </CheckboxField>
-                <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '24px', }} >
+                <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '24px' }}>
                     <CheckboxField
                         name="bb-issues-monitor-enabled"
                         id="bb-issues-monitor-enabled"
@@ -67,31 +70,36 @@ export default class BitbucketIssuesConfig extends React.Component<{ config: ICo
                         }}
                     </CheckboxField>
                 </div>
-                <div className='refreshInterval'>
+                <div className="refreshInterval">
                     <span>Refresh explorer every: </span>
-                    <input className='ac-inputField-inline' style={{ width: '60px' }} name='bb-issues-refresh-interval'
-                        type='number' min='0'
+                    <input
+                        className="ac-inputField-inline"
+                        style={{ width: '60px' }}
+                        name="bb-issues-refresh-interval"
+                        type="number"
+                        min="0"
                         value={this.props.config.bitbucket.issues.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, 'bitbucket.issues.refreshInterval')}
-                        disabled={!this.props.config.bitbucket.issues.explorerEnabled} />
+                        disabled={!this.props.config.bitbucket.issues.explorerEnabled}
+                    />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
                 <div>
                     <CheckboxField
-                        name='bb-issues-jiracreate-enabled'
-                        id='bb-issues-jiracreate-enabled'
-                        value='bitbucket.issues.createJiraEnabled'>
-                        {
-                            (fieldArgs: any) => {
-                                return (
-                                    <Checkbox {...fieldArgs.fieldProps}
-                                        label='Show Create Jira Issue button on Bitbucket issue screens'
-                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isChecked={this.props.config.bitbucket.issues.createJiraEnabled}
-                                    />
-                                );
-                            }
-                        }
+                        name="bb-issues-jiracreate-enabled"
+                        id="bb-issues-jiracreate-enabled"
+                        value="bitbucket.issues.createJiraEnabled"
+                    >
+                        {(fieldArgs: any) => {
+                            return (
+                                <Checkbox
+                                    {...fieldArgs.fieldProps}
+                                    label="Show Create Jira Issue button on Bitbucket issue screens"
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.config.bitbucket.issues.createJiraEnabled}
+                                />
+                            );
+                        }}
                     </CheckboxField>
                 </div>
             </div>

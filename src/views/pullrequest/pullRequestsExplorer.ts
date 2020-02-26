@@ -10,17 +10,20 @@ import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
 
 export class PullRequestsExplorer extends BitbucketExplorer {
-
     constructor(ctx: BitbucketContext) {
         super(ctx);
 
         Container.context.subscriptions.push(
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this.refresh()),
             commands.registerCommand(Commands.BitbucketToggleFileNesting, () => this.toggleFileNesting()),
-            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
+            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async pr => {
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
-            commands.registerCommand(Commands.CreatePullRequest, Container.pullRequestCreatorView.createOrShow, Container.pullRequestCreatorView)
+            commands.registerCommand(
+                Commands.CreatePullRequest,
+                Container.pullRequestCreatorView.createOrShow,
+                Container.pullRequestCreatorView
+            )
         );
     }
 

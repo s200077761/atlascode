@@ -1,9 +1,16 @@
-import { CompletionItem, CompletionItemKind, CompletionItemProvider, Position, SnippetString, TextDocument } from 'vscode';
+import {
+    CompletionItem,
+    CompletionItemKind,
+    CompletionItemProvider,
+    Position,
+    SnippetString,
+    TextDocument
+} from 'vscode';
 import { getAxiosInstance } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
 
-
-const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
+const BB_PIPES_URL =
+    'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
 
 interface NamedWebsite {
     name: string;
@@ -22,7 +29,6 @@ interface PipeMeta {
 }
 
 export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
-
     private knownPipes: PipeMeta[] = [];
     private pipeItems: CompletionItem[] = [];
     private pipeItemsNoPipe: CompletionItem[] = [];
@@ -46,7 +52,10 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     private showPipes(doc: TextDocument, pos: Position): boolean {
         let wordOnLine = this.getFirstWord(doc, pos);
 
-        if (wordOnLine === 'pipe' || (wordOnLine === undefined && this.findParentWord(doc, pos.with(pos.line - 1, 0)) === 'script')) {
+        if (
+            wordOnLine === 'pipe' ||
+            (wordOnLine === undefined && this.findParentWord(doc, pos.with(pos.line - 1, 0)) === 'script')
+        ) {
             return true;
         }
 
@@ -96,9 +105,9 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
         const transport = getAxiosInstance();
 
         transport(BB_PIPES_URL, {
-            method: "GET",
+            method: 'GET',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json'
             }
         })
             .then(res => res.data)

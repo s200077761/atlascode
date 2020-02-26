@@ -1,6 +1,5 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import pSettle from 'p-settle';
-import { PRData } from 'src/ipc/prMessaging';
 import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prCommentEvent, prMergeEvent, prTaskEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
@@ -9,6 +8,7 @@ import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 import {
     ApprovalStatus,
+    BitbucketApi,
     BitbucketIssue,
     Commit,
     FileChange,
@@ -25,6 +25,7 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
 import {
+    isAddReviewer,
     isCheckout,
     isCreateTask,
     isDeleteComment,
@@ -38,9 +39,9 @@ import {
     isPostComment,
     isUpdateApproval,
     isUpdateTitle,
-    Merge,
-    isAddReviewer
+    Merge
 } from '../ipc/prActions';
+import { PRData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -51,6 +52,7 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _pr: PullRequest | undefined = undefined;
+    private readyForData: boolean = false;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -238,6 +240,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     }
                     break;
                 }
+                case 'ready': {
+                    this.readyForData = true;
+                    break;
+                }
                 case 'refreshPR': {
                     handled = true;
                     this.invalidate();
@@ -324,6 +330,16 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
     }
 
+    private async fetchChangedFiles(bbApi: BitbucketApi, pr: PullRequest) {
+        const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
+        return fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
+    }
+
+    /* 
+        Data is sent to the PR page in parts: starting with the main PR data, and then sending everything else (comments, tasks, etc.) in a first-come-first-serve basis.
+        Promises are arranged in such a way as to avoid waiting on data as much as possible. E.g. while tasks are being waited on, a bunch of other promises are spawned.
+        Many of these promises contain a .then(), when makes this function harder to read, but means the promise will resolve itself without explicitly waiting for it.
+    */
     private async postCompleteState() {
         if (!this._pr || !this._panel) {
             return;
@@ -332,51 +348,80 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             this._panel.title = `Pull Request #${this._pr.data.id}`;
         }
 
+        //This promise gets resolved when this.readyForData is true (which occurs when the webview is finished loading)
+        const readyForDataPromise = this.isReadyForData();
         const bbApi = await clientForSite(this._pr.site);
 
-        const prDetailsPromises = Promise.all([
-            bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo),
-            bbApi.pullrequests.getCommits(this._pr),
-            bbApi.pullrequests.getComments(this._pr),
-            bbApi.pullrequests.getBuildStatuses(this._pr),
-            bbApi.pullrequests.getMergeStrategies(this._pr),
-            bbApi.pullrequests.getChangedFiles(this._pr),
-            bbApi.pullrequests.getTasks(this._pr)
-        ]);
-        const [updatedPr, commits, comments, buildStatuses, mergeStrategies, fileChanges, tasks] = await prDetailsPromises;
-        this._pr = updatedPr;
-        const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
+        //The results of some of these promises are needed for future API calls, so we store them
+        const prPromise = bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
+        const commentsPromise = bbApi.pullrequests.getComments(this._pr).then(async paginatedComments => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateComments', comments: paginatedComments.data });
+            return paginatedComments;
+        });
+        const commitsPromise = bbApi.pullrequests.getCommits(this._pr).then(async commits => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateCommits', commits: commits });
+            return commits;
+        });
 
-        const issuesPromises = Promise.all([
-            this.fetchRelatedJiraIssues(this._pr, commits, comments),
-            this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
-            this.fetchMainIssue(this._pr)
-        ]);
-        const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
-        const currentUser = await Container.bitbucketContext.currentUser(this._pr.site);
+        //Other promises are not needed for later so we don't need to store them
+        bbApi.pullrequests.getTasks(this._pr).then(async tasks => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateTasks', tasks: tasks });
+        });
+        this.fetchChangedFiles(bbApi, this._pr).then(async fileDiffs => {
+            await readyForDataPromise;
+            this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs });
+        });
 
+        this._pr = await prPromise;
+        const buildStatusPromise = bbApi.pullrequests.getBuildStatuses(this._pr);
+        const mergeStrategiesPromise = bbApi.pullrequests.getMergeStrategies(this._pr);
+
+        //Use the newly retrieved PR data to get additional data. Meanwhile, several promises that aren't needed for this step are executing concurrently
+        const mainIssuePromise = this.fetchMainIssue(this._pr);
+        const currentUserPromise = Container.bitbucketContext.currentUser(this._pr.site);
         let currentBranch = '';
         if (this._pr.workspaceRepo) {
             const scm = Container.bitbucketContext.getRepositoryScm(this._pr.workspaceRepo!.rootUri)!;
             currentBranch = scm.state.HEAD ? scm.state.HEAD.name! : '';
         }
 
-        const prData: PRData = {
+        //This represents the main PR data; all other data (comments, commits, tasks, etc.) are being sent separately
+        const basicPRData: PRData = {
             pr: this._pr,
-            fileDiffs: fileDiffs,
-            currentUser: currentUser,
+            currentUser: await currentUserPromise,
             currentBranch: currentBranch,
             type: 'update',
-            commits: commits,
-            comments: comments.data,
-            tasks: tasks,
-            relatedJiraIssues: relatedJiraIssues,
-            relatedBitbucketIssues: relatedBitbucketIssues,
-            mainIssue: mainIssue,
-            buildStatuses: buildStatuses,
-            mergeStrategies: mergeStrategies
+            mainIssue: await mainIssuePromise,
+            buildStatuses: await buildStatusPromise,
+            mergeStrategies: await mergeStrategiesPromise
         };
-        this.postMessage(prData);
+        await readyForDataPromise; //We can't send data until this promise is resolved
+        this.postMessage(basicPRData);
+
+        //We need to wait for comments and commits to resolve before getting the related issues (the pr promise already resolved by this point)
+        const [paginatedComments, commits] = await Promise.all([commentsPromise, commitsPromise]);
+        this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then(issues =>
+            this.postMessage({ type: 'updateRelatedJiraIssues', relatedJiraIssues: issues })
+        );
+        this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then(issues =>
+            this.postMessage({ type: 'updateRelatedBitbucketIssues', relatedBitbucketIssues: issues })
+        );
+    }
+
+    //Checks every 100ms if this.readyForData === true and resolves when it is
+    private isReadyForData() {
+        const checker = (resolve: () => void) => {
+            if (this.readyForData) {
+                resolve();
+            } else {
+                setTimeout(_ => checker(resolve), 100);
+            }
+        };
+
+        return new Promise(checker);
     }
 
     private async fetchMainIssue(
@@ -389,6 +434,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 const jiraIssueKeys = parseJiraIssueKeys(branchAndTitleText);
                 if (jiraIssueKeys.length > 0) {
                     try {
+                        Container.jiraActiveIssueStatusBar.handleActiveIssueChange(jiraIssueKeys[0]);
                         return await issueForKey(jiraIssueKeys[0]);
                     } catch (e) {
                         Logger.debug('error fetching main jira issue: ', e);
@@ -465,7 +511,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async updateTitle(pr: PullRequest, text: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(pr, text, pr.data.participants.filter(p => p.role === 'PARTICIPANT').map(p =>  p.accountId));
+        await bbApi.pullrequests.update(
+            pr,
+            text,
+            pr.data.participants.filter(p => p.role === 'PARTICIPANT').map(p => p.accountId)
+        );
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
     }
@@ -482,11 +532,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async addReviewer(pr: PullRequest, accountId: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(
-            pr,
-            pr.data.title,
-            [...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId), accountId]
-        );
+        await bbApi.pullrequests.update(pr, pr.data.title, [
+            ...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId),
+            accountId
+        ]);
         await this.updatePullRequest();
     }
 

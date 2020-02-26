@@ -5,10 +5,9 @@ const { analyticsClient } = require('../../src/');
 const { buildTrackEvent, buildUIEvent, buildScreenEvent } = require('../helpers/event-builder');
 
 describe('integration/send-event', () => {
-
     let httpSpy;
 
-    beforeAll((done) => {
+    beforeAll(done => {
         httpSpy = jasmineHttpServerSpy.createSpyObj('mockServer', [
             {
                 method: 'post',
@@ -23,16 +22,13 @@ describe('integration/send-event', () => {
         });
     });
 
-    afterAll((done) => {
+    afterAll(done => {
         httpSpy.server.stop(done);
     });
-
 
     afterEach(() => {
         httpSpy.handleEvent.calls.reset();
     });
-
-
 
     it('Sends an event to the server', () => {
         const client = analyticsClient({
@@ -50,48 +46,51 @@ describe('integration/send-event', () => {
             trackEvent: buildTrackEvent()
         };
 
-        return client.sendTrackEvent(event)
+        return client
+            .sendTrackEvent(event)
             .then(() => client.flush())
             .then(() => {
                 expect(httpSpy.handleEvent).toHaveBeenCalledWith(
                     jasmine.objectContaining({
                         body: {
-                            batch: [{
-                                userId: 'test-user-id',
-                                anonymousId: 'test-anonymous-id',
-                                event: 'my-action-subject my-action',
-                                properties: {
-                                    source: 'my-source',
-                                    action: 'my-action',
-                                    actionSubject: 'my-action-subject',
-                                    actionSubjectId: 'my-action-subject-id',
-                                    tags: ['my-tag'],
-                                    containerType: 'my-container-type',
-                                    containerId: 'my-container-id',
-                                    objectType: 'my-object-type',
-                                    objectId: 'my-object-id',
-                                    attributes: {},
-                                    origin: 'my-origin',
-                                    product: 'integration-test',
-                                    env: 'local',
-                                    eventType: 'track',
-                                    userIdType: 'atlassianAccount',
-                                    tenantIdType: 'cloudId',
-                                    tenantId: 'test-tenant-id'
-                                },
-                                type: 'track',
-                                context: jasmine.anything(),
-                                _metadata: jasmine.anything(),
-                                timestamp: jasmine.anything(),
-                                messageId: jasmine.anything()
-                            }],
+                            batch: [
+                                {
+                                    userId: 'test-user-id',
+                                    anonymousId: 'test-anonymous-id',
+                                    event: 'my-action-subject my-action',
+                                    properties: {
+                                        source: 'my-source',
+                                        action: 'my-action',
+                                        actionSubject: 'my-action-subject',
+                                        actionSubjectId: 'my-action-subject-id',
+                                        tags: ['my-tag'],
+                                        containerType: 'my-container-type',
+                                        containerId: 'my-container-id',
+                                        objectType: 'my-object-type',
+                                        objectId: 'my-object-id',
+                                        attributes: {},
+                                        origin: 'my-origin',
+                                        product: 'integration-test',
+                                        env: 'local',
+                                        eventType: 'track',
+                                        userIdType: 'atlassianAccount',
+                                        tenantIdType: 'cloudId',
+                                        tenantId: 'test-tenant-id'
+                                    },
+                                    type: 'track',
+                                    context: jasmine.anything(),
+                                    _metadata: jasmine.anything(),
+                                    timestamp: jasmine.anything(),
+                                    messageId: jasmine.anything()
+                                }
+                            ],
                             timestamp: jasmine.anything(),
                             sentAt: jasmine.anything()
                         }
-                    }));
+                    })
+                );
             });
     });
-
 
     it('Sends a UI event to the server', () => {
         const client = analyticsClient({
@@ -108,44 +107,48 @@ describe('integration/send-event', () => {
             uiEvent: buildUIEvent()
         };
 
-        return client.sendUIEvent(uiEvent)
+        return client
+            .sendUIEvent(uiEvent)
             .then(() => client.flush())
             .then(() => {
                 expect(httpSpy.handleEvent).toHaveBeenCalledWith(
                     jasmine.objectContaining({
                         body: {
-                            batch: [{
-                                userId: 'test-user-id',
-                                event: 'my-action-subject my-action',
-                                properties: {
-                                    source: 'my-source',
-                                    action: 'my-action',
-                                    actionSubject: 'my-action-subject',
-                                    actionSubjectId: 'my-action-subject-id',
-                                    tags: ['my-tag'],
-                                    containerType: 'my-container-type',
-                                    containerId: 'my-container-id',
-                                    objectType: 'my-object-type',
-                                    objectId: 'my-object-id',
-                                    attributes: {},
-                                    origin: 'my-origin',
-                                    product: 'integration-test',
-                                    env: 'local',
-                                    eventType: 'ui',
-                                    userIdType: 'atlassianAccount',
-                                    tenantIdType: 'cloudId',
-                                    tenantId: 'test-tenant-id'
-                                },
-                                type: 'track',
-                                context: jasmine.anything(),
-                                _metadata: jasmine.anything(),
-                                timestamp: jasmine.anything(),
-                                messageId: jasmine.anything()
-                            }],
+                            batch: [
+                                {
+                                    userId: 'test-user-id',
+                                    event: 'my-action-subject my-action',
+                                    properties: {
+                                        source: 'my-source',
+                                        action: 'my-action',
+                                        actionSubject: 'my-action-subject',
+                                        actionSubjectId: 'my-action-subject-id',
+                                        tags: ['my-tag'],
+                                        containerType: 'my-container-type',
+                                        containerId: 'my-container-id',
+                                        objectType: 'my-object-type',
+                                        objectId: 'my-object-id',
+                                        attributes: {},
+                                        origin: 'my-origin',
+                                        product: 'integration-test',
+                                        env: 'local',
+                                        eventType: 'ui',
+                                        userIdType: 'atlassianAccount',
+                                        tenantIdType: 'cloudId',
+                                        tenantId: 'test-tenant-id'
+                                    },
+                                    type: 'track',
+                                    context: jasmine.anything(),
+                                    _metadata: jasmine.anything(),
+                                    timestamp: jasmine.anything(),
+                                    messageId: jasmine.anything()
+                                }
+                            ],
                             timestamp: jasmine.anything(),
                             sentAt: jasmine.anything()
                         }
-                    }));
+                    })
+                );
             });
     });
 
@@ -165,38 +168,41 @@ describe('integration/send-event', () => {
             screenEvent: buildScreenEvent()
         };
 
-        return client.sendScreenEvent(screenEvent)
+        return client
+            .sendScreenEvent(screenEvent)
             .then(() => client.flush())
             .then(() => {
                 expect(httpSpy.handleEvent).toHaveBeenCalledWith(
                     jasmine.objectContaining({
                         body: {
-                            batch: [{
-                                userId: 'test-user-id',
-                                name: 'test-name',
-                                properties: {
-                                    tags: ['my-tag'],
-                                    attributes: {},
-                                    origin: 'my-origin',
-                                    platform: 'my-platform',
-                                    product: 'integration-test',
-                                    env: 'local',
-                                    eventType: 'screen',
-                                    userIdType: 'atlassianAccount',
-                                    tenantIdType: 'cloudId',
-                                    tenantId: 'test-tenant-id'
-                                },
-                                type: 'page',
-                                context: jasmine.anything(),
-                                _metadata: jasmine.anything(),
-                                timestamp: jasmine.anything(),
-                                messageId: jasmine.anything()
-                            }],
+                            batch: [
+                                {
+                                    userId: 'test-user-id',
+                                    name: 'test-name',
+                                    properties: {
+                                        tags: ['my-tag'],
+                                        attributes: {},
+                                        origin: 'my-origin',
+                                        platform: 'my-platform',
+                                        product: 'integration-test',
+                                        env: 'local',
+                                        eventType: 'screen',
+                                        userIdType: 'atlassianAccount',
+                                        tenantIdType: 'cloudId',
+                                        tenantId: 'test-tenant-id'
+                                    },
+                                    type: 'page',
+                                    context: jasmine.anything(),
+                                    _metadata: jasmine.anything(),
+                                    timestamp: jasmine.anything(),
+                                    messageId: jasmine.anything()
+                                }
+                            ],
                             timestamp: jasmine.anything(),
                             sentAt: jasmine.anything()
                         }
-                    }));
+                    })
+                );
             });
     });
-
 });

@@ -3,7 +3,7 @@ export as namespace jqlAutocompleteLib;
 export = JQLAutocomplete;
 
 declare class JQLAutocomplete {
-  constructor(somethign: any);
+    constructor(somethign: any);
 
-  passAutocompleteData(something: any): void;
+    passAutocompleteData(something: any): void;
 }
