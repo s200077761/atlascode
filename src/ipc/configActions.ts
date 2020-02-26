@@ -25,6 +25,11 @@ export interface LogoutAuthAction extends Action {
     detailedSiteInfo: DetailedSiteInfo;
 }
 
+export interface EditAuthAction extends Action {
+    detailedSiteInfo: DetailedSiteInfo;
+    authInfo: AuthInfo;
+}
+
 export enum ConfigTarget {
     User = 'user',
     Workspace = 'workspace',
@@ -84,6 +89,14 @@ export function isFetchSearchJiraFiltersAction(a: Action): a is FetchSearchJiraF
 
 export function isLogoutAuthAction(a: Action): a is LogoutAuthAction {
     return (<LogoutAuthAction>a).detailedSiteInfo !== undefined && (<LogoutAuthAction>a).action === 'logout';
+}
+
+export function isEditAuthAction(a: Action): a is EditAuthAction {
+    return (
+        (<EditAuthAction>a).detailedSiteInfo !== undefined &&
+        (<EditAuthAction>a).authInfo !== undefined &&
+        (<EditAuthAction>a).action === 'edit'
+    );
 }
 
 export function isLoginAuthAction(a: Action): a is LoginAuthAction {

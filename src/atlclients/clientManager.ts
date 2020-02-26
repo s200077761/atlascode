@@ -21,6 +21,7 @@ import {
 } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
+import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap, Interval } from '../util/cachemap';
 import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo } from './authInfo';
 
@@ -32,11 +33,19 @@ export class ClientManager implements Disposable {
     private _agentChanged: boolean = false;
 
     constructor(context: ExtensionContext) {
-        context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
+        context.subscriptions.push(
+            configuration.onDidChange(this.onConfigurationChanged, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this)
+        );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     dispose() {
+        this._clients.clear();
+    }
+
+    private onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        this._agentChanged = true;
         this._clients.clear();
     }
 

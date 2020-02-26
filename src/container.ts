@@ -67,10 +67,10 @@ export class Container {
         this._context = context;
         this._version = version;
         context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
-        context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
-        context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
+        context.subscriptions.push((this._clientManager = new ClientManager(context)));
+        context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));

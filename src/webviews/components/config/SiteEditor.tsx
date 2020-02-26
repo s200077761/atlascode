@@ -1,4 +1,5 @@
 import Button from '@atlaskit/button';
+import EditIcon from '@atlaskit/icon/glyph/edit';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
@@ -11,30 +12,33 @@ import {
     ProductJira,
     SiteInfo
 } from '../../../atlclients/authInfo';
+import { emptySiteAuthInfo, SiteAuthInfo } from '../../../ipc/configMessaging';
 import AuthForm from './AuthForm';
 
 interface AuthProps {
-    sites: DetailedSiteInfo[];
+    sites: SiteAuthInfo[];
     product: Product;
     isRemote: boolean;
     handleDeleteSite: (site: DetailedSiteInfo) => void;
+    handleEditSite?: (site: DetailedSiteInfo, auth: AuthInfo) => void;
     handleSaveSite: (site: SiteInfo, auth: AuthInfo) => void;
     siteExample?: string;
     cloudOrServer?: string;
 }
 
 type ItemData = {
-    site: DetailedSiteInfo;
+    site: SiteAuthInfo;
     delfunc: (site: DetailedSiteInfo) => void;
+    editfunc: (site: SiteAuthInfo) => void;
 };
 
-const Name = (data: ItemData) => <p style={{ display: 'inline' }}>{data.site.name}</p>;
+const Name = (data: ItemData) => <p style={{ display: 'inline' }}>{data.site.site.name}</p>;
 
 const Delete = (data: ItemData) => {
     return (
         <React.Fragment>
-            <Tooltip content={`Delete ${data.site.name}`}>
-                <div className="ac-delete" onClick={() => data.delfunc(data.site)}>
+            <Tooltip content={`Delete ${data.site.site.name}`}>
+                <div className="ac-delete" onClick={() => data.delfunc(data.site.site)}>
                     <TrashIcon label="trash" />
                 </div>
             </Tooltip>
@@ -42,16 +46,33 @@ const Delete = (data: ItemData) => {
     );
 };
 
+const Edit = (data: ItemData) => {
+    if (data.editfunc) {
+        return (
+            <React.Fragment>
+                <Tooltip content={`Edit ${data.site.site.name}`}>
+                    <div className="ac-edit" onClick={() => data.editfunc(data.site)}>
+                        <EditIcon label="edit" />
+                    </div>
+                </Tooltip>
+            </React.Fragment>
+        );
+    }
+    return <React.Fragment />;
+};
+
 export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     sites,
     product,
     isRemote,
     handleDeleteSite,
+    handleEditSite,
     handleSaveSite,
     siteExample,
     cloudOrServer
 }) => {
     const [addingSite, setAddingSite] = useState(false);
+    const [editingSite, setEditingSite] = useState(emptySiteAuthInfo);
     const loginText = `Login to ${product.name} Cloud`;
     const addSiteText = `Add Custom ${product.name} Site`;
 
@@ -63,6 +84,19 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     const handleSave = (site: SiteInfo, auth: AuthInfo) => {
         handleSaveSite(site, auth);
         setAddingSite(false);
+    };
+
+    const handleEdit = (site: SiteAuthInfo) => {
+        if (handleEditSite) {
+            setEditingSite(site);
+        }
+    };
+
+    const completeEdit = (site: DetailedSiteInfo, auth: AuthInfo) => {
+        if (handleEditSite) {
+            handleEditSite(site, auth);
+            setEditingSite(emptySiteAuthInfo);
+        }
     };
 
     const generateLoginButtons = () => {
@@ -109,23 +143,33 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
 
     const getTreeItems = () => {
         if (sites.length > 0) {
-            return sites.map(site => {
+            return sites.map(siteInfo => {
                 return {
-                    id: site.id,
+                    id: siteInfo.site.id,
                     content: {
-                        site: site,
-                        delfunc: handleDeleteSite
+                        site: siteInfo,
+                        delfunc: handleDeleteSite,
+                        editfunc: handleEditSite && siteInfo.site.isCloud ? undefined : handleEdit
                     }
                 };
             });
         } else {
-            return [{ id: 1, content: { site: `No sites currently authenticated` } }];
+            return [{ id: 1, content: { site: { site: { name: `No sites currently authenticated` } } } }];
         }
     };
 
     return (
         <React.Fragment>
             {addingSite && <AuthForm onCancel={() => setAddingSite(false)} onSave={handleSave} product={product} />}
+            {editingSite !== emptySiteAuthInfo && (
+                <AuthForm
+                    site={editingSite.site}
+                    auth={editingSite.auth}
+                    onCancel={() => setEditingSite(emptySiteAuthInfo)}
+                    onSave={completeEdit}
+                    product={product}
+                />
+            )}
             <div className="ac-vpadding">
                 {isRemote && (
                     <div className="ac-vpadding">
@@ -141,8 +185,8 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
             </div>
             <div style={{ marginTop: '8px' }}>
                 <TableTree
-                    columns={sites.length > 0 ? [Name, Delete] : [Name]}
-                    columnWidths={['100%', '20px']}
+                    columns={sites.length > 0 ? [Name, Edit, Delete] : [Name]}
+                    columnWidths={['100%', '20px', '20px']}
                     items={getTreeItems()}
                 />
             </div>

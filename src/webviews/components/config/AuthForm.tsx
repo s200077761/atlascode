@@ -7,6 +7,7 @@ import React, { PureComponent } from 'react';
 import {
     AuthInfo,
     BasicAuthInfo,
+    DetailedSiteInfo,
     emptyAuthInfo,
     emptyUserInfo,
     Product,
@@ -18,6 +19,8 @@ import * as FieldValidators from '../fieldValidators';
 export default class AuthForm extends PureComponent<
     {
         product: Product;
+        site?: DetailedSiteInfo;
+        auth?: AuthInfo;
         onCancel: () => void;
         onSave: (site: SiteInfo, authInfo: AuthInfo) => void;
     },
@@ -53,20 +56,24 @@ export default class AuthForm extends PureComponent<
         super(props);
 
         this.state = {
-            baseUrl: '',
-            username: '',
-            password: '',
-            requiresCredentials: false,
+            baseUrl: props.site?.baseLinkUrl ?? '',
+            username: props.auth?.username ?? '',
+            password: props.auth?.password ?? '',
+            requiresCredentials: this.isEditing(),
             readyToSave: false,
-            useCustomSSL: false,
-            useContextPath: false,
+            useCustomSSL: props.site?.customSSLCertPaths && props.site?.customSSLCertPaths !== '',
+            useContextPath: props.site?.contextPath && props.site?.contexPath !== '',
             customSSLType: 'customServerSSL',
-            certPaths: '',
-            pfxPath: '',
-            pfxPassphrase: '',
-            contextPath: ''
+            certPaths: props.site?.customSSLCertPaths ?? '',
+            pfxPath: props.site?.pfxPath ?? '',
+            pfxPassphrase: props.site?.pfxPassphrase ?? '',
+            contextPath: props.site?.contextPath ?? ''
         };
     }
+
+    isEditing = (): boolean => {
+        return this.props.site !== undefined;
+    };
 
     isCloudUrl = (url: URL): boolean => {
         return (
@@ -174,36 +181,41 @@ export default class AuthForm extends PureComponent<
     };
 
     onContextPathEnableChange = (e: any) => {
-        this.setState({ useContextPath: e.target.checked });
+        this.setState({ useContextPath: e.target.checked }, () => this.setReadyToSave(true));
     };
 
     onContextPathChange = (e: any) => {
         this.setState({ contextPath: e.target.value }, () => this.setReadyToSave(true));
     };
 
+    heading = (): string => {
+        return this.isEditing() ? `Edit ${this.props.product.name} Site` : `Add ${this.props.product.name} Site`;
+    };
+
     render() {
-        const heading = `Add ${this.props.product.name} Site`;
         let helperText =
             'You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com';
         if (this.props.product.key === ProductBitbucket.key) {
             helperText =
                 'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
+        } else if (this.isEditing()) {
+            helperText = 'Base Url can not be edited.';
         }
 
         return (
             <ModalTransition>
                 <Modal
                     onClose={this.props.onCancel}
-                    heading={heading}
+                    heading={this.heading()}
                     shouldCloseOnEscapePress={false}
                     className="modalClass"
                 >
                     <Field
                         label="Base Url"
-                        isRequired={true}
+                        isRequired={!this.isEditing()}
                         id="baseUrl-input"
                         name="baseUrl-input"
-                        defaultValue=""
+                        defaultValue={this.props.site?.baseLinkUrl ?? ''}
                         validate={FieldValidators.validateRequiredUrl}
                     >
                         {(fieldArgs: any) => {
@@ -223,6 +235,7 @@ export default class AuthForm extends PureComponent<
                                         {...fieldArgs.fieldProps}
                                         style={{ width: '100%', display: 'block' }}
                                         className="ac-inputField"
+                                        readOnly={this.isEditing()}
                                         onChange={FieldValidators.chain(
                                             fieldArgs.fieldProps.onChange,
                                             this.onBaseUrlChange
@@ -260,7 +273,7 @@ export default class AuthForm extends PureComponent<
                                     isRequired={true}
                                     id="contextPath-input"
                                     name="contextPath-input"
-                                    defaultValue=""
+                                    defaultValue={this.props.site?.contextPath ?? ''}
                                 >
                                     {(fieldArgs: any) => {
                                         return (
@@ -287,7 +300,7 @@ export default class AuthForm extends PureComponent<
                                 isRequired={true}
                                 id="username-input"
                                 name="username-input"
-                                defaultValue=""
+                                defaultValue={(this.props.auth as BasicAuthInfo)?.username ?? ''}
                                 validate={FieldValidators.validateString}
                             >
                                 {(fieldArgs: any) => {
@@ -316,7 +329,7 @@ export default class AuthForm extends PureComponent<
                                 isRequired={true}
                                 id="password-input"
                                 name="password-input"
-                                defaultValue=""
+                                defaultValue={(this.props.auth as BasicAuthInfo)?.password ?? ''}
                                 validate={FieldValidators.validateString}
                             >
                                 {(fieldArgs: any) => {
@@ -391,7 +404,7 @@ export default class AuthForm extends PureComponent<
                                     isRequired={true}
                                     id="sslCertPaths-input"
                                     name="sslCertPaths-input"
-                                    defaultValue=""
+                                    defaultValue={this.props.site?.customSSLCertPaths ?? ''}
                                 >
                                     {(fieldArgs: any) => {
                                         return (
@@ -422,7 +435,7 @@ export default class AuthForm extends PureComponent<
                                         isRequired={true}
                                         id="pfxPath-input"
                                         name="pfxPath-input"
-                                        defaultValue=""
+                                        defaultValue={this.props.site?.pfxPath ?? ''}
                                     >
                                         {(fieldArgs: any) => {
                                             return (
@@ -448,7 +461,7 @@ export default class AuthForm extends PureComponent<
                                         isRequired={false}
                                         id="pfxPassphrase-input"
                                         name="pfxPassphrase-input"
-                                        defaultValue=""
+                                        defaultValue={this.props.site?.pfxPassphrase ?? ''}
                                     >
                                         {(fieldArgs: any) => {
                                             return (

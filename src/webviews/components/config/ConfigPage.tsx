@@ -305,6 +305,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
     };
 
+    handleEdit = (site: DetailedSiteInfo, auth: AuthInfo) => {
+        this.postMessage({ action: 'edit', detailedSiteInfo: site, authInfo: auth });
+    };
+
     handleLogout = (site: DetailedSiteInfo) => {
         this.postMessage({ action: 'logout', detailedSiteInfo: site });
     };
@@ -496,6 +500,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                             product={ProductJira}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}
+                                                            handleEditSite={this.handleEdit}
                                                             handleSaveSite={this.handleLogin}
                                                         />
                                                     </Panel>
@@ -513,7 +518,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                             jqlFetcher={this.handleFetchJqlOptions}
                                                             jiraFilterFetcher={this.handleFetchFilterOptions}
                                                             jiraFilterSearcher={this.handleSearchFilterOptions}
-                                                            sites={this.state.jiraSites}
+                                                            sites={this.state.jiraSites.map(siteAuth => siteAuth.site)}
                                                             filters={this.state.jiraFilters}
                                                             filterSearches={this.state.jiraFilterSearches}
                                                             onConfigChange={this.onConfigChange}

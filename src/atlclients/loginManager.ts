@@ -1,5 +1,5 @@
 import { window } from 'vscode';
-import { authenticatedEvent } from '../analytics';
+import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
@@ -156,6 +156,21 @@ export class LoginManager {
         }
     }
 
+    public async updatedServerInfo(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
+        if (isBasicAuthInfo(authInfo)) {
+            try {
+                const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                editedEvent(siteDetails).then(e => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
+            } catch (err) {
+                const errorString = `Error authenticating with ${site.product.name}: ${err}`;
+                Logger.error(new Error(errorString));
+                return Promise.reject(errorString);
+            }
+        }
+    }
+
     private async saveDetailsForServerSite(site: SiteInfo, credentials: BasicAuthInfo): Promise<DetailedSiteInfo> {
         const authHeader = 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
         // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances will
@@ -231,7 +246,7 @@ export class LoginManager {
         }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
-        this._siteManager.addSites([siteDetails]);
+        this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
     }

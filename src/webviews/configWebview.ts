@@ -1,7 +1,13 @@
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
 import * as vscode from 'vscode';
 import { commands, ConfigurationChangeEvent, ConfigurationTarget, env, Uri } from 'vscode';
-import { authenticateButtonEvent, customJQLCreatedEvent, featureChangeEvent, logoutButtonEvent } from '../analytics';
+import {
+    authenticateButtonEvent,
+    customJQLCreatedEvent,
+    editButtonEvent,
+    featureChangeEvent,
+    logoutButtonEvent
+} from '../analytics';
 import {
     DetailedSiteInfo,
     isBasicAuthInfo,
@@ -10,13 +16,14 @@ import {
     ProductBitbucket,
     ProductJira
 } from '../atlclients/authInfo';
-import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import { authenticateCloud, authenticateServer, clearAuth, updateServer } from '../commands/authenticate';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
 import { configuration } from '../config/configuration';
 import { JQLEntry, SettingSource } from '../config/model';
 import { Container } from '../container';
 import {
     ConfigTarget,
+    isEditAuthAction,
     isFetchJiraFiltersAction,
     isFetchJqlDataAction,
     isFetchSearchJiraFiltersAction,
@@ -26,7 +33,7 @@ import {
     isSaveSettingsAction,
     isSubmitFeedbackAction
 } from '../ipc/configActions';
-import { ConfigInspect, ConfigWorkspaceFolder } from '../ipc/configMessaging';
+import { ConfigInspect, ConfigWorkspaceFolder, SiteAuthInfo } from '../ipc/configMessaging';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { SitesAvailableUpdateEvent } from '../siteManager';
@@ -72,6 +79,14 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         this.initialize(data);
     }
 
+    private async siteAuthInfoForProduct(product: Product): Promise<SiteAuthInfo[]> {
+        const sites = Container.siteManager.getSitesAvailable(product);
+        const auths = await Promise.all(sites.map(site => Container.credentialManager.getAuthInfo(site)));
+        return sites.map((s, i) => {
+            return { site: s, auth: auths[i] };
+        });
+    }
+
     public async invalidate() {
         try {
             if (!this._panel || this.isRefeshing) {
@@ -80,8 +95,8 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
             this.isRefeshing = true;
 
-            const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-            const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
+            const jiraSitesAvailable = await this.siteAuthInfoForProduct(ProductJira);
+            const bitbucketSitesAvailable = await this.siteAuthInfoForProduct(ProductBitbucket);
 
             const feedbackUser = await getFeedbackUser();
 
@@ -141,14 +156,11 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         };
     }
 
-    private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
-        const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-        const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
-
+    private async onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
         this.postMessage({
             type: 'sitesAvailableUpdate',
-            jiraSites: jiraSitesAvailable,
-            bitbucketSites: bitbucketSitesAvailable
+            jiraSites: await this.siteAuthInfoForProduct(ProductJira),
+            bitbucketSites: await this.siteAuthInfoForProduct(ProductBitbucket)
         });
     }
 
@@ -188,6 +200,25 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                             authenticateCloud(msg.siteInfo, settingsUrl);
                         }
                         authenticateButtonEvent(this.id).then(e => {
+                            Container.analyticsClient.sendUIEvent(e);
+                        });
+                    }
+                    break;
+                }
+                case 'edit': {
+                    handled = true;
+                    if (isEditAuthAction(msg)) {
+                        try {
+                            await updateServer(msg.detailedSiteInfo, msg.authInfo);
+                        } catch (e) {
+                            let err = new Error(`Authentication error: ${e}`);
+                            Logger.error(err);
+                            this.postMessage({
+                                type: 'error',
+                                reason: this.formatErrorReason(e, 'Authentication error')
+                            });
+                        }
+                        editButtonEvent(this.id).then(e => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }

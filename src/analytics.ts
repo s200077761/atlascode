@@ -66,6 +66,12 @@ export async function authenticatedEvent(site: DetailedSiteInfo): Promise<TrackE
     });
 }
 
+export async function editedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'edited', 'atlascode', {
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+    });
+}
+
 export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'unauthenticated', 'atlascode', {
         attributes: { machineId: Container.machineId, hostProduct: site.product.name }
@@ -307,6 +313,22 @@ export async function authenticateButtonEvent(source: string): Promise<UIEvent> 
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'authenticateButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function editButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'editCredentialsButton',
             source: source
         }
     };
