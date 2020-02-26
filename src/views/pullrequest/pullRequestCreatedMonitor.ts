@@ -20,19 +20,21 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             }
             const bbApi = await clientForSite(site);
 
-            return bbApi.pullrequests.getLatest(wsRepo).then(prList => {
-                const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
-                    ? this._lastCheckedTime.get(wsRepo.rootUri)!
-                    : new Date();
-                this._lastCheckedTime.set(wsRepo.rootUri, new Date());
+            return bbApi.pullrequests
+                .getLatest(wsRepo)
+                .then(prList => {
+                    const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
+                        ? this._lastCheckedTime.get(wsRepo.rootUri)!
+                        : new Date();
+                    this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
-                let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
-                return newPRs;
-            })
-            .catch(e => {
-                Logger.error(e, 'Error while fetching latest pull requests');
-                return [];
-            });
+                    let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
+                    return newPRs;
+                })
+                .catch(e => {
+                    Logger.error(e, 'Error while fetching latest pull requests');
+                    return [];
+                });
         });
         Promise.all(promises)
             .then(result => result.reduce((prev, curr) => prev.concat(curr), []))
