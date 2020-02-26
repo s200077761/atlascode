@@ -42,7 +42,6 @@ import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
-import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
@@ -50,6 +49,7 @@ import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
+import { TextAreaEditor } from './TextAreaEditor';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -102,8 +102,6 @@ export abstract class AbstractIssueEditorPage<
 > extends WebviewComponent<EA, ER, EP, ES> {
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
-
-    private commentInputRef: HTMLTextAreaElement;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {};
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {};
@@ -200,22 +198,6 @@ export abstract class AbstractIssueEditorPage<
         }
 
         return false;
-    };
-
-    private handleCommentInput = (e: any) => {
-        const val: string = e.target.value;
-        this.setState({ commentInputValue: val });
-    };
-
-    private handleCommentMention = (e: any) => {
-        const { selectionStart, selectionEnd, value } = this.commentInputRef;
-        const mentionText: string = e.mention;
-        const commentInputWithMention = `${value.slice(0, selectionStart)}${mentionText} ${value.slice(selectionEnd)}`;
-        this.setState({ commentInputValue: commentInputWithMention }, () => {
-            this.commentInputRef.selectionStart = this.commentInputRef.selectionEnd =
-                selectionStart + mentionText.length;
-            this.commentInputRef.focus();
-        });
     };
 
     private handleExternalCommentSave = (e: any) => {
@@ -752,30 +734,21 @@ export abstract class AbstractIssueEditorPage<
                 return (
                     <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
                         {this.state.loadingField === field.key && <Spinner size="large" />}
-                        <textarea
-                            className="ac-textarea"
-                            rows={5}
-                            placeholder="Add a comment"
-                            value={this.state.commentInputValue}
-                            onChange={this.handleCommentInput}
-                            ref={element => (this.commentInputRef = element!)}
+                        <TextAreaEditor
+                            text={this.state.commentInputValue}
+                            fetchUsers={async (input: string) =>
+                                (await this.fetchUsers(input)).map(user => ({
+                                    displayName: user.displayName,
+                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                    mention: this.state.siteDetails.isCloud
+                                        ? `[~accountid:${user.accountId}]`
+                                        : `[~${user.name}]`
+                                }))
+                            }
+                            placeholder="Add a comment..."
+                            disabled={false}
+                            onChange={(input: string) => this.setState({ commentInputValue: input })}
                         />
-                        <div className="ac-textarea-toolbar">
-                            <PopoutMentionPicker
-                                targetButtonContent="@"
-                                targetButtonTooltip="Mention @"
-                                loadUserOptions={async (input: string) =>
-                                    (await this.fetchUsers(input)).map(user => ({
-                                        displayName: user.displayName,
-                                        avatarUrl: user.avatarUrl,
-                                        mention: this.state.siteDetails.isCloud
-                                            ? `[~accountid:${user.accountId}]`
-                                            : `[~${user.name}]`
-                                    }))
-                                }
-                                onUserMentioned={this.handleCommentMention}
-                            />
-                        </div>
 
                         <ButtonGroup>
                             <Button

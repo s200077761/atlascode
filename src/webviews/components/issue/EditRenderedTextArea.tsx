@@ -1,9 +1,9 @@
 import { ButtonGroup } from '@atlaskit/button';
 import { Button } from '@atlaskit/button/dist/cjs/components/Button';
 import Comment from '@atlaskit/comment';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
+import { TextAreaEditor } from './TextAreaEditor';
 
 interface Props {
     siteDetails: DetailedSiteInfo;
@@ -22,25 +22,8 @@ export const EditRenderedTextArea: React.FC<Props> = ({
     isSaving,
     onSave
 }: Props) => {
-    const [textAreaRef, setCommentInputRef] = useState(null! as HTMLTextAreaElement);
     const [editing, setEditing] = useState(false);
     const [commentInputValue, setCommentInputValue] = useState(text);
-    const [cursorPosition, setCursor] = useState(0);
-
-    useEffect(() => {
-        if (textAreaRef) {
-            textAreaRef.selectionStart = textAreaRef.selectionEnd = cursorPosition;
-            textAreaRef.focus();
-        }
-    }, [textAreaRef, cursorPosition]);
-
-    const handleCommentMention = (e: any) => {
-        const { selectionStart, selectionEnd, value } = textAreaRef;
-        const mentionText: string = e.mention;
-        const commentInputWithMention = `${value.slice(0, selectionStart)}${mentionText} ${value.slice(selectionEnd)}`;
-        setCursor(selectionStart + mentionText.length);
-        setCommentInputValue(commentInputWithMention);
-    };
 
     if (editing) {
         return (
@@ -48,33 +31,18 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                 <Comment
                     isSaving={isSaving}
                     content={
-                        <React.Fragment>
-                            <textarea
-                                className="ac-textarea"
-                                rows={5}
-                                placeholder="Add a comment"
-                                value={commentInputValue}
-                                onChange={e => setCommentInputValue(e.target.value)}
-                                ref={element => setCommentInputRef(element!)}
-                                disabled={isSaving}
-                            />
-                            <div className="ac-textarea-toolbar">
-                                <PopoutMentionPicker
-                                    targetButtonContent="@"
-                                    targetButtonTooltip="Mention @"
-                                    loadUserOptions={async (input: string) =>
-                                        (await fetchUsers(input)).map(user => ({
-                                            displayName: user.displayName,
-                                            avatarUrl: user.avatarUrls?.['48x48'],
-                                            mention: siteDetails.isCloud
-                                                ? `[~accountid:${user.accountId}]`
-                                                : `[~${user.name}]`
-                                        }))
-                                    }
-                                    onUserMentioned={handleCommentMention}
-                                />
-                            </div>
-                        </React.Fragment>
+                        <TextAreaEditor
+                            text={text}
+                            fetchUsers={async (input: string) =>
+                                (await fetchUsers(input)).map(user => ({
+                                    displayName: user.displayName,
+                                    avatarUrl: user.avatarUrls?.['48x48'],
+                                    mention: siteDetails.isCloud ? `[~accountid:${user.accountId}]` : `[~${user.name}]`
+                                }))
+                            }
+                            disabled={isSaving}
+                            onChange={(input: string) => setCommentInputValue(input)}
+                        />
                     }
                 />
                 <ButtonGroup>

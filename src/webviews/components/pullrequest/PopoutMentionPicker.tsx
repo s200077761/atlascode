@@ -30,7 +30,7 @@ export default class PopoutMentionPicker extends React.Component<
         targetButtonContent: string;
         targetButtonTooltip: string;
         onUserMentioned: (user: any) => void;
-        loadUserOptions: (input: string) => any;
+        loadUserOptions: (input: string) => Promise<{ displayName: string; mention: string; avatarUrl?: string }[]>;
     },
     State
 > {
