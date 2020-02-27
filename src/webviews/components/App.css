@@ -443,8 +443,8 @@ section button span {
   color: var(--vscode-editor-foreground);
 }
 
-.vscode-dark .ac-inline-dialog>div {
-  background-color: var(--vscode-editor-background--lighten-05);
+.ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--lighten-15);
 }
 
 .vscode-light .ac-inline-dialog>div {
@@ -549,6 +549,10 @@ section button span {
 
 .ac-button:disabled {
   background: var(--vscode-button-background--50) !important;
+}
+
+.vscode-high-contrast .ac-button {
+  border-width: 1px;
 }
 
 .ac-button-warning span {
