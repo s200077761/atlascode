@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
+import { WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
@@ -25,11 +25,6 @@ import { SimpleNode } from '../nodes/simpleNode';
 import { descriptionForState, filtersActive, iconUriForPipeline, shouldDisplay } from './Helpers';
 
 const defaultPageLength = 25;
-
-export interface PipelineInfo {
-    site: BitbucketSite;
-    pipelineUuid: string;
-}
 
 export class PipelinesTree extends BaseTreeDataProvider {
     private _disposable: Disposable;
@@ -226,7 +221,7 @@ export class PipelineNode extends AbstractBaseNode {
         item.command = {
             command: Commands.ShowPipeline,
             title: 'Show Pipeline',
-            arguments: [{ site: this.pipeline.site, pipelineUuid: this.pipeline.uuid } as PipelineInfo]
+            arguments: [this.pipeline]
         };
         item.iconPath = iconUriForPipeline(this.pipeline);
         item.resourceUri = Uri.parse(

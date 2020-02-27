@@ -17,6 +17,7 @@ export interface Pipeline {
     state: PipelineState;
     uuid: string;
     target: PipelineTarget;
+    triggerName?: string;
     completed_on?: string;
     duration_in_seconds?: number;
 }
@@ -49,15 +50,55 @@ export interface PipelineStage {
     type: string;
 }
 
+export enum PipelineSelectorType {
+    Branch = 'branches',
+    Tag = 'tags',
+    Bookmark = 'bookmarks',
+    Custom = 'custom',
+    PullRequests = 'pull-requests',
+    Default = 'default'
+}
+
 export interface PipelineSelector {
     pattern?: string;
-    type: string;
+    type: PipelineSelectorType;
+}
+
+export enum PipelineTargetType {
+    Reference = 'pipeline_ref_target',
+    Commit = 'pipeline_commit_target',
+    PullRequest = 'pipeline_pullrequest_target'
+}
+
+export enum PipelineReferenceType {
+    Branch = 'branch',
+    NamedBranch = 'named_branch',
+    Tag = 'tag',
+    AnnotatedTag = 'annotated_tag',
+    Bookmark = 'bookmark'
 }
 
 export interface PipelineTarget {
+    type: PipelineTargetType;
     ref_name?: string;
     selector?: PipelineSelector;
-    triggerName: string;
+    branch_name?: string;
+    commit?: any; // We need this to be able to re-run pipeline builds but I can't find any complete documentation as to its shape
+}
+
+// Leaving this here to match the (implied) model of the API.
+export interface PipelineCommitTarget extends PipelineTarget {}
+
+export interface PipelinePullRequestTarget extends PipelineTarget {
+    source: string;
+    destination: string;
+    destination_revision?: string;
+    pull_request_id: number;
+}
+
+export interface PipelineReferenceTarget extends PipelineTarget {
+    ref_name: string;
+    ref_type: PipelineReferenceType;
 }
 
 export interface PipelineStep {

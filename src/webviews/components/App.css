@@ -1144,6 +1144,14 @@ pre.pipeline-logs {
     margin-left: 24px;
 }
 
+.pipeline-button-group {
+    float: right;
+}
+
+.pipeline-button-group .ac-button {
+    margin-left: 4px;
+}
+
 /*-------------------- END - Pipelines --------------------*/
 
 /*-------------------- BEGIN - Comments --------------------*/

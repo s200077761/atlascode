@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
+import { Commands } from '../commands';
 import { Container } from '../container';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
@@ -8,11 +9,10 @@ import { PipelineData, StepMessageData } from '../ipc/pipelinesMessaging';
 import { Logger } from '../logger';
 import { Pipeline, PipelineStep } from '../pipelines/model';
 import { iconSet, Resources } from '../resources';
-import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
-export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
-    private _pipelineInfo: PipelineInfo | undefined = undefined;
+export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<Pipeline> {
+    private pipeline: Pipeline | undefined = undefined;
     constructor(extensionPath: string) {
         super(extensionPath);
     }
@@ -30,24 +30,20 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
-        if (this._pipelineInfo) {
-            return this._pipelineInfo.site.details;
-        }
-
-        return undefined;
+        return this.pipeline?.site.details;
     }
 
     public get productOrUndefined(): Product | undefined {
         return ProductBitbucket;
     }
 
-    initialize(pipelineInfo: PipelineInfo) {
-        this._pipelineInfo = pipelineInfo;
+    initialize(pipeline: Pipeline) {
+        this.pipeline = pipeline;
         this.invalidate();
     }
 
     public async invalidate() {
-        if (this._pipelineInfo === undefined || this._pipelineInfo.pipelineUuid === '') {
+        if (this.pipeline === undefined || this.pipeline.uuid === '') {
             return;
         }
 
@@ -62,9 +58,9 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
 
         this.isRefeshing = true;
 
-        const bbApi = await clientForSite(this._pipelineInfo.site);
+        const bbApi = await clientForSite(this.pipeline.site);
         try {
-            let pipeline = await bbApi.pipelines!.getPipeline(this._pipelineInfo.site, this._pipelineInfo.pipelineUuid);
+            let pipeline = await bbApi.pipelines!.getPipeline(this.pipeline.site, this.pipeline.uuid);
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
@@ -74,21 +70,19 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
         }
 
         try {
-            let steps = await bbApi.pipelines!.getSteps(this._pipelineInfo.site, this._pipelineInfo.pipelineUuid);
+            let steps = await bbApi.pipelines!.getSteps(this.pipeline.site, this.pipeline.uuid);
             this.updateSteps(steps);
 
             steps.map(step => {
-                bbApi
-                    .pipelines!.getStepLog(this._pipelineInfo!.site, this._pipelineInfo!.pipelineUuid, step.uuid)
-                    .then(logs => {
-                        const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
-                        logs.map((log, ix) => {
-                            if (ix < commands.length) {
-                                commands[ix].logs = log;
-                                this.updateSteps(steps);
-                            }
-                        });
+                bbApi.pipelines!.getStepLog(this.pipeline!.site, this.pipeline!.uuid, step.uuid).then(logs => {
+                    const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
+                    logs.map((log, ix) => {
+                        if (ix < commands.length) {
+                            commands[ix].logs = log;
+                            this.updateSteps(steps);
+                        }
                     });
+                });
             });
         } catch (e) {
             Logger.error(e);
@@ -128,6 +122,22 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
                     handled = true;
                     if (isCopyPipelineLinkAction(e)) {
                         await vscode.env.clipboard.writeText(e.href!);
+                    }
+                    break;
+                }
+                case 'rerun': {
+                    handled = true;
+                    const bbApi = await clientForSite(this.pipeline!.site);
+                    try {
+                        const newPipeline = await bbApi.pipelines!.triggerPipeline(
+                            this.pipeline!.site,
+                            this.pipeline!.target
+                        );
+                        vscode.commands.executeCommand(Commands.ShowPipeline, newPipeline);
+                        this.hide();
+                    } catch (e) {
+                        Logger.error(e);
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                     }
                     break;
                 }

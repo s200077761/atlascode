@@ -5,7 +5,6 @@ import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { Pipeline, PipelineTarget } from '../../pipelines/model';
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from './Helpers';
-import { PipelineInfo } from './PipelinesTree';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
     private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -37,10 +36,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
                     window.showInformationMessage(this.composeMessage(diffs), buttonText).then(selection => {
                         if (selection) {
                             if (diffs.length === 1) {
-                                commands.executeCommand(Commands.ShowPipeline, {
-                                    site: diffs[0].site,
-                                    pipelineUuid: diffs[0].uuid
-                                } as PipelineInfo);
+                                commands.executeCommand(Commands.ShowPipeline, diffs[0]);
                             } else {
                                 commands.executeCommand('workbench.view.extension.atlascode-drawer');
                             }

@@ -11,6 +11,7 @@ import {
 import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { BitbucketIssue } from './bitbucket/model';
+import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
@@ -19,6 +20,7 @@ import { SettingSource } from './config/model';
 import { Container } from './container';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
+import { PipelineNode } from './views/pipelines/PipelinesTree';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -62,7 +64,7 @@ export enum Commands {
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
-    StartPipeline = 'atlascode.bb.startPipeline',
+    RerunPipeline = 'atlascode.bb.rerunPipeline',
     RefreshPipelines = 'atlascode.bb.refreshPipelines',
     ShowPipeline = 'atlascode.bb.showPipeline',
     PipelinesNextPage = 'atlascode.bb.pipelinesNextPage',
@@ -145,6 +147,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             });
             diffArgs[0]();
             commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
+        }),
+        commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
+            rerunPipeline(node.pipeline);
         }),
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
             Container.pipelineViewManager.createOrShow(pipelineInfo);

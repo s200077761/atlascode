@@ -1,6 +1,6 @@
 import { Uri } from 'vscode';
 import { Container } from '../../container';
-import { Pipeline, Status, statusForState } from '../../pipelines/model';
+import { Pipeline, PipelineSelectorType, Status, statusForState } from '../../pipelines/model';
 import { Resources } from '../../resources';
 
 /**
@@ -52,19 +52,19 @@ export function descriptionForState(result: Pipeline, excludePipelinePrefix?: bo
 export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?: boolean): string {
     let description = '';
     let pattern = undefined;
-    let type = undefined;
+    let type: PipelineSelectorType | undefined = undefined;
     if (pipeline.target.selector) {
         //Apparently some pipelines may be missing a selector entirely
         pattern = pipeline.target.selector.pattern;
         type = pipeline.target.selector.type;
     }
     const ref_name = pipeline.target.ref_name;
-    const triggerType = pipeline.target.triggerName;
+    const triggerType = pipeline.triggerName;
     const buildNumber = pipeline.build_number;
     const prefix = excludePipelinePrefix ? '' : `${pipeline.repository.name}: Pipeline `;
 
     //Make sure every case is covered so that a meaningful message is displayed back
-    if (type === 'custom') {
+    if (type === PipelineSelectorType.Custom) {
         //This is a custom pipeline
         if (ref_name && pattern) {
             //Pipeline is on a branch
