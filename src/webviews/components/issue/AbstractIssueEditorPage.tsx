@@ -46,6 +46,7 @@ import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
+import { EditRenderedTextArea } from './EditRenderedTextArea';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import { ParticipantList } from './ParticipantList';
@@ -404,18 +405,18 @@ export abstract class AbstractIssueEditorPage<
                     let markup: React.ReactNode = <p></p>;
 
                     if ((field as InputFieldUI).isMultiline) {
-                        if (this.state.fieldValues[`${field.key}.rendered`] !== undefined) {
-                            markup = (
-                                <p
-                                    id={field.key}
-                                    dangerouslySetInnerHTML={{
-                                        __html: this.state.fieldValues[`${field.key}.rendered`]
-                                    }}
-                                />
-                            );
-                        } else {
-                            markup = <p id={field.key}>{defaultVal}</p>;
-                        }
+                        markup = (
+                            <EditRenderedTextArea
+                                siteDetails={this.state.siteDetails}
+                                text={this.state.fieldValues[`${field.key}`]}
+                                renderedText={this.state.fieldValues[`${field.key}.rendered`]}
+                                fetchUsers={this.fetchUsers}
+                                isSaving={this.state.loadingField === field.key}
+                                onSave={(val: string) => {
+                                    this.handleInlineEdit(field, val);
+                                }}
+                            />
+                        );
                     } else {
                         markup = (
                             <EdiText
