@@ -19,8 +19,8 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
 import { AsyncSelect, components } from '@atlaskit/select';
-import SizeDetector from '@atlaskit/size-detector';
 import Tooltip from '@atlaskit/tooltip';
+import WidthDetector from '@atlaskit/width-detector';
 import { distanceInWordsToNow, format } from 'date-fns';
 import React from 'react';
 import uuid from 'uuid';
@@ -46,11 +46,6 @@ import CommentForm from '../pullrequest/CommentForm';
 import Comments from '../pullrequest/Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { StatusMenu } from './StatusMenu';
-
-type SizeMetrics = {
-    width: number;
-    height: number;
-};
 
 const priorityIcon = {
     trivial: <PriorityTrivialIcon label="trivial" />,
@@ -333,11 +328,12 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         return (
             <Page>
                 {!this.state.isOnline && <Offline />}
-                <SizeDetector>
-                    {({ width }: SizeMetrics) => {
+                <WidthDetector>
+                    {(width?: number) => {
+                        const narrow = width && width <= 800;
                         return (
                             <Grid>
-                                <GridColumn medium={width > 800 ? 8 : 12}>
+                                <GridColumn medium={narrow ? 12 : 8}>
                                     {this.state.isErrorBannerOpen && (
                                         <ErrorBanner
                                             onDismissError={this.handleDismissError}
@@ -388,7 +384,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                     </PageHeader>
                                     <p dangerouslySetInnerHTML={{ __html: issueData.content!.html! }} />
 
-                                    {width <= 800 && this.renderDetails(issueData)}
+                                    {narrow && this.renderDetails(issueData)}
 
                                     <Panel isDefaultExpanded header={<h3>Comments</h3>}>
                                         {this.state.data!.hasMore && (
@@ -418,11 +414,11 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                     </Panel>
                                 </GridColumn>
 
-                                {width > 800 && <GridColumn medium={4}>{this.renderDetails(issueData)}</GridColumn>}
+                                {!narrow && <GridColumn medium={4}>{this.renderDetails(issueData)}</GridColumn>}
                             </Grid>
                         );
                     }}
-                </SizeDetector>
+                </WidthDetector>
             </Page>
         );
     }

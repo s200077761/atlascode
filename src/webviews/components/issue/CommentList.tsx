@@ -34,6 +34,7 @@ export class CommentList extends React.Component<Props, State> {
             const type = this.props.isServiceDeskProject ? (comment.jsdPublic ? 'external' : 'internal') : undefined;
             const commentMarkup = (
                 <Comment
+                    key={comment.id}
                     avatar={<Avatar src={comment.author.avatarUrls['48x48']} label="Atlaskit avatar" size="medium" />}
                     author={
                         <CommentAuthor>
