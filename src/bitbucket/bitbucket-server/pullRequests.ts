@@ -539,7 +539,17 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
-        return [];
+        const { data } = await this.client.get(`/rest/build-status/1.0/commits/${pr.data.source.commitHash}`, {
+            markup: true,
+            avatarSize: 64
+        });
+
+        return (data.values || []).map((val: any) => ({
+            name: val.name,
+            state: val.state,
+            url: val.url,
+            ts: val.dateAdded
+        }));
     }
 
     async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
