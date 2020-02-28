@@ -61,11 +61,11 @@ export function registerResources(vscodeContext: ExtensionContext) {
     );
     Resources.icons.set(
         iconSet.BITBUCKETICON,
-        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'BitbucketFavicon.ico')))
+        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'BitbucketFavicon.png')))
     );
     Resources.icons.set(
         iconSet.JIRAICON,
-        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'JiraFavicon.ico')))
+        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'JiraFavicon.png')))
     );
     Resources.icons.set(
         iconSet.ATLASSIANICON,

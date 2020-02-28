@@ -36,7 +36,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
     }
 
     setIconPath() {
-        this._panel!.iconPath = Resources.icons.get(iconSet.PULLREQUEST);
+        this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
