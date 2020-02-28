@@ -12,7 +12,6 @@ declare module '@atlaskit/tag';
 declare module '@atlaskit/tag-group';
 declare module '@atlaskit/tooltip';
 declare module '@atlaskit/theme';
-declare module '@atlaskit/size-detector';
 declare module '@atlaskit/panel';
 
 /* BEGIN - ONLY USE FOR JQL EDITING */

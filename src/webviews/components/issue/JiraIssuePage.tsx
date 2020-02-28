@@ -1,16 +1,16 @@
 import Button, { ButtonGroup } from '@atlaskit/button';
+import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import StarIcon from '@atlaskit/icon/glyph/star';
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
-import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
-import SizeDetector from '@atlaskit/size-detector';
 import Tooltip from '@atlaskit/tooltip';
+import WidthDetector from '@atlaskit/width-detector';
 import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { distanceInWordsToNow, format } from 'date-fns';
@@ -47,11 +47,6 @@ import Worklogs from './Worklogs';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
-
-type SizeMetrics = {
-    width: number;
-    height: number;
-};
 
 interface ViewState extends CommonEditorViewState, EditIssueData {
     showMore: boolean;
@@ -389,7 +384,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
     };
 
-    getMainPanelMarkup(): any {
+    getMainPanelMarkup(includeCommonSidebar: boolean): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
         let epicLinkKey: string = '';
 
@@ -462,6 +457,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                 )}
+                {includeCommonSidebar && this.commonSidebar()}
                 {this.state.fields['description'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['description'].name}</label>
@@ -820,13 +816,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <SizeDetector>
-                    {(size: SizeMetrics) => {
-                        if (size.width < 800) {
+                <WidthDetector>
+                    {(width?: number) => {
+                        if (width && width < 800) {
                             return (
-                                <div style={{ marginTop: '20px' }}>
-                                    {this.getMainPanelMarkup()}
-                                    {this.commonSidebar()}
+                                <div style={{ margin: '20px 16px 0px 16px' }}>
+                                    {this.getMainPanelMarkup(true)}
                                     <Collapsible
                                         trigger="show more"
                                         triggerWhenOpen="show less"
@@ -853,7 +848,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         return (
                             <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
                                 <Grid layout="fluid">
-                                    <GridColumn medium={8}>{this.getMainPanelMarkup()}</GridColumn>
+                                    <GridColumn medium={8}>{this.getMainPanelMarkup(false)}</GridColumn>
                                     <GridColumn medium={4}>
                                         {this.commonSidebar()}
                                         <Collapsible
@@ -887,7 +882,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </div>
                         );
                     }}
-                </SizeDetector>
+                </WidthDetector>
             </Page>
         );
     }

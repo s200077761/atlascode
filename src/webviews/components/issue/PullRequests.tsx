@@ -1,7 +1,7 @@
-import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Button from '@atlaskit/button';
 import Lozenge from '@atlaskit/lozenge';
+import React from 'react';
 import { PullRequestData } from '../../../bitbucket/model';
 
 export default class PullRequests extends React.Component<
@@ -37,7 +37,7 @@ export default class PullRequests extends React.Component<
     render() {
         return this.props.pullRequests.map((pr: PullRequestData) => {
             return (
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div key={pr.url} style={{ display: 'flex', alignItems: 'center' }}>
                     {this.avatar(pr)}
                     <Button appearance="link" onClick={() => this.props.onClick(pr)}>{`${
                         pr.destination!.repo!.displayName
