@@ -50,7 +50,7 @@ export const CommentComponent: React.FC<Props> = ({
                     content={
                         <React.Fragment>
                             <TextAreaEditor
-                                text={comment.body}
+                                value={commentInputValue}
                                 fetchUsers={async (input: string) =>
                                     (await fetchUsers(input)).map(user => ({
                                         displayName: user.displayName,
@@ -86,7 +86,13 @@ export const CommentComponent: React.FC<Props> = ({
                                         Add internal note
                                     </Button>
                                 )}
-                                <Button appearance="default" onClick={() => setEditing(false)}>
+                                <Button
+                                    appearance="default"
+                                    onClick={() => {
+                                        setEditing(false);
+                                        setCommentInputValue(comment.body);
+                                    }}
+                                >
                                     Cancel
                                 </Button>
                             </ButtonGroup>

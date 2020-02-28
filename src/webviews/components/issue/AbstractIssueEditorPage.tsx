@@ -735,7 +735,7 @@ export abstract class AbstractIssueEditorPage<
                     <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
                         {this.state.loadingField === field.key && <Spinner size="large" />}
                         <TextAreaEditor
-                            text={this.state.commentInputValue}
+                            value={this.state.commentInputValue}
                             fetchUsers={async (input: string) =>
                                 (await this.fetchUsers(input)).map(user => ({
                                     displayName: user.displayName,

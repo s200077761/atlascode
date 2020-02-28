@@ -32,7 +32,7 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                     isSaving={isSaving}
                     content={
                         <TextAreaEditor
-                            text={text}
+                            value={commentInputValue}
                             fetchUsers={async (input: string) =>
                                 (await fetchUsers(input)).map(user => ({
                                     displayName: user.displayName,
@@ -56,7 +56,13 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                     >
                         Save
                     </Button>
-                    <Button appearance="default" onClick={() => setEditing(false)}>
+                    <Button
+                        appearance="default"
+                        onClick={() => {
+                            setEditing(false);
+                            setCommentInputValue(text);
+                        }}
+                    >
                         Cancel
                     </Button>
                 </ButtonGroup>
