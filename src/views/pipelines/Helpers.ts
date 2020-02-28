@@ -1,7 +1,7 @@
+import { Uri } from 'vscode';
 import { Container } from '../../container';
 import { Pipeline, Status, statusForState } from '../../pipelines/model';
 import { Resources } from '../../resources';
-import { Uri } from 'vscode';
 
 /**
  * Determines whether or not a branch name should be displayed according to the filtering
@@ -61,7 +61,7 @@ export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?
     const ref_name = pipeline.target.ref_name;
     const triggerType = pipeline.target.triggerName;
     const buildNumber = pipeline.build_number;
-    const prefix = excludePipelinePrefix ? '' : 'Pipeline ';
+    const prefix = excludePipelinePrefix ? '' : `${pipeline.repository.name}: Pipeline `;
 
     //Make sure every case is covered so that a meaningful message is displayed back
     if (type === 'custom') {
