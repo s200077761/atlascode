@@ -4,15 +4,14 @@
 
 -   If there's only one related issue, don't make the user expand the "Related issues" section
 -   Edit Jira issue descriptions
--   Add "Configure filters..." button below JQL filters in tree
+-   Added "Configure filters..." button below JQL filters in tree
 -   Pull build status for Bitbucket Server
--   Expose Jira issue results search via command palette
--   Improve PR Speed
+-   Exposed Jira issue results search via command palette
+-   Improved PR Speed
 -   Allow user to change password for server sites
--   Remove warning about next-gen
 -   Preload PR data
--   Stop notifying users when URLs are copied to clipboard
--   Add repository name to pipeline messages
+-   Stopped notifying users when URLs are copied to clipboard
+-   Added repository name to pipeline messages
 -   Show active Jira issue in status bar
 
 ### Bugs fixed

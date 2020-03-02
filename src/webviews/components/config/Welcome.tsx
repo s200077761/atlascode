@@ -111,15 +111,14 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                     section
                                 </li>
                                 <li>Edit Jira issue descriptions</li>
-                                <li>Add "Configure filters..." button below JQL filters in tree</li>
+                                <li>Added "Configure filters..." button below JQL filters in tree</li>
                                 <li>Pull build status for Bitbucket Server</li>
-                                <li>Expose Jira issue results search via command palette</li>
-                                <li>Improve PR Speed</li>
+                                <li>Exposed Jira issue results search via command palette</li>
+                                <li>Improved PR Speed</li>
                                 <li>Allow user to change password for server sites</li>
-                                <li>Remove warning about next-gen</li>
                                 <li>Preload PR data</li>
-                                <li>Stop notifying users when URLs are copied to clipboard</li>
-                                <li>Add repository name to pipeline messages</li>
+                                <li>Stopped notifying users when URLs are copied to clipboard</li>
+                                <li>Added repository name to pipeline messages</li>
                                 <li>Show active Jira issue in status bar</li>
                             </ul>
                             <h4>🐞 Bugs Fixed 🐞</h4>
