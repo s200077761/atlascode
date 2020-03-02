@@ -249,6 +249,8 @@ track:
       - name: instanceType
       - name: hostProduct
       - name: source
+        type: string
+        description: 'Source UI from which the action originated'
   - id: 15636
     action: checkedOut
     subject: pullRequestBranch
@@ -520,6 +522,13 @@ screen:
     attributes:
       - name: hostProduct
 ui:
+  - id: 20888
+    action: clicked
+    subject: button
+    subjectId: editCredentialsButton
+    description: |
+      Event when a user clicks the edit credentials button
+    attributes:
   - id: 14444
     action: clicked
     subject: button
@@ -533,6 +542,13 @@ ui:
     subjectId: logoutButton
     description: |
       Event when a user clicks a logout button
+    attributes:
+  - id: 20840
+    action: clicked
+    subject: button
+    subjectId: configureJQLButton
+    description: |
+      Event when a user clicks a configure JQL button
     attributes:
   - id: 14446
     action: clicked
@@ -607,4 +623,11 @@ ui:
     subjectId: cloneRepository
     description: |
       Event when a user clicks on the clone repository button
+    attributes:
+  - id: 20841
+    action: clicked
+    subject: button
+    subjectId: openActiveIssue
+    description: |
+      Event when a user clicks on active issue id in status bar
     attributes:

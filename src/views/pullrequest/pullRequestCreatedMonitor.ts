@@ -1,8 +1,9 @@
 import * as path from 'path';
-import * as vscode from "vscode";
-import { BitbucketContext } from "../../bitbucket/bbContext";
+import { Logger } from 'src/logger';
+import * as vscode from 'vscode';
+import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { Commands } from "../../commands";
+import { Commands } from '../../commands';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
@@ -19,30 +20,44 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             }
             const bbApi = await clientForSite(site);
 
-            return bbApi.pullrequests.getLatest(wsRepo).then(prList => {
-                const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
-                    ? this._lastCheckedTime.get(wsRepo.rootUri)!
-                    : new Date();
-                this._lastCheckedTime.set(wsRepo.rootUri, new Date());
+            return bbApi.pullrequests
+                .getLatest(wsRepo)
+                .then(prList => {
+                    const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
+                        ? this._lastCheckedTime.get(wsRepo.rootUri)!
+                        : new Date();
+                    this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
-                let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
-                return newPRs;
-            });
+                    let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
+                    return newPRs;
+                })
+                .catch(e => {
+                    Logger.error(e, 'Error while fetching latest pull requests');
+                    return [];
+                });
         });
         Promise.all(promises)
             .then(result => result.reduce((prev, curr) => prev.concat(curr), []))
             .then(allPRs => {
                 if (allPRs.length === 1) {
                     let repoName = path.basename(allPRs[0].site.repoSlug);
-                    vscode.window.showInformationMessage(`New pull request "${allPRs[0].data.title}" for repo "${repoName}"`, 'Show')
+                    vscode.window
+                        .showInformationMessage(
+                            `New pull request "${allPRs[0].data.title}" for repo "${repoName}"`,
+                            'Show'
+                        )
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
                                 vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, allPRs[0]);
                             }
                         });
                 } else if (allPRs.length > 0) {
-                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.site.repoSlug)))].join(", ");
-                    vscode.window.showInformationMessage(`New pull requests found for the following repositories: ${repoNames}`, 'Show')
+                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.site.repoSlug)))].join(', ');
+                    vscode.window
+                        .showInformationMessage(
+                            `New pull requests found for the following repositories: ${repoNames}`,
+                            'Show'
+                        )
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
                                 vscode.commands.executeCommand('workbench.view.extension.atlascode-drawer');

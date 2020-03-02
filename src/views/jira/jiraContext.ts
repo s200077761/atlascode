@@ -1,18 +1,17 @@
-import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models/entities";
-import { commands, ConfigurationChangeEvent, Disposable } from "vscode";
-import { DetailedSiteInfo, ProductJira } from "../../atlclients/authInfo";
-import { Commands } from "../../commands";
-import { configuration } from "../../config/configuration";
-import { CommandContext, CustomJQLTreeId, setCommandContext } from "../../constants";
-import { Container } from "../../container";
-import { NewIssueMonitor } from "../../jira/newIssueMonitor";
-import { SitesAvailableUpdateEvent } from "../../siteManager";
-import { RefreshTimer } from "../RefreshTimer";
-import { CustomJQLRoot } from "./customJqlRoot";
-import { JiraExplorer } from "./jiraExplorer";
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
+import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { Commands } from '../../commands';
+import { configuration } from '../../config/configuration';
+import { CommandContext, CustomJQLTreeId, setCommandContext } from '../../constants';
+import { Container } from '../../container';
+import { NewIssueMonitor } from '../../jira/newIssueMonitor';
+import { SitesAvailableUpdateEvent } from '../../siteManager';
+import { RefreshTimer } from '../RefreshTimer';
+import { CustomJQLRoot } from './customJqlRoot';
+import { JiraExplorer } from './jiraExplorer';
 
 export class JiraContext extends Disposable {
-
     private _explorer: JiraExplorer | undefined;
     private _disposable: Disposable;
     private _newIssueMonitor: NewIssueMonitor;
@@ -23,16 +22,16 @@ export class JiraContext extends Disposable {
 
         commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
 
-        this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
+        this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () =>
+            this.refresh()
+        );
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             this._refreshTimer
         );
 
-        Container.context.subscriptions.push(
-            configuration.onDidChange(this.onConfigurationChanged, this)
-        );
+        Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 

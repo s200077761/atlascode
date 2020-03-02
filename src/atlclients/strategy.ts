@@ -11,8 +11,8 @@ export const JiraProdStrategy = {
     scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     authParams: {
         audience: 'api.atlassian.com',
-        prompt: 'consent',
-    },
+        prompt: 'consent'
+    }
 };
 
 export const JiraStagingStrategy = {
@@ -26,8 +26,8 @@ export const JiraStagingStrategy = {
     scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     authParams: {
         audience: 'api.stg.atlassian.com',
-        prompt: 'consent',
-    },
+        prompt: 'consent'
+    }
 };
 
 export const BitbucketProdStrategy = {
@@ -47,5 +47,5 @@ export const BitbucketStagingStrategy = {
     tokenURL: 'https://staging.bb-inf.net/site/oauth2/access_token',
     profileURL: 'https://api-staging.bb-inf.net/2.0/user',
     emailsURL: 'https://api-staging.bb-inf.net/2.0/user/emails',
-    callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.BitbucketCloudStaging,
+    callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.BitbucketCloudStaging
 };

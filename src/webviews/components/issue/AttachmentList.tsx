@@ -14,20 +14,21 @@ interface AttachmentListProps {
 }
 
 const Delete = (data: ItemData) => {
-    return (<div className='ac-delete' onClick={() => data.delfunc(data.attachment)}>
-        <TrashIcon label='trash' />
-    </div>);
+    return (
+        <div className="ac-delete" onClick={() => data.delfunc(data.attachment)}>
+            <TrashIcon label="trash" />
+        </div>
+    );
 };
 
-const Filename = (data: ItemData) => <p style={{ display: "inline" }}>{data.attachment.filename}</p>;
+const Filename = (data: ItemData) => <p style={{ display: 'inline' }}>{data.attachment.filename}</p>;
 const Size = (data: ItemData) => {
-    const numSize = (typeof data.attachment.size === 'number') ? data.attachment.size : parseFloat(data.attachment.size);
+    const numSize = typeof data.attachment.size === 'number' ? data.attachment.size : parseFloat(data.attachment.size);
     const size = filesize(numSize);
-    return (<p style={{ display: "inline" }}>{size}</p>);
+    return <p style={{ display: 'inline' }}>{size}</p>;
 };
 
 export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({ attachments, onDelete }) => {
-
     return (
         <TableTree
             columns={[Filename, Size, Delete]}
@@ -37,11 +38,10 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({ a
                     id: attachment.id,
                     content: {
                         attachment: attachment,
-                        delfunc: onDelete,
+                        delfunc: onDelete
                     }
                 };
             })}
         />
     );
-
 };

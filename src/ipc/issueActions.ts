@@ -1,7 +1,17 @@
-import { CommentVisibility, isIssueType, IssueKeyAndSite, IssueType, MinimalIssue, MinimalIssueOrKeyAndSite, Project, Transition, User } from '@atlassianlabs/jira-pi-common-models/entities';
+import {
+    CommentVisibility,
+    isIssueType,
+    IssueKeyAndSite,
+    IssueType,
+    MinimalIssue,
+    MinimalIssueOrKeyAndSite,
+    Project,
+    Transition,
+    User
+} from '@atlassianlabs/jira-pi-common-models/entities';
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Action } from "./messaging";
+import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { Action } from './messaging';
 
 export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';
@@ -21,8 +31,15 @@ export interface TransitionIssueAction extends Action {
 export interface IssueCommentAction extends Action {
     action: 'comment';
     issue: IssueKeyAndSite<DetailedSiteInfo>;
-    comment: string;
+    commentBody: string;
+    commentId?: string;
     restriction?: CommentVisibility;
+}
+
+export interface IssueDeleteCommentAction extends Action {
+    action: 'deleteComment';
+    issue: IssueKeyAndSite<DetailedSiteInfo>;
+    commentId: string;
 }
 
 export interface IssueAssignAction extends Action {
@@ -151,13 +168,15 @@ export function isTransitionIssue(a: Action): a is TransitionIssueAction {
 }
 
 export function isSetIssueType(a: Action): a is SetIssueTypeAction {
-    return a
-        && (<SetIssueTypeAction>a).issueType !== undefined
-        && isIssueType((<SetIssueTypeAction>a).issueType);
+    return a && (<SetIssueTypeAction>a).issueType !== undefined && isIssueType((<SetIssueTypeAction>a).issueType);
 }
 
 export function isIssueComment(a: Action): a is IssueCommentAction {
-    return (<IssueCommentAction>a).comment !== undefined && (<IssueCommentAction>a).issue !== undefined;
+    return (<IssueCommentAction>a).commentBody !== undefined && (<IssueCommentAction>a).issue !== undefined;
+}
+
+export function isIssueDeleteComment(a: Action): a is IssueDeleteCommentAction {
+    return (<IssueDeleteCommentAction>a).commentId !== undefined && (<IssueDeleteCommentAction>a).issue !== undefined;
 }
 
 export function isIssueAssign(a: Action): a is IssueAssignAction {
@@ -168,8 +187,7 @@ export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
 }
 
 export function isFetchQueryAndSite(a: Action): a is FetchQueryAction {
-    return a && (<FetchQueryAction>a).query !== undefined
-        && (<FetchQueryAction>a).site !== undefined;
+    return a && (<FetchQueryAction>a).query !== undefined && (<FetchQueryAction>a).site !== undefined;
 }
 
 export function isFetchQuery(a: Action): a is FetchQueryAction {
@@ -177,13 +195,14 @@ export function isFetchQuery(a: Action): a is FetchQueryAction {
 }
 
 export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {
-    return (<FetchByProjectQueryAction>a).query !== undefined
-        && (<FetchByProjectQueryAction>a).project !== undefined;
+    return (<FetchByProjectQueryAction>a).query !== undefined && (<FetchByProjectQueryAction>a).project !== undefined;
 }
 
 export function isFetchOptionsJQL(a: Action): a is FetchIssueFieldOptionsByJQLAction {
-    return (<FetchIssueFieldOptionsByJQLAction>a).jql !== undefined
-        && (<FetchIssueFieldOptionsByJQLAction>a).fieldId !== undefined;
+    return (
+        (<FetchIssueFieldOptionsByJQLAction>a).jql !== undefined &&
+        (<FetchIssueFieldOptionsByJQLAction>a).fieldId !== undefined
+    );
 }
 
 export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
@@ -199,44 +218,61 @@ export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
 }
 
 export function isCreateIssue(a: Action): a is CreateIssueAction {
-    return a && (<CreateIssueAction>a).issueData !== undefined
-        && (<CreateIssueAction>a).site !== undefined;
+    return a && (<CreateIssueAction>a).issueData !== undefined && (<CreateIssueAction>a).site !== undefined;
 }
 
 export function isCreateWorklog(a: Action): a is CreateWorklogAction {
-    return a && (<CreateWorklogAction>a).worklogData !== undefined
-        && (<CreateWorklogAction>a).site !== undefined
-        && (<CreateWorklogAction>a).issueKey !== undefined;
+    return (
+        a &&
+        (<CreateWorklogAction>a).worklogData !== undefined &&
+        (<CreateWorklogAction>a).site !== undefined &&
+        (<CreateWorklogAction>a).issueKey !== undefined
+    );
 }
 
 export function isUpdateWatcherAction(a: Action): a is UpdateWatcherAction {
-    return a && (<UpdateWatcherAction>a).watcher !== undefined
-        && (<UpdateWatcherAction>a).site !== undefined
-        && (<UpdateWatcherAction>a).issueKey !== undefined;
+    return (
+        a &&
+        (<UpdateWatcherAction>a).watcher !== undefined &&
+        (<UpdateWatcherAction>a).site !== undefined &&
+        (<UpdateWatcherAction>a).issueKey !== undefined
+    );
 }
 
 export function isUpdateVoteAction(a: Action): a is UpdateVoteAction {
-    return a && (<UpdateVoteAction>a).voter !== undefined
-        && (<UpdateVoteAction>a).site !== undefined
-        && (<UpdateVoteAction>a).issueKey !== undefined;
+    return (
+        a &&
+        (<UpdateVoteAction>a).voter !== undefined &&
+        (<UpdateVoteAction>a).site !== undefined &&
+        (<UpdateVoteAction>a).issueKey !== undefined
+    );
 }
 
 export function isAddAttachmentsAction(a: Action): a is AddAttachmentsAction {
-    return a && (<AddAttachmentsAction>a).files !== undefined
-        && (<AddAttachmentsAction>a).site !== undefined
-        && (<AddAttachmentsAction>a).issueKey !== undefined;
+    return (
+        a &&
+        (<AddAttachmentsAction>a).files !== undefined &&
+        (<AddAttachmentsAction>a).site !== undefined &&
+        (<AddAttachmentsAction>a).issueKey !== undefined
+    );
 }
 
 export function isDeleteByIDAction(a: Action): a is DeleteByIDAction {
-    return a && (<DeleteByIDAction>a).objectWithId !== undefined
-        && (<DeleteByIDAction>a).objectWithId.id !== undefined
-        && (<DeleteByIDAction>a).site !== undefined;
+    return (
+        a &&
+        (<DeleteByIDAction>a).objectWithId !== undefined &&
+        (<DeleteByIDAction>a).objectWithId.id !== undefined &&
+        (<DeleteByIDAction>a).site !== undefined
+    );
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {
-    return a && (<CreateIssueLinkAction>a).issueLinkData !== undefined
-        && (<CreateIssueLinkAction>a).site !== undefined
-        && (<CreateIssueLinkAction>a).issueLinkType !== undefined;
+    return (
+        a &&
+        (<CreateIssueLinkAction>a).issueLinkData !== undefined &&
+        (<CreateIssueLinkAction>a).site !== undefined &&
+        (<CreateIssueLinkAction>a).issueLinkType !== undefined
+    );
 }
 
 export function isStartWork(a: Action): a is StartWorkAction {

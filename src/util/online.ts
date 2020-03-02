@@ -1,14 +1,13 @@
 import axios, { AxiosInstance } from 'axios';
-import pAny from "p-any";
-import pRetry from "p-retry";
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from "vscode";
-import { addCurlLogging } from "../atlclients/interceptors";
-import { configuration } from "../config/configuration";
-import { Container } from "../container";
-import { getAgent } from "../jira/jira-client/providers";
-import { Logger } from "../logger";
-import { ConnectionTimeout, Time } from "./time";
-
+import pAny from 'p-any';
+import pRetry from 'p-retry';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from 'vscode';
+import { addCurlLogging } from '../atlclients/interceptors';
+import { configuration } from '../config/configuration';
+import { Container } from '../container';
+import { getAgent } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
+import { ConnectionTimeout, Time } from './time';
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -35,12 +34,10 @@ export class OnlineDetector extends Disposable {
     constructor() {
         super(() => this.dispose());
 
-        this._disposable = Disposable.from(
-            configuration.onDidChange(this.onConfigurationChanged, this)
-        );
+        this._disposable = Disposable.from(configuration.onDidChange(this.onConfigurationChanged, this));
 
         this._transport = axios.create({
-            timeout: ConnectionTimeout,
+            timeout: ConnectionTimeout
         });
 
         if (Container.config.enableCurlLogging) {
@@ -48,7 +45,6 @@ export class OnlineDetector extends Disposable {
         }
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
-
     }
 
     dispose() {
@@ -96,24 +92,26 @@ export class OnlineDetector extends Disposable {
 
     private async runOnlineChecks(): Promise<boolean> {
         const urlList = Container.config.onlineCheckerUrls.slice();
-        const promise = async () => await pAny(
-            urlList.map(url => {
-                return (async () => {
-                    Logger.debug(`Online check attempting to connect to ${url}`);
-                    await this._transport(url, { method: "HEAD", ...getAgent() });
-                    Logger.debug(`Online check connected to ${url}`);
-                    return true;
-                })();
-            })
-        );
+        const promise = async () =>
+            await pAny(
+                urlList.map(url => {
+                    return (async () => {
+                        Logger.debug(`Online check attempting to connect to ${url}`);
+                        await this._transport(url, { method: 'HEAD', ...getAgent() });
+                        Logger.debug(`Online check connected to ${url}`);
+                        return true;
+                    })();
+                })
+            );
 
         return await pRetry<boolean>(promise, {
             retries: 4,
             onFailedAttempt: error => {
-                Logger.debug(`Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`);
-            },
+                Logger.debug(
+                    `Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`
+                );
+            }
         }).catch(() => false);
-
     }
 
     private async checkOnlineStatus() {
@@ -141,12 +139,10 @@ export class OnlineDetector extends Disposable {
                 }
 
                 if (!this._isOfflineMode) {
-
                     Logger.debug(newIsOnline ? 'You have gone online!' : 'You have gone offline :(');
                     this._onDidOnlineChange.fire({ isOnline: newIsOnline });
                 }
             }
         }
-
     }
 }

@@ -5,8 +5,7 @@ import * as React from 'react';
 import { Checkout } from '../../../ipc/prActions';
 import { PRData } from '../../../ipc/prMessaging';
 
-
-export default class BranchInfo extends React.Component<{ prData: PRData, postMessage: (e: Checkout) => void }> {
+export default class BranchInfo extends React.Component<{ prData: PRData; postMessage: (e: Checkout) => void }> {
     constructor(props: any) {
         super(props);
     }
@@ -26,7 +25,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
         return (
             <React.Fragment>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div className='ac-hmargin'>
+                    <div className="ac-hmargin">
                         <Avatar
                             appearance="circle"
                             name={pr.author!.displayName}
@@ -34,21 +33,21 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
                             size="small"
                         />
                     </div>
-                    <div className='ac-branch-lozenge'>
-                        <BitbucketBranchesIcon label='branch' size='small' />
-                        <span className='ac-branch-lozenge__Text'>{sourceBranch}</span>
+                    <div className="ac-branch-lozenge">
+                        <BitbucketBranchesIcon label="branch" size="small" />
+                        <span className="ac-branch-lozenge__Text">{sourceBranch}</span>
                     </div>
 
-                    <div className='ac-hmargin'>
+                    <div className="ac-hmargin">
                         <Arrow label="" size="small" />
                     </div>
 
-                    <div className='ac-branch-lozenge'>
-                        <BitbucketBranchesIcon label='branch' size='small' />
-                        <span className='ac-branch-lozenge__Text'>{targetBranch}</span>
+                    <div className="ac-branch-lozenge">
+                        <BitbucketBranchesIcon label="branch" size="small" />
+                        <span className="ac-branch-lozenge__Text">{targetBranch}</span>
                     </div>
                 </div>
-            </React.Fragment >
+            </React.Fragment>
         );
     }
 }

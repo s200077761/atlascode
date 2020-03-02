@@ -6,7 +6,10 @@ import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class BitbucketContextMenus extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class BitbucketContextMenus extends React.Component<
+    { config: IConfig; onConfigChange: (changes: changeObject, removes?: string[]) => void },
+    {}
+> {
     constructor(props: any) {
         super(props);
     }
@@ -20,24 +23,23 @@ export default class BitbucketContextMenus extends React.Component<{ config: ICo
         }
     };
 
-
     render() {
         return (
             <CheckboxField
-                name='bitbucket-contextmenus-enabled'
-                id='bitbucket-contextmenus-enabled'
-                value='bitbucket.contextMenus.enabled'>
-                {
-                    (fieldArgs: any) => {
-                        return (
-                            <Checkbox {...fieldArgs.fieldProps}
-                                label='Enable Bitbucket context menus in editor'
-                                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                isChecked={this.props.config.bitbucket.contextMenus.enabled}
-                            />
-                        );
-                    }
-                }
+                name="bitbucket-contextmenus-enabled"
+                id="bitbucket-contextmenus-enabled"
+                value="bitbucket.contextMenus.enabled"
+            >
+                {(fieldArgs: any) => {
+                    return (
+                        <Checkbox
+                            {...fieldArgs.fieldProps}
+                            label="Enable Bitbucket context menus in editor"
+                            onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                            isChecked={this.props.config.bitbucket.contextMenus.enabled}
+                        />
+                    );
+                }}
             </CheckboxField>
         );
     }

@@ -17,9 +17,10 @@ import { Logger } from '../logger';
 import { RefType, Repository } from '../typings/git';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
-const customBranchType: BranchType = { kind: "Custom", prefix: "" };
+const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
-export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview
+    implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
     private _state: MinimalIssue<DetailedSiteInfo> = createEmptyMinimalIssue(emptySiteInfo);
 
     constructor(extensionPath: string) {
@@ -27,10 +28,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
     }
 
     public get title(): string {
-        return "Start work on Jira issue";
+        return 'Start work on Jira issue';
     }
     public get id(): string {
-        return "startWorkOnIssueScreen";
+        return 'startWorkOnIssueScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -88,8 +89,9 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     handled = true;
                     const linkUrl = `${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
-                    vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
-                    issueUrlCopiedEvent(this._state.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    issueUrlCopiedEvent(this._state.siteDetails.id).then(e => {
+                        Container.analyticsClient.sendTrackEvent(e);
+                    });
                     break;
                 }
                 case 'startWork': {
@@ -107,9 +109,19 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remoteName}/${e.branchName}</code></li>` : ''}</ul>`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${
+                                    e.setupJira
+                                        ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>`
+                                        : ''
+                                }  ${
+                                    e.setupBitbucket
+                                        ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remoteName}/${e.branchName}</code></li>`
+                                        : ''
+                                }</ul>`
                             });
-                            issueWorkStartedEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueWorkStartedEvent(issue.siteDetails).then(e => {
+                                Container.analyticsClient.sendTrackEvent(e);
+                            });
                         } catch (e) {
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
@@ -121,7 +133,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         return handled;
     }
 
-    async createOrCheckoutBranch(repo: Repository, destBranch: string, sourceBranch: string, remote: string): Promise<void> {
+    async createOrCheckoutBranch(
+        repo: Repository,
+        destBranch: string,
+        sourceBranch: string,
+        remote: string
+    ): Promise<void> {
         await repo.fetch(remote, sourceBranch);
 
         // checkout if a branch exists already
@@ -129,14 +146,14 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
             await repo.getBranch(destBranch);
             await repo.checkout(destBranch);
             return;
-        } catch (_) { }
+        } catch (_) {}
 
         // checkout if there's a matching remote branch (checkout will track remote branch automatically)
         try {
             await repo.getBranch(`remotes/${remote}/${destBranch}`);
             await repo.checkout(destBranch);
             return;
-        } catch (_) { }
+        } catch (_) {}
 
         // no existing branches, create a new one
         await repo.createBranch(destBranch, true, sourceBranch);
@@ -157,59 +174,62 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                 this._panel.title = `Start work on Jira issue ${issue.key}`;
             }
 
-            const workspaceRepos = Container.bitbucketContext
-                ? Container.bitbucketContext.getAllRepositories()
-                : [];
+            const workspaceRepos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];
 
-            const repoData: RepoData[] = await Promise.all(workspaceRepos
-                .filter(r => r.siteRemotes.length > 0)
-                .map(async wsRepo => {
-                    let repo: Repo | undefined = undefined;
-                    let developmentBranch = undefined;
-                    let href = undefined;
-                    let isCloud = false;
-                    let branchTypes: BranchType[] = [];
+            const repoData: RepoData[] = await Promise.all(
+                workspaceRepos
+                    .filter(r => r.siteRemotes.length > 0)
+                    .map(async wsRepo => {
+                        let repo: Repo | undefined = undefined;
+                        let developmentBranch = undefined;
+                        let href = undefined;
+                        let isCloud = false;
+                        let branchTypes: BranchType[] = [];
 
-                    const site = wsRepo.mainSiteRemote.site;
-                    const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
-                    if (site) {
-                        let branchingModel: BitbucketBranchingModel | undefined = undefined;
+                        const site = wsRepo.mainSiteRemote.site;
+                        const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
+                        if (site) {
+                            let branchingModel: BitbucketBranchingModel | undefined = undefined;
 
-                        const bbApi = await clientForSite(site);
-                        [, repo, developmentBranch, branchingModel] = await Promise.all(
-                            [scm.fetch(),
-                            bbApi.repositories.get(site),
-                            bbApi.repositories.getDevelopmentBranch(site),
-                            bbApi.repositories.getBranchingModel(site)
+                            const bbApi = await clientForSite(site);
+                            [, repo, developmentBranch, branchingModel] = await Promise.all([
+                                scm.fetch(),
+                                bbApi.repositories.get(site),
+                                bbApi.repositories.getDevelopmentBranch(site),
+                                bbApi.repositories.getBranchingModel(site)
                             ]);
 
-                        href = repo!.url;
-                        isCloud = site.details.isCloud;
+                            href = repo!.url;
+                            isCloud = site.details.isCloud;
 
-                        if (branchingModel && branchingModel.branch_types) {
-                            branchTypes = [...branchingModel.branch_types]
-                                .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
-                            if (branchTypes.length > 0) {
-                                branchTypes.push(customBranchType);
+                            if (branchingModel && branchingModel.branch_types) {
+                                branchTypes = [...branchingModel.branch_types].sort((a, b) => {
+                                    return a.kind.localeCompare(b.kind);
+                                });
+                                if (branchTypes.length > 0) {
+                                    branchTypes.push(customBranchType);
+                                }
                             }
                         }
-                    }
 
-                    return {
-                        workspaceRepo: wsRepo,
-                        href: href,
-                        localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                        remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
-                        branchTypes: branchTypes,
-                        developmentBranch: developmentBranch,
-                        isCloud: isCloud
-                    };
-                }));
+                        return {
+                            workspaceRepo: wsRepo,
+                            href: href,
+                            localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                            remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
+                            branchTypes: branchTypes,
+                            developmentBranch: developmentBranch,
+                            isCloud: isCloud
+                        };
+                    })
+            );
 
             let issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
             if (!issueClone.status.name.toLowerCase().includes('progress')) {
-                const inProgressTransition = issueClone.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
+                const inProgressTransition = issueClone.transitions.find(
+                    t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')
+                );
                 if (inProgressTransition) {
                     issueClone.status = inProgressTransition.to;
                 } else {
@@ -236,7 +256,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
 
     private async forceUpdateIssue() {
         let key = this._state.key;
-        if (key !== "") {
+        if (key !== '') {
             try {
                 let issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);

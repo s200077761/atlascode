@@ -22,9 +22,7 @@
         }
     },
     "additionalProperties": false,
-    "required": [
-        "pipelines"
-    ],
+    "required": ["pipelines"],
     "definitions": {
         "pipelines": {
             "type": "object",
@@ -223,10 +221,7 @@
                     "type": "string",
                     "title": "Step trigger type",
                     "description": "Specifies whether a step will run automatically or only after someone manually triggers it. You can define the trigger type as manual or automatic. If the trigger type is not defined, the step defaults to running automatically. The first step cannot be manual. If you want to have a whole pipeline only run from a manual trigger then use a custom pipeline.",
-                    "enum": [
-                        "automatic",
-                        "manual"
-                    ],
+                    "enum": ["automatic", "manual"],
                     "default": "automatic"
                 },
                 "deployment": {
@@ -236,9 +231,7 @@
                     "minLength": 1
                 }
             },
-            "required": [
-                "script"
-            ],
+            "required": ["script"],
             "additionalProperties": false
         },
         "parallel": {
@@ -295,9 +288,7 @@
                     "minProperties": 1
                 }
             },
-            "required": [
-                "pipe"
-            ],
+            "required": ["pipe"],
             "additionalProperties": false
         },
         "definitions": {
@@ -355,9 +346,7 @@
                 }
             },
             "not": {
-                "required": [
-                    "docker"
-                ]
+                "required": ["docker"]
             },
             "additionalProperties": false
         },
@@ -390,10 +379,7 @@
             "type": "string",
             "title": "Multiplier of the resources allocated to a pipeline step",
             "description": "You can allocate additional resources to a step, or to the whole pipeline. \nBy specifying the size of 2x, you'll have double the resources available (eg. 4GB memory → 8GB memory).\n\nAt this time, valid sizes are 1x and 2x.",
-            "enum": [
-                "1x",
-                "2x"
-            ],
+            "enum": ["1x", "2x"],
             "default": "1x"
         },
         "clone": {
@@ -443,9 +429,7 @@
                     "$ref": "#/definitions/runAsUser"
                 }
             },
-            "required": [
-                "name"
-            ],
+            "required": ["name"],
             "additionalProperties": false
         },
         "privateImage": {
@@ -475,11 +459,7 @@
                     "$ref": "#/definitions/runAsUser"
                 }
             },
-            "required": [
-                "name",
-                "username",
-                "password"
-            ],
+            "required": ["name", "username", "password"],
             "additionalProperties": false
         },
         "awsImage": {
@@ -504,20 +484,14 @@
                             "minLength": 1
                         }
                     },
-                    "required": [
-                        "access-key",
-                        "secret-key"
-                    ],
+                    "required": ["access-key", "secret-key"],
                     "additionalProperties": false
                 },
                 "run-as-user": {
                     "$ref": "#/definitions/runAsUser"
                 }
             },
-            "required": [
-                "name",
-                "aws"
-            ],
+            "required": ["name", "aws"],
             "additionalProperties": false
         },
         "image": {

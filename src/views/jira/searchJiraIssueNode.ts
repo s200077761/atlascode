@@ -8,7 +8,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 export class SearchJiraIssuesNode extends AbstractBaseNode {
     private _searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[];
 
-    setIssues(searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[]){
+    setIssues(searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[]) {
         this._searchableIssueList = searchableIssueList;
     }
 

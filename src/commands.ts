@@ -2,6 +2,7 @@ import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassi
 import { commands, env, ExtensionContext, Uri } from 'vscode';
 import {
     cloneRepositoryButtonEvent,
+    logoutButtonEvent,
     openWorkbenchRepositoryButtonEvent,
     openWorkbenchWorkspaceButtonEvent,
     Registry,
@@ -90,9 +91,13 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.ShowBitbucketAuth, () =>
             Container.configWebview.createOrShowConfig(SettingSource.BBAuth)
         ),
-        commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.JiraIssue)
-        ),
+        commands.registerCommand(Commands.ShowJiraIssueSettings, (source?: string) => {
+            source = source ? source : 'JiraExplorerTopBar';
+            logoutButtonEvent(source).then((e: any) => {
+                Container.analyticsClient.sendUIEvent(e);
+            });
+            Container.configWebview.createOrShowConfig(SettingSource.JiraIssue);
+        }),
         commands.registerCommand(Commands.ShowPullRequestSettings, () =>
             Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest)
         ),

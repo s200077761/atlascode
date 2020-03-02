@@ -5,7 +5,7 @@ import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import { AsyncSelect } from '@atlaskit/select';
 import { User, Watches } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
-import debounce from "lodash.debounce";
+import debounce from 'lodash.debounce';
 import * as React from 'react';
 import * as SelectFieldHelper from '../selectFieldHelper';
 
@@ -27,11 +27,10 @@ const emptyForm = {
 };
 
 export default class WatchesForm extends React.Component<MyProps, MyState> {
-
     constructor(props: any) {
         super(props);
         this.state = {
-            ...emptyForm,
+            ...emptyForm
         };
     }
 
@@ -53,39 +52,44 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
 
     getEmptyWatchers = () => {
         const data = [
-            <Avatar size='large' />
-            , <Avatar size='large' />
-            , <Avatar size='large' />
-            , <Avatar size='large' />
+            <Avatar size="large" />,
+            <Avatar size="large" />,
+            <Avatar size="large" />,
+            <Avatar size="large" />
         ];
 
-        return (<div>
-            <AvatarGroup
-                appearance="stack"
-                data={data}
-                size="large"
-            />
-            <span>No watchers yet</span>
-        </div>);
+        return (
+            <div>
+                <AvatarGroup appearance="stack" data={data} size="large" />
+                <span>No watchers yet</span>
+            </div>
+        );
     };
 
     getStartStop = (): JSX.Element => {
         if (this.props.watches.isWatching) {
             return (
-                <div className='ac-icon-with-text ac-inline-watcher-hover' style={{ cursor: 'pointer' }} onClick={this.toggleWatching}>
-                    <WatchFilledIcon label='watchfilledicon' size='medium' />
+                <div
+                    className="ac-icon-with-text ac-inline-watcher-hover"
+                    style={{ cursor: 'pointer' }}
+                    onClick={this.toggleWatching}
+                >
+                    <WatchFilledIcon label="watchfilledicon" size="medium" />
                     <span style={{ marginLeft: '8px' }}>Stop watching</span>
                 </div>
             );
         }
 
         return (
-            <div className='ac-icon-with-text ac-inline-watcher-hover' style={{ cursor: 'pointer' }} onClick={this.toggleWatching}>
-                <WatchIcon label='watchicon' size='medium' />
+            <div
+                className="ac-icon-with-text ac-inline-watcher-hover"
+                style={{ cursor: 'pointer' }}
+                onClick={this.toggleWatching}
+            >
+                <WatchIcon label="watchicon" size="medium" />
                 <span style={{ marginLeft: '8px' }}>Start watching</span>
             </div>
         );
-
     };
 
     getWatchers = (): JSX.Element => {
@@ -94,20 +98,19 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
         }
 
         let watcherList = this.props.watches.watchers.map(watcher => {
-            let avatar = (watcher.avatarUrls && watcher.avatarUrls['24x24']) ? watcher.avatarUrls['24x24'] : '';
+            let avatar = watcher.avatarUrls && watcher.avatarUrls['24x24'] ? watcher.avatarUrls['24x24'] : '';
             return (
-                <div className='ac-inline-watcher ac-inline-watcher-hover'>
-                    <Avatar size='small' src={avatar} />
-                    <div className='ac-inline-watcher-name'>{watcher.displayName}</div>
-                    <div className='ac-inline-watcher-delete'
-                        onClick={() => this.props.onRemoveWatcher(watcher)}></div>
+                <div className="ac-inline-watcher ac-inline-watcher-hover">
+                    <Avatar size="small" src={avatar} />
+                    <div className="ac-inline-watcher-name">{watcher.displayName}</div>
+                    <div className="ac-inline-watcher-delete" onClick={() => this.props.onRemoveWatcher(watcher)}></div>
                 </div>
             );
         });
 
         return (
             <div>
-                <div className='ac-inline-watcher-list-heading'>watching this issue</div>
+                <div className="ac-inline-watcher-list-heading">watching this issue</div>
                 {watcherList}
             </div>
         );
@@ -115,23 +118,19 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
     render() {
         const commonSelectProps: any = {
             isMulti: false,
-            className: "ac-select-container",
-            classNamePrefix: "ac-select",
+            className: 'ac-select-container',
+            classNamePrefix: 'ac-select',
             getOptionLabel: SelectFieldHelper.labelFuncForValueType(ValueType.User),
             getOptionValue: SelectFieldHelper.valueFuncForValueType(ValueType.User),
             components: SelectFieldHelper.getComponentsForValueType(ValueType.User),
-            placeholder: 'Add watchers',
+            placeholder: 'Add watchers'
         };
 
         return (
-            <div className='ac-inline-items-container'>
-                <div className='ac-inline-item'>
-                    {this.getStartStop()}
-                </div>
-                <div className='ac-inline-item'>
-                    {this.getWatchers()}
-                </div>
-                <div className='ac-inline-item'>
+            <div className="ac-inline-items-container">
+                <div className="ac-inline-item">{this.getStartStop()}</div>
+                <div className="ac-inline-item">{this.getWatchers()}</div>
+                <div className="ac-inline-item">
                     <AsyncSelect
                         {...commonSelectProps}
                         isLoading={this.state.isLoading}

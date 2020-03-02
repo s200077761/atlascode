@@ -1,4 +1,4 @@
-import { BitbucketSite, Repo } from "../bitbucket/model";
+import { BitbucketSite, Repo } from '../bitbucket/model';
 
 export interface PaginatedPipelines {
     values: Pipeline[];
@@ -29,7 +29,7 @@ export enum Status {
     Successful,
     Error,
     Failed,
-    Unknown,
+    Unknown
 }
 
 export interface PipelineState {
@@ -84,17 +84,17 @@ export function statusForState(state: PipelineState): Status {
         return Status.Unknown;
     }
     switch (state.type) {
-        case "pipeline_state_completed":
+        case 'pipeline_state_completed':
         // fall through
-        case "pipeline_step_state_completed":
+        case 'pipeline_step_state_completed':
             return statusForResult(state.result!);
-        case "pipeline_state_in_progress":
+        case 'pipeline_state_in_progress':
         // fall through
-        case "pipeline_step_state_in_progress":
+        case 'pipeline_step_state_in_progress':
             return statusForStage(state.stage);
-        case "pipeline_state_pending":
+        case 'pipeline_state_pending':
             return Status.Pending;
-        case "pipeline_step_state_pending":
+        case 'pipeline_step_state_pending':
             return statusForStage(state.stage);
         default:
             return Status.Unknown;
@@ -103,21 +103,21 @@ export function statusForState(state: PipelineState): Status {
 
 function statusForResult(result: PipelineResult): Status {
     switch (result.type) {
-        case "pipeline_state_completed_successful":
+        case 'pipeline_state_completed_successful':
         // fall through
-        case "pipeline_step_state_completed_successful":
+        case 'pipeline_step_state_completed_successful':
             return Status.Successful;
-        case "pipeline_state_completed_error":
+        case 'pipeline_state_completed_error':
         // fall through
-        case "pipeline_step_state_completed_error":
+        case 'pipeline_step_state_completed_error':
             return Status.Error;
-        case "pipeline_state_completed_failed":
+        case 'pipeline_state_completed_failed':
         // fall through
-        case "pipeline_step_state_completed_failed":
+        case 'pipeline_step_state_completed_failed':
             return Status.Failed;
-        case "pipeline_state_completed_stopped":
+        case 'pipeline_state_completed_stopped':
         // fall through
-        case "pipeline_step_state_completed_stopped":
+        case 'pipeline_step_state_completed_stopped':
             return Status.Stopped;
         default:
             return Status.Unknown;
@@ -129,16 +129,16 @@ function statusForStage(stage?: PipelineStage): Status {
         return Status.InProgress;
     }
     switch (stage.type) {
-        case "pipeline_state_in_progress_running":
+        case 'pipeline_state_in_progress_running':
             return Status.InProgress;
-        case "pipeline_step_state_pending_pending":
-        case "pipeline_step_state_in_progress_pending":
+        case 'pipeline_step_state_pending_pending':
+        case 'pipeline_step_state_in_progress_pending':
             return Status.Pending;
-        case "pipeline_step_state_pending_paused":
-        case "pipeline_state_in_progress_paused":
+        case 'pipeline_step_state_pending_paused':
+        case 'pipeline_state_in_progress_paused':
             return Status.Paused;
-        case "pipeline_step_state_pending_halted":
-        case "pipeline_state_in_progress_halted":
+        case 'pipeline_step_state_pending_halted':
+        case 'pipeline_state_in_progress_halted':
             return Status.Stopped;
         default:
             return Status.Unknown;

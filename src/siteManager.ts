@@ -1,8 +1,17 @@
-import { Disposable, Event, EventEmitter, Memento } from "vscode";
-import { AuthInfoEvent, DetailedSiteInfo, emptySiteInfo, isRemoveAuthEvent, Product, ProductBitbucket, ProductJira, SiteInfo } from "./atlclients/authInfo";
-import { configuration } from "./config/configuration";
-import { Container } from "./container";
-
+import { Disposable, Event, EventEmitter, Memento } from 'vscode';
+import {
+    AuthInfoEvent,
+    DetailedSiteInfo,
+    emptySiteInfo,
+    isRemoveAuthEvent,
+    isUpdateAuthEvent,
+    Product,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo
+} from './atlclients/authInfo';
+import { configuration } from './config/configuration';
+import { Container } from './container';
 
 export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
@@ -30,14 +39,22 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(ProductJira.key, []);
         this._sitesAvailable.set(ProductBitbucket.key, []);
 
-        this._disposable = Disposable.from(
-            Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this)
-        );
+        this._disposable = Disposable.from(Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this));
     }
 
     dispose() {
         this._disposable.dispose();
         this._onDidSitesAvailableChange.dispose();
+    }
+
+    public addOrUpdateSite(newSite: DetailedSiteInfo) {
+        let allSites = this.readSitesFromGlobalStore(newSite.product.key);
+        const oldSite = allSites?.find(site => site.id === newSite.id && site.userId === newSite.userId);
+        if (oldSite) {
+            this.updateSite(oldSite, newSite);
+        } else {
+            this.addSites([newSite]);
+        }
     }
 
     public addSites(newSites: DetailedSiteInfo[]) {
@@ -61,7 +78,11 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(productKey, allSites);
 
         if (notify) {
-            this._onDidSitesAvailableChange.fire({ sites: allSites, newSites: newSites, product: allSites[0].product });
+            this._onDidSitesAvailableChange.fire({
+                sites: allSites,
+                newSites: newSites,
+                product: allSites[0].product
+            });
         }
     }
 
@@ -84,8 +105,16 @@ export class SiteManager extends Disposable {
             const deadSites = this.getSitesAvailable(e.product).filter(site => site.credentialId === e.credentialId);
             deadSites.forEach(s => this.removeSite(s));
             if (deadSites.length > 0) {
-                this._onDidSitesAvailableChange.fire({ sites: this.getSitesAvailable(e.product), product: e.product });
+                this._onDidSitesAvailableChange.fire({
+                    sites: this.getSitesAvailable(e.product),
+                    product: e.product
+                });
             }
+        } else if (isUpdateAuthEvent(e)) {
+            this._onDidSitesAvailableChange.fire({
+                sites: this.getSitesAvailable(e.site.product),
+                product: e.site.product
+            });
         }
     }
 
@@ -164,11 +193,12 @@ export class SiteManager extends Disposable {
             return site;
         }
 
-        return this.getSitesAvailable(product)
-            .find(site => Container.bitbucketContext
-                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !== undefined
+        return this.getSitesAvailable(product).find(site =>
+            Container.bitbucketContext
+                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !==
+                  undefined
                 : false
-            );
+        );
     }
 
     public getSiteForId(product: Product, id: string): DetailedSiteInfo | undefined {

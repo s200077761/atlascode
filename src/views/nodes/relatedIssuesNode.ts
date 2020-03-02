@@ -14,15 +14,23 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<AbstractBaseNode | undefined> {
+    public static async create(
+        pr: PullRequest,
+        commits: Commit[],
+        allComments: Comment[]
+    ): Promise<AbstractBaseNode | undefined> {
         // TODO: [VSCODE-503] handle related issues across cloud/server
-        if (!Container.siteManager.productHasAtLeastOneSite(ProductJira) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+        if (
+            !Container.siteManager.productHasAtLeastOneSite(ProductJira) ||
+            !Container.config.bitbucket.explorer.relatedJiraIssues.enabled
+        ) {
             return undefined;
         }
         const issueKeys = await extractIssueKeys(pr, commits, allComments);
         if (issueKeys.length > 0) {
             const node = new RelatedIssuesNode();
             node._delegate = new StaticIssuesNode(issueKeys, 'Related Jira issues');
+            await node._delegate.updateJqlEntry();
             return node;
         }
         return undefined;
@@ -31,7 +39,7 @@ export class RelatedIssuesNode extends AbstractBaseNode {
     async getTreeItem(): Promise<vscode.TreeItem> {
         return this._delegate.getTreeItem();
     }
-    
+
     getChildren(element?: IssueNode): Promise<IssueNode[]> {
         return this._delegate.getChildren(element);
     }

@@ -13,7 +13,7 @@ With Atlassian for VS Code you can create and view issues, start work on issues,
 
 For more in-depth information, check out our [User Guide](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code)
 
-**Note:** Jira Software Cloud next-gen projects and all Jira Service Desk project types are not fully supported at this time.
+**Note:** Jira Service Desk projects are not fully supported at this time.
 
 ## Features at a Glance
 

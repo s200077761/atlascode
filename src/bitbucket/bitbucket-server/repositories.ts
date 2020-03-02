@@ -1,20 +1,17 @@
-import { CacheMap } from "../../util/cachemap";
-import { HTTPClient } from "../httpClient";
-import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
-import { ServerPullRequestApi } from "./pullRequests";
+import { CacheMap } from '../../util/cachemap';
+import { HTTPClient } from '../httpClient';
+import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from '../model';
+import { ServerPullRequestApi } from './pullRequests';
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private repoCache: CacheMap = new CacheMap();
     private branchingModelCache: CacheMap = new CacheMap();
 
-    constructor(private client: HTTPClient) {
-    }
+    constructor(private client: HTTPClient) {}
 
     async getMirrorHosts(): Promise<string[]> {
         try {
-            const { data } = await this.client.get(
-                `/rest/mirroring/1.0/mirrorServers?limit=100`
-            );
+            const { data } = await this.client.get(`/rest/mirroring/1.0/mirrorServers?limit=100`);
 
             return data.values.map((val: any) => new URL(val.baseUrl).hostname);
         } catch (e) {
@@ -33,9 +30,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}`
-        );
+        const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}`);
 
         const { data: defaultBranch } = await this.client.get(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches/default`
@@ -55,12 +50,9 @@ export class ServerRepositoriesApi implements RepositoriesApi {
     async getBranches(site: BitbucketSite): Promise<string[]> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`,
-            {
-                limit: 100
-            }
-        );
+        const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`, {
+            limit: 100
+        });
 
         return data.values.map((val: any) => val.displayId);
     }
@@ -87,10 +79,10 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             })),
             development: data.development
                 ? {
-                    branch: {
-                        name: data.development.displayId
-                    }
-                }
+                      branch: {
+                          name: data.development.displayId
+                      }
+                  }
                 : undefined
         };
 
@@ -101,13 +93,10 @@ export class ServerRepositoriesApi implements RepositoriesApi {
     async getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits`,
-            {
-                until: includeRef,
-                since: excludeRef
-            }
-        );
+        const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits`, {
+            until: includeRef,
+            since: excludeRef
+        });
 
         const commits: any[] = data.values || [];
 
@@ -123,7 +112,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
     }
 
     /**
-     * This method then uses `git show` and scans the commit message for an 
+     * This method then uses `git show` and scans the commit message for an
      * explicit mention of a pull request, which is populated by default in the
      * Bitbucket UI.
      *
@@ -161,7 +150,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             };
         }
 
-        let url: string = Array.isArray(bbRepo.links.self) ? (bbRepo.links.self[0].href || '') : '';
+        let url: string = Array.isArray(bbRepo.links.self) ? bbRepo.links.self[0].href || '' : '';
         url = url.endsWith('/browse') ? url.slice(0, url.lastIndexOf('/browse')) : url;
 
         return {

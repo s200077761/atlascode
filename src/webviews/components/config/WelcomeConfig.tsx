@@ -6,7 +6,10 @@ import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class WelcomeConfig extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class WelcomeConfig extends React.Component<
+    { config: IConfig; onConfigChange: (changes: changeObject, removes?: string[]) => void },
+    {}
+> {
     constructor(props: any) {
         super(props);
     }
@@ -20,24 +23,19 @@ export default class WelcomeConfig extends React.Component<{ config: IConfig, on
         }
     };
 
-
     render() {
         return (
-            <CheckboxField
-                name='show-welcome-enabled'
-                id='show-welcome-enabled'
-                value='showWelcomeOnInstall'>
-                {
-                    (fieldArgs: any) => {
-                        return (
-                            <Checkbox {...fieldArgs.fieldProps}
-                                label='Show welcome screen when extension is updated'
-                                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                isChecked={this.props.config.showWelcomeOnInstall}
-                            />
-                        );
-                    }
-                }
+            <CheckboxField name="show-welcome-enabled" id="show-welcome-enabled" value="showWelcomeOnInstall">
+                {(fieldArgs: any) => {
+                    return (
+                        <Checkbox
+                            {...fieldArgs.fieldProps}
+                            label="Show welcome screen when extension is updated"
+                            onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                            isChecked={this.props.config.showWelcomeOnInstall}
+                        />
+                    );
+                }}
             </CheckboxField>
         );
     }

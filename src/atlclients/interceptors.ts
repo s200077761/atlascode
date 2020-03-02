@@ -1,6 +1,6 @@
-import { AxiosInstance } from "axios";
+import { AxiosInstance } from 'axios';
 import curlirize from 'axios-curlirize';
-import { Logger } from "../logger";
+import { Logger } from '../logger';
 
 interface CurlResult {
     command: string;
@@ -11,9 +11,9 @@ export function addCurlLogging(transport: AxiosInstance): void {
         let { command } = result;
         command = command.replace('-H "Accept-Encoding:gzip, deflate" ', '');
         if (!err) {
-            Logger.debug("-".repeat(70));
+            Logger.debug('-'.repeat(70));
             Logger.debug(command);
-            Logger.debug("-".repeat(70));
+            Logger.debug('-'.repeat(70));
         }
     });
 }

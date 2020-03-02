@@ -1,4 +1,19 @@
-import { AuthInfo, Product, OAuthProvider, ProductJira, ProductBitbucket, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent, oauthProviderForSite, isOAuthInfo } from './authInfo';
+import {
+    AuthInfo,
+    Product,
+    OAuthProvider,
+    ProductJira,
+    ProductBitbucket,
+    getSecretForAuthInfo,
+    emptyAuthInfo,
+    AuthInfoEvent,
+    AuthChangeType,
+    DetailedSiteInfo,
+    UpdateAuthInfoEvent,
+    RemoveAuthInfoEvent,
+    oauthProviderForSite,
+    isOAuthInfo
+} from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event, version } from 'vscode';
 import { Logger } from '../logger';
@@ -9,7 +24,7 @@ import { AnalyticsClient } from '../analytics-node-client/src';
 import PQueue from 'p-queue';
 import crypto from 'crypto';
 
-const keychainServiceNameV3 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV3" : "atlascode-authinfoV3";
+const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
 enum Priority {
     Read = 0,
@@ -57,7 +72,8 @@ export class CredentialManager implements Disposable {
         const oldInfo = await this.getAuthInfo(site);
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
-        const hasNewInfo = !oldInfo ||
+        const hasNewInfo =
+            !oldInfo ||
             getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info) ||
             oldInfo.user.id !== info.user.id;
 
@@ -73,13 +89,15 @@ export class CredentialManager implements Disposable {
                 const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site };
                 this._onDidAuthChange.fire(updateEvent);
             } catch (e) {
-                Logger.debug("error saving auth info to keychain: ", e);
+                Logger.debug('error saving auth info to keychain: ', e);
             }
-
         }
     }
 
-    private async getAuthInfoForProductAndCredentialId(productKey: string, credentialId: string): Promise<AuthInfo | undefined> {
+    private async getAuthInfoForProductAndCredentialId(
+        productKey: string,
+        credentialId: string
+    ): Promise<AuthInfo | undefined> {
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(productKey);
 
@@ -89,7 +107,7 @@ export class CredentialManager implements Disposable {
 
         if (!foundInfo && keychain) {
             try {
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey, credentialId) || undefined;
+                let infoEntry = (await this.getJsonAuthInfoFromKeychain(productKey, credentialId)) || undefined;
                 if (infoEntry) {
                     let info: AuthInfo = JSON.parse(infoEntry);
 
@@ -98,7 +116,6 @@ export class CredentialManager implements Disposable {
 
                         foundInfo = info;
                     }
-
                 }
             } catch (e) {
                 Logger.info(`keychain error ${e}`);
@@ -111,19 +128,22 @@ export class CredentialManager implements Disposable {
 
     /**
      * Returns a raw keychain item.
-     * 
+     *
      * @remarks
-     * Ignores the in-memory store and returns the raw value stored in the keychain. Meant to 
+     * Ignores the in-memory store and returns the raw value stored in the keychain. Meant to
      * used during migration.
      */
     public async getRawKeychainItem(service: string, productKey: string): Promise<any | undefined> {
         try {
             let item = undefined;
-            await this._queue.add(async () => {
-                if (keychain) {
-                    item = await keychain.getPassword(service, productKey);
-                }
-            }, { priority: Priority.Read });
+            await this._queue.add(
+                async () => {
+                    if (keychain) {
+                        item = await keychain.getPassword(service, productKey);
+                    }
+                },
+                { priority: Priority.Read }
+            );
             if (!item) {
                 return undefined;
             }
@@ -136,9 +156,9 @@ export class CredentialManager implements Disposable {
 
     /**
      * Deletes the keychain item.
-     * 
+     *
      * @remarks
-     * This only deletes the keychain item, leaving the in-memory store un-touched. It's 
+     * This only deletes the keychain item, leaving the in-memory store un-touched. It's
      * meant to be used during migrations.
      */
     public async deleteKeychainItem(service: string, productKey: string) {
@@ -152,24 +172,41 @@ export class CredentialManager implements Disposable {
     }
 
     private async addSiteInformationToKeychain(productKey: string, credentialId: string, info: AuthInfo) {
-        await this._queue.add(async () => {
-            if (keychain) {
-                await keychain.setPassword(keychainServiceNameV3, `${productKey}-${credentialId}`, JSON.stringify(info));
-            }
-        }, { priority: Priority.Write });
+        await this._queue.add(
+            async () => {
+                if (keychain) {
+                    await keychain.setPassword(
+                        keychainServiceNameV3,
+                        `${productKey}-${credentialId}`,
+                        JSON.stringify(info)
+                    );
+                }
+            },
+            { priority: Priority.Write }
+        );
     }
 
     private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
         let wasKeyDeleted = false;
-        await this._queue.add(async () => {
-            if (keychain) {
-                wasKeyDeleted = await keychain.deletePassword(keychainServiceNameV3, `${productKey}-${credentialId}`);
-            }
-        }, { priority: Priority.Write });
+        await this._queue.add(
+            async () => {
+                if (keychain) {
+                    wasKeyDeleted = await keychain.deletePassword(
+                        keychainServiceNameV3,
+                        `${productKey}-${credentialId}`
+                    );
+                }
+            },
+            { priority: Priority.Write }
+        );
         return wasKeyDeleted;
     }
 
-    private async getJsonAuthInfoFromKeychain(productKey: string, credentialId: string, serviceName?: string): Promise<string | null> {
+    private async getJsonAuthInfoFromKeychain(
+        productKey: string,
+        credentialId: string,
+        serviceName?: string
+    ): Promise<string | null> {
         let svcName = keychainServiceNameV3;
 
         if (serviceName) {
@@ -177,11 +214,14 @@ export class CredentialManager implements Disposable {
         }
 
         let authInfo: string | null = null;
-        await this._queue.add(async () => {
-            if (keychain) {
-                authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
-            }
-        }, { priority: Priority.Read });
+        await this._queue.add(
+            async () => {
+                if (keychain) {
+                    authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
+                }
+            },
+            { priority: Priority.Read }
+        );
         return authInfo;
     }
 
@@ -228,12 +268,18 @@ export class CredentialManager implements Disposable {
 
             let name = site.name;
 
-            const removeEvent: RemoveAuthInfoEvent = { type: AuthChangeType.Remove, product: site.product, credentialId: site.credentialId };
+            const removeEvent: RemoveAuthInfoEvent = {
+                type: AuthChangeType.Remove,
+                product: site.product,
+                credentialId: site.credentialId
+            };
             this._onDidAuthChange.fire(removeEvent);
 
             window.showInformationMessage(`You have been logged out of ${site.product.name}: ${name}`);
 
-            loggedOutEvent(site).then(e => { this._analyticsClient.sendTrackEvent(e); });
+            loggedOutEvent(site).then(e => {
+                this._analyticsClient.sendTrackEvent(e);
+            });
             return true;
         }
 
@@ -251,6 +297,9 @@ export class CredentialManager implements Disposable {
     }
 
     public static generateCredentialId(siteId: string, userId: string): string {
-        return crypto.createHash('md5').update(siteId + '::' + userId).digest('hex');
+        return crypto
+            .createHash('md5')
+            .update(siteId + '::' + userId)
+            .digest('hex');
     }
 }

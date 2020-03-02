@@ -1,17 +1,18 @@
 import Button, { ButtonGroup } from '@atlaskit/button';
+import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import StarIcon from '@atlaskit/icon/glyph/star';
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
-import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
-import SizeDetector from '@atlaskit/size-detector';
 import Tooltip from '@atlaskit/tooltip';
+import WidthDetector from '@atlaskit/width-detector';
 import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Comment as JiraComment } from '@atlassianlabs/jira-pi-common-models/entities';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { distanceInWordsToNow, format } from 'date-fns';
 import * as React from 'react';
@@ -34,7 +35,7 @@ import {
 } from './AbstractIssueEditorPage';
 import { AttachmentList } from './AttachmentList';
 import { AttachmentsModal } from './AttachmentsModal';
-import { CommentList } from './CommentList';
+import { CommentComponent } from './CommentComponent';
 import IssueList from './IssueList';
 import { LinkedIssues } from './LinkedIssues';
 import NavItem from './NavItem';
@@ -47,11 +48,6 @@ import Worklogs from './Worklogs';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
-
-type SizeMetrics = {
-    width: number;
-    height: number;
-};
 
 interface ViewState extends CommonEditorViewState, EditIssueData {
     showMore: boolean;
@@ -258,16 +254,36 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    protected handleCommentSave = (comment: string, restriction?: CommentVisibility) => {
+    protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
         let commentAction: IssueCommentAction = {
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
-            comment: comment,
+            commentBody: commentBody,
             restriction: restriction
         };
 
         this.postMessage(commentAction);
+    };
+
+    protected handleUpdateComment = (commentBody: string, commentId: string, restriction?: CommentVisibility) => {
+        const commentAction: IssueCommentAction = {
+            action: 'comment',
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+            commentBody: commentBody,
+            commentId: commentId,
+            restriction: restriction
+        };
+
+        this.postMessage(commentAction);
+    };
+
+    handleDeleteComment = (commentId: string) => {
+        this.postMessage({
+            action: 'deleteComment',
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+            commentId: commentId
+        });
     };
 
     handleStatusChange = (transition: Transition) => {
@@ -389,7 +405,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
     };
 
-    getMainPanelMarkup(): any {
+    getMainPanelMarkup(includeCommonSidebar: boolean): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
         let epicLinkKey: string = '';
 
@@ -462,6 +478,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                 )}
+                {includeCommonSidebar && this.commonSidebar()}
                 {this.state.fields['description'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['description'].name}</label>
@@ -528,13 +545,20 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['comment'].name}</label>
-                        <CommentList
-                            comments={this.state.fieldValues['comment'].comments}
-                            isServiceDeskProject={
-                                this.state.fieldValues['project'] &&
-                                this.state.fieldValues['project'].projectTypeKey === 'service_desk'
-                            }
-                        />
+                        {this.state.fieldValues['comment'].comments.map((comment: JiraComment) => (
+                            <CommentComponent
+                                key={`${comment.id}::${comment.updated}`}
+                                siteDetails={this.state.siteDetails}
+                                isServiceDeskProject={
+                                    this.state.fieldValues['project'] &&
+                                    this.state.fieldValues['project'].projectTypeKey === 'service_desk'
+                                }
+                                comment={comment}
+                                fetchUsers={this.fetchUsers}
+                                onSave={this.handleUpdateComment}
+                                onDelete={this.handleDeleteComment}
+                            />
+                        ))}
                         {this.getInputMarkup(this.state.fields['comment'], true)}
                     </div>
                 )}
@@ -565,8 +589,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             <React.Fragment>
                 <ButtonGroup>
                     <Tooltip content="Refresh">
-                        <Button 
-                            className='ac-button-secondary'
+                        <Button
+                            className="ac-button-secondary"
                             onClick={this.handleRefresh}
                             iconBefore={<RefreshIcon label="refresh" />}
                             isLoading={this.state.loadingField === 'refresh'}
@@ -589,8 +613,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 placement="left-start"
                             >
                                 <Tooltip content="Log work">
-                                    <Button 
-                                        className='ac-button-secondary'
+                                    <Button
+                                        className="ac-button-secondary"
                                         onClick={this.handleOpenWorklogEditor}
                                         iconBefore={<EmojiFrequentIcon label="Log Work" />}
                                         isLoading={this.state.loadingField === 'worklog'}
@@ -602,8 +626,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     {this.state.fields['attachment'] && (
                         <div className="ac-inline-dialog">
                             <Tooltip content="Add Attachment">
-                                <Button 
-                                    className='ac-button-secondary'
+                                <Button
+                                    className="ac-button-secondary"
                                     onClick={this.handleOpenAttachmentEditor}
                                     iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
                                     isLoading={this.state.loadingField === 'attachment'}
@@ -635,8 +659,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 placement="left-start"
                             >
                                 <Tooltip content="Watch options">
-                                    <Button 
-                                        className='ac-button-secondary'
+                                    <Button
+                                        className="ac-button-secondary"
                                         onClick={this.handleOpenWatchesEditor}
                                         iconBefore={
                                             this.state.fieldValues['watches'].isWatching ? (
@@ -653,7 +677,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </InlineDialog>
                         </div>
                     )}
-                    {this.state.fields['votes'] && 
+                    {this.state.fields['votes'] && (
                         <div className="ac-inline-dialog">
                             <InlineDialog
                                 content={
@@ -671,8 +695,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 placement="left-start"
                             >
                                 <Tooltip content="Vote options">
-                                    <Button 
-                                        className='ac-button-secondary'
+                                    <Button
+                                        className="ac-button-secondary"
                                         onClick={this.handleOpenVotesEditor}
                                         iconBefore={
                                             this.state.fieldValues['votes'].hasVoted ? (
@@ -688,10 +712,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 </Tooltip>
                             </InlineDialog>
                         </div>
-                    }
+                    )}
                     <Tooltip content="Create a branch and transition this issue">
-                        <Button 
-                            className='ac-button'
+                        <Button
+                            className="ac-button"
                             onClick={this.handleStartWorkOnIssue}
                             iconBefore={<BitbucketBranchesIcon label="Start work" />}
                             isLoading={false}
@@ -820,13 +844,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         return (
             <Page>
-                <SizeDetector>
-                    {(size: SizeMetrics) => {
-                        if (size.width < 800) {
+                <WidthDetector>
+                    {(width?: number) => {
+                        if (width && width < 800) {
                             return (
-                                <div style={{ marginTop: '20px' }}>
-                                    {this.getMainPanelMarkup()}
-                                    {this.commonSidebar()}
+                                <div style={{ margin: '20px 16px 0px 16px' }}>
+                                    {this.getMainPanelMarkup(true)}
                                     <Collapsible
                                         trigger="show more"
                                         triggerWhenOpen="show less"
@@ -853,7 +876,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         return (
                             <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
                                 <Grid layout="fluid">
-                                    <GridColumn medium={8}>{this.getMainPanelMarkup()}</GridColumn>
+                                    <GridColumn medium={8}>{this.getMainPanelMarkup(false)}</GridColumn>
                                     <GridColumn medium={4}>
                                         {this.commonSidebar()}
                                         <Collapsible
@@ -887,7 +910,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </div>
                         );
                     }}
-                </SizeDetector>
+                </WidthDetector>
             </Page>
         );
     }

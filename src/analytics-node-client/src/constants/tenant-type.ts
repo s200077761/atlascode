@@ -7,8 +7,4 @@ function isValidTenantType(tenantIdType: string): boolean {
     return tenantIdType === CLOUD_ID || tenantIdType === NONE;
 }
 
-export {
-    CLOUD_ID,
-    NONE,
-    isValidTenantType
-};
+export { CLOUD_ID, NONE, isValidTenantType };

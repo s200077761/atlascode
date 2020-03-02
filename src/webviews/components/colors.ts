@@ -17,7 +17,7 @@ export const colorToLozengeAppearanceMap: { [key: string]: string } = {
     red: 'removed',
     'warm-red': 'removed',
     yellow: 'inprogress',
-    green: 'success',
+    green: 'success'
 };
 
 export function darken(color: string, percentage: number) {
@@ -26,7 +26,9 @@ export function darken(color: string, percentage: number) {
 
 export function lighten(color: string, percentage: number) {
     const rgba = toRgba(color);
-    if (rgba === null) { return color; }
+    if (rgba === null) {
+        return color;
+    }
 
     const [r, g, b, a] = rgba;
     percentage = (255 * percentage) / 100;
@@ -35,7 +37,9 @@ export function lighten(color: string, percentage: number) {
 
 export function opacity(color: string, percentage: number) {
     const rgba = toRgba(color);
-    if (rgba === null) { return color; }
+    if (rgba === null) {
+        return color;
+    }
 
     const [r, g, b, a] = rgba;
     return `rgba(${r}, ${g}, ${b}, ${a * (percentage / 100)})`;
@@ -45,7 +49,9 @@ export function toRgba(color: string) {
     color = color.trim();
 
     const result = cssColorRegEx.exec(color);
-    if (result === null) { return null; }
+    if (result === null) {
+        return null;
+    }
 
     if (result[1] === '#') {
         const hex = result[2];

@@ -19,29 +19,37 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
             description: descriptionForUri(data.uri),
             uri: data.uri,
             position: data.insertionPoint,
-            onCreated: annotateComment,
+            onCreated: annotateComment
         };
         Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
-        startIssueCreationEvent('todoComment', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        startIssueCreationEvent('todoComment', ProductJira).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         return;
     } else if (isUri(data) && data.scheme === 'file') {
         Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
-        startIssueCreationEvent('contextMenu', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        startIssueCreationEvent('contextMenu', ProductJira).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         return;
     } else if (isBBIssueData(data)) {
         const partialIssue = {
             summary: `BB #${data.data.id} - ${data.data.title}`,
             description: `created from Bitbucket issue: ${data.data.links!.html!.href!}`,
             bbIssue: data,
-            onCreated: updateBBIssue,
+            onCreated: updateBBIssue
         };
         Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
-        startIssueCreationEvent('todoComment', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        startIssueCreationEvent('todoComment', ProductJira).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         return;
     }
 
     Container.createIssueWebview.createOrShow();
-    startIssueCreationEvent(source || 'explorer', ProductJira).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+    startIssueCreationEvent(source || 'explorer', ProductJira).then(e => {
+        Container.analyticsClient.sendTrackEvent(e);
+    });
 }
 
 function isTodoIssueData(a: any): a is TodoIssueData {
@@ -82,9 +90,7 @@ function descriptionForUri(uri: Uri) {
 
     const wsRepos = Container.bitbucketContext.getAllRepositories();
 
-    const urls = wsRepos
-        .map((wsRepo) => bitbucketUrlsInRepo(wsRepo, uri, linesText))
-        .filter(url => url !== undefined);
+    const urls = wsRepos.map(wsRepo => bitbucketUrlsInRepo(wsRepo, uri, linesText)).filter(url => url !== undefined);
 
     if (urls.length === 0) {
         return `${workspace.asRelativePath(uri)}${linesText}`;
@@ -106,14 +112,18 @@ function bitbucketUrlsInRepo(wsRepo: WorkspaceRepo, fileUri: Uri, linesText: str
     if (!filePath.startsWith(scm.rootUri.path)) {
         return undefined;
     }
-    const relativePath = filePath.replace(rootPath, "");
+    const relativePath = filePath.replace(rootPath, '');
     if (wsRepo.mainSiteRemote.site) {
         const site = wsRepo.mainSiteRemote.site;
         const commit = head.upstream && head.ahead && head.ahead > 0 ? head.name : head.commit;
         if (commit) {
             return site.details.isCloud
-                ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/src/${commit}${relativePath}${linesText ? `#lines-${linesText}` : ''}`
-                : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/browse${relativePath}?at=${commit}${linesText ? `#${linesText.replace(':', '-')}` : ''}`;
+                ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/src/${commit}${relativePath}${
+                      linesText ? `#lines-${linesText}` : ''
+                  }`
+                : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${
+                      site.repoSlug
+                  }/browse${relativePath}?at=${commit}${linesText ? `#${linesText.replace(':', '-')}` : ''}`;
         }
     }
 
@@ -123,7 +133,7 @@ function bitbucketUrlsInRepo(wsRepo: WorkspaceRepo, fileUri: Uri, linesText: str
 function getLineRange(): string {
     const editor = window.activeTextEditor;
     if (!editor || !editor.selection) {
-        return "";
+        return '';
     }
     const selection = editor.selection;
     // vscode provides 0-based line numbers but Bitbucket line numbers start with 1.
@@ -136,10 +146,10 @@ function getLineRange(): string {
 function getSelectionText(): string {
     const editor = window.activeTextEditor;
     if (!editor || !editor.selection) {
-        return "";
+        return '';
     }
 
-    let result = "";
+    let result = '';
     const selection = editor.selection;
     if (selection.start.line === selection.end.line) {
         result = editor.document.lineAt(selection.start.line).text;

@@ -46,15 +46,43 @@
         "workspace"
     ],
     "main": "./build/extension/extension",
+    "scripts": {
+        "precommit": "pretty-quick --staged",
+        "pretty": "prettier --write \"./**/*.{js,jsx,ts,tsx,json}\"",
+        "vscode:uninstall": "node ./build/extension/uninstall.js",
+        "vscode:prepublish": "npm run compile",
+        "clean": "rm -rf ./build",
+        "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
+        "lint:fix": "eslint --fix ./src --ext .js,.jsx,.ts,.tsx",
+        "compile": "npm run clean && npm-run-all --parallel compile:react compile:extension",
+        "compile:extension": "webpack --mode production --config webpack.extension.prod.js",
+        "compile:react": "webpack --mode production --config webpack.react.prod.js",
+        "postinstall": "patch-package",
+        "test": "npm run compile && node ./build/test/runTest.js",
+        "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
+        "devcompile:react": "webpack --mode development --config webpack.react.dev.js",
+        "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js",
+        "webview:atlascodeSettings:dark": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:atlascodeSettings:light": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:viewJiraIssue:dark": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:viewJiraIssue:light": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:viewPullRequestScreen:dark": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
+        "webview:viewPullRequestScreen:light": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js"
+    },
     "contributes": {
         "commands": [
             {
                 "command": "atlascode.jira.createIssue",
-                "title": "Create New Jira Issue",
+                "title": "Create Jira Issue",
                 "icon": {
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.jira.searchIssues",
+                "title": "Search Jira Issue Results",
                 "category": "Atlassian"
             },
             {
@@ -139,7 +167,7 @@
             },
             {
                 "command": "atlascode.jira.refreshExplorer",
-                "title": "Refresh",
+                "title": "Refresh Jira Issues",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -148,7 +176,7 @@
             },
             {
                 "command": "atlascode.jira.showJiraIssueSettings",
-                "title": "Settings",
+                "title": "Jira Issue Settings",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -162,7 +190,7 @@
             },
             {
                 "command": "atlascode.jira.assignIssueToMe",
-                "title": "Assign Issue to Me",
+                "title": "Assign Jira Issue to Me",
                 "category": "Atlassian"
             },
             {
@@ -172,7 +200,7 @@
             },
             {
                 "command": "atlascode.bb.refreshPullRequests",
-                "title": "Refresh Bitbucket pull requests",
+                "title": "Refresh pull requests",
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
@@ -190,7 +218,7 @@
             },
             {
                 "command": "atlascode.bb.showPullRequestSettings",
-                "title": "Settings",
+                "title": "Pull Request Settings",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -209,22 +237,22 @@
             },
             {
                 "command": "atlascode.showJiraAuth",
-                "title": "Open Settings",
+                "title": "Open Jira Auth Settings",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showBitbucketAuth",
-                "title": "Open Settings",
+                "title": "Open Bitbucket Auth Settings",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showWelcomePage",
-                "title": "Open Welcome",
+                "title": "Open Welcome Page",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showOnboardingPage",
-                "title": "Open Onboarding",
+                "title": "Open Onboarding Page",
                 "category": "Atlassian"
             },
             {
@@ -259,11 +287,11 @@
             {
                 "command": "atlascode.bb.editThisFile",
                 "title": "Edit this File",
-                "category": "Atlassian",
                 "icon": {
                     "dark": "resources/dark/edit.svg",
                     "light": "resources/light/edit.svg"
-                }
+                },
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.startPipeline",
@@ -281,7 +309,7 @@
             },
             {
                 "command": "atlascode.bb.showPipelineSettings",
-                "title": "Settings",
+                "title": "Pipeline Settings",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -308,7 +336,7 @@
             },
             {
                 "command": "atlascode.bb.showBitbucketIssueSettings",
-                "title": "Settings",
+                "title": "Bitbucket Issue Settings",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -578,15 +606,55 @@
             ],
             "commandPalette": [
                 {
-                    "command": "atlascode.showJiraAuth",
+                    "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.showBitbucketAuth",
+                    "command": "atlascode.bb.refreshPipelines",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.openInBitbucket",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.viewInWebBrowser",
                     "when": "false"
                 },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.refreshExplorer",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.showPipelineSettings",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.showPullRequestSettings",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.showBitbucketIssueSettings",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.openChangeset",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.showJiraAuth",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.editThisFile",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.showBitbucketAuth",
                     "when": "false"
                 },
                 {
@@ -830,6 +898,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Shows a login button in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.jira.statusbar.showActiveIssue": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows active Jira issue key in the status bar",
                     "scope": "window"
                 },
                 "atlascode.jira.workingProject": {
@@ -1140,25 +1214,6 @@
             }
         }
     },
-    "scripts": {
-        "vscode:uninstall": "node ./build/extension/uninstall.js",
-        "vscode:prepublish": "npm run compile",
-        "clean": "rm -rf ./build",
-        "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
-        "lint:fix": "eslint --fix ./src --ext .js,.jsx,.ts,.tsx",
-        "compile": "npm run clean && npm-run-all --parallel compile:react compile:extension",
-        "compile:extension": "webpack --mode production --config webpack.extension.prod.js",
-        "compile:react": "webpack --mode production --config webpack.react.prod.js",
-        "postinstall": "patch-package",
-        "test": "npm run compile && node ./build/test/runTest.js",
-        "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
-        "devcompile:react": "webpack --mode development --config webpack.react.dev.js",
-        "devcompile:extension": "webpack --mode development --config webpack.extension.dev.js",
-        "webview:atlascodeSettings:dark": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:atlascodeSettings:light": "cross-env PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:viewJiraIssue:dark": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
-        "webview:viewJiraIssue:light": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js"
-    },
     "dependencies": {
         "@atlaskit/avatar": "^17.0.0",
         "@atlaskit/avatar-group": "^4.0.13",
@@ -1186,7 +1241,6 @@
         "@atlaskit/reduced-ui-pack": "^12.0.6",
         "@atlaskit/section-message": "^4.0.12",
         "@atlaskit/select": "^10.1.0",
-        "@atlaskit/size-detector": "^8.0.6",
         "@atlaskit/spinner": "^12.0.9",
         "@atlaskit/table-tree": "^7.1.0",
         "@atlaskit/tag": "^9.0.7",
@@ -1194,12 +1248,13 @@
         "@atlaskit/theme": "^9.2.2",
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
-        "@atlassianlabs/jira-metaui-client": "^0.1.9",
-        "@atlassianlabs/jira-metaui-transformer": "^0.1.8",
-        "@atlassianlabs/jira-pi-client": "^0.1.9",
-        "@atlassianlabs/jira-pi-common-models": "^0.1.7",
-        "@atlassianlabs/jira-pi-meta-models": "^0.1.7",
-        "@atlassianlabs/pi-client-common": "^0.1.7",
+        "@atlaskit/width-detector": "^2.0.10",
+        "@atlassianlabs/jira-metaui-client": "^0.1.13",
+        "@atlassianlabs/jira-metaui-transformer": "^0.1.13",
+        "@atlassianlabs/jira-pi-client": "^0.1.13",
+        "@atlassianlabs/jira-pi-common-models": "^0.1.13",
+        "@atlassianlabs/jira-pi-meta-models": "^0.1.13",
+        "@atlassianlabs/pi-client-common": "^0.1.13",
         "@deviniti/jql-autocomplete": "^1.0.2",
         "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
@@ -1216,7 +1271,7 @@
         "filesize": "^4.1.2",
         "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
-        "handlebars": "4.0.12",
+        "handlebars": "^4.7.3",
         "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
@@ -1284,13 +1339,16 @@
         "cross-env": "^6.0.3",
         "css-loader": "^3.2.0",
         "eslint": "^6.5.1",
+        "eslint-config-prettier": "^6.10.0",
         "eslint-import-resolver-typescript": "^2.0.0",
         "eslint-plugin-import": "^2.18.2",
+        "eslint-plugin-prettier": "^3.1.2",
         "eslint-plugin-react": "^7.16.0",
         "eslint-plugin-react-hooks": "^2.1.2",
         "fork-ts-checker-notifier-webpack-plugin": "^1.0.2",
         "fork-ts-checker-webpack-plugin": "^1.5.1",
         "html-webpack-plugin": "^3.2.0",
+        "husky": "^4.2.3",
         "mini-css-extract-plugin": "^0.8.0",
         "mocha": "^5.2.0",
         "npm-run-all": "^4.1.5",
@@ -1299,9 +1357,11 @@
         "postcss-flexbugs-fixes": "^4.1.0",
         "postcss-loader": "^3.0.0",
         "postinstall-postinstall": "^2.0.0",
+        "prettier": "^1.19.1",
+        "pretty-quick": "^2.0.1",
         "react-dev-utils": "^9.1.0",
         "source-map-loader": "^0.2.4",
-        "terser-webpack-plugin": "^2.1.1",
+        "terser-webpack-plugin": "^2.3.5",
         "ts-loader": "^6.2.0",
         "ts-node": "^8.4.1",
         "tsconfig-paths": "^3.9.0",

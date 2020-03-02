@@ -1,12 +1,25 @@
-import { window } from "vscode";
-import { authenticatedEvent } from "../analytics";
-import { AnalyticsClient } from "../analytics-node-client/src";
-import { getAgent, getAxiosInstance } from "../jira/jira-client/providers";
-import { Logger } from "../logger";
-import { SiteManager } from "../siteManager";
-import { AccessibleResource, AuthInfo, BasicAuthInfo, DetailedSiteInfo, isBasicAuthInfo, OAuthInfo, OAuthProvider, oauthProviderForSite, Product, ProductBitbucket, ProductJira, SiteInfo } from "./authInfo";
-import { CredentialManager } from "./authStore";
-import { OAuthDancer } from "./oauthDancer";
+import { window } from 'vscode';
+import { authenticatedEvent, editedEvent } from '../analytics';
+import { AnalyticsClient } from '../analytics-node-client/src';
+import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
+import { SiteManager } from '../siteManager';
+import {
+    AccessibleResource,
+    AuthInfo,
+    BasicAuthInfo,
+    DetailedSiteInfo,
+    isBasicAuthInfo,
+    OAuthInfo,
+    OAuthProvider,
+    oauthProviderForSite,
+    Product,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo
+} from './authInfo';
+import { CredentialManager } from './authStore';
+import { OAuthDancer } from './oauthDancer';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {
@@ -15,8 +28,8 @@ export class LoginManager {
     constructor(
         private _credentialManager: CredentialManager,
         private _siteManager: SiteManager,
-        private _analyticsClient: AnalyticsClient) {
-    }
+        private _analyticsClient: AnalyticsClient
+    ) {}
 
     // this is *only* called when login buttons are clicked by the user
     public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
@@ -31,19 +44,25 @@ export class LoginManager {
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
                 refresh: resp.refresh,
-                user: resp.user,
+                user: resp.user
             };
 
-            const siteDetails = await this.getOAuthSiteDetails(site.product, provider, resp.user.id, resp.accessibleResources);
+            const siteDetails = await this.getOAuthSiteDetails(
+                site.product,
+                provider,
+                resp.user.id,
+                resp.accessibleResources
+            );
 
             siteDetails.forEach(async siteInfo => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
                 this._siteManager.addSites([siteInfo]);
-                authenticatedEvent(siteInfo).then(e => { this._analyticsClient.sendTrackEvent(e); });
+                authenticatedEvent(siteInfo).then(e => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
             });
 
             window.showInformationMessage(`You are now authenticated with ${site.product.name}`);
-
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -54,40 +73,51 @@ export class LoginManager {
         }
     }
 
-    private async getOAuthSiteDetails(product: Product, provider: OAuthProvider, userId: string, resources: AccessibleResource[]): Promise<DetailedSiteInfo[]> {
+    private async getOAuthSiteDetails(
+        product: Product,
+        provider: OAuthProvider,
+        userId: string,
+        resources: AccessibleResource[]
+    ): Promise<DetailedSiteInfo[]> {
         let newSites: DetailedSiteInfo[] = [];
 
         switch (product.key) {
             case ProductBitbucket.key:
                 if (resources.length > 0) {
                     let resource = resources[0];
-                    const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
-                    const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
-                    const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
+                    const hostname = provider === OAuthProvider.BitbucketCloud ? 'bitbucket.org' : 'staging.bb-inf.net';
+                    const baseApiUrl =
+                        provider === OAuthProvider.BitbucketCloud
+                            ? 'https://api.bitbucket.org/2.0'
+                            : 'https://api-staging.bb-inf.net/2.0';
+                    const siteName =
+                        provider === OAuthProvider.BitbucketCloud ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
 
                     const credentialId = CredentialManager.generateCredentialId(resource.id, userId);
 
                     // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
-                    newSites = [{
-                        avatarUrl: "",
-                        baseApiUrl: baseApiUrl,
-                        baseLinkUrl: resource.url,
-                        host: hostname,
-                        id: resource.id,
-                        name: siteName,
-                        product: ProductBitbucket,
-                        isCloud: true,
-                        userId: userId,
-                        credentialId: credentialId,
-                    }];
+                    newSites = [
+                        {
+                            avatarUrl: '',
+                            baseApiUrl: baseApiUrl,
+                            baseLinkUrl: resource.url,
+                            host: hostname,
+                            id: resource.id,
+                            name: siteName,
+                            product: ProductBitbucket,
+                            isCloud: true,
+                            userId: userId,
+                            credentialId: credentialId
+                        }
+                    ];
                 }
                 break;
             case ProductJira.key:
-                let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
+                let apiUri =
+                    provider === OAuthProvider.JiraCloudStaging ? 'api.stg.atlassian.com' : 'api.atlassian.com';
 
                 //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
                 //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
-
 
                 newSites = resources.map(r => {
                     const credentialId = CredentialManager.generateCredentialId(r.id, userId);
@@ -96,13 +126,13 @@ export class LoginManager {
                         avatarUrl: r.avatarUrl,
                         baseApiUrl: `https://${apiUri}/ex/jira/${r.id}/rest`,
                         baseLinkUrl: r.url,
-                        host: (new URL(r.url)).host,
+                        host: new URL(r.url).host,
                         id: r.id,
                         name: r.name,
                         product: ProductJira,
                         isCloud: true,
                         userId: userId,
-                        credentialId: credentialId,
+                        credentialId: credentialId
                     };
                 });
                 break;
@@ -115,7 +145,24 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                authenticatedEvent(siteDetails).then(e => { this._analyticsClient.sendTrackEvent(e); });
+                authenticatedEvent(siteDetails).then(e => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
+            } catch (err) {
+                const errorString = `Error authenticating with ${site.product.name}: ${err}`;
+                Logger.error(new Error(errorString));
+                return Promise.reject(errorString);
+            }
+        }
+    }
+
+    public async updatedServerInfo(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
+        if (isBasicAuthInfo(authInfo)) {
+            try {
+                const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                editedEvent(siteDetails).then(e => {
+                    this._analyticsClient.sendTrackEvent(e);
+                });
             } catch (err) {
                 const errorString = `Error authenticating with ${site.product.name}: ${err}`;
                 Logger.error(new Error(errorString));
@@ -132,8 +179,8 @@ export class LoginManager {
         let siteDetailsUrl = '';
         let avatarUrl = '';
         let apiUrl = '';
-        const protocol = (site.protocol) ? site.protocol : 'https:';
-        const contextPath = (site.contextPath) ? site.contextPath : '';
+        const protocol = site.protocol ? site.protocol : 'https:';
+        const contextPath = site.contextPath ? site.contextPath : '';
         switch (site.product.key) {
             case ProductJira.key:
                 siteDetailsUrl = `${protocol}//${site.host}${contextPath}/rest/api/2/myself`;
@@ -141,7 +188,9 @@ export class LoginManager {
                 apiUrl = `${protocol}//${site.host}${contextPath}/rest`;
                 break;
             case ProductBitbucket.key:
-                siteDetailsUrl = `${protocol}//${site.host}${contextPath}/rest/api/1.0/users/${credentials.username.replace(slugRegex, "_")}?avatarSize=64`;
+                siteDetailsUrl = `${protocol}//${
+                    site.host
+                }${contextPath}/rest/api/1.0/users/${credentials.username.replace(slugRegex, '_')}?avatarSize=64`;
                 avatarUrl = '';
                 apiUrl = `${protocol}//${site.host}${contextPath}`;
                 break;
@@ -150,9 +199,9 @@ export class LoginManager {
         const transport = getAxiosInstance();
 
         const res = await transport(siteDetailsUrl, {
-            method: "GET",
+            method: 'GET',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
                 Authorization: authHeader
             },
             ...getAgent(site)
@@ -177,7 +226,7 @@ export class LoginManager {
             credentialId: credentialId,
             customSSLCertPaths: site.customSSLCertPaths,
             pfxPath: site.pfxPath,
-            pfxPassphrase: site.pfxPassphrase,
+            pfxPassphrase: site.pfxPassphrase
         };
 
         if (site.product.key === ProductJira.key) {
@@ -185,19 +234,19 @@ export class LoginManager {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrls["48x48"],
+                avatarUrl: json.avatarUrls['48x48']
             };
         } else {
             credentials.user = {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrl,
+                avatarUrl: json.avatarUrl
             };
         }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
-        this._siteManager.addSites([siteDetails]);
+        this._siteManager.addOrUpdateSite(siteDetails);
 
         return siteDetails;
     }

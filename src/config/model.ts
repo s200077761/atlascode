@@ -1,6 +1,6 @@
 'use strict';
 
-import { AccessibleResourceV1, emptyAccessibleResourceV1 } from "../atlclients/authInfo";
+import { AccessibleResourceV1, emptyAccessibleResourceV1 } from '../atlclients/authInfo';
 
 export enum SettingSource {
     JiraIssue = 'jiraIssue',
@@ -63,6 +63,7 @@ export interface JiraStatusBar {
     showProduct: boolean;
     showUser: boolean;
     showLogin: boolean;
+    showActiveIssue: boolean;
 }
 
 export interface JiraIssueMonitor {
@@ -177,22 +178,23 @@ export const emptyWorkingProjectV1: WorkingProjectV1 = {
 };
 
 export function notEmptyProjectV1(p: WorkingProjectV1): p is WorkingProjectV1 {
-    return (<WorkingProjectV1>p).name !== undefined
-        && (<WorkingProjectV1>p).name !== ''
-        && (<WorkingProjectV1>p).id !== undefined
-        && (<WorkingProjectV1>p).id !== ''
-        && (<WorkingProjectV1>p).key !== undefined
-        && (<WorkingProjectV1>p).key !== ''
-        ;
+    return (
+        (<WorkingProjectV1>p).name !== undefined &&
+        (<WorkingProjectV1>p).name !== '' &&
+        (<WorkingProjectV1>p).id !== undefined &&
+        (<WorkingProjectV1>p).id !== '' &&
+        (<WorkingProjectV1>p).key !== undefined &&
+        (<WorkingProjectV1>p).key !== ''
+    );
 }
 
 export const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
     monitorEnabled: true,
     showOpenIssues: true,
-    openIssueJql: "",
+    openIssueJql: '',
     showAssignedIssues: true,
-    assignedIssueJql: "",
+    assignedIssueJql: '',
     refreshInterval: 5,
     nestSubtasks: true,
     fetchAllQueryResults: false
@@ -206,7 +208,8 @@ export const emptyJiraStatusBar: JiraStatusBar = {
     enabled: true,
     showProduct: true,
     showUser: true,
-    showLogin: true
+    showLogin: true,
+    showActiveIssue: true
 };
 
 export const emptyJiraHover: JiraHover = {
@@ -214,12 +217,12 @@ export const emptyJiraHover: JiraHover = {
 };
 
 export const emptyJQLEntry: JQLEntry = {
-    id: "",
+    id: '',
     enabled: true,
     monitor: true,
-    name: "",
-    query: "",
-    siteId: "",
+    name: '',
+    query: '',
+    siteId: ''
 };
 
 export const emptyTodoIssues: TodoIssues = {
@@ -231,14 +234,14 @@ export const emptyJiraConfig: JiraConfig = {
     enabled: true,
     workingProject: emptyWorkingProjectV1,
     workingSite: emptyAccessibleResourceV1,
-    lastCreateSiteAndProject: { siteId: "", projectKey: "" },
+    lastCreateSiteAndProject: { siteId: '', projectKey: '' },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
     customJql: [],
     jqlList: [],
-    todoIssues: emptyTodoIssues,
+    todoIssues: emptyTodoIssues
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
@@ -287,7 +290,7 @@ export const emptyIssuesConfig: BitbucketIssuesConfig = {
     explorerEnabled: true,
     monitorEnabled: true,
     refreshInterval: 15,
-    createJiraEnabled: false,
+    createJiraEnabled: false
 };
 
 export const emptyBitbucketConfig: BitbucketConfig = {
