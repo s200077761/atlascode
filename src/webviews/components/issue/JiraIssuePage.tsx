@@ -12,6 +12,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
 import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Comment as JiraComment } from '@atlassianlabs/jira-pi-common-models/entities';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { distanceInWordsToNow, format } from 'date-fns';
 import * as React from 'react';
@@ -34,7 +35,7 @@ import {
 } from './AbstractIssueEditorPage';
 import { AttachmentList } from './AttachmentList';
 import { AttachmentsModal } from './AttachmentsModal';
-import { CommentList } from './CommentList';
+import { CommentComponent } from './CommentComponent';
 import IssueList from './IssueList';
 import { LinkedIssues } from './LinkedIssues';
 import NavItem from './NavItem';
@@ -253,16 +254,36 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     };
 
-    protected handleCommentSave = (comment: string, restriction?: CommentVisibility) => {
+    protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
         let commentAction: IssueCommentAction = {
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
-            comment: comment,
+            commentBody: commentBody,
             restriction: restriction
         };
 
         this.postMessage(commentAction);
+    };
+
+    protected handleUpdateComment = (commentBody: string, commentId: string, restriction?: CommentVisibility) => {
+        const commentAction: IssueCommentAction = {
+            action: 'comment',
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+            commentBody: commentBody,
+            commentId: commentId,
+            restriction: restriction
+        };
+
+        this.postMessage(commentAction);
+    };
+
+    handleDeleteComment = (commentId: string) => {
+        this.postMessage({
+            action: 'deleteComment',
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+            commentId: commentId
+        });
     };
 
     handleStatusChange = (transition: Transition) => {
@@ -524,13 +545,20 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['comment'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['comment'].name}</label>
-                        <CommentList
-                            comments={this.state.fieldValues['comment'].comments}
-                            isServiceDeskProject={
-                                this.state.fieldValues['project'] &&
-                                this.state.fieldValues['project'].projectTypeKey === 'service_desk'
-                            }
-                        />
+                        {this.state.fieldValues['comment'].comments.map((comment: JiraComment) => (
+                            <CommentComponent
+                                key={`${comment.id}::${comment.updated}`}
+                                siteDetails={this.state.siteDetails}
+                                isServiceDeskProject={
+                                    this.state.fieldValues['project'] &&
+                                    this.state.fieldValues['project'].projectTypeKey === 'service_desk'
+                                }
+                                comment={comment}
+                                fetchUsers={this.fetchUsers}
+                                onSave={this.handleUpdateComment}
+                                onDelete={this.handleDeleteComment}
+                            />
+                        ))}
                         {this.getInputMarkup(this.state.fields['comment'], true)}
                     </div>
                 )}
