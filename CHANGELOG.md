@@ -13,6 +13,7 @@
 -   Preload PR data
 -   Stop notifying users when URLs are copied to clipboard
 -   Add repository name to pipeline messages
+-   Show active Jira issue in status bar
 
 ### Bugs fixed
 
