@@ -1256,6 +1256,7 @@
         "@atlassianlabs/jira-pi-meta-models": "^0.1.13",
         "@atlassianlabs/pi-client-common": "^0.1.13",
         "@deviniti/jql-autocomplete": "^1.0.2",
+        "@emotion/core": "^10.0.28",
         "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
