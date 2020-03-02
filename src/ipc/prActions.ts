@@ -159,6 +159,7 @@ export function isCreatePullRequest(a: Action): a is CreatePullRequest {
 
 export interface FetchDetails extends Action {
     action: 'fetchDetails';
+    wsRepo: WorkspaceRepo;
     site: BitbucketSite;
     sourceBranch: Branch;
     destinationBranch: Branch;

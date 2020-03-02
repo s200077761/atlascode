@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.40.0"
+        "vscode": "^1.42.0"
     },
     "categories": [
         "Other"
@@ -1334,7 +1334,7 @@
         "@types/terser-webpack-plugin": "^1.2.1",
         "@types/turndown": "^5.0.0",
         "@types/uuid": "^3.4.4",
-        "@types/vscode": "1.40.0",
+        "@types/vscode": "1.42.0",
         "@types/webpack": "^4.39.1",
         "@types/webpack-manifest-plugin": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^2.10.0",
