@@ -2,7 +2,6 @@ import Button from '@atlaskit/button';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import SectionMessage from '@atlaskit/section-message';
 import { colors } from '@atlaskit/theme';
 import * as React from 'react';
 import Collapsible from 'react-collapsible';
@@ -103,46 +102,33 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 </p>
                             </div>
                         </section>
-
-                        <SectionMessage appearance="info" title="Important Note">
-                            <div>
-                                <p>
-                                    In 2.x.x we've removed the <b>Default Site</b> and <b>Default Project</b> options in
-                                    favor of powering the Jira issues lists completely from custom JQL queries.
-                                </p>
-                                <br />
-                                <p>
-                                    This means you can now see all of your JQL lists in the treeview at once regardless
-                                    of site or project.
-                                </p>
-                                <br />
-                                <p>
-                                    The extension does it's best to migrate any existing 1.x JQL queries, but you may
-                                    find some of your queries may be missing a project qualifier in your JQL and loads
-                                    too many issues.
-                                </p>
-                                <br />
-                                <p>
-                                    To correct this, open the{' '}
-                                    <Button className="ac-link-button" appearance="link" onClick={this.handleConfigure}>
-                                        Atlassian Settings
-                                    </Button>{' '}
-                                    screen and use the 'Jira Issues Explorer' editor to edit your JQL queries and ensure
-                                    they have `project = SomeProjectKey` in them.
-                                </p>
-                                <br />
-                                <p>
-                                    Finally, we've added a select box at the top of the{' '}
-                                    <Button className="ac-link-button" appearance="link" onClick={this.handleConfigure}>
-                                        Atlassian Settings
-                                    </Button>{' '}
-                                    screen that allows you to choose if you want the settings saved to your Global User
-                                    settings or the current Workspace settings.
-                                </p>
-                                <br />
-                                <p>This enables you to set a different set of JQL trees per workspace/project.</p>
-                            </div>
-                        </SectionMessage>
+                        <h3>🎉 What's New in 2.4.3 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>
+                                    If there's only one related issue, don't make the user expand the "Related issues"
+                                    section
+                                </li>
+                                <li>Edit Jira issue descriptions</li>
+                                <li>Add "Configure filters..." button below JQL filters in tree</li>
+                                <li>Pull build status for Bitbucket Server</li>
+                                <li>Expose Jira issue results search via command palette</li>
+                                <li>Improve PR Speed</li>
+                                <li>Allow user to change password for server sites</li>
+                                <li>Remove warning about next-gen</li>
+                                <li>Preload PR data</li>
+                                <li>Stop notifying users when URLs are copied to clipboard</li>
+                                <li>Add repository name to pipeline messages</li>
+                                <li>Show active Jira issue in status bar</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Jira issue webviews don't render well when narrow</li>
+                                <li>Long branch names in PRs are not entirely visible</li>
+                                <li>Merge Dialog not Readable with Dark Theme (High Contrast)</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.4.2 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
