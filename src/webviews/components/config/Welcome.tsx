@@ -102,6 +102,17 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 </p>
                             </div>
                         </section>
+                        <h3>🎉 What's New in 2.4.5 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Shortened issue tab titles to only include keys, and icons were updated</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Pull Request preloading has been reverted to avoid rate-limiting issues</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.4.4 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
@@ -109,7 +120,6 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Fixed a bug in extension build</li>
                             </ul>
                         </section>
-
                         <h3>🎉 What's New in 2.4.3 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>

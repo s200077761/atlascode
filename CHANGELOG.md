@@ -1,3 +1,13 @@
+## What's New in 2.4.5
+
+### Improvements
+
+-   Shortened issue tab titles to only include keys, and icons were updated
+
+### Bugs fixed
+
+-   Pull Request preloading has been reverted to avoid rate-limiting issues
+
 ## What's New in 2.4.4
 
 ### Bugs fixed
