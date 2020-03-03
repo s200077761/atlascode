@@ -2,28 +2,29 @@ import { ButtonGroup } from '@atlaskit/button';
 import { Button } from '@atlaskit/button/dist/cjs/components/Button';
 import Comment from '@atlaskit/comment';
 import React, { useState } from 'react';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { TextAreaEditor } from './TextAreaEditor';
 
 interface Props {
-    siteDetails: DetailedSiteInfo;
     text: string;
     renderedText?: string;
-    isSaving: boolean;
     fetchUsers: (input: string) => Promise<any[]>;
-    onSave: (text: string) => void;
+    onSave: (text: string) => Promise<void>;
 }
 
-export const EditRenderedTextArea: React.FC<Props> = ({
-    siteDetails,
-    text,
-    renderedText,
-    fetchUsers,
-    isSaving,
-    onSave
-}: Props) => {
+export const EditRenderedTextArea: React.FC<Props> = ({ text, renderedText, fetchUsers, onSave }: Props) => {
     const [editing, setEditing] = useState(false);
     const [commentInputValue, setCommentInputValue] = useState(text);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleSave = async () => {
+        try {
+            setIsSaving(true);
+            setEditing(false);
+            await onSave(commentInputValue);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (editing) {
         return (
@@ -33,27 +34,14 @@ export const EditRenderedTextArea: React.FC<Props> = ({
                     content={
                         <TextAreaEditor
                             value={commentInputValue}
-                            fetchUsers={async (input: string) =>
-                                (await fetchUsers(input)).map(user => ({
-                                    displayName: user.displayName,
-                                    avatarUrl: user.avatarUrls?.['48x48'],
-                                    mention: siteDetails.isCloud ? `[~accountid:${user.accountId}]` : `[~${user.name}]`
-                                }))
-                            }
+                            fetchUsers={fetchUsers}
                             disabled={isSaving}
                             onChange={(input: string) => setCommentInputValue(input)}
                         />
                     }
                 />
                 <ButtonGroup>
-                    <Button
-                        className="ac-button"
-                        onClick={() => {
-                            onSave(commentInputValue);
-                            setEditing(false);
-                        }}
-                        isDisabled={isSaving}
-                    >
+                    <Button className="ac-button" onClick={handleSave} isDisabled={isSaving}>
                         Save
                     </Button>
                     <Button

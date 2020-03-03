@@ -186,7 +186,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
     };
 
-    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
+    protected handleInlineEdit = async (field: FieldUI, newValue: any) => {
         let typedVal = newValue;
         let fieldkey = field.key;
 

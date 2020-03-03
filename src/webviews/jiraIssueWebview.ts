@@ -285,12 +285,20 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 fieldKey => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined
                             )
                         ) {
-                            this.forceUpdateIssue();
+                            await this.forceUpdateIssue();
+                            await this.postMessage({
+                                type: 'editIssueDone',
+                                nonce: msg.nonce
+                            });
                         } else {
                             this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
                             this.postMessage({
                                 type: 'fieldValueUpdate',
                                 fieldValues: newFieldValues,
+                                nonce: msg.nonce
+                            });
+                            await this.postMessage({
+                                type: 'editIssueDone',
                                 nonce: msg.nonce
                             });
                         }

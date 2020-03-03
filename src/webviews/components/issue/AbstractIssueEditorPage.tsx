@@ -103,7 +103,9 @@ export abstract class AbstractIssueEditorPage<
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
 
-    protected handleInlineEdit = (field: FieldUI, newValue: any) => {};
+    protected handleInlineEdit = (field: FieldUI, newValue: any): Promise<void> => {
+        return Promise.resolve();
+    };
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {};
 
     // react-select has issues and doesn't stop propagation on click events when you provide
@@ -389,13 +391,19 @@ export abstract class AbstractIssueEditorPage<
                     if ((field as InputFieldUI).isMultiline) {
                         markup = (
                             <EditRenderedTextArea
-                                siteDetails={this.state.siteDetails}
                                 text={this.state.fieldValues[`${field.key}`]}
                                 renderedText={this.state.fieldValues[`${field.key}.rendered`]}
-                                fetchUsers={this.fetchUsers}
-                                isSaving={this.state.loadingField === field.key}
-                                onSave={(val: string) => {
-                                    this.handleInlineEdit(field, val);
+                                fetchUsers={async (input: string) =>
+                                    (await this.fetchUsers(input)).map(user => ({
+                                        displayName: user.displayName,
+                                        avatarUrl: user.avatarUrls?.['48x48'],
+                                        mention: this.state.siteDetails.isCloud
+                                            ? `[~accountid:${user.accountId}]`
+                                            : `[~${user.name}]`
+                                    }))
+                                }
+                                onSave={async (val: string) => {
+                                    await this.handleInlineEdit(field, val);
                                 }}
                             />
                         );
