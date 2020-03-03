@@ -60,6 +60,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
 
+        //TODO: investigate why mass rate-limiting was occuring! Temporarily disabling any preloading
+        shouldPreload = false;
+
         //If the PR node belongs to a server repo, we don't want to preload it because we can't cache nodes based on update times.
         //BBServer update times omit actions like comments, task creation, etc. so we don't know if the PR we have is really up to date without
         //grabbing all the PR data. Due to rate limits imposed by BBServer admins, mass preloading of all nodes is not feasible without
