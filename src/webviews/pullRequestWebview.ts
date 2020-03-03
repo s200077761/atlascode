@@ -46,6 +46,7 @@ import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
+import { iconSet, Resources } from '../resources';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
@@ -65,8 +66,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         return 'Pull Request';
     }
+
     public get id(): string {
         return 'pullRequestDetailsScreen';
+    }
+
+    setIconPath() {
+        this._panel!.iconPath = Resources.icons.get(iconSet.PULLREQUEST);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {

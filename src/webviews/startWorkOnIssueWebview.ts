@@ -14,6 +14,7 @@ import { BranchType, RepoData } from '../ipc/prMessaging';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
+import { iconSet, Resources } from '../resources';
 import { RefType, Repository } from '../typings/git';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
@@ -28,10 +29,14 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
     }
 
     public get title(): string {
-        return 'Start work on Jira issue';
+        return 'Start work on Jira Issue';
     }
     public get id(): string {
         return 'startWorkOnIssueScreen';
+    }
+
+    setIconPath() {
+        this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -171,7 +176,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
             this._state = issue;
 
             if (this._panel) {
-                this._panel.title = `Start work on Jira issue ${issue.key}`;
+                this._panel.title = `Start work on ${issue.key}`;
             }
 
             const workspaceRepos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];

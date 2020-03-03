@@ -1,22 +1,22 @@
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 import {
     Disposable,
+    Event,
+    EventEmitter,
     Uri,
     ViewColumn,
     WebviewPanel,
     WebviewPanelOnDidChangeViewStateEvent,
-    EventEmitter,
-    Event,
     window
 } from 'vscode';
-import { Resources } from '../resources';
-import { isAlertable, isPMFSubmitAction, isAction } from '../ipc/messaging';
-import { viewScreenEvent, pmfSnoozed, pmfClosed } from '../analytics';
-import { Container } from '../container';
-import { OnlineInfoEvent } from '../util/online';
-import { submitPMF } from '../pmf/pmfSubmitter';
+import { pmfClosed, pmfSnoozed, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
+import { Container } from '../container';
+import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
+import { submitPMF } from '../pmf/pmfSubmitter';
+import { iconSet, Resources } from '../resources';
+import { OnlineInfoEvent } from '../util/online';
 import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
@@ -88,6 +88,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         this._panel.dispose();
     }
 
+    setIconPath() {
+        this._panel!.iconPath = Resources.icons.get(iconSet.ATLASSIANICON);
+    }
+
     public async createOrShow(column?: ViewColumn): Promise<void> {
         if (this._panel === undefined) {
             this._panel = window.createWebviewPanel(
@@ -106,7 +110,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
             );
 
-            this._panel.iconPath = Uri.file(Container.context.asAbsolutePath('resources/atlassian-icon.svg'));
+            this.setIconPath();
 
             if (Container.isDebugging && Container.config.enableUIWS) {
                 this.ws.start(this.onMessageReceived.bind(this));
