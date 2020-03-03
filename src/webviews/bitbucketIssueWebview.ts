@@ -16,7 +16,6 @@ import { BitbucketIssueMessageData } from '../ipc/bitbucketIssueMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { isFetchUsers } from '../ipc/prActions';
 import { Logger } from '../logger';
-import { iconSet, Resources } from '../resources';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
@@ -33,10 +32,6 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
 
     public get id(): string {
         return 'bitbucketIssueScreen';
-    }
-
-    setIconPath() {
-        this._panel!.iconPath = Resources.icons.get(iconSet.BITBUCKETICON);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -74,7 +69,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
         }
 
         if (this._panel) {
-            this._panel.title = `Issue #${issue.data.id}`;
+            this._panel.title = `Bitbucket issue #${issue.data.id}`;
         }
 
         if (!Container.onlineDetector.isOnline()) {

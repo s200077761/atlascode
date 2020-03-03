@@ -7,7 +7,6 @@ import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
 import { PipelineData, StepMessageData } from '../ipc/pipelinesMessaging';
 import { Logger } from '../logger';
 import { Pipeline, PipelineStep } from '../pipelines/model';
-import { iconSet, Resources } from '../resources';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
@@ -23,10 +22,6 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
 
     public get id(): string {
         return 'pipelineSummaryScreen';
-    }
-
-    setIconPath() {
-        this._panel!.iconPath = Resources.icons.get(iconSet.BITBUCKETICON);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
