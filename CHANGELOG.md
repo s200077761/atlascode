@@ -1,8 +1,4 @@
-## What's New in 2.4.5
-
-### Improvements
-
--   Shortened issue tab titles to only include keys, and icons were updated
+## What's New in 2.4.6
 
 ### Bugs fixed
 

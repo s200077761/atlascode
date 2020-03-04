@@ -16,101 +16,68 @@ export class Resources {
     </html>`);
 }
 
-export enum iconSet {
-    ADDCIRCLE = 'add-circle',
-    EDIT = 'edit',
-    DELETE = 'delete',
-    DETAIL = 'detail',
-    WARNING = 'warning',
-    BITBUCKETICON = 'bitbucketFavicon',
-    JIRAICON = 'jiraFavicon',
-    ATLASSIANICON = 'atlassianIcon',
-    PULLREQUEST = 'pullrequests',
-    PREFERENCES = 'preferences',
-    SEARCH = 'search',
-    ADD = 'add',
-    ISSUES = 'issues',
-    PIPELINEPENDING = 'pending',
-    PIPELINEBUILDING = 'building',
-    PIPELINESUCCESSFUL = 'success',
-    PIPELINEFAILED = 'failed',
-    PIPELINESTOPPED = 'stopped',
-    PIPELINEPAUSED = 'paused'
-}
-
 export function registerResources(vscodeContext: ExtensionContext) {
     Resources.icons.set(
-        iconSet.ADDCIRCLE,
+        'add-circle',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'add-circle.svg')))
     );
     Resources.icons.set(
-        iconSet.EDIT,
+        'edit',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'edit-filled.svg')))
     );
     Resources.icons.set(
-        iconSet.DELETE,
+        'delete',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'blocker.svg')))
     );
     Resources.icons.set(
-        iconSet.DETAIL,
+        'detail',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'detail-view.svg')))
     );
     Resources.icons.set(
-        iconSet.WARNING,
+        'warning',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'warning.svg')))
     );
-    Resources.icons.set(
-        iconSet.BITBUCKETICON,
-        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'BitbucketFavicon.png')))
-    );
-    Resources.icons.set(
-        iconSet.JIRAICON,
-        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'JiraFavicon.png')))
-    );
-    Resources.icons.set(
-        iconSet.ATLASSIANICON,
-        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'atlassian-icon.svg')))
-    );
-    Resources.icons.set(iconSet.PULLREQUEST, {
+
+    Resources.icons.set('pullrequests', {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'pullrequests.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'pullrequests.svg')))
     });
-    Resources.icons.set(iconSet.PREFERENCES, {
+    Resources.icons.set('preferences', {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'preferences.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'preferences.svg')))
     });
-    Resources.icons.set(iconSet.SEARCH, {
+    Resources.icons.set('search', {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'search.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'search.svg')))
     });
-    Resources.icons.set(iconSet.ADD, {
+    Resources.icons.set('add', {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'add.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg')))
     });
-    Resources.icons.set(iconSet.ISSUES, Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
+    Resources.icons.set('issues', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
     Resources.icons.set(
-        iconSet.PIPELINEPENDING,
+        'pending',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-pending.svg')))
     );
     Resources.icons.set(
-        iconSet.PIPELINEBUILDING,
+        'building',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-building.svg')))
     );
     Resources.icons.set(
-        iconSet.PIPELINESUCCESSFUL,
+        'success',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-success.svg')))
     );
     Resources.icons.set(
-        iconSet.PIPELINEFAILED,
+        'failed',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-failed.svg')))
     );
     Resources.icons.set(
-        iconSet.PIPELINESTOPPED,
+        'stopped',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-stopped.svg')))
     );
     Resources.icons.set(
-        iconSet.PIPELINEPAUSED,
+        'paused',
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-paused.svg')))
     );
 
