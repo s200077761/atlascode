@@ -43,7 +43,6 @@ import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
-import { iconSet, Resources } from '../resources';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -73,10 +72,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
 
     public get productOrUndefined(): Product | undefined {
         return ProductJira;
-    }
-
-    setIconPath() {
-        this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
@@ -125,7 +120,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
 
             if (this._panel) {
-                this._panel.title = `${this._issue.key}`;
+                this._panel.title = `Jira Issue ${this._issue.key}`;
             }
 
             // const currentBranches = Container.bitbucketContext ?
