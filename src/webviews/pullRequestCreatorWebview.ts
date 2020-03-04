@@ -37,6 +37,7 @@ import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
+import { iconSet, Resources } from '../resources';
 import { Branch, Ref, RefType, Repository } from '../typings/git';
 import { Shell } from '../util/shell';
 import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
@@ -53,6 +54,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
     public get id(): string {
         return 'createPullRequestScreen';
+    }
+
+    setIconPath() {
+        this._panel!.iconPath = Resources.icons.get(iconSet.PULLREQUEST);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
