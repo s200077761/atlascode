@@ -1,3 +1,9 @@
+## What's New in 2.4.9
+
+### Bugs fixed
+
+-   Fixed a bug in extension build
+
 ## What's New in 2.4.7
 
 ### Bugs fixed
