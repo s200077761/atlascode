@@ -46,7 +46,6 @@ export class ClientManager implements Disposable {
 
     private onSitesDidChange(e: SitesAvailableUpdateEvent) {
         this._agentChanged = true;
-        this._clients.clear();
     }
 
     // used to add and remove the proxy agent when charles setting changes.

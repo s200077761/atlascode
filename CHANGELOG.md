@@ -1,3 +1,9 @@
+## What's New in 2.4.7
+
+### Bugs fixed
+
+-   Fixed loop that could cause infinite credential refreshing in the background
+
 ## What's New in 2.4.6
 
 ### Bugs fixed
