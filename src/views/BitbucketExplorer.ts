@@ -1,11 +1,11 @@
-import { Disposable, ConfigurationChangeEvent } from 'vscode';
-import { Container } from '../container';
-import { configuration } from '../config/configuration';
-import { BitbucketContext } from '../bitbucket/bbContext';
+import { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
-import { RefreshTimer } from './RefreshTimer';
-import { Explorer, BaseTreeDataProvider } from './Explorer';
+import { BitbucketContext } from '../bitbucket/bbContext';
+import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey } from '../constants';
+import { Container } from '../container';
+import { BaseTreeDataProvider, Explorer } from './Explorer';
+import { RefreshTimer } from './RefreshTimer';
 
 export abstract class BitbucketExplorer extends Explorer implements Disposable {
     private _disposable: Disposable;
@@ -56,8 +56,8 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             return;
         }
 
-        if (this.treeDataProvder) {
-            this.treeDataProvder.refresh();
+        if (this.treeDataProvider) {
+            this.treeDataProvider.refresh();
         }
         if (this.monitor && configuration.get<boolean>(this.bitbucketEnabledConfiguration())) {
             this.monitor.checkForNewActivity();
@@ -74,13 +74,13 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         const initializing = configuration.initializing(e);
 
         if (initializing || configuration.changed(e, this.explorerEnabledConfiguration())) {
-            if (this.treeDataProvder) {
-                this.treeDataProvder.dispose();
+            if (this.treeDataProvider) {
+                this.treeDataProvider.dispose();
             }
             if (!configuration.get<boolean>(this.explorerEnabledConfiguration())) {
-                this.treeDataProvder = undefined;
+                this.treeDataProvider = undefined;
             } else {
-                this.treeDataProvder = this.newTreeDataProvider();
+                this.treeDataProvider = this.newTreeDataProvider();
             }
             this.newTreeView();
         }

@@ -3,18 +3,21 @@ import { Disposable, TreeDataProvider, TreeItem, TreeView, TreeViewVisibilityCha
 import { viewScreenEvent } from '../analytics';
 import { Product } from '../atlclients/authInfo';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 
 export abstract class Explorer extends Disposable {
-    protected treeDataProvder: BaseTreeDataProvider | undefined;
+    protected treeDataProvider: BaseTreeDataProvider | undefined;
+    protected treeView: TreeView<AbstractBaseNode> | undefined;
 
     abstract viewId(): string;
     abstract product(): Product;
 
     protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
-        if (this.treeDataProvder) {
-            const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.treeDataProvder });
+        if (this.treeDataProvider) {
+            const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.treeDataProvider });
             treeView.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+            this.treeView = treeView;
             return treeView;
         }
         return undefined;
@@ -28,15 +31,20 @@ export abstract class Explorer extends Disposable {
         }
     }
 
+    getDataProvider(): BaseTreeDataProvider | undefined {
+        return this.treeDataProvider;
+    }
+
     dispose() {
         console.log('explorer disposed');
-        if (this.treeDataProvder) {
-            this.treeDataProvder.dispose();
+        if (this.treeDataProvider) {
+            this.treeDataProvider.dispose();
         }
     }
 }
 
 export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractBaseNode>, Disposable {
+    protected treeView: TreeView<AbstractBaseNode> | undefined;
     getTreeItem(element: AbstractBaseNode): Promise<TreeItem> | TreeItem {
         return element.getTreeItem();
     }
@@ -46,4 +54,30 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
 
     refresh() {}
     dispose() {}
+    getParent(node: AbstractBaseNode): AbstractBaseNode | undefined {
+        return node.getParent();
+    }
+
+    setTreeView(treeView: TreeView<AbstractBaseNode> | undefined) {
+        this.treeView = treeView;
+    }
+
+    async reveal(
+        node: AbstractBaseNode,
+        options?: {
+            select?: boolean;
+            focus?: boolean;
+            expand?: boolean | number;
+        }
+    ) {
+        if (this.treeView === undefined) {
+            return;
+        }
+
+        try {
+            await this.treeView.reveal(node, options);
+        } catch (e) {
+            Logger.error(e);
+        }
+    }
 }

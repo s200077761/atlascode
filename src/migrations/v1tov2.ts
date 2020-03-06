@@ -15,7 +15,7 @@ import {
 import { CredentialManager } from '../atlclients/authStore';
 import { OAuthRefesher } from '../atlclients/oauthRefresher';
 import { configuration, JQLEntry, SiteJQLV1 } from '../config/configuration';
-import { JiraJQLListKey } from '../constants';
+import { JiraJQLListKey, OldJQLKey } from '../constants';
 import { Container } from '../container';
 import { getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
@@ -355,7 +355,7 @@ export function migrateAllWorkspaceCustomJQLS(deleteV1: boolean): void {
     if (newJql.length > 0) {
         configuration.update(JiraJQLListKey, newJql, ConfigurationTarget.Workspace);
         if (deleteV1) {
-            configuration.update('jira.customJql', undefined, ConfigurationTarget.Workspace);
+            configuration.update(OldJQLKey, undefined, ConfigurationTarget.Workspace);
         }
     }
 }

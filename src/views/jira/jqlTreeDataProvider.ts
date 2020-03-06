@@ -1,4 +1,4 @@
-import { MinimalIssue, isMinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -11,8 +11,9 @@ import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 
-export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
-    protected _disposables: Disposable[] = [];
+export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implements AbstractBaseNode {
+    public disposables: Disposable[] = [];
+    public parent: AbstractBaseNode | undefined;
 
     protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
     private _jqlEntry: JQLEntry | undefined;
@@ -57,11 +58,11 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     dispose() {
-        this._disposables.forEach(d => {
+        this.disposables.forEach(d => {
             d.dispose();
         });
 
-        this._disposables = [];
+        this.disposables = [];
     }
 
     async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
@@ -123,8 +124,8 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }, []);
     }
 
-    getTreeItem(node: IssueNode): TreeItem {
-        return node.getTreeItem();
+    getTreeItem(): TreeItem {
+        return new TreeItem('Abstract Node');
     }
 
     private async constructIssueTree(
@@ -225,9 +226,13 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
     private nodesForIssues(): IssueNode[] {
         if (this._issues && this._issues.length > 0) {
-            return this._issues.map(issue => new IssueNode(issue));
+            return this._issues.map(issue => new IssueNode(issue, this));
         } else {
             return [new SimpleJiraIssueNode(this._emptyState)];
         }
+    }
+
+    getParent() {
+        return undefined;
     }
 }

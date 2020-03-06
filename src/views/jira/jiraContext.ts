@@ -93,6 +93,9 @@ export class JiraContext extends Disposable {
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
+            if (isLoggedIn && !!this._explorer?.getDataProvider()) {
+                (this._explorer.getDataProvider() as CustomJQLRoot).expandFirstJQLResult();
+            }
         }
     }
 
