@@ -53,8 +53,6 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)
         );
-
-        activateBitbucketFeatures();
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
@@ -72,6 +70,10 @@ export async function activate(context: ExtensionContext) {
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
 
+    // Following are async functions called without await so that they are run
+    // in the background and do not slow down the time taken for the extension
+    // icon to appear in the activity bar
+    activateBitbucketFeatures();
     activateYamlFeatures(context);
 
     Logger.info(
@@ -81,6 +83,7 @@ export async function activate(context: ExtensionContext) {
 }
 
 async function activateBitbucketFeatures() {
+    await new Promise(resolve => setTimeout(resolve, 15000));
     const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
     if (!gitExtension) {
         Logger.error(new Error('vscode.git extension not found'));

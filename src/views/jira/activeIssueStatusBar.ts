@@ -103,9 +103,14 @@ export class JiraActiveIssueStatusBar implements Disposable {
             return branchName;
         }
 
-        const scm = Container.bitbucketContext
-            .getAllRepositoriesRaw()
-            .find(repo => fs.realpathSync(editor.document.uri.fsPath).startsWith(repo.rootUri.fsPath));
+        const scm = Container.bitbucketContext?.getAllRepositoriesRaw().find(repo => {
+            try {
+                const uriPath = fs.realpathSync(editor.document.uri.fsPath);
+                return uriPath.startsWith(repo.rootUri.fsPath);
+            } catch (e) {
+                return false;
+            }
+        });
         return scm?.state.HEAD?.name;
     }
 
