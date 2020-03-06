@@ -47,7 +47,6 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
@@ -280,10 +279,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
                             const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
-                            vscode.commands.executeCommand(Commands.ShowPipeline, {
-                                site: this._pr.site,
-                                pipelineUuid: pipelineUUID
-                            } as PipelineInfo);
+                            const bbApi = await clientForSite(this._pr.site);
+                            const pipeline = await bbApi.pipelines?.getPipeline(this._pr.site, pipelineUUID);
+                            if (pipeline) {
+                                vscode.commands.executeCommand(Commands.ShowPipeline, pipeline);
+                            } else {
+                                vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
+                            }
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }

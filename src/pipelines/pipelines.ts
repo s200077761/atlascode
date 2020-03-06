@@ -1,7 +1,22 @@
 import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
 import { HTTPClient } from '../bitbucket/httpClient';
 import { BitbucketSite } from '../bitbucket/model';
-import { PaginatedPipelines, Pipeline, PipelineCommand, PipelineResult, PipelineStep, PipelineTarget } from './model';
+import { Logger } from '../logger';
+import {
+    PaginatedPipelines,
+    Pipeline,
+    PipelineCommand,
+    PipelineCommitTarget,
+    PipelinePullRequestTarget,
+    PipelineReferenceTarget,
+    PipelineReferenceType,
+    PipelineResult,
+    PipelineSelector,
+    PipelineSelectorType,
+    PipelineStep,
+    PipelineTarget,
+    PipelineTargetType
+} from './model';
 
 export class PipelineApiImpl {
     constructor(private client: HTTPClient) {}
@@ -15,6 +30,14 @@ export class PipelineApiImpl {
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pipelines/${uuid}`);
 
+        return this.cleanPipelineData(site, data);
+    }
+
+    async triggerPipeline(site: BitbucketSite, target: any): Promise<Pipeline> {
+        const { ownerSlug, repoSlug } = site;
+        const { data } = await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pipelines/`, {
+            target: target
+        });
         return this.cleanPipelineData(site, data);
     }
 
@@ -101,6 +124,93 @@ export class PipelineApiImpl {
         return splitLogs;
     }
 
+    readSelectorType(type: string): PipelineSelectorType {
+        switch (type) {
+            case PipelineSelectorType.Bookmark:
+                return PipelineSelectorType.Bookmark;
+            case PipelineSelectorType.Branch:
+                return PipelineSelectorType.Branch;
+            case PipelineSelectorType.Custom:
+                return PipelineSelectorType.Custom;
+            case PipelineSelectorType.PullRequests:
+                return PipelineSelectorType.PullRequests;
+            case PipelineSelectorType.Tag:
+                return PipelineSelectorType.Tag;
+        }
+        return PipelineSelectorType.Default;
+    }
+
+    readTargetType(targetType: string): PipelineTargetType | undefined {
+        switch (targetType) {
+            case PipelineTargetType.Commit:
+                return PipelineTargetType.Commit;
+            case PipelineTargetType.PullRequest:
+                return PipelineTargetType.PullRequest;
+            case PipelineTargetType.Reference:
+                return PipelineTargetType.Reference;
+        }
+        Logger.debug(`Couldn't identify PipelineTargetType ${targetType}`);
+        return undefined;
+    }
+
+    readReferenceType(referenceType: string): PipelineReferenceType | undefined {
+        switch (referenceType) {
+            case PipelineReferenceType.AnnotatedTag:
+                return PipelineReferenceType.AnnotatedTag;
+            case PipelineReferenceType.Bookmark:
+                return PipelineReferenceType.Bookmark;
+            case PipelineReferenceType.Branch:
+                return PipelineReferenceType.Branch;
+            case PipelineReferenceType.NamedBranch:
+                return PipelineReferenceType.NamedBranch;
+            case PipelineReferenceType.Tag:
+                return PipelineReferenceType.Tag;
+        }
+        Logger.debug(`Couldn't identify PipelineReferenceType ${referenceType}`);
+        return undefined;
+    }
+
+    readSelector(selector: any): PipelineSelector {
+        return {
+            pattern: selector.pattern,
+            type: this.readSelectorType(selector.type)
+        } as PipelineSelector;
+    }
+
+    readTarget(target: any): PipelineTarget {
+        const partialTarget = {
+            type: this.readTargetType(target.type),
+            ref_name: target.ref_name,
+            selector: this.readSelector(target.selector),
+            branchName: target.branch,
+            commit: target.commit
+        };
+        switch (partialTarget.type) {
+            case PipelineTargetType.Commit:
+                return partialTarget as PipelineCommitTarget;
+            case PipelineTargetType.PullRequest:
+                return {
+                    ...partialTarget,
+                    ...{
+                        source: target.source,
+                        destination: target.destination,
+                        destination_revision: target.destination_revision,
+                        pull_request_id: target.pull_request_id
+                    }
+                } as PipelinePullRequestTarget;
+            case PipelineTargetType.Reference:
+                return {
+                    ...partialTarget,
+                    ...{
+                        ref_name: target.ref_name,
+                        ref_type: this.readReferenceType(target.ref_type)
+                    }
+                } as PipelineReferenceTarget;
+        }
+        Logger.debug(`Failed to read pipeline target ${JSON.stringify(target)}`);
+        return target;
+    }
+
     cleanPipelineData(site: BitbucketSite, pipeline: any): Pipeline {
         var name = undefined;
         var avatar = undefined;
@@ -110,12 +220,8 @@ export class PipelineApiImpl {
                 avatar = pipeline.creator.links.avatar.href;
             }
         }
-        //Sometimes a pipeline runs on a commit rather than a branch, so ref_name is undefined
-        let target: PipelineTarget = {
-            ref_name: pipeline.target!.ref_name,
-            selector: pipeline.target!.selector,
-            triggerName: pipeline.trigger!.name
-        };
+
+        let target: PipelineTarget = this.readTarget(pipeline.target);
 
         const cleanedPipeline: Pipeline = {
             site: site,
@@ -132,6 +238,7 @@ export class PipelineApiImpl {
                 stage: PipelineApiImpl.resultForResult(pipeline.state!.stage)
             },
             target: target,
+            triggerName: pipeline.trigger.name,
             duration_in_seconds: pipeline.duration_in_seconds,
             uuid: pipeline.uuid!
         };

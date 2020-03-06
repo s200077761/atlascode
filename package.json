@@ -294,8 +294,8 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.startPipeline",
-                "title": "Start Pipeline",
+                "command": "atlascode.bb.rerunPipeline",
+                "title": "Rerun Build",
                 "category": "Atlassian"
             },
             {
@@ -539,8 +539,8 @@
                     "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue)/"
                 },
                 {
-                    "command": "atlascode.bb.startPipeline",
-                    "when": "viewItem == pipelineBranch"
+                    "command": "atlascode.bb.rerunPipeline",
+                    "when": "viewItem == pipelineBuild && atlascode:isBBAuthenticated"
                 }
             ],
             "comments/commentThread/context": [
@@ -670,7 +670,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.bb.startPipeline",
+                    "command": "atlascode.bb.rerunPipeline",
                     "when": "false"
                 },
                 {
