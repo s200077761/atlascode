@@ -54,7 +54,7 @@
         "clean": "rm -rf ./build",
         "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
         "lint:fix": "eslint --fix ./src --ext .js,.jsx,.ts,.tsx",
-        "compile": "npm run clean && npm-run-all --parallel compile:react compile:extension",
+        "compile": "npm run clean && npm run compile:react && npm run compile:extension",
         "compile:extension": "webpack --mode production --config webpack.extension.prod.js",
         "compile:react": "webpack --mode production --config webpack.react.prod.js",
         "postinstall": "patch-package",
