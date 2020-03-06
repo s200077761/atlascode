@@ -299,6 +299,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.runPipelineForBranch",
+                "title": "Run Pipeline for Branch",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.refreshPipelines",
                 "title": "Refresh Pipelines",
                 "icon": {
