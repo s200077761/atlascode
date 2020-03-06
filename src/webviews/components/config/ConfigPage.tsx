@@ -587,6 +587,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                             product={ProductBitbucket}
                                                             isRemote={this.state.isRemote}
                                                             handleDeleteSite={this.handleLogout}
+                                                            handleEditSite={this.handleEdit}
                                                             handleSaveSite={this.handleLogin}
                                                         />
                                                     </Panel>
