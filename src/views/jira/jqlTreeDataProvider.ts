@@ -1,4 +1,4 @@
-import { MinimalIssue, isMinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -135,7 +135,9 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const [epics, epicChildrenKeys] = await this.resolveEpics(jqlIssues);
 
         const parentIssues = await this.fetchMissingParentIssues(jqlIssues);
-        const jqlAndParents = [...jqlIssues, ...parentIssues];
+        // If the jqlIssue is a sub-task we make a second call to make sure we get the epic.
+        const grandparentIssues = await this.fetchMissingParentIssues(parentIssues);
+        const jqlAndParents = [...jqlIssues, ...parentIssues, ...grandparentIssues];
 
         const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         jqlAndParents.forEach(i => {
