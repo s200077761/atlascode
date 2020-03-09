@@ -449,14 +449,21 @@ export abstract class AbstractIssueEditorPage<
                             );
                             if ((field as InputFieldUI).isMultiline) {
                                 markup = (
-                                    <textarea
+                                    <TextAreaEditor
                                         {...fieldArgs.fieldProps}
-                                        style={{ width: '100%', display: 'block' }}
-                                        className="ac-textarea"
                                         rows={5}
+                                        fetchUsers={async (input: string) =>
+                                            (await this.fetchUsers(input)).map(user => ({
+                                                displayName: user.displayName,
+                                                avatarUrl: user.avatarUrls?.['48x48'],
+                                                mention: this.state.siteDetails.isCloud
+                                                    ? `[~accountid:${user.accountId}]`
+                                                    : `[~${user.name}]`
+                                            }))
+                                        }
                                         disabled={this.state.isSomethingLoading}
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                            this.handleInlineInputEdit(field, val);
+                                            this.handleInlineEdit(field, val);
                                         })}
                                     />
                                 );
