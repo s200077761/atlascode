@@ -301,6 +301,10 @@
             {
                 "command": "atlascode.bb.runPipelineForBranch",
                 "title": "Run Pipeline for Branch",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
                 "category": "Atlassian"
             },
             {
@@ -490,6 +494,11 @@
                 {
                     "command": "atlascode.bb.showPullRequestSettings",
                     "when": "view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.runPipelineForBranch",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
                     "group": "navigation"
                 },
                 {
