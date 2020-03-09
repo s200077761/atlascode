@@ -1,6 +1,7 @@
-import { window } from 'vscode';
+import { commands, window } from 'vscode';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
+import { Commands } from '../commands';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { SiteManager } from '../siteManager';
@@ -62,7 +63,7 @@ export class LoginManager {
                 });
             });
 
-            window.showInformationMessage(`You are now authenticated with ${site.product.name}`);
+            this.displayAuthNotification(site);
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -70,6 +71,63 @@ export class LoginManager {
             } else {
                 window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
             }
+        }
+    }
+
+    private displayAuthNotification(site: SiteInfo) {
+        if (site.product.key === ProductJira.key) {
+            window
+                .showInformationMessage(
+                    `You are now authenticated with ${site.product.name}.`,
+                    'Create Issue',
+                    'View open Issues',
+                    'Show me more!'
+                )
+                .then(selection => {
+                    if (selection) {
+                        if (selection === 'Create Issue') {
+                            //TODO: Focus 'create issue' button in Jira explorer
+                            commands.executeCommand(Commands.CreateIssue, undefined, 'auth notification');
+                        } else if (selection === 'View open Issues') {
+                            //First entry in default JQL
+                            //Open that issue
+                            //TODO: Focus 'my open issues' default JQL when pressed
+                            console.log('View issues pressed');
+                        } else if (selection === 'Show me more!') {
+                            //Focus checklist explorer
+                            //Open checklist page
+                            //TODO: Open Jira features page and focus checklist explorer
+                            console.log('What else can I do pressed');
+                        }
+                    }
+                });
+        } else if (site.product.key === ProductBitbucket.key) {
+            window
+                .showInformationMessage(
+                    `You are now authenticated with ${site.product.name}.`,
+                    'Create Pull Request',
+                    'View Pull Requests',
+                    'Show me more!'
+                )
+                .then(selection => {
+                    if (selection) {
+                        if (selection === 'Create Pull Request') {
+                            //Focus 'create issue' button in Jira explorer
+                            //Open 'create issue' page
+                            commands.executeCommand(Commands.CreatePullRequest);
+                        } else if (selection === 'View Pull Requests') {
+                            //First entry in default JQL
+                            //Open that issue
+                            //TODO: focus first pr node
+                            console.log('View issues pressed');
+                        } else if (selection === 'Show me more!') {
+                            //Focus checklist explorer
+                            //Open checklist page
+                            //TODO: Open Bitbucket features page and focus checklist explorer
+                            console.log('What else can I do pressed');
+                        }
+                    }
+                });
         }
     }
 
@@ -145,6 +203,7 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                this.displayAuthNotification(site);
                 authenticatedEvent(siteDetails).then(e => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
