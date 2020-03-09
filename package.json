@@ -462,69 +462,69 @@
             ],
             "view/title": [
                 {
-                    "command": "atlascode.bb.refreshPullRequests",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.toggleFileNesting",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.createPullRequest",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
-                },
-                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "view =~ /(atlascode.views.jira.customJql)/",
-                    "group": "navigation"
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "atlascode.bb.createPullRequest",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "atlascode.bb.refreshPullRequests",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.bb.toggleFileNesting",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.bb.showPullRequestSettings",
                     "when": "view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "atlascode.bb.runPipelineForBranch",
                     "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.showPipelineSettings",
-                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.showBitbucketIssueSettings",
-                    "when": "view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.bb.refreshPipelines",
                     "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.bb.showPipelineSettings",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.bb.createIssue",
                     "when": "atlascode:isBBAuthenticated && view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.bb.refreshIssues",
                     "when": "view == atlascode.views.bb.issuesTreeView && atlascode:isBBAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.bb.showBitbucketIssueSettings",
+                    "when": "view == atlascode.views.bb.issuesTreeView",
+                    "group": "navigation@3"
                 }
             ],
             "view/item/context": [
