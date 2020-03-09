@@ -1,3 +1,4 @@
+import { SitesAvailableUpdateEvent } from 'src/siteManager';
 import { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
@@ -5,6 +6,7 @@ import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey } from '../constants';
 import { Container } from '../container';
 import { BaseTreeDataProvider, Explorer } from './Explorer';
+import { PullRequestNodeDataProvider } from './pullRequestNodeDataProvider';
 import { RefreshTimer } from './RefreshTimer';
 
 export abstract class BitbucketExplorer extends Explorer implements Disposable {
@@ -25,8 +27,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             this.ctx.onDidChangeBitbucketContext(() => {
                 this.onBitbucketContextChanged();
             }),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             this._refreshTimer
         );
+
         this._onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
@@ -83,6 +87,9 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
                 this.treeDataProvider = this.newTreeDataProvider();
             }
             this.newTreeView();
+
+            //We need the data provider to have a reference to the treeView...
+            this.getDataProvider()?.setTreeView(this.treeView);
         }
 
         if (
@@ -94,6 +101,18 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         }
 
         this.onConfigurationChanged(e);
+    }
+
+    async onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        if (e.product.key === ProductBitbucket.key) {
+            //After sites change, it takes some time for the new sites to be loaded...
+            //There is a probably a better event to use but for now I can't find it.
+            setTimeout(() => {
+                if (!!this.getDataProvider()) {
+                    (this.getDataProvider() as PullRequestNodeDataProvider).expandFirstPullRequestNode();
+                }
+            }, 1000);
+        }
     }
 
     updateMonitor() {

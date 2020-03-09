@@ -139,6 +139,25 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         });
     }
 
+    async expandFirstPullRequestNode() {
+        //The 3rd child is the first repo node...
+        const children = await this.getChildren(undefined);
+        const prTitlesNodes = await children[2].getChildren();
+        if (prTitlesNodes) {
+            //If there's something to expand, first expand the PR node
+            const repoDetailsPromise = prTitlesNodes[0].getChildren();
+            this.reveal(prTitlesNodes[0], { expand: true, focus: true }).then(() => {
+                //When the PR node is fully loaded, focus the Details node
+                this.focusDetailsNode(repoDetailsPromise);
+            });
+        }
+    }
+
+    async focusDetailsNode(repoDetailsPromise: Promise<AbstractBaseNode[]>) {
+        const result = await repoDetailsPromise;
+        this.reveal(result[0], { focus: true });
+    }
+
     addItems(prs: PaginatedPullRequests): void {
         if (!prs.workspaceRepo || !this._childrenMap || !this._childrenMap.get(prs.workspaceRepo.rootUri)) {
             return;
