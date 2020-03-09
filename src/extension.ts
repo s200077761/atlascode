@@ -83,7 +83,6 @@ export async function activate(context: ExtensionContext) {
 }
 
 async function activateBitbucketFeatures() {
-    await new Promise(resolve => setTimeout(resolve, 15000));
     const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
     if (!gitExtension) {
         Logger.error(new Error('vscode.git extension not found'));
