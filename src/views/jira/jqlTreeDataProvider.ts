@@ -134,10 +134,8 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         // we need to fill in the children and fetch the parents of any orphans
         const [epics, epicChildrenKeys] = await this.resolveEpics(jqlIssues);
 
-        const parentIssues = await this.fetchMissingParentIssues(jqlIssues);
-        // If the jqlIssue is a sub-task we make a second call to make sure we get the epic.
-        const grandparentIssues = await this.fetchMissingParentIssues(parentIssues);
-        const jqlAndParents = [...jqlIssues, ...parentIssues, ...grandparentIssues];
+        const parentIssues = await this.fetchMissingAncestorIssues(jqlIssues);
+        const jqlAndParents = [...jqlIssues, ...parentIssues];
 
         const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         jqlAndParents.forEach(i => {
@@ -154,27 +152,44 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return [...rootIssues, ...epics];
     }
 
-    private async fetchMissingParentIssues(
+    // Fetch any parents and grandparents that might be missing from the set to ensure that the a path can be drawn all
+    // the way from a subtask to an epic.
+    private async fetchMissingAncestorIssues(
         newIssues: MinimalIssue<DetailedSiteInfo>[]
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (newIssues.length < 1) {
             return [];
         }
-        const parentKeys = newIssues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
-        const uniqueParentKeys = Array.from(new Set(parentKeys));
-        const missingParentKeys = uniqueParentKeys.filter(k => !newIssues.some(i => i.key === k));
-
         const site = newIssues[0].siteDetails;
-        const parentIssues = await Promise.all(
-            missingParentKeys.map(async issueKey => {
+
+        const missingParentKeys = this.calculateMissingParentKeys(newIssues);
+        const parentIssues = await this.fetchIssuesForKeys(site, missingParentKeys);
+
+        // If a jqlIssue is a sub-task we make a second call to make sure we get its parent's epic.
+        const missingGrandparentKeys = this.calculateMissingParentKeys([...newIssues, ...parentIssues]);
+        const grandparentIssues = await this.fetchIssuesForKeys(site, missingGrandparentKeys);
+
+        return [...parentIssues, ...grandparentIssues];
+    }
+
+    private calculateMissingParentKeys(issues: MinimalIssue<DetailedSiteInfo>[]): string[] {
+        const parentKeys = issues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
+        const uniqueParentKeys = Array.from(new Set(parentKeys));
+        return uniqueParentKeys.filter(k => !issues.some(i => i.key === k));
+    }
+
+    private async fetchIssuesForKeys(
+        site: DetailedSiteInfo,
+        keys: string[]
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        return await Promise.all(
+            keys.map(async issueKey => {
                 const parent = await fetchMinimalIssue(issueKey, site);
                 // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                 parent.subtasks = [];
                 return parent;
             })
         );
-
-        return parentIssues;
     }
 
     private async resolveEpics(
