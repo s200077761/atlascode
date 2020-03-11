@@ -57,7 +57,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         shouldPreload: boolean,
         parent: AbstractBaseNode | undefined
     ) {
-        super();
+        super(parent);
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
 
@@ -71,8 +71,6 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         if (shouldPreload) {
             this.childrenPromises = this.fetchDataAndProcessChildren();
         }
-
-        this.parent = parent;
     }
 
     private createTreeItem(): vscode.TreeItem {
@@ -345,8 +343,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
 
 class DescriptionNode extends AbstractBaseNode {
     constructor(private pr: PullRequest, parent?: AbstractBaseNode | undefined) {
-        super();
-        this.parent = parent;
+        super(parent);
     }
 
     getTreeItem(): vscode.TreeItem {

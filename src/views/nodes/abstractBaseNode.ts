@@ -4,7 +4,10 @@ import { Disposable, TreeItem } from 'vscode';
 // It also takes care of disposables if they are added to the `disposables` field.
 export abstract class AbstractBaseNode implements Disposable {
     public disposables: Disposable[] = [];
-    public parent: AbstractBaseNode | undefined;
+
+    constructor(private parent?: AbstractBaseNode) {
+        this.parent = parent;
+    }
 
     abstract getTreeItem(): Promise<TreeItem> | TreeItem;
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {

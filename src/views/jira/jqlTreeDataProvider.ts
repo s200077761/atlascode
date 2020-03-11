@@ -13,7 +13,6 @@ import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implements AbstractBaseNode {
     public disposables: Disposable[] = [];
-    public parent: AbstractBaseNode | undefined;
 
     protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
     private _jqlEntry: JQLEntry | undefined;

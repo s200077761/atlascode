@@ -10,9 +10,8 @@ export class IssueNode extends AbstractBaseNode {
     public issue: MinimalORIssueLink<DetailedSiteInfo>;
 
     constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>, parent?: AbstractBaseNode | undefined) {
-        super();
+        super(parent);
         this.issue = _issue;
-        this.parent = parent;
     }
 
     getTreeItem(): vscode.TreeItem {

@@ -103,15 +103,29 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         this.onConfigurationChanged(e);
     }
 
+    async attempNodeExpansionNTimes(remainingAttempts: number, delay: number) {
+        const dataProvider = this.getDataProvider();
+        if (remainingAttempts === 0) {
+            if (dataProvider) {
+                await (dataProvider as PullRequestNodeDataProvider).expandFirstPullRequestNode(true);
+            }
+        }
+
+        setTimeout(async () => {
+            let success = false;
+            if (dataProvider) {
+                success = await (dataProvider as PullRequestNodeDataProvider).expandFirstPullRequestNode(false);
+            }
+
+            if (!success) {
+                await this.attempNodeExpansionNTimes(remainingAttempts - 1, delay);
+            }
+        }, delay);
+    }
+
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductBitbucket.key) {
-            //After sites change, it takes some time for the new sites to be loaded...
-            //There is a probably a better event to use but for now I can't find it.
-            setTimeout(() => {
-                if (!!this.getDataProvider()) {
-                    (this.getDataProvider() as PullRequestNodeDataProvider).expandFirstPullRequestNode();
-                }
-            }, 1000);
+            this.attempNodeExpansionNTimes(3, 1000);
         }
     }
 
