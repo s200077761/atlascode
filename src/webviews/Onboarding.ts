@@ -2,20 +2,20 @@ import { commands, env, version } from 'vscode';
 import {
     authenticateButtonEvent,
     doneButtonEvent,
+    featureChangeEvent,
     logoutButtonEvent,
-    moreSettingsButtonEvent,
-    featureChangeEvent
+    moreSettingsButtonEvent
 } from '../analytics';
 import { DetailedSiteInfo, isBasicAuthInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { isLoginAuthAction, isLogoutAuthAction } from '../ipc/configActions';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { AbstractReactWebview } from './abstractWebview';
-import { configuration } from '../config/configuration';
 const onboardingUrl = version.endsWith('-insider')
     ? 'vscode-insiders://atlassian.atlascode/openOnboarding'
     : 'vscode://atlassian.atlascode/openOnboarding';
@@ -133,7 +133,9 @@ export class OnboardingWebview extends AbstractReactWebview {
                 case 'login': {
                     handled = true;
                     if (isLoginAuthAction(msg)) {
+                        let isCloud = true;
                         if (isBasicAuthInfo(msg.authInfo)) {
+                            isCloud = false;
                             try {
                                 await authenticateServer(msg.siteInfo, msg.authInfo);
                             } catch (e) {
@@ -147,7 +149,7 @@ export class OnboardingWebview extends AbstractReactWebview {
                         } else {
                             authenticateCloud(msg.siteInfo, onboardingUrl);
                         }
-                        authenticateButtonEvent(this.id).then(e => {
+                        authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then(e => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }
