@@ -1,38 +1,43 @@
-import { BitbucketApi, BitbucketSite } from 'src/bitbucket/model';
+import path from 'path';
 import { commands, QuickPickItem, window } from 'vscode';
 import { bitbucketSiteForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
+import { BitbucketApi, BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { PipelineReferenceTarget, PipelineReferenceType, PipelineTargetType } from '../../pipelines/model';
 import { Remote } from '../../typings/git';
 
-interface QuickPickRemote extends QuickPickItem {
-    remote: Remote;
+interface QuickPickRepo extends QuickPickItem {
+    repo: WorkspaceRepo;
 }
 
 export async function runPipeline() {
-    const remoteQuickPicks = fetchRemotes();
-    if (remoteQuickPicks.length === 0) {
-        window.showErrorMessage(`There are no remotes available to build`);
-    } else if (remoteQuickPicks.length === 1) {
-        showBranchPicker(remoteQuickPicks[0].remote);
+    const repoQuickPicks = fetchRepos();
+    if (repoQuickPicks.length === 0) {
+        window.showErrorMessage(`There are no repos available to build`);
+    } else if (repoQuickPicks.length === 1) {
+        showBranchPicker(repoQuickPicks[0].repo.mainSiteRemote.remote);
     } else {
         window
-            .showQuickPick<QuickPickRemote>(remoteQuickPicks, {
+            .showQuickPick<QuickPickRepo>(repoQuickPicks, {
                 matchOnDescription: true,
-                placeHolder: 'Select remote'
+                placeHolder: 'Select repo'
             })
-            .then((quickPickRemote: QuickPickRemote | undefined) => {
-                if (quickPickRemote) {
-                    showBranchPicker(quickPickRemote.remote);
+            .then((quickPickRepo: QuickPickRepo | undefined) => {
+                if (quickPickRepo) {
+                    showBranchPicker(quickPickRepo.repo.mainSiteRemote.remote);
                 }
             });
     }
 }
 
 async function showBranchPicker(remote: Remote) {
-    const bbSite = bitbucketSiteForRemote(remote); // maybe undefined
+    const bbSite = bitbucketSiteForRemote(remote);
+    if (!bbSite) {
+        window.showErrorMessage(`No Bitbucket site has been configured for this repo.`);
+        return;
+    }
     const site = siteDetailsForRemote(remote);
     const bbApi = await Container.clientManager.bbClient(site!);
     window
@@ -71,13 +76,12 @@ async function fetchBranches(bbApi: BitbucketApi, bbSite: BitbucketSite): Promis
     });
 }
 
-function fetchRemotes(): QuickPickRemote[] {
+function fetchRepos(): QuickPickRepo[] {
     const repos = Container.bitbucketContext.getBitbucketCloudRepositories();
-    const remotes = repos.map(repo => repo.mainSiteRemote.remote);
-    return remotes.map(remote => {
+    return repos.map(repo => {
         return {
-            remote: remote,
-            label: remote.name
+            repo: repo,
+            label: path.basename(repo.rootUri)
         };
     });
 }
