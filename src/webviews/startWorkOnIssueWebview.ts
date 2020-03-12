@@ -15,7 +15,7 @@ import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { RefType, Repository } from '../typings/git';
+import { Branch, RefType, Repository } from '../typings/git';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
@@ -105,7 +105,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                             const issue = this._state;
                             if (e.setupBitbucket) {
                                 const scm = Container.bitbucketContext.getRepositoryScm(e.repoUri)!;
-                                await this.createOrCheckoutBranch(scm, e.branchName, e.sourceBranchName, e.remoteName);
+                                await this.createOrCheckoutBranch(
+                                    scm,
+                                    e.targetBranchName,
+                                    e.sourceBranch,
+                                    e.remoteName
+                                );
                             }
                             const currentUserId = issue.siteDetails.userId;
                             await assignIssue(issue, currentUserId);
@@ -120,7 +125,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                                         : ''
                                 }  ${
                                     e.setupBitbucket
-                                        ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remoteName}/${e.branchName}</code></li>`
+                                        ? `<li>Switched to <code>${e.targetBranchName}</code> branch with upstream set to <code>${e.remoteName}/${e.targetBranchName}</code></li>`
                                         : ''
                                 }</ul>`
                             });
@@ -141,13 +146,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
     async createOrCheckoutBranch(
         repo: Repository,
         destBranch: string,
-        sourceBranch: string,
+        sourceBranch: Branch,
         remote: string
     ): Promise<void> {
-        await repo.fetch(remote, sourceBranch);
-
         // checkout if a branch exists already
         try {
+            await repo.fetch(remote, sourceBranch.name);
             await repo.getBranch(destBranch);
             await repo.checkout(destBranch);
             return;
@@ -161,7 +165,11 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
         } catch (_) {}
 
         // no existing branches, create a new one
-        await repo.createBranch(destBranch, true, sourceBranch);
+        await repo.createBranch(
+            destBranch,
+            true,
+            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`
+        );
         await repo.push(remote, destBranch, true);
         return;
     }
