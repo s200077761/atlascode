@@ -19,9 +19,11 @@ import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
 import Collapsible from 'react-collapsible';
+import uuid from 'uuid';
 import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
 import { PMFData } from '../../../ipc/messaging';
+import { ConnectionTimeout } from '../../../util/time';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
@@ -154,7 +156,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     };
 
-    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
+    protected handleInlineEdit = async (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
             case UIType.Subtasks: {
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
@@ -197,16 +199,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         originalEstimate: newValue
                     };
                 }
-                this.setState(
-                    {
-                        loadingField: field.key,
-                        isSomethingLoading: true,
-                        fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } }
-                    },
-                    () => {
-                        this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
-                    }
-                );
+                this.setState({
+                    loadingField: field.key,
+                    isSomethingLoading: true,
+                    fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } }
+                });
+                await this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
                 break;
             }
             case UIType.Worklog: {
@@ -227,31 +225,34 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     typedVal = parseFloat(newValue);
                 }
                 //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
-                this.setState(
-                    {
-                        loadingField: field.key,
-                        fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } }
-                    },
-                    () => {
-                        if (typedVal === undefined) {
-                            typedVal = null;
-                        }
-                        this.handleEditIssue(field.key, typedVal);
-                    }
-                );
+                this.setState({
+                    loadingField: field.key,
+                    fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } }
+                });
+                if (typedVal === undefined) {
+                    typedVal = null;
+                }
+                await this.handleEditIssue(field.key, typedVal);
                 break;
             }
         }
     };
 
-    handleEditIssue = (fieldKey: string, newValue: any) => {
+    handleEditIssue = async (fieldKey: string, newValue: any) => {
         this.setState({ isSomethingLoading: true, loadingField: fieldKey });
-        this.postMessage({
-            action: 'editIssue',
-            fields: {
-                [fieldKey]: newValue
-            }
-        });
+        const nonce = uuid.v4();
+        await this.postMessageWithEventPromise(
+            {
+                action: 'editIssue',
+                fields: {
+                    [fieldKey]: newValue
+                },
+                nonce: nonce
+            },
+            'editIssueDone',
+            ConnectionTimeout,
+            nonce
+        );
     };
 
     protected handleCreateComment = (commentBody: string, restriction?: CommentVisibility) => {

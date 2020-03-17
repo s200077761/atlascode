@@ -53,6 +53,7 @@ import {
     Ready,
     RefreshPullRequest,
     UpdateApproval,
+    UpdateSummary,
     UpdateTitle
 } from '../../../ipc/prActions';
 import {
@@ -66,11 +67,13 @@ import {
     isUpdateTasks,
     PRData
 } from '../../../ipc/prMessaging';
+import { ConnectionTimeout } from '../../../util/time';
 import { AtlLoader } from '../AtlLoader';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import ErrorBanner from '../ErrorBanner';
 import { isValidString } from '../fieldValidators';
+import { EditRenderedTextArea } from '../issue/EditRenderedTextArea';
 import IssueList from '../issue/IssueList';
 import NavItem from '../issue/NavItem';
 import { TransitionMenu } from '../issue/TransitionMenu';
@@ -92,6 +95,7 @@ type Emit =
     | EditTask
     | DeleteTask
     | UpdateTitle
+    | UpdateSummary
     | AddReviewer
     | UpdateApproval
     | Merge
@@ -507,6 +511,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             action: 'updateTitle',
             text: text
         });
+
+    handleSummaryChange = async (text: string): Promise<void> => {
+        const nonce: string = uuid.v4();
+        const msg = await this.postMessageWithEventPromise(
+            {
+                action: 'updateSummary',
+                summary: text,
+                nonce: nonce
+            } as UpdateSummary,
+            'updatePullRequestSummary',
+            ConnectionTimeout,
+            nonce
+        );
+        this.setState({ pr: { ...this.state.pr, pr: msg.pr } });
+    };
 
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
     closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
@@ -996,7 +1015,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 </div>
                             </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
-                                <p dangerouslySetInnerHTML={{ __html: pr.htmlSummary! }} />
+                                <EditRenderedTextArea
+                                    text={pr.rawSummary}
+                                    renderedText={pr.htmlSummary}
+                                    fetchUsers={this.loadUserOptions}
+                                    onSave={this.handleSummaryChange}
+                                />
                             </Panel>
                             {this.relatedJiraIssuesPanel()}
                             {this.relatedBitbucketIssuesPanel()}

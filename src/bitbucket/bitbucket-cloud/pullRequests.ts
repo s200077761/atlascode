@@ -595,18 +595,25 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
 
-    async update(pr: PullRequest, title: string, reviewerAccountIds: string[]) {
+    async update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
         let prBody = {
             title: title,
+            summary: {
+                raw: summary
+            },
             reviewers: reviewerAccountIds.map(accountId => ({
                 type: 'user',
                 account_id: accountId
             }))
         };
 
-        await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`, prBody);
+        const { data } = await this.client.put(
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
+            prBody
+        );
+        return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
 
     async updateApproval(pr: PullRequest, status: string) {

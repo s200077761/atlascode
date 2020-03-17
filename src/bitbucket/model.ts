@@ -303,7 +303,7 @@ export interface PullRequestApi {
         workspaceRepo: WorkspaceRepo,
         createPrData: CreatePullRequestData
     ): Promise<PullRequest>;
-    update(pr: PullRequest, title: string, reviewerAccountIds: string[]): Promise<void>;
+    update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
     postComment(
