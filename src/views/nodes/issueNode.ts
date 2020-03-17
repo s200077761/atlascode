@@ -9,7 +9,7 @@ const IssueNodeContextValue = 'jiraIssue';
 export class IssueNode extends AbstractBaseNode {
     public issue: MinimalORIssueLink<DetailedSiteInfo>;
 
-    constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>, parent?: AbstractBaseNode | undefined) {
+    constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>, parent: AbstractBaseNode | undefined) {
         super(parent);
         this.issue = _issue;
     }

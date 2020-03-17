@@ -35,33 +35,6 @@ export abstract class Explorer extends Disposable {
         return this.treeDataProvider;
     }
 
-    dispose() {
-        console.log('explorer disposed');
-        if (this.treeDataProvider) {
-            this.treeDataProvider.dispose();
-        }
-    }
-}
-
-export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractBaseNode>, Disposable {
-    protected treeView: TreeView<AbstractBaseNode> | undefined;
-    getTreeItem(element: AbstractBaseNode): Promise<TreeItem> | TreeItem {
-        return element.getTreeItem();
-    }
-
-    abstract getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]>;
-    setProject(project: Project) {}
-
-    refresh() {}
-    dispose() {}
-    getParent(node: AbstractBaseNode): AbstractBaseNode | undefined {
-        return node.getParent();
-    }
-
-    setTreeView(treeView: TreeView<AbstractBaseNode> | undefined) {
-        this.treeView = treeView;
-    }
-
     async reveal(
         node: AbstractBaseNode,
         options?: {
@@ -79,5 +52,27 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
         } catch (e) {
             Logger.error(e);
         }
+    }
+
+    dispose() {
+        console.log('explorer disposed');
+        if (this.treeDataProvider) {
+            this.treeDataProvider.dispose();
+        }
+    }
+}
+
+export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractBaseNode>, Disposable {
+    getTreeItem(element: AbstractBaseNode): Promise<TreeItem> | TreeItem {
+        return element.getTreeItem();
+    }
+
+    abstract getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]>;
+    setProject(project: Project) {}
+
+    refresh() {}
+    dispose() {}
+    getParent(node: AbstractBaseNode): AbstractBaseNode | undefined {
+        return node.getParent();
     }
 }

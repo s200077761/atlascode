@@ -12,6 +12,7 @@ import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 import { SimpleNode } from './nodes/simpleNode';
 import { CreatePullRequestNode, PullRequestHeaderNode } from './pullrequest/headerNode';
+import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
@@ -139,37 +140,37 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         });
     }
 
-    async expandFirstPullRequestNode(forceFocus: boolean): Promise<boolean> {
+    async getFirstPullRequestNode(forceFocus: boolean): Promise<PullRequestTitlesNode | SimpleNode | undefined> {
         const children = await this.getChildren(undefined);
 
         //The 3rd child is the first repo node...
-        if (!(children[0] instanceof SimpleNode) && children.length >= 3) {
-            const prTitlesNodes = await children[2].getChildren();
+
+        let repoNode: AbstractBaseNode = new SimpleNode('');
+        for (let node of children) {
+            repoNode = node;
+            if (node instanceof RepositoriesNode) {
+                break;
+            }
+        }
+        if (repoNode instanceof RepositoriesNode) {
+            const prTitlesNodes = await repoNode.getChildren();
             if (prTitlesNodes) {
-                //If there's something to expand, first expand the PR node
-                const repoDetailsPromise = prTitlesNodes[0].getChildren();
-                this.reveal(prTitlesNodes[0], { expand: true, focus: true }).then(() => {
-                    //When the PR node is fully loaded, focus the Details node
-                    this.focusDetailsNode(repoDetailsPromise);
-                });
-                return true;
+                return prTitlesNodes[0] as PullRequestTitlesNode;
             } else if (forceFocus) {
-                this.reveal(children[0], { focus: true });
-                return true;
+                return children[0] as SimpleNode;
             } else {
-                return false;
+                return undefined;
             }
         } else if (forceFocus) {
-            this.reveal(children[0], { focus: true });
-            return true;
+            return children[0] as SimpleNode;
         } else {
-            return false;
+            return undefined;
         }
     }
 
-    async focusDetailsNode(repoDetailsPromise: Promise<AbstractBaseNode[]>) {
-        const result = await repoDetailsPromise;
-        this.reveal(result[0], { focus: true });
+    async getDetailsNode(prTitlesNode: PullRequestTitlesNode): Promise<DescriptionNode> {
+        const children = await prTitlesNode.getChildren();
+        return children[0] as DescriptionNode;
     }
 
     addItems(prs: PaginatedPullRequests): void {

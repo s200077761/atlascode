@@ -123,9 +123,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
         }, []);
     }
 
-    getTreeItem(): TreeItem {
-        return new TreeItem('Abstract Node');
-    }
+    abstract getTreeItem(): TreeItem;
 
     private async constructIssueTree(
         jqlIssues: MinimalIssue<DetailedSiteInfo>[]

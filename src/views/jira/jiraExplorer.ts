@@ -16,7 +16,6 @@ export class JiraExplorer extends Explorer implements Refreshable {
         super(() => this.dispose());
         this.treeDataProvider = dataProvider;
         this.newTreeView();
-        dataProvider.setTreeView(this.treeView);
     }
 
     viewId() {

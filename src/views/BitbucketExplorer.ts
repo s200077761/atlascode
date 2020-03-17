@@ -6,6 +6,7 @@ import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey } from '../constants';
 import { Container } from '../container';
 import { BaseTreeDataProvider, Explorer } from './Explorer';
+import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from './pullRequestNodeDataProvider';
 import { RefreshTimer } from './RefreshTimer';
 
@@ -87,9 +88,6 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
                 this.treeDataProvider = this.newTreeDataProvider();
             }
             this.newTreeView();
-
-            //We need the data provider to have a reference to the treeView...
-            this.getDataProvider()?.setTreeView(this.treeView);
         }
 
         if (
@@ -103,29 +101,42 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         this.onConfigurationChanged(e);
     }
 
-    async attempNodeExpansionNTimes(remainingAttempts: number, delay: number) {
+    async attemptNodeExpansionNTimes(remainingAttempts: number, delay: number) {
         const dataProvider = this.getDataProvider();
         if (remainingAttempts === 0) {
             if (dataProvider) {
-                await (dataProvider as PullRequestNodeDataProvider).expandFirstPullRequestNode(true);
+                const forceFocusedNode = await (dataProvider as PullRequestNodeDataProvider).getFirstPullRequestNode(
+                    true
+                );
+                this.reveal(forceFocusedNode!, { focus: true });
             }
         }
 
         setTimeout(async () => {
-            let success = false;
+            let prNode: PullRequestTitlesNode | undefined;
             if (dataProvider) {
-                success = await (dataProvider as PullRequestNodeDataProvider).expandFirstPullRequestNode(false);
+                prNode = (await (dataProvider as PullRequestNodeDataProvider).getFirstPullRequestNode(
+                    false
+                )) as PullRequestTitlesNode;
             }
-
-            if (!success) {
-                await this.attempNodeExpansionNTimes(remainingAttempts - 1, delay);
+            if (prNode) {
+                this.reveal(prNode, { focus: true, expand: true });
+                const detailsNode: DescriptionNode = await (dataProvider as PullRequestNodeDataProvider).getDetailsNode(
+                    prNode
+                );
+                this.reveal(detailsNode, { focus: true });
+            } else {
+                await this.attemptNodeExpansionNTimes(remainingAttempts - 1, delay);
             }
         }, delay);
     }
 
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
-        if (e.product.key === ProductBitbucket.key) {
-            this.attempNodeExpansionNTimes(3, 1000);
+        if (e.product.key === ProductBitbucket.key && e.newSites) {
+            //We attempt to expand the node 3 times with 1000ms delays in between. This is because after sites change, the PR explorer wipes its nodes and replaces them with simple nodes.
+            //Only after it fetches data do those get replaced with useful nodes, but as of right now there doesn't appear to be a good way of detecting when new data is fetched, so
+            //we make a few attempts at expanding the node in hopes that it will have been fetched by that time.
+            this.attemptNodeExpansionNTimes(3, 1000);
         }
     }
 

@@ -341,7 +341,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
     }
 }
 
-class DescriptionNode extends AbstractBaseNode {
+export class DescriptionNode extends AbstractBaseNode {
     constructor(private pr: PullRequest, parent?: AbstractBaseNode | undefined) {
         super(parent);
     }
