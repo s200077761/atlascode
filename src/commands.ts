@@ -12,6 +12,7 @@ import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { BitbucketIssue } from './bitbucket/model';
 import { rerunPipeline } from './commands/bitbucket/rerunPipeline';
+import { runPipeline } from './commands/bitbucket/runPipeline';
 import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
@@ -65,6 +66,7 @@ export enum Commands {
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
     RerunPipeline = 'atlascode.bb.rerunPipeline',
+    RunPipelineForBranch = 'atlascode.bb.runPipelineForBranch',
     RefreshPipelines = 'atlascode.bb.refreshPipelines',
     ShowPipeline = 'atlascode.bb.showPipeline',
     PipelinesNextPage = 'atlascode.bb.pipelinesNextPage',
@@ -150,6 +152,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         }),
         commands.registerCommand(Commands.RerunPipeline, (node: PipelineNode) => {
             rerunPipeline(node.pipeline);
+        }),
+        commands.registerCommand(Commands.RunPipelineForBranch, () => {
+            runPipeline();
         }),
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
             Container.pipelineViewManager.createOrShow(pipelineInfo);
