@@ -11,6 +11,7 @@ import {
 } from '@atlassianlabs/jira-pi-common-models/entities';
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { Branch } from '../typings/git';
 import { Action } from './messaging';
 
 export interface RefreshIssueAction extends Action {
@@ -114,8 +115,8 @@ export interface StartWorkAction extends Action {
     action: 'startWork';
     transition: Transition;
     repoUri: string;
-    sourceBranchName: string;
-    branchName: string;
+    sourceBranch: Branch;
+    targetBranchName: string;
     remoteName: string;
     setupJira: boolean;
     setupBitbucket: boolean;
