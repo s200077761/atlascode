@@ -38,7 +38,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { Branch, Ref, RefType, Repository } from '../typings/git';
+import { Branch, Commit as GitCommit, Ref, RefType, Repository } from '../typings/git';
 import { Shell } from '../util/shell';
 import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
@@ -304,13 +304,68 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     private async fetchDetails(fetchDetailsAction: FetchDetails): Promise<Commit[]> {
-        const { site, sourceBranch, destinationBranch } = fetchDetailsAction;
+        const { wsRepo, site, sourceBranch, destinationBranch } = fetchDetailsAction;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(`${destinationBranch.remote}/`, '');
 
-        const bbApi = await clientForSite(site);
-        const result = await bbApi.repositories.getCommitsForRefs(site, sourceBranchName, destinationBranchName);
-        return result;
+        try {
+            const bbApi = await clientForSite(site);
+            const result = await bbApi.repositories.getCommitsForRefs(site, sourceBranchName, destinationBranchName);
+            return result;
+        } catch (e) {}
+
+        const shell = new Shell(vscode.Uri.parse(wsRepo.rootUri).fsPath);
+        const diff = await shell.output(
+            `git log --format=${this.commitFormat} ${destinationBranch.name}..${sourceBranchName} -z`
+        );
+        const gitCommits = this.parseGitCommits(diff);
+
+        return gitCommits.map(c => ({
+            author: {
+                accountId: '',
+                displayName: c.authorEmail!,
+                avatarUrl: '',
+                mention: '',
+                url: ''
+            },
+            ts: c.authorDate!.toString(),
+            hash: c.hash,
+            message: c.message,
+            url: '',
+            htmlSummary: '',
+            rawSummary: ''
+        }));
+    }
+
+    commitFormat = '%H%n%aN%n%aE%n%at%n%ct%n%P%n%B';
+    commitRegex = /([0-9a-f]{40})\n(.*)\n(.*)\n(.*)\n(.*)\n(.*)(?:\n([^]*?))?(?:\x00)/gm;
+
+    private parseGitCommits(data: string): GitCommit[] {
+        const commits: GitCommit[] = [];
+
+        let match;
+
+        do {
+            match = this.commitRegex.exec(data);
+            if (match === null) {
+                break;
+            }
+
+            const [, ref, authorName, authorEmail, authorDate, commitDate, parents, message] = match;
+
+            commits.push({
+                hash: ` ${ref}`.substr(1),
+                message: ` ${message}`.substr(1),
+                parents: parents ? parents.split(' ') : [],
+                authorDate: new Date(Number(authorDate) * 1000),
+                authorName: ` ${authorName}`.substr(1),
+                authorEmail: ` ${authorEmail}`.substr(1),
+                //@ts-ignore
+                commitDate: new Date(Number(commitDate) * 1000)
+            });
+        } while (true);
+
+        return commits;
     }
 
     private async fetchReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
