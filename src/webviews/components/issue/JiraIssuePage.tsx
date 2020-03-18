@@ -14,7 +14,7 @@ import WidthDetector from '@atlaskit/width-detector';
 import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { Comment as JiraComment } from '@atlassianlabs/jira-pi-common-models/entities';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
-import { distanceInWordsToNow, format } from 'date-fns';
+import { distanceInWordsToNow } from 'date-fns';
 import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
@@ -405,7 +405,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
     };
 
-    getMainPanelMarkup(includeCommonSidebar: boolean): any {
+    getMainPanelHeaderMarkup(): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
         let epicLinkKey: string = '';
 
@@ -463,7 +463,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         )}
 
                         <Tooltip
-                            content={`Created on ${format(this.state.fieldValues['created'], 'YYYY-MM-DD h:mm A')}`}
+                            content={`Created on ${this.state.fieldValues['created.rendered'] ||
+                                this.state.fieldValues['created']}`}
                         >
                             <NavItem
                                 text={`${this.state.key}`}
@@ -478,7 +479,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.isErrorBannerOpen && (
                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                 )}
-                {includeCommonSidebar && this.commonSidebar()}
+            </div>
+        );
+    }
+
+    getMainPanelBodyMarkup(): any {
+        return (
+            <div>
                 {this.state.fields['description'] && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['description'].name}</label>
@@ -796,19 +803,28 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             markups.push(
                 <div className="ac-vpadding">
                     <label className="ac-field-label">Recent pull requests</label>
-                    {this.state.recentPullRequests.map(pr => {
-                        return (
-                            <PullRequests
-                                pullRequests={this.state.recentPullRequests}
-                                onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
-                            />
-                        );
-                    })}
+                    <PullRequests
+                        pullRequests={this.state.recentPullRequests}
+                        onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
+                    />
                 </div>
             );
         }
 
-        return markups;
+        return (
+            <Collapsible
+                trigger="show more"
+                triggerWhenOpen="show less"
+                triggerClassName="ac-collapsible-trigger"
+                triggerOpenedClassName="ac-collapsible-trigger"
+                triggerTagName="label"
+                easing="ease-out"
+                transitionTime={150}
+                overflowWhenOpen="visible"
+            >
+                {markups}
+            </Collapsible>
+        );
     }
 
     advancedMain(): any {
@@ -826,6 +842,23 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
 
         return markups;
+    }
+
+    createdUpdatedDates(): any {
+        let created, updated;
+        try {
+            created = `Created ${distanceInWordsToNow(this.state.fieldValues['created'])} ago`;
+            updated = `Updated ${distanceInWordsToNow(this.state.fieldValues['updated'])} ago`;
+        } catch (e) {
+            created = this.state.fieldValues['created.rendered'] || this.state.fieldValues['created'];
+            updated = this.state.fieldValues['updated.rendered'] || this.state.fieldValues['updated'];
+        }
+        return (
+            <div className="ac-issue-created-updated">
+                {created && <div>{created}</div>}
+                {updated && <div>{updated}</div>}
+            </div>
+        );
     }
 
     public render() {
@@ -849,62 +882,25 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         if (width && width < 800) {
                             return (
                                 <div style={{ margin: '20px 16px 0px 16px' }}>
-                                    {this.getMainPanelMarkup(true)}
-                                    <Collapsible
-                                        trigger="show more"
-                                        triggerWhenOpen="show less"
-                                        triggerClassName="ac-collapsible-trigger"
-                                        triggerOpenedClassName="ac-collapsible-trigger"
-                                        triggerTagName="label"
-                                        easing="ease-out"
-                                        transitionTime={150}
-                                        overflowWhenOpen="visible"
-                                    >
-                                        {this.advancedSidebar()}
-                                    </Collapsible>
-                                    <div className="ac-issue-created-updated">
-                                        {this.state.fieldValues['created'] && (
-                                            <div>Created {this.state.fieldValues['created']}</div>
-                                        )}
-                                        {this.state.fieldValues['updated'] && (
-                                            <div>Updated {this.state.fieldValues['updated']}</div>
-                                        )}
-                                    </div>
+                                    {this.getMainPanelHeaderMarkup()}
+                                    {this.commonSidebar()}
+                                    {this.getMainPanelBodyMarkup()}
+                                    {this.advancedSidebar()}
+                                    {this.createdUpdatedDates()}
                                 </div>
                             );
                         }
                         return (
                             <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
                                 <Grid layout="fluid">
-                                    <GridColumn medium={8}>{this.getMainPanelMarkup(false)}</GridColumn>
+                                    <GridColumn medium={8}>
+                                        {this.getMainPanelHeaderMarkup()}
+                                        {this.getMainPanelBodyMarkup()}
+                                    </GridColumn>
                                     <GridColumn medium={4}>
                                         {this.commonSidebar()}
-                                        <Collapsible
-                                            trigger="show more"
-                                            triggerWhenOpen="show less"
-                                            triggerClassName="ac-collapsible-trigger"
-                                            triggerOpenedClassName="ac-collapsible-trigger"
-                                            triggerTagName="label"
-                                            easing="ease-out"
-                                            transitionTime={150}
-                                            overflowWhenOpen="visible"
-                                        >
-                                            {this.advancedSidebar()}
-                                        </Collapsible>
-                                        <div className="ac-issue-created-updated">
-                                            {this.state.fieldValues['created'] && (
-                                                <div>
-                                                    Created{' '}
-                                                    {`${distanceInWordsToNow(this.state.fieldValues['created'])} ago`}
-                                                </div>
-                                            )}
-                                            {this.state.fieldValues['updated'] && (
-                                                <div>
-                                                    Updated{' '}
-                                                    {`${distanceInWordsToNow(this.state.fieldValues['updated'])} ago`}
-                                                </div>
-                                            )}
-                                        </div>
+                                        {this.advancedSidebar()}
+                                        {this.createdUpdatedDates()}
                                     </GridColumn>
                                 </Grid>
                             </div>
