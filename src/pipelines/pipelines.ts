@@ -154,6 +154,21 @@ export class PipelineApiImpl {
         return [];
     }
 
+    // XYZZY should all of this get moved?
+    private static splitLogsWell(logText: string, phaseRanges: PipelineLogRange[][]): string[][] {
+        const logs: string[][] = [];
+
+        phaseRanges.forEach(phaseRange => {
+            let phaseLogs: string[] = [];
+            phaseRange.forEach(logRange => {
+                phaseLogs.push(logText.substr(logRange.firstByte, logRange.byteCount));
+            });
+            logs.push(phaseLogs);
+        });
+
+        return logs;
+    }
+
     readSelectorType(type: string): PipelineSelectorType {
         switch (type) {
             case PipelineSelectorType.Bookmark:
