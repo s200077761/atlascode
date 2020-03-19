@@ -1,4 +1,4 @@
-import { MinimalIssue, isMinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -130,97 +130,67 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     private async constructIssueTree(
         jqlIssues: MinimalIssue<DetailedSiteInfo>[]
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        // epics don't have children filled in and children only have a ref to the parent key
-        // we need to fill in the children and fetch the parents of any orphans
-        const [epics, epicChildrenKeys] = await this.resolveEpics(jqlIssues);
-
-        const parentIssues = await this.fetchMissingParentIssues(jqlIssues);
+        const parentIssues = await this.fetchMissingAncestorIssues(jqlIssues);
         const jqlAndParents = [...jqlIssues, ...parentIssues];
 
         const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         jqlAndParents.forEach(i => {
-            if (i.parentKey) {
-                const parent = jqlAndParents.find(i2 => i.parentKey === i2.key);
+            const parentKey = i.parentKey ?? i.epicLink;
+            if (parentKey) {
+                const parent = jqlAndParents.find(i2 => parentKey === i2.key);
                 if (parent) {
                     parent.subtasks.push(i);
                 }
-            } else if (!epics.some(e => e.key === i.key) && !epicChildrenKeys.some(k => k === i.key)) {
+            } else {
                 rootIssues.push(i);
             }
         });
 
-        return [...rootIssues, ...epics];
+        return [...rootIssues];
     }
 
-    private async fetchMissingParentIssues(
+    // Fetch any parents and grandparents that might be missing from the set to ensure that the a path can be drawn all
+    // the way from a subtask to an epic.
+    private async fetchMissingAncestorIssues(
         newIssues: MinimalIssue<DetailedSiteInfo>[]
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (newIssues.length < 1) {
             return [];
         }
-        const parentKeys = newIssues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
-        const uniqueParentKeys = Array.from(new Set(parentKeys));
-        const missingParentKeys = uniqueParentKeys.filter(k => !newIssues.some(i => i.key === k));
-
         const site = newIssues[0].siteDetails;
-        const parentIssues = await Promise.all(
-            missingParentKeys.map(async issueKey => {
+
+        const missingParentKeys = this.calculateMissingParentKeys(newIssues);
+        const parentIssues = await this.fetchIssuesForKeys(site, missingParentKeys);
+
+        // If a jqlIssue is a sub-task we make a second call to make sure we get its parent's epic.
+        const missingGrandparentKeys = this.calculateMissingParentKeys([...newIssues, ...parentIssues]);
+        const grandparentIssues = await this.fetchIssuesForKeys(site, missingGrandparentKeys);
+
+        return [...parentIssues, ...grandparentIssues];
+    }
+
+    private calculateMissingParentKeys(issues: MinimalIssue<DetailedSiteInfo>[]): string[] {
+        // On NextGen projects epics are considered parents to issues and parentKey points to them. On classic projects
+        // issues parentKey doesn't point to its epic, but its epicLink does. In both cases parentKey points to the
+        // parent task for subtasks. Since they're disjoint we can just take both and treat them the same.
+        const parentKeys = issues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
+        const epicKeys = issues.filter(i => i.epicLink).map(i => i.epicLink) as string[];
+        const uniqueParentKeys = Array.from(new Set([...parentKeys, ...epicKeys]));
+        return uniqueParentKeys.filter(k => !issues.some(i => i.key === k));
+    }
+
+    private async fetchIssuesForKeys(
+        site: DetailedSiteInfo,
+        keys: string[]
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        return await Promise.all(
+            keys.map(async issueKey => {
                 const parent = await fetchMinimalIssue(issueKey, site);
                 // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                 parent.subtasks = [];
                 return parent;
             })
         );
-
-        return parentIssues;
-    }
-
-    private async resolveEpics(
-        allIssues: MinimalIssue<DetailedSiteInfo>[]
-    ): Promise<[MinimalIssue<DetailedSiteInfo>[], string[]]> {
-        const allIssueKeys = allIssues.map(i => i.key);
-        const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
-        const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
-        const remoteEpics = await this.fetchEpicIssues(epicChildrenWithoutParents);
-        let epicChildKeys: string[] = [];
-
-        const epics = [...localEpics, ...remoteEpics];
-
-        if (epics.length < 1) {
-            return [[], []];
-        }
-
-        let finalEpics: MinimalIssue<DetailedSiteInfo>[] = await Promise.all(
-            epics.map(async epic => {
-                if (epic.epicChildren.length < 1) {
-                    epic.epicChildren = allIssues.filter(i => i.epicLink === epic.key);
-                }
-
-                epicChildKeys.push(...epic.epicChildren.map(child => child.key));
-                return epic;
-            })
-        );
-
-        return [finalEpics, epicChildKeys];
-    }
-
-    private async fetchEpicIssues(
-        childIssues: MinimalIssue<DetailedSiteInfo>[]
-    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        if (childIssues.length < 1) {
-            return [];
-        }
-        const site = childIssues[0].siteDetails;
-        const parentKeys: string[] = Array.from(new Set(childIssues.map(i => i.epicLink!)));
-
-        const parentIssues = await Promise.all(
-            parentKeys.map(async issueKey => {
-                const parent = await fetchMinimalIssue(issueKey, site);
-                return parent;
-            })
-        );
-
-        return parentIssues;
     }
 
     private nodesForIssues(): IssueNode[] {

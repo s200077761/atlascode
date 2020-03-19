@@ -53,15 +53,6 @@ export async function activate(context: ExtensionContext) {
             CommandContext.IsBBAuthenticated,
             Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)
         );
-
-        const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
-        if (gitExtension) {
-            const gitApi = gitExtension.exports.getAPI(1);
-            const bbContext = new BitbucketContext(gitApi);
-            Container.initializeBitbucket(bbContext);
-        } else {
-            Logger.error(new Error('vscode.git extension not found'));
-        }
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
@@ -78,20 +69,48 @@ export async function activate(context: ExtensionContext) {
 
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
+
+    // Following are async functions called without await so that they are run
+    // in the background and do not slow down the time taken for the extension
+    // icon to appear in the activity bar
+    activateBitbucketFeatures();
+    activateYamlFeatures(context);
+
+    Logger.info(
+        `Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration[0] * 1000 +
+            Math.floor(duration[1] / 1000000)} ms`
+    );
+}
+
+async function activateBitbucketFeatures() {
+    const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
+    if (!gitExtension) {
+        Logger.error(new Error('vscode.git extension not found'));
+        window.showInformationMessage(
+            'Activating Bitbucket features failed. Install vscode.git extension to enable Bitbucket features.'
+        );
+        return;
+    }
+
+    try {
+        const gitApi = gitExtension.exports.getAPI(1);
+        const bbContext = new BitbucketContext(gitApi);
+        Container.initializeBitbucket(bbContext);
+    } catch (e) {
+        Logger.error(e, 'Activating Bitbucket features failed');
+        window.showInformationMessage('Activating Bitbucket features failed');
+    }
+}
+
+async function activateYamlFeatures(context: ExtensionContext) {
     context.subscriptions.push(
         languages.registerCompletionItemProvider(
             { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
             new PipelinesYamlCompletionProvider()
         )
     );
-
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();
-
-    Logger.info(
-        `Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration[0] * 1000 +
-            Math.floor(duration[1] / 1000000)} ms`
-    );
 }
 
 async function migrateConfig(globalState: Memento): Promise<void> {

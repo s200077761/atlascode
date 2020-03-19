@@ -265,12 +265,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 destinationBranch: this.state.destinationBranch!
             });
 
-            if (
-                this.state.destinationSiteRemote &&
-                this.state.repo.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)
-            ) {
+            if (this.state.destinationSiteRemote) {
                 this.postMessage({
                     action: 'fetchDetails',
+                    wsRepo: this.state.repo.workspaceRepo,
                     site: this.state.destinationSiteRemote.site!,
                     sourceBranch: this.state.sourceBranch!,
                     destinationBranch: this.state.destinationBranch!

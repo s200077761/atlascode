@@ -20,9 +20,11 @@ import {
     Pipeline,
     PipelineCommand,
     PipelineResult,
+    PipelineSelectorType,
     PipelineStage,
     PipelineState,
     PipelineStep,
+    PipelineTargetType,
     Status,
     statusForState
 } from '../../../pipelines/model';
@@ -82,6 +84,7 @@ type State = {
     isErrorBannerOpen: boolean;
     isOnline: boolean;
     errorDetails: any;
+    isRerunning: boolean;
 };
 
 const emptyPipeline: PipelineData = {
@@ -96,6 +99,7 @@ const emptyPipeline: PipelineData = {
         issueTrackerEnabled: false
     },
     type: '',
+    triggerName: '',
     build_number: 0,
     uuid: '',
     created_on: '',
@@ -106,9 +110,9 @@ const emptyPipeline: PipelineData = {
         stage: { name: 'PENDING', type: 'pipeline_step_state_pending_pending' }
     },
     target: {
+        type: PipelineTargetType.Commit,
         ref_name: '',
-        selector: { pattern: '', type: '' },
-        triggerName: ''
+        selector: { pattern: '', type: PipelineSelectorType.Default }
     }
 };
 
@@ -120,14 +124,15 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
             steps: [],
             isErrorBannerOpen: false,
             isOnline: true,
-            errorDetails: undefined
+            errorDetails: undefined,
+            isRerunning: false
         };
     }
 
     public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
-                this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
+                this.setState({ isRerunning: false, isErrorBannerOpen: true, errorDetails: e.reason });
                 break;
             }
             case 'updatePipeline': {
@@ -151,6 +156,11 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
 
         return true;
     }
+
+    rerun = () => {
+        this.setState({ isRerunning: true });
+        this.postMessage({ action: 'rerun' });
+    };
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
@@ -312,6 +322,13 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         );
     }
 
+    buildInProgress(): boolean {
+        return (
+            this.state.pipeline.state.type === 'pipeline_state_in_progress' ||
+            this.state.pipeline.state.type === 'pipeline_state_pending'
+        );
+    }
+
     render() {
         if (this.state.pipeline.uuid === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refresh' });
@@ -327,13 +344,25 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
                 <Page>
                     <Grid spacing="comfortable" layout="fixed">
                         <GridColumn medium={12}>
-                            <Button
-                                className="ac-button"
-                                style={{ float: 'right' }}
-                                onClick={() => this.postMessage({ action: 'refresh' })}
-                            >
-                                <RefreshIcon label="refresh" size="small"></RefreshIcon>
-                            </Button>
+                            <div className="pipeline-button-group">
+                                <Button
+                                    className="ac-button"
+                                    style={{ float: 'right' }}
+                                    onClick={() => this.postMessage({ action: 'refresh' })}
+                                >
+                                    <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                                </Button>
+                                {!this.buildInProgress() && (
+                                    <Button
+                                        className="ac-button"
+                                        style={{ float: 'right' }}
+                                        onClick={() => this.rerun()}
+                                        isLoading={this.state.isRerunning}
+                                    >
+                                        Rerun
+                                    </Button>
+                                )}
+                            </div>
                             <PageHeader
                                 breadcrumbs={
                                     <BreadcrumbsStateless onExpand={() => {}}>

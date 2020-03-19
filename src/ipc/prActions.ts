@@ -98,6 +98,15 @@ export function isUpdateTitle(a: Action): a is UpdateTitle {
     return (<UpdateTitle>a).text !== undefined;
 }
 
+export interface UpdateSummary extends Action {
+    action: 'updateSummary';
+    summary: string;
+}
+
+export function isUpdateSummary(a: Action): a is UpdateSummary {
+    return (<UpdateSummary>a).summary !== undefined;
+}
+
 export interface UpdateApproval extends Action {
     action: 'updateApproval';
     status: ApprovalStatus;
@@ -159,6 +168,7 @@ export function isCreatePullRequest(a: Action): a is CreatePullRequest {
 
 export interface FetchDetails extends Action {
     action: 'fetchDetails';
+    wsRepo: WorkspaceRepo;
     site: BitbucketSite;
     sourceBranch: Branch;
     destinationBranch: Branch;

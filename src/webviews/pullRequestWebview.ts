@@ -38,15 +38,17 @@ import {
     isOpenDiffView,
     isPostComment,
     isUpdateApproval,
+    isUpdateSummary,
     isUpdateTitle,
-    Merge
+    Merge,
+    UpdateSummary
 } from '../ipc/prActions';
 import { PRData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
-import { PipelineInfo } from '../views/pipelines/PipelinesTree';
+import { iconSet, Resources } from '../resources';
 import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
@@ -65,8 +67,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         return 'Pull Request';
     }
+
     public get id(): string {
         return 'pullRequestDetailsScreen';
+    }
+
+    setIconPath() {
+        this._panel!.iconPath = Resources.icons.get(iconSet.PULLREQUEST);
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -120,6 +127,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.updateTitle(this._pr, msg.text);
                         } catch (e) {
                             Logger.error(new Error(`error updating pull request title: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'updateSummary': {
+                    handled = true;
+                    if (isUpdateSummary(msg)) {
+                        try {
+                            await this.updateSummary(this._pr, msg);
+                        } catch (e) {
+                            Logger.error(new Error(`error updating pull request summary: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
@@ -274,10 +293,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
                             const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
-                            vscode.commands.executeCommand(Commands.ShowPipeline, {
-                                site: this._pr.site,
-                                pipelineUuid: pipelineUUID
-                            } as PipelineInfo);
+                            const bbApi = await clientForSite(this._pr.site);
+                            const pipeline = await bbApi.pipelines?.getPipeline(this._pr.site, pipelineUUID);
+                            if (pipeline) {
+                                vscode.commands.executeCommand(Commands.ShowPipeline, pipeline);
+                            } else {
+                                vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
+                            }
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }
@@ -514,10 +536,27 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         await bbApi.pullrequests.update(
             pr,
             text,
-            pr.data.participants.filter(p => p.role === 'PARTICIPANT').map(p => p.accountId)
+            pr.data.rawSummary,
+            pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId)
         );
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+    }
+
+    private async updateSummary(pr: PullRequest, msg: UpdateSummary) {
+        const bbApi = await clientForSite(pr.site);
+        this._pr = await bbApi.pullrequests.update(
+            pr,
+            pr.data.title,
+            msg.summary,
+            pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId)
+        );
+
+        await this.postMessage({
+            type: 'updatePullRequestSummary',
+            nonce: msg.nonce,
+            pr: this._pr
+        });
     }
 
     private async updateApproval(pr: PullRequest, status: ApprovalStatus) {
@@ -532,7 +571,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async addReviewer(pr: PullRequest, accountId: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(pr, pr.data.title, [
+        await bbApi.pullrequests.update(pr, pr.data.title, pr.data.rawSummary, [
             ...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId),
             accountId
         ]);

@@ -11,10 +11,10 @@ interface Props {
 
 export const TextAreaEditor: React.FC<Props> = ({ value, disabled, placeholder, fetchUsers, onChange }: Props) => {
     const inputTextAreaRef = useRef<HTMLTextAreaElement>(null);
-    const [cursorPosition, setCursorPosition] = useState(value.length);
+    const [cursorPosition, setCursorPosition] = useState(value?.length || 0);
 
     useEffect(() => {
-        if (inputTextAreaRef.current) {
+        if (inputTextAreaRef.current && cursorPosition > 0) {
             inputTextAreaRef.current.selectionStart = inputTextAreaRef.current.selectionEnd = cursorPosition;
             inputTextAreaRef.current.focus();
         }

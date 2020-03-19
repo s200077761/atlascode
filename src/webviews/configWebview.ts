@@ -185,7 +185,9 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 case 'login': {
                     handled = true;
                     if (isLoginAuthAction(msg)) {
+                        let isCloud = true;
                         if (isBasicAuthInfo(msg.authInfo)) {
+                            isCloud = false;
                             try {
                                 await authenticateServer(msg.siteInfo, msg.authInfo);
                             } catch (e) {
@@ -199,7 +201,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                         } else {
                             authenticateCloud(msg.siteInfo, settingsUrl);
                         }
-                        authenticateButtonEvent(this.id).then(e => {
+                        authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then(e => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }

@@ -43,6 +43,7 @@ import { fetchEditIssueUI, fetchMinimalIssue } from '../jira/fetchIssue';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
+import { iconSet, Resources } from '../resources';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
@@ -72,6 +73,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
 
     public get productOrUndefined(): Product | undefined {
         return ProductJira;
+    }
+
+    setIconPath() {
+        this._panel!.iconPath = Resources.icons.get(iconSet.JIRAICON);
     }
 
     async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
@@ -120,7 +125,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
             const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
 
             if (this._panel) {
-                this._panel.title = `Jira Issue ${this._issue.key}`;
+                this._panel.title = `${this._issue.key}`;
             }
 
             // const currentBranches = Container.bitbucketContext ?
@@ -285,12 +290,20 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 fieldKey => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined
                             )
                         ) {
-                            this.forceUpdateIssue();
+                            await this.forceUpdateIssue();
+                            await this.postMessage({
+                                type: 'editIssueDone',
+                                nonce: msg.nonce
+                            });
                         } else {
                             this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
                             this.postMessage({
                                 type: 'fieldValueUpdate',
                                 fieldValues: newFieldValues,
+                                nonce: msg.nonce
+                            });
+                            await this.postMessage({
+                                type: 'editIssueDone',
                                 nonce: msg.nonce
                             });
                         }
