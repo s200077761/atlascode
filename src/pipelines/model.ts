@@ -107,8 +107,10 @@ export interface PipelineStep {
     name?: string;
     completed_on?: string;
     setup_commands: PipelineCommand[];
+    setup_logs?: string;
     script_commands: PipelineCommand[];
     teardown_commands: PipelineCommand[];
+    teardown_logs?: string;
     duration_in_seconds: number;
     state?: PipelineState;
 }
@@ -118,6 +120,12 @@ export interface PipelineCommand {
     command: string;
     name: string;
     logs?: string;
+}
+
+export interface PipelineLogRange {
+    firstByte: number;
+    byteCount: number;
+    lastByte: number;
 }
 
 export function statusForState(state: PipelineState): Status {

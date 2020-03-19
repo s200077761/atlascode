@@ -262,6 +262,14 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         return `${seconds} sec`;
     }
 
+    setupAndTeardownSection(logs: string, title: string) {
+        return (
+            <Panel isDefaultExpanded={false} header={panelHeader(title, '')}>
+                <pre className="pipeline-logs">{logs}</pre>
+            </Panel>
+        );
+    }
+
     commandSection(commands: PipelineCommand[], title: string, expanded: boolean) {
         return (
             <Panel isDefaultExpanded={expanded} header={panelHeader(title, `${commands.length} Commands`)}>
@@ -281,9 +289,9 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     commands(step: PipelineStep) {
         return (
             <div className="pipeline-command-panels">
-                {this.commandSection(step.setup_commands, 'Setup', false)}
+                {this.setupAndTeardownSection(step.setup_logs ?? '', 'Setup')}
                 {this.commandSection(step.script_commands, 'Build', true)}
-                {this.commandSection(step.teardown_commands, 'Teardown', false)}
+                {this.setupAndTeardownSection(step.teardown_logs ?? '', 'Teardown')}
             </div>
         );
     }
