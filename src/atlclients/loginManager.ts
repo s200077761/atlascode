@@ -1,4 +1,4 @@
-import { commands, window } from 'vscode';
+import { commands, Event, EventEmitter, window } from 'vscode';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
 import { Commands } from '../commands';
@@ -23,8 +23,21 @@ import { CredentialManager } from './authStore';
 import { OAuthDancer } from './oauthDancer';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
+
+export enum onboardingNotificationActions {
+    CREATEISSUE,
+    OPENISSUE,
+    CREATEPULLREQUEST,
+    VIEWPULLREQUEST
+}
+
+export type OnboardingNotificationPressedEvent = {
+    action: onboardingNotificationActions;
+};
+
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
+    private _onboardingAuthenticatedNotificationPressed = new EventEmitter<OnboardingNotificationPressedEvent>();
 
     constructor(
         private _credentialManager: CredentialManager,
@@ -74,31 +87,38 @@ export class LoginManager {
         }
     }
 
+    public get onWasOnboardingNotificationPressed(): Event<OnboardingNotificationPressedEvent> {
+        return this._onboardingAuthenticatedNotificationPressed.event;
+    }
+
     private displayAuthNotification(site: SiteInfo) {
         if (site.product.key === ProductJira.key) {
             window
                 .showInformationMessage(
                     `You are now authenticated with ${site.product.name}.`,
                     'Create Issue',
-                    'View open Issues',
-                    'Show me more!'
+                    'View open Issues'
+                    /* 'Show me more!' */
                 )
                 .then(selection => {
                     if (selection) {
                         if (selection === 'Create Issue') {
-                            //TODO: Focus 'create issue' button in Jira explorer
+                            this._onboardingAuthenticatedNotificationPressed.fire({
+                                action: onboardingNotificationActions.CREATEISSUE
+                            });
                             commands.executeCommand(Commands.CreateIssue, undefined, 'auth notification');
                         } else if (selection === 'View open Issues') {
-                            //First entry in default JQL
-                            //Open that issue
-                            //TODO: Focus 'my open issues' default JQL when pressed
+                            this._onboardingAuthenticatedNotificationPressed.fire({
+                                action: onboardingNotificationActions.OPENISSUE
+                            });
+
                             console.log('View issues pressed');
-                        } else if (selection === 'Show me more!') {
+                        } /* else if (selection === 'Show me more!') {
                             //Focus checklist explorer
                             //Open checklist page
                             //TODO: Open Jira features page and focus checklist explorer
                             console.log('What else can I do pressed');
-                        }
+                        } */
                     }
                 });
         } else if (site.product.key === ProductBitbucket.key) {
@@ -106,26 +126,27 @@ export class LoginManager {
                 .showInformationMessage(
                     `You are now authenticated with ${site.product.name}.`,
                     'Create Pull Request',
-                    'View Pull Requests',
-                    'Show me more!'
+                    'View Pull Requests'
+                    /* 'Show me more!' */
                 )
                 .then(selection => {
                     if (selection) {
                         if (selection === 'Create Pull Request') {
-                            //Focus 'create issue' button in Jira explorer
-                            //Open 'create issue' page
+                            this._onboardingAuthenticatedNotificationPressed.fire({
+                                action: onboardingNotificationActions.CREATEPULLREQUEST
+                            });
                             commands.executeCommand(Commands.CreatePullRequest);
                         } else if (selection === 'View Pull Requests') {
-                            //First entry in default JQL
-                            //Open that issue
-                            //TODO: focus first pr node
+                            this._onboardingAuthenticatedNotificationPressed.fire({
+                                action: onboardingNotificationActions.VIEWPULLREQUEST
+                            });
                             console.log('View issues pressed');
-                        } else if (selection === 'Show me more!') {
+                        } /* else if (selection === 'Show me more!') {
                             //Focus checklist explorer
                             //Open checklist page
                             //TODO: Open Bitbucket features page and focus checklist explorer
                             console.log('What else can I do pressed');
-                        }
+                        } */
                     }
                 });
         }

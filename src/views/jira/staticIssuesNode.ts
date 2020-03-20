@@ -8,7 +8,6 @@ import { JQLTreeDataProvider } from './jqlTreeDataProvider';
 
 export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBaseNode {
     public disposables: vscode.Disposable[] = [];
-    public parent: AbstractBaseNode | undefined = undefined;
     private collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
     private issueKeys: string[] = [];
 

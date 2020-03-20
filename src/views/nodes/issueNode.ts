@@ -14,6 +14,10 @@ export class IssueNode extends AbstractBaseNode {
         this.issue = _issue;
     }
 
+    getCommand(): vscode.Command {
+        return { command: Commands.ShowIssue, title: 'Show Issue', arguments: [this.issue] };
+    }
+
     getTreeItem(): vscode.TreeItem {
         let title = isMinimalIssue(this.issue) && this.issue.isEpic ? this.issue.epicName : this.issue.summary;
         let treeItem = new vscode.TreeItem(
@@ -22,7 +26,7 @@ export class IssueNode extends AbstractBaseNode {
                 ? vscode.TreeItemCollapsibleState.Expanded
                 : vscode.TreeItemCollapsibleState.None
         );
-        treeItem.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [this.issue] };
+        treeItem.command = this.getCommand();
         treeItem.iconPath = vscode.Uri.parse(this.issue.issuetype.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;
         treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}`;

@@ -1,14 +1,17 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { onboardingNotificationActions, OnboardingNotificationPressedEvent } from '../../atlclients/loginManager';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, CustomJQLTreeId, setCommandContext } from '../../constants';
 import { Container } from '../../container';
 import { NewIssueMonitor } from '../../jira/newIssueMonitor';
 import { SitesAvailableUpdateEvent } from '../../siteManager';
+import { IssueNode } from '../nodes/issueNode';
 import { RefreshTimer } from '../RefreshTimer';
 import { CustomJQLRoot } from './customJqlRoot';
+import { CreateJiraIssueNode } from './headerNode';
 import { JiraExplorer } from './jiraExplorer';
 
 export class JiraContext extends Disposable {
@@ -28,6 +31,7 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            Container.loginManager.onWasOnboardingNotificationPressed(this.onboardingNotificationWasPressed, this),
             this._refreshTimer
         );
 
@@ -86,16 +90,34 @@ export class JiraContext extends Disposable {
     }
 
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
-        if (e.product.key === ProductJira.key && e.newSites) {
+        if (e.product.key === ProductJira.key) {
             if (e.newSites) {
                 Container.jqlManager.initializeJQL(e.newSites);
             }
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
-            if (isLoggedIn && !!this._explorer?.getDataProvider()) {
-                const firstJQLResult = await (this._explorer.getDataProvider() as CustomJQLRoot).getFirstJQLResult();
-                this._explorer.reveal(firstJQLResult!, { focus: true });
+        }
+    }
+
+    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+        if (this._explorer) {
+            const dataProvider = this._explorer.getDataProvider();
+            if (dataProvider instanceof CustomJQLRoot) {
+                if (e.action === onboardingNotificationActions.OPENISSUE) {
+                    const firstJQLResult = await dataProvider.getFirstJQLResult();
+                    if (firstJQLResult instanceof IssueNode) {
+                        this._explorer.reveal(firstJQLResult, { focus: true });
+                        const commandObj = firstJQLResult.getCommand();
+                        commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
+                    }
+                } else if (e.action === onboardingNotificationActions.CREATEISSUE) {
+                    const createIssueNode = dataProvider.getCreateIssueNode();
+                    if (createIssueNode instanceof CreateJiraIssueNode) {
+                        this._explorer.reveal(createIssueNode, { focus: true });
+                        commands.executeCommand(Commands.CreateIssue, undefined, 'HintNotification');
+                    }
+                }
             }
         }
     }
