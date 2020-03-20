@@ -54,9 +54,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     constructor(
         private pr: PullRequest,
         private commentController: PullRequestCommentController,
-        shouldPreload: boolean
+        shouldPreload: boolean,
+        parent: AbstractBaseNode | undefined
     ) {
-        super();
+        super(parent);
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
 
@@ -121,7 +122,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             async result => {
                 let [fileChanges, commits, allComments] = result;
 
-                const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
+                const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
                 children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
                 children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
                 children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
@@ -340,9 +341,9 @@ class PullRequestFilesNode extends AbstractBaseNode {
     }
 }
 
-class DescriptionNode extends AbstractBaseNode {
-    constructor(private pr: PullRequest) {
-        super();
+export class DescriptionNode extends AbstractBaseNode {
+    constructor(private pr: PullRequest, parent?: AbstractBaseNode | undefined) {
+        super(parent);
     }
 
     getTreeItem(): vscode.TreeItem {

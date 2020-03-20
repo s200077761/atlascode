@@ -637,12 +637,13 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(data, 0, site, workspaceRepo);
     }
 
-    async update(pr: PullRequest, title: string, reviewerAccountIds: string[]) {
+    async update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
         let prBody = {
             version: pr.data.version,
             title: title,
+            description: summary,
             reviewers: reviewerAccountIds.map(accountId => ({
                 user: {
                     name: accountId
@@ -650,10 +651,12 @@ export class ServerPullRequestApi implements PullRequestApi {
             }))
         };
 
-        await this.client.put(
+        const { data } = await this.client.put(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}`,
             prBody
         );
+
+        return ServerPullRequestApi.toPullRequestModel(data, 0, pr.site, pr.workspaceRepo);
     }
 
     async updateApproval(pr: PullRequest, status: string) {

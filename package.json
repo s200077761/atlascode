@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.40.0"
+        "vscode": "^1.42.0"
     },
     "categories": [
         "Other"
@@ -299,6 +299,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.runPipelineForBranch",
+                "title": "Run Pipeline for Branch",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.refreshPipelines",
                 "title": "Refresh Pipelines",
                 "icon": {
@@ -453,64 +462,69 @@
             ],
             "view/title": [
                 {
-                    "command": "atlascode.bb.refreshPullRequests",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.toggleFileNesting",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.createPullRequest",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
-                },
-                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "view =~ /(atlascode.views.jira.customJql)/",
-                    "group": "navigation"
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "atlascode.bb.createPullRequest",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "atlascode.bb.refreshPullRequests",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.bb.toggleFileNesting",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.bb.showPullRequestSettings",
                     "when": "view == atlascode.views.bb.pullrequestsTreeView",
-                    "group": "navigation"
+                    "group": "navigation@4"
                 },
                 {
-                    "command": "atlascode.bb.showPipelineSettings",
-                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/",
-                    "group": "navigation"
-                },
-                {
-                    "command": "atlascode.bb.showBitbucketIssueSettings",
-                    "when": "view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation"
+                    "command": "atlascode.bb.runPipelineForBranch",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.bb.refreshPipelines",
                     "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.bb.showPipelineSettings",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/",
+                    "group": "navigation@3"
                 },
                 {
                     "command": "atlascode.bb.createIssue",
                     "when": "atlascode:isBBAuthenticated && view == atlascode.views.bb.issuesTreeView",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "atlascode.bb.refreshIssues",
                     "when": "view == atlascode.views.bb.issuesTreeView && atlascode:isBBAuthenticated",
-                    "group": "navigation"
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "atlascode.bb.showBitbucketIssueSettings",
+                    "when": "view == atlascode.views.bb.issuesTreeView",
+                    "group": "navigation@3"
                 }
             ],
             "view/item/context": [
@@ -1250,12 +1264,12 @@
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
         "@atlaskit/width-detector": "^2.0.10",
-        "@atlassianlabs/jira-metaui-client": "^0.1.13",
-        "@atlassianlabs/jira-metaui-transformer": "^0.1.13",
-        "@atlassianlabs/jira-pi-client": "^0.1.13",
-        "@atlassianlabs/jira-pi-common-models": "^0.1.13",
-        "@atlassianlabs/jira-pi-meta-models": "^0.1.13",
-        "@atlassianlabs/pi-client-common": "^0.1.13",
+        "@atlassianlabs/jira-metaui-client": "^0.1.17",
+        "@atlassianlabs/jira-metaui-transformer": "^0.1.17",
+        "@atlassianlabs/jira-pi-client": "^0.1.16",
+        "@atlassianlabs/jira-pi-common-models": "^0.1.16",
+        "@atlassianlabs/jira-pi-meta-models": "^0.1.16",
+        "@atlassianlabs/pi-client-common": "^0.1.16",
         "@deviniti/jql-autocomplete": "^1.0.2",
         "@emotion/core": "^10.0.28",
         "@types/websocket": "^0.0.40",
@@ -1334,7 +1348,7 @@
         "@types/terser-webpack-plugin": "^1.2.1",
         "@types/turndown": "^5.0.0",
         "@types/uuid": "^3.4.4",
-        "@types/vscode": "1.40.0",
+        "@types/vscode": "1.42.0",
         "@types/webpack": "^4.39.1",
         "@types/webpack-manifest-plugin": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^2.10.0",

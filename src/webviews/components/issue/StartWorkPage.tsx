@@ -252,8 +252,8 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
         this.postMessage({
             action: 'startWork',
             repoUri: this.state.repo.workspaceRepo.rootUri,
-            branchName: branchName,
-            sourceBranchName: this.state.sourceBranch ? this.state.sourceBranch.name! : '',
+            targetBranchName: branchName,
+            sourceBranch: this.state.sourceBranch!,
             remoteName: this.state.siteRemote ? this.state.siteRemote.remote.name : '',
             transition: this.state.transition,
             setupJira: this.state.jiraSetupEnabled,
@@ -588,7 +588,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                         <Select
                                             className="ac-select-container"
                                             classNamePrefix="ac-select"
-                                            options={repo.localBranches}
+                                            options={[...repo.localBranches, ...repo.remoteBranches]}
                                             getOptionLabel={(option: Branch) => option.name}
                                             getOptionValue={(option: Branch) => option}
                                             onChange={this.handleSourceBranchChange}

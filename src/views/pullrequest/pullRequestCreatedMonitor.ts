@@ -1,9 +1,9 @@
 import * as path from 'path';
-import { Logger } from 'src/logger';
 import * as vscode from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from '../../commands';
+import { Logger } from '../../logger';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();

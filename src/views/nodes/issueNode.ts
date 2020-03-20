@@ -9,8 +9,8 @@ const IssueNodeContextValue = 'jiraIssue';
 export class IssueNode extends AbstractBaseNode {
     public issue: MinimalORIssueLink<DetailedSiteInfo>;
 
-    constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>) {
-        super();
+    constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>, parent: AbstractBaseNode | undefined) {
+        super(parent);
         this.issue = _issue;
     }
 
@@ -35,7 +35,7 @@ export class IssueNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (isMinimalIssue(this.issue) && Array.isArray(this.issue.subtasks) && this.issue.subtasks.length > 0) {
-            return this.issue.subtasks.map(subtask => new IssueNode(subtask));
+            return this.issue.subtasks.map(subtask => new IssueNode(subtask, this));
         }
 
         if (
@@ -43,7 +43,7 @@ export class IssueNode extends AbstractBaseNode {
             Array.isArray(this.issue.epicChildren) &&
             this.issue.epicChildren.length > 0
         ) {
-            return this.issue.epicChildren.map(epicChild => new IssueNode(epicChild));
+            return this.issue.epicChildren.map(epicChild => new IssueNode(epicChild, this));
         }
         return [];
     }

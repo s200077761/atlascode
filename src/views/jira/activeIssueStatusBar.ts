@@ -1,3 +1,4 @@
+import { isMinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import fs from 'fs';
 import {
     commands,
@@ -9,11 +10,14 @@ import {
     window
 } from 'vscode';
 import { openActiveIssueEvent } from '../../analytics';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { BitbucketContext } from '../../bitbucket/bbContext';
-import { showIssueForKey } from '../../commands/jira/showIssue';
+import { showIssue } from '../../commands/jira/showIssue';
 import { configuration } from '../../config/configuration';
 import { JiraEnabledKey } from '../../constants';
 import { Container } from '../../container';
+import { getCachedIssue } from '../../jira/fetchIssue';
+import { issueForKey } from '../../jira/issueForKey';
 import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { AuthStatusBar } from '../authStatusBar';
 import { PRFileDiffQueryParams } from '../pullrequest/pullRequestNode';
@@ -26,7 +30,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
     private disposable: Disposable | undefined;
     private statusBarItem: StatusBarItem | undefined;
     private repoListeners: Disposable | undefined;
-    private activeIssueKey: string;
+    private activeIssue: MinimalIssueOrKeyAndSite<DetailedSiteInfo> | undefined;
 
     constructor(bbCtx: BitbucketContext) {
         Container.context.subscriptions.push(
@@ -65,8 +69,10 @@ export class JiraActiveIssueStatusBar implements Disposable {
                 this.statusBarItem,
                 window.onDidChangeActiveTextEditor(e => this.handleActiveIssueChange(e)),
                 commands.registerCommand(JiraActiveIssueStatusBar.OpenActiveIssueCommand, () => {
-                    showIssueForKey(this.activeIssueKey);
-                    openActiveIssueEvent().then(e => Container.analyticsClient.sendUIEvent(e));
+                    if (this.activeIssue) {
+                        showIssue(this.activeIssue);
+                        openActiveIssueEvent().then(e => Container.analyticsClient.sendUIEvent(e));
+                    }
                 })
             );
     }
@@ -83,21 +89,30 @@ export class JiraActiveIssueStatusBar implements Disposable {
 
         this.initializeIfNeeded();
 
-        textOrEditor = textOrEditor || window.visibleTextEditors?.[0];
+        textOrEditor = textOrEditor || window.activeTextEditor;
         if (textOrEditor === undefined) {
-            this.activeIssueKey ? this.updateStatusBarItem(this.activeIssueKey) : this.showEmptyStateStatusBarItem();
+            this.activeIssue ? this.updateStatusBarItem(this.activeIssue) : this.showEmptyStateStatusBarItem();
             return;
         }
 
         const text = typeof textOrEditor === 'string' ? textOrEditor : this.extractBranchName(textOrEditor);
 
         const parsedIssueKeys = parseJiraIssueKeys(text);
-        if (parsedIssueKeys.length > 0) {
-            this.updateStatusBarItem(parsedIssueKeys[0]);
+        if (parsedIssueKeys.length > 0 && parsedIssueKeys[0] !== this.activeIssue?.key) {
+            try {
+                const issue = (await getCachedIssue(parsedIssueKeys[0])) || (await issueForKey(parsedIssueKeys[0]));
+                this.updateStatusBarItem(issue);
+            } catch (e) {
+                // do nothing
+            }
         }
     }
 
     private extractBranchName(editor: TextEditor): string | undefined {
+        if (editor.viewColumn === undefined) {
+            return undefined;
+        }
+
         if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
             const { branchName } = JSON.parse(editor.document.uri.query) as PRFileDiffQueryParams;
             return branchName;
@@ -114,13 +129,13 @@ export class JiraActiveIssueStatusBar implements Disposable {
         return scm?.state.HEAD?.name;
     }
 
-    private updateStatusBarItem(issueKey: string) {
-        this.statusBarItem!.text = `$(chevron-right)${issueKey}`;
-        this.statusBarItem!.tooltip = `${issueKey} (active Jira issue)`;
+    private updateStatusBarItem(issue: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
+        this.statusBarItem!.text = `$(chevron-right)${issue.key}`;
+        this.statusBarItem!.tooltip = `${issue.key} ${isMinimalIssue(issue) ? issue.summary : ''} (active Jira issue)`;
         this.statusBarItem!.command = JiraActiveIssueStatusBar.OpenActiveIssueCommand;
         this.statusBarItem!.show();
 
-        this.activeIssueKey = issueKey;
+        this.activeIssue = issue;
     }
 
     private showEmptyStateStatusBarItem() {

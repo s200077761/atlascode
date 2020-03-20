@@ -1,5 +1,5 @@
 import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/index';
-import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira } from './atlclients/authInfo';
+import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
 
@@ -304,7 +304,7 @@ export async function doneButtonEvent(source: string): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
-export async function authenticateButtonEvent(source: string): Promise<UIEvent> {
+export async function authenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
         uiEvent: {
@@ -313,7 +313,8 @@ export async function authenticateButtonEvent(source: string): Promise<UIEvent> 
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'authenticateButton',
-            source: source
+            source: source,
+            attributes: { instanceType: isCloud ? 'cloud' : 'server', hostProduct: site.product.name }
         }
     };
 

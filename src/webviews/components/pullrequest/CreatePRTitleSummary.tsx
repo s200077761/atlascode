@@ -29,7 +29,9 @@ export const CreatePRTitleSummary: React.FC<TitleSummaryProps> = (props: TitleSu
                         ? `${props.commits[0]
                               .message!.substring(props.commits[0].message!.indexOf('\n') + 1)
                               .trimLeft()}${createdFromAtlascodeFooter}`
-                        : `${props.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
+                        : `${props.commits
+                              .map(c => `* ${c.message.trimRight()}`)
+                              .join('\n\n')}${createdFromAtlascodeFooter}`
                 );
             } else {
                 setTitle(props.sourceBranchName);

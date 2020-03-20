@@ -77,6 +77,17 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
             });
     }
 
+    async getFirstJQLResult() {
+        const children = await this.getChildren(undefined);
+
+        //The 3rd child is the first one with children...
+        if (children.length >= 3) {
+            const issueNodes = await children[2].getChildren();
+            return issueNodes[0];
+        }
+        return children[0];
+    }
+
     async getChildren(element: IssueNode | undefined) {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return Promise.resolve([
