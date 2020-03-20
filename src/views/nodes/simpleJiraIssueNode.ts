@@ -7,7 +7,7 @@ export class SimpleJiraIssueNode extends IssueNode {
     private command: Command | undefined;
 
     constructor(private text: string, command?: Command) {
-        super(createEmptyMinimalIssue(emptySiteInfo));
+        super(createEmptyMinimalIssue(emptySiteInfo), undefined);
         this.command = command;
     }
 

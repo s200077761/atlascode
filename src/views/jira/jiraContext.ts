@@ -86,13 +86,17 @@ export class JiraContext extends Disposable {
     }
 
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
-        if (e.product.key === ProductJira.key) {
+        if (e.product.key === ProductJira.key && e.newSites) {
             if (e.newSites) {
                 Container.jqlManager.initializeJQL(e.newSites);
             }
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
+            if (isLoggedIn && !!this._explorer?.getDataProvider()) {
+                const firstJQLResult = await (this._explorer.getDataProvider() as CustomJQLRoot).getFirstJQLResult();
+                this._explorer.reveal(firstJQLResult!, { focus: true });
+            }
         }
     }
 

@@ -1,11 +1,14 @@
-import { Disposable, ConfigurationChangeEvent } from 'vscode';
-import { Container } from '../container';
-import { configuration } from '../config/configuration';
-import { BitbucketContext } from '../bitbucket/bbContext';
+import { SitesAvailableUpdateEvent } from 'src/siteManager';
+import { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
-import { RefreshTimer } from './RefreshTimer';
-import { Explorer, BaseTreeDataProvider } from './Explorer';
+import { BitbucketContext } from '../bitbucket/bbContext';
+import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey } from '../constants';
+import { Container } from '../container';
+import { BaseTreeDataProvider, Explorer } from './Explorer';
+import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
+import { PullRequestNodeDataProvider } from './pullRequestNodeDataProvider';
+import { RefreshTimer } from './RefreshTimer';
 
 export abstract class BitbucketExplorer extends Explorer implements Disposable {
     private _disposable: Disposable;
@@ -25,8 +28,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             this.ctx.onDidChangeBitbucketContext(() => {
                 this.onBitbucketContextChanged();
             }),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             this._refreshTimer
         );
+
         this._onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
@@ -56,8 +61,8 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             return;
         }
 
-        if (this.treeDataProvder) {
-            this.treeDataProvder.refresh();
+        if (this.treeDataProvider) {
+            this.treeDataProvider.refresh();
         }
         if (this.monitor && configuration.get<boolean>(this.bitbucketEnabledConfiguration())) {
             this.monitor.checkForNewActivity();
@@ -74,13 +79,13 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         const initializing = configuration.initializing(e);
 
         if (initializing || configuration.changed(e, this.explorerEnabledConfiguration())) {
-            if (this.treeDataProvder) {
-                this.treeDataProvder.dispose();
+            if (this.treeDataProvider) {
+                this.treeDataProvider.dispose();
             }
             if (!configuration.get<boolean>(this.explorerEnabledConfiguration())) {
-                this.treeDataProvder = undefined;
+                this.treeDataProvider = undefined;
             } else {
-                this.treeDataProvder = this.newTreeDataProvider();
+                this.treeDataProvider = this.newTreeDataProvider();
             }
             this.newTreeView();
         }
@@ -94,6 +99,45 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         }
 
         this.onConfigurationChanged(e);
+    }
+
+    async attemptNodeExpansionNTimes(remainingAttempts: number, delay: number) {
+        const dataProvider = this.getDataProvider();
+        if (remainingAttempts === 0) {
+            if (dataProvider) {
+                const forceFocusedNode = await (dataProvider as PullRequestNodeDataProvider).getFirstPullRequestNode(
+                    true
+                );
+                this.reveal(forceFocusedNode!, { focus: true });
+            }
+        }
+
+        setTimeout(async () => {
+            let prNode: PullRequestTitlesNode | undefined;
+            if (dataProvider) {
+                prNode = (await (dataProvider as PullRequestNodeDataProvider).getFirstPullRequestNode(
+                    false
+                )) as PullRequestTitlesNode;
+            }
+            if (prNode) {
+                this.reveal(prNode, { focus: true, expand: true });
+                const detailsNode: DescriptionNode = await (dataProvider as PullRequestNodeDataProvider).getDetailsNode(
+                    prNode
+                );
+                this.reveal(detailsNode, { focus: true });
+            } else {
+                await this.attemptNodeExpansionNTimes(remainingAttempts - 1, delay);
+            }
+        }, delay);
+    }
+
+    async onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        if (e.product.key === ProductBitbucket.key && e.newSites) {
+            //We attempt to expand the node 3 times with 1000ms delays in between. This is because after sites change, the PR explorer wipes its nodes and replaces them with simple nodes.
+            //Only after it fetches data do those get replaced with useful nodes, but as of right now there doesn't appear to be a good way of detecting when new data is fetched, so
+            //we make a few attempts at expanding the node in hopes that it will have been fetched by that time.
+            this.attemptNodeExpansionNTimes(3, 1000);
+        }
     }
 
     updateMonitor() {

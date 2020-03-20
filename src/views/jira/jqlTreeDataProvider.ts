@@ -11,8 +11,8 @@ import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 
-export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
-    protected _disposables: Disposable[] = [];
+export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implements AbstractBaseNode {
+    public disposables: Disposable[] = [];
 
     protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
     private _jqlEntry: JQLEntry | undefined;
@@ -57,11 +57,11 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     dispose() {
-        this._disposables.forEach(d => {
+        this.disposables.forEach(d => {
             d.dispose();
         });
 
-        this._disposables = [];
+        this.disposables = [];
     }
 
     async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
@@ -123,9 +123,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }, []);
     }
 
-    getTreeItem(node: IssueNode): TreeItem {
-        return node.getTreeItem();
-    }
+    abstract getTreeItem(): TreeItem;
 
     private async constructIssueTree(
         jqlIssues: MinimalIssue<DetailedSiteInfo>[]
@@ -195,9 +193,13 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
     private nodesForIssues(): IssueNode[] {
         if (this._issues && this._issues.length > 0) {
-            return this._issues.map(issue => new IssueNode(issue));
+            return this._issues.map(issue => new IssueNode(issue, this));
         } else {
             return [new SimpleJiraIssueNode(this._emptyState)];
         }
+    }
+
+    getParent() {
+        return undefined;
     }
 }

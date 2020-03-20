@@ -14,7 +14,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
 
     constructor(private _id: string, dataProvider: CustomJQLRoot) {
         super(() => this.dispose());
-        this.treeDataProvder = dataProvider;
+        this.treeDataProvider = dataProvider;
         this.newTreeView();
     }
 
@@ -27,8 +27,8 @@ export class JiraExplorer extends Explorer implements Refreshable {
     }
 
     refresh() {
-        if (this.treeDataProvder) {
-            this.treeDataProvder.refresh();
+        if (this.treeDataProvider) {
+            this.treeDataProvider.refresh();
         }
     }
 
@@ -43,11 +43,11 @@ export class JiraExplorer extends Explorer implements Refreshable {
     ): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
         let dp = jqlRoot;
         if (dp === undefined) {
-            dp = this.treeDataProvder as CustomJQLRoot;
+            dp = this.treeDataProvider as CustomJQLRoot;
         }
 
         let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
-        if (this.treeDataProvder) {
+        if (this.treeDataProvider) {
             let dpchildren = [];
 
             if (dp instanceof CustomJQLTree) {

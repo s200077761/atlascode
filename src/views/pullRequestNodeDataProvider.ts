@@ -12,6 +12,7 @@ import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 import { SimpleNode } from './nodes/simpleNode';
 import { CreatePullRequestNode, PullRequestHeaderNode } from './pullrequest/headerNode';
+import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
@@ -137,6 +138,39 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 this._onDidChangeTreeData.fire(foundItem);
             }
         });
+    }
+
+    async getFirstPullRequestNode(forceFocus: boolean): Promise<PullRequestTitlesNode | SimpleNode | undefined> {
+        const children = await this.getChildren(undefined);
+
+        //The 3rd child is the first repo node...
+
+        let repoNode: AbstractBaseNode = new SimpleNode('');
+        for (let node of children) {
+            repoNode = node;
+            if (node instanceof RepositoriesNode) {
+                break;
+            }
+        }
+        if (repoNode instanceof RepositoriesNode) {
+            const prTitlesNodes = await repoNode.getChildren();
+            if (prTitlesNodes) {
+                return prTitlesNodes[0] as PullRequestTitlesNode;
+            } else if (forceFocus) {
+                return children[0] as SimpleNode;
+            } else {
+                return undefined;
+            }
+        } else if (forceFocus) {
+            return children[0] as SimpleNode;
+        } else {
+            return undefined;
+        }
+    }
+
+    async getDetailsNode(prTitlesNode: PullRequestTitlesNode): Promise<DescriptionNode> {
+        const children = await prTitlesNode.getChildren();
+        return children[0] as DescriptionNode;
     }
 
     addItems(prs: PaginatedPullRequests): void {
