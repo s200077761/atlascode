@@ -346,20 +346,16 @@ export class DescriptionNode extends AbstractBaseNode {
         super(parent);
     }
 
-    getCommand(): vscode.Command {
-        return {
-            command: Commands.BitbucketShowPullRequestDetails,
-            title: 'Open pull request details',
-            arguments: [this.pr]
-        };
-    }
-
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem('Details', vscode.TreeItemCollapsibleState.None);
         item.tooltip = 'Open pull request details';
         item.iconPath = Resources.icons.get('detail');
 
-        item.command = this.getCommand();
+        item.command = {
+            command: Commands.BitbucketShowPullRequestDetails,
+            title: 'Open pull request details',
+            arguments: [this.pr]
+        };
 
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);

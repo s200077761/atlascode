@@ -101,11 +101,15 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     async getChildren(element: IssueNode | undefined) {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return Promise.resolve([
-                new SimpleJiraIssueNode('Please login to Jira', {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Jira',
-                    arguments: [ProductJira]
-                })
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira]
+                    },
+                    undefined
+                )
             ]);
         }
 

@@ -1,7 +1,6 @@
-import { commands, Event, EventEmitter, window } from 'vscode';
+import { Event, EventEmitter, window } from 'vscode';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
-import { Commands } from '../commands';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { SiteManager } from '../siteManager';
@@ -19,21 +18,11 @@ import {
     ProductJira,
     SiteInfo
 } from './authInfo';
+import { displayAuthNotification, OnboardingNotificationPressedEvent } from './authNotification';
 import { CredentialManager } from './authStore';
 import { OAuthDancer } from './oauthDancer';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
-
-export enum onboardingNotificationActions {
-    CREATEISSUE,
-    OPENISSUE,
-    CREATEPULLREQUEST,
-    VIEWPULLREQUEST
-}
-
-export type OnboardingNotificationPressedEvent = {
-    action: onboardingNotificationActions;
-};
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -76,7 +65,7 @@ export class LoginManager {
                 });
             });
 
-            this.displayAuthNotification(site);
+            displayAuthNotification(site, this._onboardingAuthenticatedNotificationPressed);
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -89,67 +78,6 @@ export class LoginManager {
 
     public get onWasOnboardingNotificationPressed(): Event<OnboardingNotificationPressedEvent> {
         return this._onboardingAuthenticatedNotificationPressed.event;
-    }
-
-    private displayAuthNotification(site: SiteInfo) {
-        if (site.product.key === ProductJira.key) {
-            window
-                .showInformationMessage(
-                    `You are now authenticated with ${site.product.name}.`,
-                    'Create Issue',
-                    'View open Issues'
-                    /* 'Show me more!' */
-                )
-                .then(selection => {
-                    if (selection) {
-                        if (selection === 'Create Issue') {
-                            this._onboardingAuthenticatedNotificationPressed.fire({
-                                action: onboardingNotificationActions.CREATEISSUE
-                            });
-                            commands.executeCommand(Commands.CreateIssue, undefined, 'auth notification');
-                        } else if (selection === 'View open Issues') {
-                            this._onboardingAuthenticatedNotificationPressed.fire({
-                                action: onboardingNotificationActions.OPENISSUE
-                            });
-
-                            console.log('View issues pressed');
-                        } /* else if (selection === 'Show me more!') {
-                            //Focus checklist explorer
-                            //Open checklist page
-                            //TODO: Open Jira features page and focus checklist explorer
-                            console.log('What else can I do pressed');
-                        } */
-                    }
-                });
-        } else if (site.product.key === ProductBitbucket.key) {
-            window
-                .showInformationMessage(
-                    `You are now authenticated with ${site.product.name}.`,
-                    'Create Pull Request',
-                    'View Pull Requests'
-                    /* 'Show me more!' */
-                )
-                .then(selection => {
-                    if (selection) {
-                        if (selection === 'Create Pull Request') {
-                            this._onboardingAuthenticatedNotificationPressed.fire({
-                                action: onboardingNotificationActions.CREATEPULLREQUEST
-                            });
-                            commands.executeCommand(Commands.CreatePullRequest);
-                        } else if (selection === 'View Pull Requests') {
-                            this._onboardingAuthenticatedNotificationPressed.fire({
-                                action: onboardingNotificationActions.VIEWPULLREQUEST
-                            });
-                            console.log('View issues pressed');
-                        } /* else if (selection === 'Show me more!') {
-                            //Focus checklist explorer
-                            //Open checklist page
-                            //TODO: Open Bitbucket features page and focus checklist explorer
-                            console.log('What else can I do pressed');
-                        } */
-                    }
-                });
-        }
     }
 
     private async getOAuthSiteDetails(
@@ -224,7 +152,7 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                this.displayAuthNotification(site);
+                displayAuthNotification(site, this._onboardingAuthenticatedNotificationPressed);
                 authenticatedEvent(siteDetails).then(e => {
                     this._analyticsClient.sendTrackEvent(e);
                 });

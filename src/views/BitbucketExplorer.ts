@@ -1,6 +1,6 @@
 import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
-import { onboardingNotificationActions, OnboardingNotificationPressedEvent } from '../atlclients/loginManager';
+import { onboardingNotificationActions, OnboardingNotificationPressedEvent } from '../atlclients/authNotification';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
@@ -124,8 +124,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
                 );
                 this.reveal(detailsNode, { focus: true });
                 if (openNode) {
-                    const commandObj = detailsNode.getCommand();
-                    vscode.commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
+                    const commandObj = detailsNode.getTreeItem().command;
+                    if (commandObj) {
+                        vscode.commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
+                    }
                 }
             } else {
                 await this.attemptDetailsNodeExpansionNTimes(remainingAttempts - 1, delay, openNode);

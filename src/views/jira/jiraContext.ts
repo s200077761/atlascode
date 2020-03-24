@@ -1,17 +1,15 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { onboardingNotificationActions, OnboardingNotificationPressedEvent } from '../../atlclients/loginManager';
+import { OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, CustomJQLTreeId, setCommandContext } from '../../constants';
 import { Container } from '../../container';
 import { NewIssueMonitor } from '../../jira/newIssueMonitor';
 import { SitesAvailableUpdateEvent } from '../../siteManager';
-import { IssueNode } from '../nodes/issueNode';
 import { RefreshTimer } from '../RefreshTimer';
 import { CustomJQLRoot } from './customJqlRoot';
-import { CreateJiraIssueNode } from './headerNode';
 import { JiraExplorer } from './jiraExplorer';
 
 export class JiraContext extends Disposable {
@@ -67,6 +65,12 @@ export class JiraContext extends Disposable {
         }
     }
 
+    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+        if (this._explorer instanceof JiraExplorer) {
+            this._explorer.onboardingNotificationWasPressed(e);
+        }
+    }
+
     dispose() {
         this._disposable.dispose();
         if (this._explorer) {
@@ -97,28 +101,6 @@ export class JiraContext extends Disposable {
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
-        }
-    }
-
-    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
-        if (this._explorer) {
-            const dataProvider = this._explorer.getDataProvider();
-            if (dataProvider instanceof CustomJQLRoot) {
-                if (e.action === onboardingNotificationActions.OPENISSUE) {
-                    const firstJQLResult = await dataProvider.getFirstJQLResult();
-                    if (firstJQLResult instanceof IssueNode) {
-                        this._explorer.reveal(firstJQLResult, { focus: true });
-                        const commandObj = firstJQLResult.getCommand();
-                        commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
-                    }
-                } else if (e.action === onboardingNotificationActions.CREATEISSUE) {
-                    const createIssueNode = dataProvider.getCreateIssueNode();
-                    if (createIssueNode instanceof CreateJiraIssueNode) {
-                        this._explorer.reveal(createIssueNode, { focus: true });
-                        commands.executeCommand(Commands.CreateIssue, undefined, 'HintNotification');
-                    }
-                }
-            }
         }
     }
 
