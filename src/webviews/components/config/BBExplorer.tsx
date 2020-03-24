@@ -137,7 +137,7 @@ export default class BitbucketExplorer extends React.Component<
                                     label="Nest modified files by folder"
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isDisabled={!this.props.config.bitbucket.explorer.enabled}
-                                    isChecked={this.props.config.bitbucket.explorer.nestFiles}
+                                    isChecked={this.props.config.bitbucket.explorer.nestFilesEnabled}
                                 />
                             );
                         }}

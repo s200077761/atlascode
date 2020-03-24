@@ -7,11 +7,11 @@ import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../colors';
 
-interface LinkedIssuesProps {
+type LinkedIssuesProps = {
     issuelinks: MinimalIssueLink<DetailedSiteInfo>[];
     onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     onDelete: (issueLink: any) => void;
-}
+};
 
 type ItemData = {
     linkDescription: string;

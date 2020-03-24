@@ -14,7 +14,7 @@ import { pmfClosed, pmfSnoozed, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
-import { submitPMF } from '../pmf/pmfSubmitter';
+import { submitLegacyJSDPMF } from '../pmf/pmfJSDSubmitter';
 import { iconSet, Resources } from '../resources';
 import { OnlineInfoEvent } from '../util/online';
 import { UIWebsocket } from '../ws';
@@ -187,7 +187,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
                 case 'pmfSubmit': {
                     if (isPMFSubmitAction(a)) {
-                        submitPMF(a.pmfData);
+                        submitLegacyJSDPMF(a.pmfData);
                     }
                     Container.pmfStats.touchSurveyed();
                     return true;

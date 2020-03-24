@@ -1,10 +1,10 @@
-import { truncate } from 'lodash';
+import truncate from 'lodash.truncate';
 import { version, window } from 'vscode';
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { FeedbackData, FeedbackType } from '../ipc/configActions';
 import { FeedbackUser } from '../ipc/configMessaging';
-import { getAxiosInstance } from '../jira/jira-client/providers';
+import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 
 const feedbackTypeIds = {
     [FeedbackType.Bug]: '10105',
@@ -122,7 +122,8 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            data: JSON.stringify(payload)
+            data: JSON.stringify(payload),
+            ...getAgent()
         }
     );
 

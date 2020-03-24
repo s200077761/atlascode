@@ -1,5 +1,5 @@
 import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 import { AxiosResponse } from 'axios';
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
 import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';

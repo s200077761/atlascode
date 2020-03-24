@@ -1,10 +1,10 @@
-import * as React from 'react';
-import SectionMessage from '@atlaskit/section-message';
-import { PMFData } from '../../ipc/messaging';
 import Button, { ButtonGroup } from '@atlaskit/button';
+import Form, { Field, FormFooter } from '@atlaskit/form';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
-import Form, { FormFooter, Field } from '@atlaskit/form';
 import { RadioGroup } from '@atlaskit/radio';
+import SectionMessage from '@atlaskit/section-message';
+import * as React from 'react';
+import { LegacyPMFData } from '../../ipc/messaging';
 import * as FieldValidators from './fieldValidators';
 
 const q1 = { id: 'q1', question: 'How would you feel if you could no longer use this extension?' };
@@ -21,7 +21,7 @@ export default class PMFBBanner extends React.Component<
         onPMFOpen: () => void;
         onPMFLater: () => void;
         onPMFNever: () => void;
-        onPMFSubmit: (data: PMFData) => void;
+        onPMFSubmit: (data: LegacyPMFData) => void;
     },
     { isOpen: boolean; q1Value: string | undefined }
 > {
@@ -45,7 +45,7 @@ export default class PMFBBanner extends React.Component<
         this.setState({ isOpen: false });
     };
 
-    handleFeedback = (formData: PMFData) => {
+    handleFeedback = (formData: LegacyPMFData) => {
         this.props.onPMFSubmit(formData);
         this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });

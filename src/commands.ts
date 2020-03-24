@@ -1,8 +1,7 @@
-import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models/entities';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { commands, env, ExtensionContext, Uri } from 'vscode';
 import {
     cloneRepositoryButtonEvent,
-    logoutButtonEvent,
     openWorkbenchRepositoryButtonEvent,
     openWorkbenchWorkspaceButtonEvent,
     Registry,
@@ -17,8 +16,8 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
-import { SettingSource } from './config/model';
 import { Container } from './container';
+import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
 import { PipelineNode } from './views/pipelines/PipelinesTree';
@@ -87,29 +86,46 @@ export enum Commands {
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
         commands.registerCommand(Commands.ShowConfigPage, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.Default)
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth
+            })
         ),
         commands.registerCommand(Commands.ShowJiraAuth, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.JiraAuth)
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth
+            })
         ),
         commands.registerCommand(Commands.ShowBitbucketAuth, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.BBAuth)
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.Auth
+            })
         ),
-        commands.registerCommand(Commands.ShowJiraIssueSettings, (source?: string) => {
-            source = source ? source : 'JiraExplorerTopBar';
-            logoutButtonEvent(source).then((e: any) => {
-                Container.analyticsClient.sendUIEvent(e);
-            });
-            Container.configWebview.createOrShowConfig(SettingSource.JiraIssue);
-        }),
+        commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Issues
+            })
+        ),
         commands.registerCommand(Commands.ShowPullRequestSettings, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest)
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.PR
+            })
         ),
         commands.registerCommand(Commands.ShowPipelineSettings, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.BBPipeline)
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.Pipelines
+            })
         ),
         commands.registerCommand(Commands.ShowBitbucketIssueSettings, () =>
-            Container.configWebview.createOrShowConfig(SettingSource.BBIssue)
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Bitbucket,
+                subSection: ConfigSubSection.Issues
+            })
         ),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebview.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebview.createOrShow()),

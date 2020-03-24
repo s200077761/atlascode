@@ -56,10 +56,10 @@ export function isPMFSubmitAction(a: Action): a is PMFSubmitAction {
 }
 export interface PMFSubmitAction extends Action {
     action: 'pmfSubmit';
-    pmfData: PMFData;
+    pmfData: LegacyPMFData;
 }
 
-export interface PMFData {
+export interface LegacyPMFData {
     q1: string;
     q2: string;
     q3: string;

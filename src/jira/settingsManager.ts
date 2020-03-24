@@ -1,11 +1,9 @@
-import { EpicFieldInfo } from '@atlassianlabs/jira-pi-common-models';
-import { IssueLinkType } from '@atlassianlabs/jira-pi-common-models/entities';
+import { EpicFieldInfo, getEpicFieldInfo, IssueLinkType } from '@atlassianlabs/jira-pi-common-models';
 import { Fields, readField } from '@atlassianlabs/jira-pi-meta-models/jira-meta';
 import { Disposable } from 'vscode';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { Logger } from '../logger';
-import { epicsDisabled } from './jiraCommon';
 
 export const detailedIssueFields: string[] = [
     'summary',
@@ -40,7 +38,6 @@ export const minimalDefaultIssueFields: string[] = [
 ];
 
 export class JiraSettingsManager extends Disposable {
-    private _epicStore: Map<string, EpicFieldInfo> = new Map<string, EpicFieldInfo>();
     private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
 
@@ -72,10 +69,10 @@ export class JiraSettingsManager extends Disposable {
 
     public async getMinimalIssueFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
         let fields = Array.from(minimalDefaultIssueFields);
-        let epicFields = await this.getEpicFieldsForSite(site);
+        let epicInfo = await this.getEpicFieldsForSite(site);
 
-        if (epicFields.epicsEnabled) {
-            fields.push(epicFields.epicLink.id, epicFields.epicName.id);
+        if (epicInfo.epicsEnabled) {
+            fields.push(epicInfo.epicLink.id, epicInfo.epicName.id);
         }
 
         return fields;
@@ -83,64 +80,18 @@ export class JiraSettingsManager extends Disposable {
 
     public async getDetailedIssueFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
         let fields = Array.from(detailedIssueFields);
-        let epicFields = await this.getEpicFieldsForSite(site);
+        let epicInfo = await this.getEpicFieldsForSite(site);
 
-        if (epicFields.epicsEnabled) {
-            fields.push(epicFields.epicLink.id, epicFields.epicName.id);
+        if (epicInfo.epicsEnabled) {
+            fields.push(epicInfo.epicLink.id, epicInfo.epicName.id);
         }
 
         return fields;
     }
 
     public async getEpicFieldsForSite(site: DetailedSiteInfo): Promise<EpicFieldInfo> {
-        if (!this._epicStore.has(site.id)) {
-            let fields = await this.fetchEpicFieldsForSite(site);
-            this._epicStore.set(site.id, fields);
-        }
-
-        return this._epicStore.get(site.id)!;
-    }
-
-    private async fetchEpicFieldsForSite(site: DetailedSiteInfo): Promise<EpicFieldInfo> {
         let allFields: Fields = await this.getAllFieldsForSite(site);
-
-        let epicFields = epicsDisabled;
-
-        if (Object.keys(allFields).length > 0) {
-            let epicName = undefined;
-            let epicLink = undefined;
-
-            Object.values(allFields)
-                .filter(field => {
-                    if (
-                        field.schema &&
-                        field.schema.custom &&
-                        (field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label' ||
-                            field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link')
-                    ) {
-                        return field;
-                    }
-                    return undefined;
-                })
-                .forEach(field => {
-                    // cfid example: customfield_10013
-                    if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label') {
-                        epicName = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
-                    } else if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link') {
-                        epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
-                    }
-                });
-
-            if (epicName && epicLink) {
-                epicFields = {
-                    epicName: epicName,
-                    epicLink: epicLink,
-                    epicsEnabled: true
-                };
-            }
-        }
-
-        return epicFields;
+        return getEpicFieldInfo(allFields);
     }
 
     public async getAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {

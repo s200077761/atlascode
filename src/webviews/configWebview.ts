@@ -1,4 +1,4 @@
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 import * as vscode from 'vscode';
 import { commands, ConfigurationChangeEvent, ConfigurationTarget, env, Uri } from 'vscode';
 import {

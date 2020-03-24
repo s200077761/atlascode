@@ -1,4 +1,4 @@
-import { Disposable, env, ExtensionContext, Uri, UriHandler, window } from 'vscode';
+import { Disposable, env, ExtensionContext, Uri, UriHandler, version, window } from 'vscode';
 import { AnalyticsClient } from './analytics-node-client/src/index';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
@@ -8,13 +8,23 @@ import { configuration, IConfig } from './config/configuration';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
+import { ConfigAction } from './lib/ipc/fromUI/config';
+import { ConfigTarget } from './lib/ipc/models/config';
+import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { PmfStats } from './pmf/stats';
 import { SiteManager } from './siteManager';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
+import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { JiraContext } from './views/jira/jiraContext';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
+import { VSCAnalyticsApi } from './vscAnalyticsApi';
+import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
+import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
+import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { SingleWebview } from './webview/singleViewFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
@@ -27,9 +37,13 @@ import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 import { WelcomeWebview } from './webviews/welcomeWebview';
-import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
+const ConfigTargetKey = 'configurationTarget';
+
+const settingsUrl = version.endsWith('-insider')
+    ? 'vscode-insiders://atlassian.atlascode/openSettings'
+    : 'vscode://atlassian.atlascode/openSettings';
 
 export class AtlascodeUriHandler extends Disposable implements UriHandler {
     private disposables: Disposable;
@@ -64,6 +78,9 @@ export class Container {
             deviceId: env.machineId
         });
 
+        this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient);
+        this._commonMessageHandler = new VSCCommonMessageHandler(this._analyticsApi);
+
         this._context = context;
         this._version = version;
         context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
@@ -96,6 +113,18 @@ export class Container {
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jqlManager = new JQLManager()));
+
+        const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
+            context.extensionPath,
+            new VSCConfigWebviewControllerFactory(
+                new VSCConfigActionApi(this._analyticsApi),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                settingsUrl
+            )
+        );
+
+        context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
 
@@ -143,6 +172,14 @@ export class Container {
         return this._isDebugging;
     }
 
+    public static get configTarget(): ConfigTarget {
+        return this._context.globalState.get<ConfigTarget>(ConfigTargetKey, ConfigTarget.User);
+    }
+
+    public static set configTarget(target: ConfigTarget) {
+        this._context.globalState.update(ConfigTargetKey, target);
+    }
+
     private static _uriHandler: UriHandler;
     static get uriHandler() {
         return this._uriHandler;
@@ -176,6 +213,11 @@ export class Container {
     private static _configWebview: ConfigWebview;
     static get configWebview() {
         return this._configWebview;
+    }
+
+    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
+    static get settingsWebviewFactory() {
+        return this._settingsWebviewFactory;
     }
 
     private static _welcomeWebview: WelcomeWebview;
@@ -291,6 +333,16 @@ export class Container {
     private static _analyticsClient: AnalyticsClient;
     static get analyticsClient() {
         return this._analyticsClient;
+    }
+
+    private static _analyticsApi: VSCAnalyticsApi;
+    static get analyticsApi() {
+        return this._analyticsApi;
+    }
+
+    private static _commonMessageHandler: CommonActionMessageHandler;
+    static get commonMessageHandler() {
+        return this._commonMessageHandler;
     }
 
     private static _pmfStats: PmfStats;

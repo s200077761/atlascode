@@ -1,4 +1,4 @@
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 import axios, { AxiosInstance } from 'axios';
 import EventEmitter from 'eventemitter3';
 import * as express from 'express';
@@ -15,6 +15,7 @@ import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { Resources } from '../resources';
 import { ConnectionTimeout, Time } from '../util/time';
+import { settingsUrl } from '../webviews/configWebview';
 import {
     AccessibleResource,
     emptyUserInfo,
@@ -27,7 +28,6 @@ import {
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-import { settingsUrl } from '../webviews/configWebview';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;

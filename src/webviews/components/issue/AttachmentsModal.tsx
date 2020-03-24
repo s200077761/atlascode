@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
-import { AttachmentForm } from './AttachmentForm';
 import Button, { ButtonGroup } from '@atlaskit/button';
-import { FileWithPath } from 'file-selector';
-interface AttachmentsModalProps {
+import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
+import React, { useState } from 'react';
+import { FileWithPath } from 'react-dropzone';
+import { AttachmentForm } from './AttachmentForm';
+type AttachmentsModalProps = {
     isOpen: boolean;
     onSave(files: FileWithPath[]): void;
     onCancel(): void;
-}
+};
 
 const initialState: File[] = [];
 

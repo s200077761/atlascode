@@ -6,21 +6,26 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
-
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+const smp = new SpeedMeasurePlugin();
 
-module.exports = {
+module.exports = smp.wrap({
     mode: 'development',
-    entry: resolveApp('./src/webviews/components/index.tsx'),
+    entry: {
+        main: resolveApp('./src/webviews/components/index.tsx'),
+        mui: resolveApp('./src/react/index.tsx')
+    },
     devtool: 'cheap-module-source-map',
     output: {
         pathinfo: true,
         path: path.resolve(__dirname, 'build'),
         chunkFilename: 'static/js/[name].chunk.js',
-        filename: 'static/js/bundle.js',
+        filename: 'static/js/[name].js',
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
     },
+    externals: ['utf-8-validate', 'bufferutil'],
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
@@ -34,11 +39,9 @@ module.exports = {
         new webpack.IgnorePlugin(/iconv-loader\.js/),
         new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
         new ForkTsCheckerWebpackPlugin({
-            watch: resolveApp('src'),
             tsconfig: resolveApp('tsconfig.json'),
             eslint: true
-        }),
-        new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false })
+        })
     ],
     module: {
         rules: [
@@ -71,4 +74,4 @@ module.exports = {
             }
         ]
     }
-};
+});

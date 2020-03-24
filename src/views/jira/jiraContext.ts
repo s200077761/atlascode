@@ -1,4 +1,4 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -60,6 +60,7 @@ export class JiraContext extends Disposable {
         if (initializing) {
             const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
+            //this._newIssueMonitor.setProject(project);
         }
     }
 

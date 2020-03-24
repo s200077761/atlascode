@@ -6,7 +6,7 @@ import {
     SnippetString,
     TextDocument
 } from 'vscode';
-import { getAxiosInstance } from '../../jira/jira-client/providers';
+import { getAgent, getAxiosInstance } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
 
 const BB_PIPES_URL =
@@ -108,7 +108,8 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            ...getAgent()
         })
             .then(res => res.data)
             .then((res: PipeMeta[]) => {

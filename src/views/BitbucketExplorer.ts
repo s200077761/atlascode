@@ -70,7 +70,6 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     dispose() {
-        console.log('bitbucket explorer disposed');
         super.dispose();
         this._disposable.dispose();
     }

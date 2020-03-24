@@ -439,7 +439,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             if (this.readyForData) {
                 resolve();
             } else {
-                setTimeout(_ => checker(resolve), 100);
+                setTimeout(() => checker(resolve), 100);
             }
         };
 

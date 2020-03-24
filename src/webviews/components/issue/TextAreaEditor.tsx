@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
 
-interface Props {
+type Props = {
     value: string;
     disabled: boolean;
     placeholder?: string;
     fetchUsers: (input: string) => Promise<{ displayName: string; mention: string; avatarUrl?: string }[]>;
     onChange: (input: string) => void;
-}
+};
 
 export const TextAreaEditor: React.FC<Props> = ({ value, disabled, placeholder, fetchUsers, onChange }: Props) => {
     const inputTextAreaRef = useRef<HTMLTextAreaElement>(null);

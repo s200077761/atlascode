@@ -1,4 +1,4 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { BaseTreeDataProvider, Explorer } from '../Explorer';

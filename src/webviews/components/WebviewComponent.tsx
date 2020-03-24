@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Action, PMFData } from '../../ipc/messaging';
-import { darken, lighten, opacity } from './colors';
+import { Action, LegacyPMFData } from '../../ipc/messaging';
 import { OnMessageEventPromise } from '../../util/reactpromise';
+import { darken, lighten, opacity } from './colors';
 
 interface VsCodeApi {
     postMessage(msg: {}): void;
@@ -86,7 +86,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     protected onPMFNever() {
         this._api.postMessage({ action: 'pmfNever' });
     }
-    protected onPMFSubmit(data: PMFData) {
+    protected onPMFSubmit(data: LegacyPMFData) {
         this._api.postMessage({ action: 'pmfSubmit', pmfData: data });
     }
     protected onPMFOpen() {
