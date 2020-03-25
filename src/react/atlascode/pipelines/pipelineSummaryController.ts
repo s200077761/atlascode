@@ -125,7 +125,7 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
     const fetchLogs = useCallback(
         (stepUuid: string, logReference: PipelineLogReference) => {
             postMessage({
-                type: PipelineSummaryActionType.FetchLogRange,
+                type: PipelineSummaryActionType.FetchLogRangeRequest,
                 uuid: stepUuid,
                 reference: logReference,
             });

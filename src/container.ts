@@ -158,6 +158,13 @@ export class Container {
 
         context.subscriptions.push((this._pipelinesSummaryWebview = pipelinesV2Webview));
 
+        const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
+            context.extensionPath,
+            new PipelineSummaryWebviewControllerFactory(new PipelineSummaryActionImplementation())
+        );
+
+        context.subscriptions.push((this._pipelinesSummaryWebview = pipelinesV2Webview));
+
         this._pmfStats = new PmfStats(context);
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
