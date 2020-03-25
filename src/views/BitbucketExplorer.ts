@@ -1,6 +1,6 @@
 import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
-import { onboardingNotificationActions, OnboardingNotificationPressedEvent } from '../atlclients/authNotification';
+import { OnboardingNotificationActions, OnboardingNotificationPressedEvent } from '../atlclients/authNotification';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
@@ -30,7 +30,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             this.ctx.onDidChangeBitbucketContext(() => {
                 this.onBitbucketContextChanged();
             }),
-            Container.loginManager.onWasOnboardingNotificationPressed(this.onboardingNotificationWasPressed, this),
+            Container.loginManager.onLoginNotificationActionEvent(this.onboardingNotificationWasPressed, this),
             this._refreshTimer
         );
 
@@ -72,7 +72,6 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     dispose() {
-        console.log('bitbucket explorer disposed');
         super.dispose();
         this._disposable.dispose();
     }
@@ -168,9 +167,9 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         //We attempt to expand the node 3 times with 1000ms delays in between. This is because after sites change, the PR explorer wipes its nodes and replaces them with simple nodes.
         //Only after it fetches data do those get replaced with useful nodes, but as of right now there doesn't appear to be a good way of detecting when new data is fetched, so
         //we make a few attempts at expanding the node in hopes that it will have been fetched by that time.
-        if (e.action === onboardingNotificationActions.CREATEPULLREQUEST) {
+        if (e.action === OnboardingNotificationActions.CREATEPULLREQUEST) {
             this.attemptCreatePRNodeExpansionNTimes(3, 1000, true);
-        } else if (e.action === onboardingNotificationActions.VIEWPULLREQUEST) {
+        } else if (e.action === OnboardingNotificationActions.VIEWPULLREQUEST) {
             this.attemptDetailsNodeExpansionNTimes(3, 1000, true);
         }
     }

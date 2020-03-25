@@ -52,7 +52,7 @@ module.exports = {
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
-        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })]
+        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })]
     },
     plugins: [
         new MiniCssExtractPlugin({
@@ -65,7 +65,7 @@ module.exports = {
         new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
         new ForkTsCheckerWebpackPlugin({
             watch: resolveApp('src'),
-            tsconfig: resolveApp('tsconfig.json'),
+            tsconfig: resolveApp('tsconfig.notest.json'),
             eslint: true
         }),
         new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),

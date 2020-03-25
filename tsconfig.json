@@ -5,6 +5,7 @@
         "module": "esnext",
         "target": "es6",
         "lib": ["esnext", "dom"],
+        "resolveJsonModule": true,
         "skipLibCheck": true,
         "sourceMap": true,
         "allowJs": true,
@@ -19,10 +20,9 @@
         "strictNullChecks": true,
         "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": true,
-        "jsxFactory": "React.createElement",
         "typeRoots": ["node_modules/@types", "src/typings/"]
     },
-    "include": ["**/src/**/*", "webpack.*.js"],
+    "include": ["**/src/**/*", "**/test/**/*", "webpack.*.js", "jest.config.js", "**/stories/**/*"],
     "exclude": [
         "out",
         "node_modules",
@@ -32,6 +32,7 @@
         "webpack",
         "jest",
         "src/setupTests.ts",
-        ".vscode-test"
+        ".vscode-test",
+        ".yalc"
     ]
 }

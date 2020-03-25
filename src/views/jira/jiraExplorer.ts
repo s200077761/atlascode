@@ -1,7 +1,7 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { onboardingNotificationActions, OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
+import { OnboardingNotificationActions, OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
 import { Commands } from '../../commands';
 import { BaseTreeDataProvider, Explorer } from '../Explorer';
 import { IssueNode } from '../nodes/issueNode';
@@ -84,7 +84,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
     async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
         const dataProvider = this.getDataProvider();
         if (dataProvider instanceof CustomJQLRoot) {
-            if (e.action === onboardingNotificationActions.VIEWISSUE) {
+            if (e.action === OnboardingNotificationActions.VIEWISSUE) {
                 const firstJQLResult = await dataProvider.getFirstJQLResult();
 
                 //If the JQL query returns nothing, firstJQLResult will be a SimpleJirIssueNode saying "No issue match this query"
@@ -97,7 +97,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
                         commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
                     }
                 }
-            } else if (e.action === onboardingNotificationActions.CREATEISSUE) {
+            } else if (e.action === OnboardingNotificationActions.CREATEISSUE) {
                 const createIssueNode = dataProvider.getCreateIssueNode();
                 if (createIssueNode instanceof CreateJiraIssueNode) {
                     this.reveal(createIssueNode, { focus: true });

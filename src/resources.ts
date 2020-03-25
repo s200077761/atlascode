@@ -123,6 +123,14 @@ export function registerResources(vscodeContext: ExtensionContext) {
         )
     );
     Resources.html.set(
+        'reactWebviewHtml',
+        Handlebars.compile(
+            fs
+                .readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactWebview.html')))
+                .toString()
+        )
+    );
+    Resources.html.set(
         'statusBarText',
         Handlebars.compile(
             fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'statusbar.html'))).toString()

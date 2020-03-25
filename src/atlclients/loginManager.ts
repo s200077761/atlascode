@@ -26,7 +26,7 @@ const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
-    private _onboardingAuthenticatedNotificationPressed = new EventEmitter<OnboardingNotificationPressedEvent>();
+    private _onLoginNotificationAction = new EventEmitter<OnboardingNotificationPressedEvent>();
 
     constructor(
         private _credentialManager: CredentialManager,
@@ -65,7 +65,7 @@ export class LoginManager {
                 });
             });
 
-            displayAuthNotification(site, this._onboardingAuthenticatedNotificationPressed);
+            displayAuthNotification(site, this._onLoginNotificationAction);
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -76,8 +76,8 @@ export class LoginManager {
         }
     }
 
-    public get onWasOnboardingNotificationPressed(): Event<OnboardingNotificationPressedEvent> {
-        return this._onboardingAuthenticatedNotificationPressed.event;
+    public get onLoginNotificationActionEvent(): Event<OnboardingNotificationPressedEvent> {
+        return this._onLoginNotificationAction.event;
     }
 
     private async getOAuthSiteDetails(
@@ -152,7 +152,7 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                displayAuthNotification(site, this._onboardingAuthenticatedNotificationPressed);
+                displayAuthNotification(site, this._onLoginNotificationAction);
                 authenticatedEvent(siteDetails).then(e => {
                     this._analyticsClient.sendTrackEvent(e);
                 });

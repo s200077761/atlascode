@@ -149,9 +149,8 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 return prTitlesNodes[0] as PullRequestTitlesNode;
             } else if (forceFocus) {
                 return children[0] as SimpleNode;
-            } else {
-                return undefined;
             }
+            return undefined;
         } else if (forceFocus) {
             return children[0] as SimpleNode;
         }

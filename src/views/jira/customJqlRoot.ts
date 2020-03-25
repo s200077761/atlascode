@@ -84,11 +84,9 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
         for (let child of children) {
             if (child instanceof CustomJQLTree) {
                 firstJQLTree = child;
+                const issueNodes = await firstJQLTree.getChildren();
+                return issueNodes[0];
             }
-        }
-        if (!!firstJQLTree) {
-            const issueNodes = await firstJQLTree.getChildren();
-            return issueNodes[0];
         }
         return undefined;
     }

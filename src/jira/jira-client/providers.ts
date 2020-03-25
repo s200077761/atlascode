@@ -1,5 +1,5 @@
 import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
-import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common/agent';
+import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common';
 import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
@@ -24,8 +24,7 @@ export function getAxiosInstance(): AxiosInstance {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',
             'Accept-Encoding': 'gzip, deflate'
-        },
-        ...getAgent()
+        }
     });
 
     if (Container.config.enableCurlLogging) {

@@ -2,7 +2,7 @@ import { commands, EventEmitter, window } from 'vscode';
 import { Commands } from '../commands';
 import { ProductBitbucket, ProductJira, SiteInfo } from './authInfo';
 
-export enum onboardingNotificationActions {
+export enum OnboardingNotificationActions {
     CREATEISSUE = 'Create an issue',
     VIEWISSUE = 'View an issue',
     CREATEPULLREQUEST = 'Create a pull request',
@@ -10,7 +10,7 @@ export enum onboardingNotificationActions {
 }
 
 export type OnboardingNotificationPressedEvent = {
-    action: onboardingNotificationActions;
+    action: OnboardingNotificationActions;
 };
 
 export function displayAuthNotification(site: SiteInfo, event: EventEmitter<OnboardingNotificationPressedEvent>) {
@@ -18,19 +18,19 @@ export function displayAuthNotification(site: SiteInfo, event: EventEmitter<Onbo
         window
             .showInformationMessage(
                 `You are now authenticated with ${site.product.name}.`,
-                onboardingNotificationActions.CREATEISSUE,
-                onboardingNotificationActions.VIEWISSUE
+                OnboardingNotificationActions.CREATEISSUE,
+                OnboardingNotificationActions.VIEWISSUE
             )
             .then(selection => {
                 if (selection) {
-                    if (selection === onboardingNotificationActions.CREATEISSUE) {
+                    if (selection === OnboardingNotificationActions.CREATEISSUE) {
                         event.fire({
-                            action: onboardingNotificationActions.CREATEISSUE
+                            action: OnboardingNotificationActions.CREATEISSUE
                         });
                         commands.executeCommand(Commands.CreateIssue, undefined, 'auth notification');
-                    } else if (selection === onboardingNotificationActions.VIEWISSUE) {
+                    } else if (selection === OnboardingNotificationActions.VIEWISSUE) {
                         event.fire({
-                            action: onboardingNotificationActions.VIEWISSUE
+                            action: OnboardingNotificationActions.VIEWISSUE
                         });
                     }
                 }
@@ -39,19 +39,19 @@ export function displayAuthNotification(site: SiteInfo, event: EventEmitter<Onbo
         window
             .showInformationMessage(
                 `You are now authenticated with ${site.product.name}.`,
-                onboardingNotificationActions.CREATEPULLREQUEST,
-                onboardingNotificationActions.VIEWPULLREQUEST
+                OnboardingNotificationActions.CREATEPULLREQUEST,
+                OnboardingNotificationActions.VIEWPULLREQUEST
             )
             .then(selection => {
                 if (selection) {
-                    if (selection === onboardingNotificationActions.CREATEPULLREQUEST) {
+                    if (selection === OnboardingNotificationActions.CREATEPULLREQUEST) {
                         event.fire({
-                            action: onboardingNotificationActions.CREATEPULLREQUEST
+                            action: OnboardingNotificationActions.CREATEPULLREQUEST
                         });
                         commands.executeCommand(Commands.CreatePullRequest);
-                    } else if (selection === onboardingNotificationActions.VIEWPULLREQUEST) {
+                    } else if (selection === OnboardingNotificationActions.VIEWPULLREQUEST) {
                         event.fire({
-                            action: onboardingNotificationActions.VIEWPULLREQUEST
+                            action: OnboardingNotificationActions.VIEWPULLREQUEST
                         });
                     }
                 }

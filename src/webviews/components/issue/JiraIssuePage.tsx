@@ -11,8 +11,7 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
-import { CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
-import { Comment as JiraComment } from '@atlassianlabs/jira-pi-common-models/entities';
+import { Comment as JiraComment, CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { distanceInWordsToNow } from 'date-fns';
 import * as React from 'react';
@@ -22,7 +21,7 @@ import Collapsible from 'react-collapsible';
 import uuid from 'uuid';
 import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
-import { PMFData } from '../../../ipc/messaging';
+import { LegacyPMFData } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
@@ -431,7 +430,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
                         onPMFLater={() => this.onPMFLater()}
                         onPMFNever={() => this.onPMFNever()}
-                        onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)}
+                        onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                     />
                 )}
                 <div className="ac-page-header">

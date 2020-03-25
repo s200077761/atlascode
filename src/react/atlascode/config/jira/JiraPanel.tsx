@@ -1,0 +1,96 @@
+import { Fade, Grid } from '@material-ui/core';
+import React from 'react';
+import { DetailedSiteInfo, ProductJira } from '../../../../atlclients/authInfo';
+import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
+import { CommonPanelProps } from '../../common/commonPanelProps';
+import { StatusBarPanel } from '../../common/StatusBarPanel';
+import { AuthPanel } from '../auth/AuthPanel';
+import { JiraExplorerPanel } from './subpanels/JiraExplorerPanel';
+import { JiraHoversPanel } from './subpanels/JiraHoversPanel';
+import { JiraTriggersPanel } from './subpanels/JiraTriggersPanel';
+
+type JiraPanelProps = CommonPanelProps & {
+    config: { [key: string]: any };
+    sites: DetailedSiteInfo[];
+    isRemote: boolean;
+    onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
+};
+
+export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
+    visible,
+    selectedSubSections,
+    onSubsectionChange,
+    config,
+    sites,
+    isRemote
+}) => {
+    return (
+        <>
+            <Fade in={visible}>
+                <div hidden={!visible || config['jira.enabled']}>enable jira features to see settings</div>
+            </Fade>
+
+            <Fade in={visible}>
+                <div hidden={!visible || !config['jira.enabled']} role="tabpanel">
+                    <Grid container spacing={3} direction="column">
+                        <Grid item>
+                            <AuthPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.Auth)}
+                                onSubsectionChange={onSubsectionChange}
+                                isRemote={isRemote}
+                                sites={sites}
+                                product={ProductJira}
+                                section={ConfigSection.Jira}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <JiraExplorerPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.Issues)}
+                                onSubsectionChange={onSubsectionChange}
+                                sites={sites}
+                                jqlList={config[`${ConfigSection.Jira}.jqlList`]}
+                                enabled={config[`${ConfigSection.Jira}.explorer.enabled`]}
+                                nestSubtasks={config[`${ConfigSection.Jira}.explorer.nestSubtasks`]}
+                                fetchAllQueryResults={config[`${ConfigSection.Jira}.explorer.fetchAllQueryResults`]}
+                                monitorEnabled={config[`${ConfigSection.Jira}.explorer.monitorEnabled`]}
+                                refreshInterval={config[`${ConfigSection.Jira}.explorer.refreshInterval`]}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <JiraHoversPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.Hovers)}
+                                onSubsectionChange={onSubsectionChange}
+                                enabled={config[`${ConfigSection.Jira}.hover.enabled`]}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <JiraTriggersPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.Triggers)}
+                                onSubsectionChange={onSubsectionChange}
+                                enabled={config[`${ConfigSection.Jira}.todoIssues.enabled`]}
+                                triggers={config[`${ConfigSection.Jira}.todoIssues.triggers`]}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <StatusBarPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.Status)}
+                                onSubsectionChange={onSubsectionChange}
+                                configSection={ConfigSection.Jira}
+                                productName={ProductJira.name}
+                                enabled={config[`${ConfigSection.Jira}.statusbar.enabled`]}
+                                showProduct={config[`${ConfigSection.Jira}.statusbar.showProduct`]}
+                                showUser={config[`${ConfigSection.Jira}.statusbar.showUser`]}
+                                showLogin={config[`${ConfigSection.Jira}.statusbar.showLogin`]}
+                            />
+                        </Grid>
+                    </Grid>
+                </div>
+            </Fade>
+        </>
+    );
+};

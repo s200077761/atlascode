@@ -1,6 +1,6 @@
+import SectionMessage from '@atlaskit/section-message';
 import React from 'react';
 import { Branch } from '../../../typings/git';
-import SectionMessage from '@atlaskit/section-message';
 
 type BranchWarningProps = {
     sourceBranch: Branch | undefined;

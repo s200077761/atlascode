@@ -5,12 +5,12 @@ import Panel from '@atlaskit/panel';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models/entities';
+import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import * as React from 'react';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
-import { PMFData } from '../../../ipc/messaging';
+import { LegacyPMFData } from '../../../ipc/messaging';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
 import { chain } from '../fieldValidators';
@@ -285,7 +285,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
                                     onPMFLater={() => this.onPMFLater()}
                                     onPMFNever={() => this.onPMFNever()}
-                                    onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)}
+                                    onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                                 />
                             )}
                             {this.state.isCreateBannerOpen && (

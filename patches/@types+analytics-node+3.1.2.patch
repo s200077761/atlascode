@@ -1,14 +1,12 @@
 diff --git a/node_modules/@types/analytics-node/index.d.ts b/node_modules/@types/analytics-node/index.d.ts
-index d46fc09..0ce77cf 100644
+index fba1ffc..5b2722b 100644
 --- a/node_modules/@types/analytics-node/index.d.ts
 +++ b/node_modules/@types/analytics-node/index.d.ts
-@@ -43,7 +43,8 @@ declare namespace AnalyticsNode {
-       flushAt?: number,
+@@ -44,6 +44,7 @@ declare namespace AnalyticsNode {
        flushInterval?: number,
        host?: string,
--      enable?: boolean
-+      enable?: boolean,
+       enable?: boolean,
 +      agent?: any,
+       timeout?: number | string,
      });
  
-     /* The identify method lets you tie a user to their actions and record

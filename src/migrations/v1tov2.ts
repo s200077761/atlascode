@@ -17,7 +17,7 @@ import { OAuthRefesher } from '../atlclients/oauthRefresher';
 import { configuration, JQLEntry, SiteJQLV1 } from '../config/configuration';
 import { JiraJQLListKey, OldJQLKey } from '../constants';
 import { Container } from '../container';
-import { getAxiosInstance } from '../jira/jira-client/providers';
+import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { SiteManager } from '../siteManager';
 import { keychain } from '../util/keychain';
@@ -282,7 +282,8 @@ export class V1toV2Migrator {
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`
-                }
+                },
+                ...getAgent()
             });
 
             if (product.key === ProductJira.key) {

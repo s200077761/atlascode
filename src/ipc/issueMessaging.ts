@@ -1,4 +1,4 @@
-import { createEmptyEditIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
+import { createEmptyEditIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client';
 import { emptyUser, isMinimalIssue, MinimalIssue, Project, User } from '@atlassianlabs/jira-pi-common-models';
 import {
     createEmptyIssueTypeUI,

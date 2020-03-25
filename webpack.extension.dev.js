@@ -2,9 +2,11 @@ const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+const smp = new SpeedMeasurePlugin();
 
 module.exports = [
     {
@@ -46,7 +48,7 @@ module.exports = [
             libraryTarget: 'commonjs',
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
         },
-        externals: ['vscode'],
+        externals: ['vscode', 'utf-8-validate', 'bufferutil'],
         plugins: [new webpack.IgnorePlugin(/iconv-loader\.js/), new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/])]
     },
     {
@@ -76,6 +78,6 @@ module.exports = [
             libraryTarget: 'commonjs',
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
         },
-        externals: ['vscode']
+        externals: ['vscode', 'utf-8-validate', 'bufferutil']
     }
 ];

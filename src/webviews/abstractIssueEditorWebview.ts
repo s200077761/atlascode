@@ -1,13 +1,13 @@
-import { isProject } from '@atlassianlabs/jira-pi-common-models/entities';
 import {
     isAutocompleteSuggestionsResult,
     isGroupPickerResult,
     isIssuePickerResult,
+    isProject,
     isProjectsResult,
     IssuePickerIssue,
     IssuePickerResult
-} from '@atlassianlabs/jira-pi-common-models/responses';
-import { ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
+} from '@atlassianlabs/jira-pi-common-models';
+import { ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { FetchQueryAction, isCreateSelectOption, isFetchQueryAndSite, isOpenJiraIssue } from '../ipc/issueActions';

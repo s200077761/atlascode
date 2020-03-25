@@ -31,6 +31,21 @@ module.exports = {
             'error',
             { devDependencies: ['**/webpack.*', '**/test/*', '**/*.test.js', '**/*.spec.js'] }
         ],
+        'no-restricted-imports': [
+            'error',
+            {
+                patterns: [
+                    '@atlassianlabs/guipi-core-components/*',
+                    '@atlassianlabs/guipi-core-controller/*',
+                    '@atlassianlabs/guipi-jira-components/*',
+                    '@atlassianlabs/jira-metaui-client/*',
+                    '@atlassianlabs/jira-metaui-transformer/*',
+                    '@atlassianlabs/jira-pi-client/*',
+                    '@atlassianlabs/jira-pi-common-models/*',
+                    '@atlassianlabs/pi-client-common/*'
+                ]
+            }
+        ],
         'brace-style': 'off',
         '@typescript-eslint/brace-style': [
             'error',

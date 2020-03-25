@@ -35,7 +35,7 @@ import {
 } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
+import { HostErrorMessage, LegacyPMFData } from '../../../ipc/messaging';
 import {
     AddReviewer,
     Checkout,
@@ -961,7 +961,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                     onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })}
                                     onPMFLater={() => this.onPMFLater()}
                                     onPMFNever={() => this.onPMFNever()}
-                                    onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)}
+                                    onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                                 />
                             )}
                             <PageHeader actions={actionsContent} breadcrumbs={breadcrumbs}>

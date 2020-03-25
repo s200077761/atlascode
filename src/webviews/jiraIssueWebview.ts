@@ -1,4 +1,4 @@
-import { EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
+import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
 import {
     Comment,
     createEmptyMinimalIssue,
@@ -10,7 +10,7 @@ import {
     readSearchResults,
     User
 } from '@atlassianlabs/jira-pi-common-models';
-import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
+import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import FormData from 'form-data';
 import * as fs from 'fs';
 import { commands, env } from 'vscode';
@@ -169,13 +169,12 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
             const site = this._issue.siteDetails;
             const client = await Container.clientManager.jiraClient(site);
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
-            const epicFieldInfo = this._editUIData.epicFieldInfo;
-
+            const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
             const res = await client.searchForIssuesUsingJqlGet(
-                `cf[${epicFieldInfo.epicLink.cfid}] = "${this._issue.key}" order by lastViewed DESC`,
+                `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
                 fields
             );
-            const searchResults = await readSearchResults(res, site, epicFieldInfo);
+            const searchResults = await readSearchResults(res, site, epicInfo);
             this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
         }
     }

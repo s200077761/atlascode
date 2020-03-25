@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
+import * as React from 'react';
+import { IConfig } from '../../../config/model';
 import { chain } from '../fieldValidators';
 import MultiOptionList from './MultiOptionList';
-import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 

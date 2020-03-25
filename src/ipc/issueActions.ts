@@ -8,7 +8,7 @@ import {
     Project,
     Transition,
     User
-} from '@atlassianlabs/jira-pi-common-models/entities';
+} from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { Branch } from '../typings/git';

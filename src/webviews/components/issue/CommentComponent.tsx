@@ -6,20 +6,20 @@ import {
     Comment as JiraComment,
     CommentVisibility,
     JsdInternalCommentVisibility
-} from '@atlassianlabs/jira-pi-common-models/entities';
+} from '@atlassianlabs/jira-pi-common-models';
 import { distanceInWordsToNow } from 'date-fns';
 import React, { useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { TextAreaEditor } from './TextAreaEditor';
 
-interface Props {
+type Props = {
     siteDetails: DetailedSiteInfo;
     comment: JiraComment;
     isServiceDeskProject: boolean;
     fetchUsers: (input: string) => Promise<any[]>;
     onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
     onDelete: (commentId: string) => void;
-}
+};
 
 export const CommentComponent: React.FC<Props> = ({
     siteDetails,

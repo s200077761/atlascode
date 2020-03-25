@@ -8,7 +8,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { isMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models/entities';
+import { isMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import path from 'path';
 import React from 'react';
 import uuid from 'uuid';
@@ -24,7 +24,7 @@ import {
 } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import { PMFData } from '../../../ipc/messaging';
+import { LegacyPMFData } from '../../../ipc/messaging';
 import {
     CreatePullRequest,
     FetchDefaultReviewers,
@@ -538,7 +538,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                 }
                                                 onPMFLater={() => this.onPMFLater()}
                                                 onPMFNever={() => this.onPMFNever()}
-                                                onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)}
+                                                onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                                             />
                                         )}
                                         <GridColumn medium={12}>

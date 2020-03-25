@@ -1,10 +1,10 @@
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import * as React from 'react';
-import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
 import differenceInWeeks from 'date-fns/difference_in_weeks';
+import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
 import format from 'date-fns/format';
+import * as React from 'react';
 import { Commit } from '../../../bitbucket/model';
 
 const style = { fontFamily: 'monospace' };

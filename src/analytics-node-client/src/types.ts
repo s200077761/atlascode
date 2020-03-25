@@ -5,10 +5,10 @@ export interface AnalyticsClientInit {
     datacenter?: any;
     version?: any;
     origin: any;
-    flushAt?: any;
-    flushInterval?: any;
-    baseUrl?: any;
-    deviceId?: any;
+    flushAt?: number;
+    flushInterval?: number;
+    baseUrl?: string;
+    deviceId?: string;
 }
 
 export interface BaseEvent {

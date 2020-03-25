@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 import { pmfSubmitted } from '../analytics';
 import { Container } from '../container';
-import { PMFData } from '../ipc/messaging';
-import { getAxiosInstance } from '../jira/jira-client/providers';
+import { LegacyPMFData } from '../ipc/messaging';
+import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 
 const devPMF = {
     collectorId: '235854834',
@@ -91,7 +91,7 @@ function newPMFPayload(
     };
 }
 
-export async function submitPMF(pmfData: PMFData): Promise<void> {
+export async function submitPMF(pmfData: LegacyPMFData): Promise<void> {
     let aaid = await getAAID();
     if (!aaid) {
         // if we don't have an actual aaid, we'll send the machineId.
@@ -151,7 +151,8 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${pmfIds.pmf}`
         },
-        data: JSON.stringify(payload)
+        data: JSON.stringify(payload),
+        ...getAgent()
     });
 
     pmfSubmitted(pmfData.q1).then(e => {

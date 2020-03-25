@@ -2,11 +2,12 @@ import FileIcon from '@atlaskit/icon/glyph/file';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import filesize from 'filesize';
 import React, { useContext, useEffect, useReducer } from 'react';
 import { FileWithPath, useDropzone } from 'react-dropzone';
 import { ResourceContext } from '../context';
+
 type ItemData = {
     file: FileWithPreview;
     delfunc: (file: any) => void;
@@ -54,12 +55,12 @@ type ActionType = {
     payload?: any;
 };
 
-interface AttachmentFormProps {
+type AttachmentFormProps = {
     isInline?: boolean;
     // TODO: remove field param when we clean up ui
     field?: FieldUI;
     onFilesChanged(files: FileWithPath[], field?: FieldUI): void;
-}
+};
 
 const initialState: FileWithPreview[] = [];
 
