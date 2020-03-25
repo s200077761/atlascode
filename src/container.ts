@@ -14,6 +14,7 @@ import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
+import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
@@ -21,6 +22,7 @@ import { SectionChangeMessage } from './lib/ipc/toUI/config';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
+import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
@@ -37,6 +39,8 @@ import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
+import { PipelineSummaryActionImplementation } from './webview/pipelines/pipelineSummaryActionImplementation';
+import { PipelineSummaryWebviewControllerFactory } from './webview/pipelines/pipelineSummaryWebviewControllerFactory';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
@@ -47,6 +51,7 @@ import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcome
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
+import { OnboardingWebview } from './webviews/Onboarding';
 import { PipelineViewManager } from './webviews/pipelineViewManager';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
@@ -146,6 +151,13 @@ export class Container {
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
+
+        const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
+            context.extensionPath,
+            new PipelineSummaryWebviewControllerFactory(new PipelineSummaryActionImplementation())
+        );
+
+        context.subscriptions.push((this._pipelinesSummaryWebview = pipelinesV2Webview));
 
         this._pmfStats = new PmfStats(context);
 
@@ -254,6 +266,11 @@ export class Container {
         return this._onboardingWebviewFactory;
     }
 
+    private static _pipelinesSummaryWebview: MultiWebview<Pipeline, PipelineSummaryAction>;
+    static get pipelinesSummaryWebview() {
+        return this._pipelinesSummaryWebview;
+    }
+
     private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
     static get welcomeWebviewFactory() {
         return this._welcomeWebviewFactory;
@@ -317,6 +334,11 @@ export class Container {
     private static _pipelineViewManager: PipelineViewManager;
     static get pipelineViewManager() {
         return this._pipelineViewManager;
+    }
+
+    private static _bitbucketIssueViewManager: BitbucketIssueViewManager;
+    static get bitbucketIssueViewManager() {
+        return this._bitbucketIssueViewManager;
     }
 
     private static _clientManager: ClientManager;

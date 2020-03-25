@@ -15,6 +15,7 @@ import {
     PipelineSelector,
     PipelineSelectorType,
     PipelineStep,
+    PipelineStepLogRanges,
     PipelineTarget,
     PipelineTargetType,
 } from './model';
@@ -48,15 +49,6 @@ export class PipelineApiImpl {
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pipelines/${uuid}/steps/`);
 
         return data.values!.map((s: any) => PipelineApiImpl.pipelineStepForPipelineStep(s));
-    }
-
-    async getStepLog(
-        site: BitbucketSite,
-        pipelineUuid: string,
-        stepUuid: string,
-        buildNumber: number
-    ): Promise<string[][]> {
-        return await this.getPipelineLog(site, pipelineUuid, stepUuid, buildNumber);
     }
 
     async getListForRemote(site: BitbucketSite, branchName: string): Promise<Pipeline[]> {
@@ -93,80 +85,54 @@ export class PipelineApiImpl {
         return cleanedPaginatedPipelines;
     }
 
-    async getPipelineLog(
+    async getPipelineLogRange(
         site: BitbucketSite,
         pipelineUuid: string,
         stepUuid: string,
-        buildNumber: number
-    ): Promise<string[][]> {
+        range: PipelineLogRange
+    ): Promise<string> {
         const { ownerSlug, repoSlug } = site;
-
-        try {
-            const ranges = await this.getLogRanges(site, buildNumber);
-            if (Array.isArray(ranges) && ranges.length >= 2) {
-                const buildRanges = ranges[1];
-                if (Array.isArray(buildRanges) && buildRanges.length >= 1) {
-                    const {
-                        data
-                    } = await this.client.getOctetStream(
-                        `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`,
-                        { start: buildRanges[0].firstByte, end: buildRanges[0].lastByte }
-                    );
-                    console.log('-----');
-                    console.log(data.toString());
-                    console.log('-----');
-                }
-            }
-        } catch (e) {}
-
-        const { data } = await this.client.getOctetStream(
-            `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`
+        const {
+            data
+        } = await this.client.getOctetStream(
+            `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`,
+            { start: range.firstByte, end: range.lastByte }
         );
 
-        const logs = data.toString();
-
-        let splitLogs: string[][] = [];
-        try {
-            const ranges = await this.getLogRanges(site, buildNumber);
-            splitLogs = PipelineApiImpl.splitLogsWell(logs, ranges);
-        } catch (e) {
-            Logger.debug(`Log range API call is failing`);
-        }
-        const oldLogs = PipelineApiImpl.splitLogs(logs);
-
-        if (!splitLogs || splitLogs.length === 0) {
-            Logger.debug(`Falling back to original log splitting.`);
-            splitLogs = [oldLogs]; // XYZZY this is wrong
-        }
-
-        return splitLogs;
+        return data;
     }
 
-    private async getLogRanges(site: BitbucketSite, buildNumber: number): Promise<PipelineLogRange[][]> {
-        // https://api.bitbucket.org/internal/repositories/atlassianlabs/atlascode/pipelines/3043/steps/?fields=%2Bvalues.environment.%2A.%2A.%2A&page=1&pagelen=100
-
+    /**
+     * This is an undocumented API call. It probably won't disappear, but code like you expect it to.
+     * @param site the bitbucket site
+     * @param buildNumber the build number for which you want log ranges.
+     */
+    async getLogRanges(site: BitbucketSite, buildNumber: number): Promise<PipelineStepLogRanges[]> {
         const { ownerSlug, repoSlug } = site;
-        const url = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pipelines/${buildNumber}/steps/`;
-        const { data } = await this.client.getUrl(url);
-        // XYZZY figure out this pagination
-        // const page = data.page;
-        // const pagelen = data.pagelen;
-        // not sure what the correct way to make a determination that we're at the last page is
-        // const size = data.size;
-        let ranges: PipelineLogRange[][] = [];
-        const steps = data.values;
+        let url:
+            | string
+            | undefined = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pipelines/${buildNumber}/steps/`;
+        let steps: any[] = [];
+        do {
+            const data: any = (await this.client.getUrl(url)).data;
+            steps = steps.concat(data.values);
+            url = data.next;
+        } while (url);
+        const stepRanges: PipelineStepLogRanges[] = [];
         if (Array.isArray(steps)) {
             steps.forEach(step => {
                 const phases = step.tasks?.execution_phases;
-                const setup = phases.SETUP;
-                ranges.push(this.splitPhase(setup));
-                const main = phases.MAIN;
-                ranges.push(this.splitPhase(main));
-                const teardown = phases.TEARDOWN;
-                ranges.push(this.splitPhase(teardown));
+                const setupLogRange = this.splitPhase(phases.SETUP)[0];
+                const buildLogRanges = this.splitPhase(phases.MAIN);
+                const teardownLogRange = this.splitPhase(phases.TEARDOWN)[0];
+                stepRanges.push({
+                    setupLogRange: setupLogRange,
+                    buildLogRanges: buildLogRanges,
+                    teardownLogRange: teardownLogRange
+                });
             });
         }
-        return ranges;
+        return stepRanges;
     }
 
     private splitPhase(phase: any): PipelineLogRange[] {
@@ -186,48 +152,6 @@ export class PipelineApiImpl {
                 .filter(x => x !== undefined) as PipelineLogRange[];
         }
         return [];
-    }
-
-    private static splitLogs(logText: string): string[] {
-        const lines = logText.split('\n');
-        var commandAccumulator = '';
-        var lineIndex = 0;
-        const splitLogs: string[] = [];
-
-        // Trim any log output preceding the first command
-        while (!lines[lineIndex].startsWith('+ ') && lineIndex < lines.length) {
-            lineIndex++;
-        }
-
-        for (; lineIndex < lines.length; lineIndex++) {
-            if (lines[lineIndex].startsWith('+ ')) {
-                if (commandAccumulator.length > 0) {
-                    splitLogs.push(commandAccumulator);
-                }
-                commandAccumulator = lines[lineIndex] + '\n';
-            } else {
-                commandAccumulator += lines[lineIndex] + '\n';
-            }
-        }
-        if (commandAccumulator.length > 0) {
-            splitLogs.push(commandAccumulator);
-        }
-        return splitLogs;
-    }
-
-    // XYZZY should all of this get moved?
-    private static splitLogsWell(logText: string, phaseRanges: PipelineLogRange[][]): string[][] {
-        const logs: string[][] = [];
-
-        phaseRanges.forEach(phaseRange => {
-            let phaseLogs: string[] = [];
-            phaseRange.forEach(logRange => {
-                phaseLogs.push(logText.substr(logRange.firstByte, logRange.byteCount));
-            });
-            logs.push(phaseLogs);
-        });
-
-        return logs;
     }
 
     readSelectorType(type: string): PipelineSelectorType {

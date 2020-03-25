@@ -4,4 +4,5 @@ export enum UIWSPort {
     BitbucketIssuePage,
     WelcomePage,
     StartWork,
+    PipelineSummary
 }
