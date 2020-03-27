@@ -54,7 +54,6 @@ export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?
     let pattern = undefined;
     let type: PipelineSelectorType | undefined = undefined;
     if (pipeline.target.selector) {
-        //Apparently some pipelines may be missing a selector entirely
         pattern = pipeline.target.selector.pattern;
         type = pipeline.target.selector.type;
     }
