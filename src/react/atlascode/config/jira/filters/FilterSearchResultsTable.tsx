@@ -21,7 +21,7 @@ import StarBorderIcon from '@material-ui/icons/StarBorder';
 import clsx from 'clsx';
 import React, { useContext, useEffect, useState } from 'react';
 import { DetailedSiteInfo } from '../../../../../atlclients/authInfo';
-import { listActiveSelectionBackground, listActiveSelectionForeground } from '../../../../vscode/theme/styles';
+import { VSCodeStyles, VSCodeStylesContext } from '../../../../vscode/theme/styles';
 import { ConfigControllerContext } from '../../configController';
 import { useFilterSearch } from './useFilterSearch';
 
@@ -70,10 +70,10 @@ const useToolbarStyles = makeStyles(theme => ({
         paddingRight: theme.spacing(1),
         marginBottom: theme.spacing(2)
     },
-    highlight: {
-        color: listActiveSelectionForeground,
-        backgroundColor: listActiveSelectionBackground
-    },
+    highlight: (props: VSCodeStyles) => ({
+        color: props.listActiveSelectionForeground,
+        backgroundColor: props.listActiveSelectionBackground
+    }),
 
     title: {
         flex: '1 1 100%'
@@ -99,7 +99,8 @@ const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
     setInputText,
     loading
 }) => {
-    const classes = useToolbarStyles();
+    const vscStyles = useContext(VSCodeStylesContext);
+    const classes = useToolbarStyles(vscStyles);
 
     return (
         <Toolbar
