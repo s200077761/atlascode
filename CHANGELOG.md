@@ -1,3 +1,9 @@
+## What's New in 2.4.11
+
+### Bugs fixed
+
+-   No longer show error for certain pipeline configurations
+
 ## What's New in 2.4.10
 
 ### Improvements

@@ -102,6 +102,13 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 </p>
                             </div>
                         </section>
+                        <h3>🎉 What's New in 2.4.11 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>No longer show error for certain pipeline configurations</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.4.10 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
