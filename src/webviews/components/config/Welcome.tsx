@@ -107,6 +107,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>No longer show error for certain pipeline configurations</li>
+                                <li>Create, Search, and Configure nodes no longer disappear from Jira sidebar</li>
                             </ul>
                         </section>
                         <h3>🎉 What's New in 2.4.10 🎉</h3>

@@ -3,6 +3,7 @@
 ### Bugs fixed
 
 -   No longer show error for certain pipeline configurations
+-   Create, Search, and Configure nodes no longer disappear from Jira sidebar
 
 ## What's New in 2.4.10
 
