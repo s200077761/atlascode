@@ -176,7 +176,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.pipelineViewManager.createOrShow(pipelineInfo);
         }),
         commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.bitbucketIssueViewManager.createOrShow(issue)
+            Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue)
         ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
         commands.registerCommand(Commands.WorkbenchOpenRepository, () => {

@@ -10,6 +10,7 @@ import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
+import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
@@ -23,9 +24,12 @@ import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManage
 import { JiraContext } from './views/jira/jiraContext';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
+import { VSCBitbucketIssueActionApi } from './webview/bbIssue/vscBitbucketIssueActionApi';
+import { VSCBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscBitbucketIssueWebviewControllerFactory';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { MultiWebview } from './webview/multiViewFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
@@ -103,7 +107,17 @@ export class Container {
             this._analyticsApi
         );
 
+        const bitbucketIssuePageV2ViewFactory = new MultiWebview<any, BitbucketIssueAction>(
+            context.extensionPath,
+            new VSCBitbucketIssueWebviewControllerFactory(
+                new VSCBitbucketIssueActionApi(this._analyticsApi),
+                this._commonMessageHandler,
+                this._analyticsApi
+            )
+        );
+
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        context.subscriptions.push((this._bitbucketIssueWebviewFactory = bitbucketIssuePageV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
 
@@ -197,6 +211,11 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
+    }
+
+    private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
+    static get bitbucketIssueWebviewFactory() {
+        return this._bitbucketIssueWebviewFactory;
     }
 
     private static _welcomeWebview: WelcomeWebview;
