@@ -6,6 +6,7 @@ import { JQLEntry } from '../../../../config/model';
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
 import { PrepareCommitTip } from '../../common/PrepareCommitTip';
+import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
 import { JQLListEditor } from './jql/JQLListEditor';
 
@@ -31,6 +32,7 @@ const useStyles = makeStyles(
 export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
     ({ enabled, nestSubtasks, fetchAllQueryResults, monitorEnabled, refreshInterval, sites, jqlList }) => {
         const classes = useStyles();
+        const boxClass = useBorderBoxStyles();
         const controller = useContext(ConfigControllerContext);
 
         const [changes, setChanges] = useState<{ [key: string]: any }>({});
@@ -146,7 +148,9 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                     </Box>
                 </Grid>
                 <Grid item>
-                    <JQLListEditor sites={sites} jqlList={jqlList} />
+                    <Box className={boxClass.box} paddingBottom={2}>
+                        <JQLListEditor sites={sites} jqlList={jqlList} />
+                    </Box>
                 </Grid>
             </Grid>
         );
