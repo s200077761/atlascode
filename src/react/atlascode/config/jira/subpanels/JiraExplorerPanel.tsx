@@ -8,7 +8,7 @@ import { ConfigSection, ConfigSubSection } from '../../../../../lib/ipc/models/c
 import { CommonSubpanelProps } from '../../../common/commonPanelProps';
 import { PanelSubtitle } from '../../../common/PanelSubtitle';
 import { PanelTitle } from '../../../common/PanelTitle';
-import { JiraExplorer } from '../explorer/JiraExplorer';
+import { JiraExplorer } from '../JiraExplorer';
 
 type JiraExplorerPanelProps = CommonSubpanelProps & {
     enabled: boolean;
@@ -79,7 +79,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
                     aria-controls={`${ConfigSection.Jira}-${ConfigSubSection.Issues}-content`}
                     id={`${ConfigSection.Jira}-${ConfigSubSection.Issues}-header`}
                 >
-                    <PanelTitle>Issues and JQL</PanelTitle>
+                    <PanelTitle>Jira Issues Explorer</PanelTitle>
                     <PanelSubtitle>configure the Jira issue explorer, custom JQL and notifications</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
