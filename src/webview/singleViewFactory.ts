@@ -64,21 +64,16 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
 
     public async createOrShow(factoryData?: FD, column?: ViewColumn): Promise<void> {
         if (this._panel === undefined) {
-            this._panel = window.createWebviewPanel(
-                viewType,
-                this._controllerFactory.title(),
-                column ? column : ViewColumn.Active,
-                {
-                    retainContextWhenHidden: true,
-                    enableFindWidget: true,
-                    enableCommandUris: true,
-                    enableScripts: true,
-                    localResourceRoots: [
-                        Uri.file(path.join(this._extensionPath, 'build')),
-                        Uri.file(path.join(this._extensionPath, 'images'))
-                    ]
-                }
-            );
+            this._panel = window.createWebviewPanel(viewType, '', column ? column : ViewColumn.Active, {
+                retainContextWhenHidden: true,
+                enableFindWidget: true,
+                enableCommandUris: true,
+                enableScripts: true,
+                localResourceRoots: [
+                    Uri.file(path.join(this._extensionPath, 'build')),
+                    Uri.file(path.join(this._extensionPath, 'images'))
+                ]
+            });
 
             this._panel.iconPath = Uri.file(this._controllerFactory.tabIconPath());
 
@@ -108,6 +103,7 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                 this._ws
             );
 
+            this._panel.title = this._controller.title();
             this._panel.webview.html = this._controllerFactory.webviewHtml(this._extensionPath);
         } else {
             this._panel.webview.html = this._controllerFactory.webviewHtml(this._extensionPath);

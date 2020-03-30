@@ -5,7 +5,7 @@ import { UIWSPort } from '../../lib/ipc/models/ports';
 import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
-import { ConfigWebviewController, id, title } from '../../lib/webview/controller/config/configWebviewController';
+import { ConfigWebviewController, id } from '../../lib/webview/controller/config/configWebviewController';
 import { Logger } from '../../logger';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
@@ -26,10 +26,6 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
         this._commonHandler = commonHandler;
         this._analytics = analytics;
         this._settingsUrl = settingsUrl;
-    }
-
-    public title(): string {
-        return title;
     }
 
     public tabIconPath(): string {

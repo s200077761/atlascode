@@ -12,7 +12,6 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { ConfigActionApi } from './configActionApi';
 
 export const id: string = 'atlascodeSettingsV2';
-export const title: string = 'Atlassian Settings';
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
     private _messagePoster: MessagePoster;
@@ -40,6 +39,10 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this._settingsUrl = settingsUrl;
         this._commonHandler = commonHandler;
         this._initialSection = section;
+    }
+
+    public title(): string {
+        return 'Atlassian Settings';
     }
 
     private postMessage(message: ConfigMessage | ConfigResponse | CommonMessage) {
