@@ -1,5 +1,5 @@
 import { InlineTextEditorList, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Grid, Typography } from '@material-ui/core';
+import { Box, Button, Grid, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigControllerContext } from '../configController';
 
@@ -8,6 +8,7 @@ type ConnectivityProps = {
     onlineCheckerUrls: string[];
 };
 
+const defaultSites = ['http://atlassian.com', 'https://bitbucket.org'];
 export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
     ({ enableHttpsTunnel, onlineCheckerUrls }) => {
         const controller = useContext(ConfigControllerContext);
@@ -23,6 +24,12 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
         const handleUrlsChange = useCallback((urls: string[]) => {
             const changes = Object.create(null);
             changes['onlineCheckerUrls'] = urls;
+            setChanges(changes);
+        }, []);
+
+        const handleRestore = useCallback(() => {
+            const changes = Object.create(null);
+            changes['onlineCheckerUrls'] = defaultSites;
             setChanges(changes);
         }, []);
 
@@ -53,10 +60,19 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
                     <InlineTextEditorList
                         disabled={false}
                         options={onlineCheckerUrls}
+                        reverseButtons={false}
+                        justifyButtons="flex-end"
                         addOptionButtonContent="Add URL"
                         inputLabel="Custom Ping URL"
                         onChange={handleUrlsChange}
-                    />
+                        emptyComponent={
+                            <Box width="100%">
+                                <Typography align="center">No urls found.</Typography>
+                            </Box>
+                        }
+                    >
+                        <Button onClick={handleRestore}>Restore Defaults</Button>
+                    </InlineTextEditorList>
                 </Grid>
             </Grid>
         );
