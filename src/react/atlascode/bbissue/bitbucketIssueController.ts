@@ -1,5 +1,6 @@
 import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { BitbucketIssue } from '../../../bitbucket/model';
 import { BitbucketIssueAction } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
@@ -32,6 +33,7 @@ export const emptyApi: BitbucketIssueControllerApi = {
 export const BitbucketIssueControllerContext = React.createContext(emptyApi);
 
 export interface BitbucketIssueState extends BitbucketIssueInitMessage {
+    issue: BitbucketIssue;
     isSomethingLoading: boolean;
 }
 

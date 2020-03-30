@@ -5,7 +5,6 @@ import { BitbucketIssueAction } from '../../../ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { BitbucketIssueMessage, BitbucketIssueMessageType } from '../../../ipc/toUI/bbIssue';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
-import { SectionChangeMessage } from '../../../ipc/toUI/config';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
@@ -13,9 +12,8 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { BitbucketIssueActionApi } from './bitbucketIssueActionApi';
 
 export const id: string = 'bitbucketIssuePageV2';
-export const title: string = 'Bitbucket Issue';
 
-export class BitbucketIssueWebviewController implements WebviewController<{}> {
+export class BitbucketIssueWebviewController implements WebviewController<BitbucketIssue> {
     private _issue: BitbucketIssue;
     private _messagePoster: MessagePoster;
     private _api: BitbucketIssueActionApi;
@@ -56,7 +54,8 @@ export class BitbucketIssueWebviewController implements WebviewController<{}> {
 
             this._isRefreshing = true;
             this.postMessage({
-                type: BitbucketIssueMessageType.Init
+                type: BitbucketIssueMessageType.Init,
+                issue: this._issue
             });
         } catch (e) {
             let err = new Error(`error updating bitbucket issue: ${e}`);
@@ -67,8 +66,8 @@ export class BitbucketIssueWebviewController implements WebviewController<{}> {
         }
     }
 
-    public update(section: SectionChangeMessage) {
-        //this.postMessage({ type: BitbucketIssueMessageType.SectionChange, ...section });
+    public update(issue: BitbucketIssue) {
+        this.postMessage({ type: BitbucketIssueMessageType.Init, issue });
     }
 
     public async onMessageReceived(msg: BitbucketIssueAction) {

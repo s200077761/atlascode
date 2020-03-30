@@ -29,7 +29,7 @@ export class VSCBitbucketIssueWebviewControllerFactory implements VSCWebviewCont
     }
 
     public uiWebsocketPort(): number {
-        return UIWSPort.Settings;
+        return UIWSPort.BitbucketIssuePage;
     }
 
     public createController(postMessage: PostMessageFunc): [BitbucketIssueWebviewController, Disposable | undefined];

@@ -1,5 +1,5 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
-import { AppBar, Container, Grid, Paper, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Button, Container, Grid, Paper, Toolbar, Typography } from '@material-ui/core';
 import React from 'react';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
@@ -10,7 +10,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
 
     return (
         <BitbucketIssueControllerContext.Provider value={controller}>
-            <Container maxWidth="xl">
+            <Container maxWidth="xl" hidden={state.issue.data.id === ''}>
                 <AppBar position="relative">
                     <Toolbar>
                         <Typography variant="h3">Bitbucket issue</Typography>
@@ -22,6 +22,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                         <Paper>
                             <ErrorDisplay />
                             <PMFDisplay postMessageFunc={controller.postMessage} />
+                            <Button>{state.issue.data.id}</Button>
                         </Paper>
                     </Grid>
                 </Grid>

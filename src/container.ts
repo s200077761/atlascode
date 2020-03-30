@@ -4,6 +4,7 @@ import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
+import { BitbucketIssue } from './bitbucket/model';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
@@ -107,7 +108,7 @@ export class Container {
             this._analyticsApi
         );
 
-        const bitbucketIssuePageV2ViewFactory = new MultiWebview<any, BitbucketIssueAction>(
+        const bitbucketIssuePageV2ViewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
             context.extensionPath,
             new VSCBitbucketIssueWebviewControllerFactory(
                 new VSCBitbucketIssueActionApi(this._analyticsApi),
