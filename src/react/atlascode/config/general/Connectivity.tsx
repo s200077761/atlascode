@@ -1,6 +1,7 @@
 import { InlineTextEditorList, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Button, Grid, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
+import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
 
 type ConnectivityProps = {
@@ -15,6 +16,7 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
 
         const [changes, setChanges] = useState<{ [key: string]: any }>({});
 
+        const boxClass = useBorderBoxStyles();
         const handleCheckedChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
             const changes = Object.create(null);
             changes[`${e.target.value}`] = e.target.checked;
@@ -57,22 +59,25 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
                     <Typography variant="body1">
                         The following urls will be ping'ed periodically to check for online connectivity
                     </Typography>
-                    <InlineTextEditorList
-                        disabled={false}
-                        options={onlineCheckerUrls}
-                        reverseButtons={false}
-                        justifyButtons="flex-end"
-                        addOptionButtonContent="Add URL"
-                        inputLabel="Custom Ping URL"
-                        onChange={handleUrlsChange}
-                        emptyComponent={
-                            <Box width="100%">
-                                <Typography align="center">No urls found.</Typography>
-                            </Box>
-                        }
-                    >
-                        <Button onClick={handleRestore}>Restore Defaults</Button>
-                    </InlineTextEditorList>
+
+                    <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
+                        <InlineTextEditorList
+                            disabled={false}
+                            options={onlineCheckerUrls}
+                            reverseButtons={false}
+                            justifyButtons="flex-end"
+                            addOptionButtonContent="Add URL"
+                            inputLabel="Custom Ping URL"
+                            onChange={handleUrlsChange}
+                            emptyComponent={
+                                <Box width="100%">
+                                    <Typography align="center">No urls found.</Typography>
+                                </Box>
+                            }
+                        >
+                            <Button onClick={handleRestore}>Restore Defaults</Button>
+                        </InlineTextEditorList>
+                    </Box>
                 </Grid>
             </Grid>
         );
