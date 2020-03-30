@@ -1,6 +1,7 @@
 import { InlineTextEditorList, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
 import { Box, Grid, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
+import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
 
 type CreateTriggerEditorProps = {
@@ -11,7 +12,7 @@ type CreateTriggerEditorProps = {
 export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorProps> = memo(({ triggers, disabled }) => {
     const controller = useContext(ConfigControllerContext);
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
-
+    const boxClass = useBorderBoxStyles();
     const handleEnableToggle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const changes = Object.create(null);
         changes['jira.todoIssues.enabled'] = e.target.checked;
@@ -51,13 +52,15 @@ export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorPro
                         Strings (in comments) that will cause the 'Create Jira issue' code action to show
                     </Typography>
 
-                    <InlineTextEditorList
-                        options={triggers}
-                        addOptionButtonContent="Add Trigger"
-                        disabled={disabled}
-                        inputLabel="Trigger Text"
-                        onChange={handleOptionsChange}
-                    />
+                    <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
+                        <InlineTextEditorList
+                            options={triggers}
+                            addOptionButtonContent="Add Trigger"
+                            disabled={disabled}
+                            inputLabel="Trigger Text"
+                            onChange={handleOptionsChange}
+                        />
+                    </Box>
                 </Box>
             </Grid>
         </Grid>
