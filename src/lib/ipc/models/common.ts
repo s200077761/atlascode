@@ -18,6 +18,7 @@ export interface FeedbackData {
     canBeContacted: boolean;
     userName: string;
     emailAddress: string;
+    source: string;
 }
 
 export interface FeedbackUser {

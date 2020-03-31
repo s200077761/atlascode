@@ -1,11 +1,12 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { env, Uri } from 'vscode';
 import { Container } from '../../container';
+import { submitFeedback } from '../../feedback/feedbackSubmitter';
+import { submitJSDPMF } from '../../feedback/pmfJSDSubmitter';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { CommonAction, CommonActionType } from '../../lib/ipc/fromUI/common';
 import { KnownLinkID, numForPMFLevel } from '../../lib/ipc/models/common';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
-import { submitJSDPMF } from '../../pmf/pmfJSDSubmitter';
 
 const knownLinkIdMap: Map<string, string> = new Map([
     [KnownLinkID.AtlascodeRepo, 'https://bitbucket.org/atlassianlabs/atlascode'],
@@ -56,7 +57,7 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                 break;
             }
             case CommonActionType.SubmitFeedback: {
-                // should be handled by caller
+                submitFeedback(msg.feedback);
                 break;
             }
             case CommonActionType.Refresh: {
