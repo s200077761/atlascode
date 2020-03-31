@@ -1,4 +1,5 @@
 import { InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
+import { Box, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../../lib/ipc/models/config';
 import { ConfigControllerContext } from '../../configController';
@@ -29,10 +30,16 @@ export const PipelineFilterListEditor: React.FunctionComponent<PipelineFilterLis
         return (
             <InlineTextEditorList
                 options={filters}
+                reverseButtons={true}
                 addOptionButtonContent="Add Filter"
                 disabled={!enabled}
                 inputLabel="Filter Text"
                 onChange={handleOptionsChange}
+                emptyComponent={
+                    <Box width="100%">
+                        <Typography align="center">No filters found.</Typography>
+                    </Box>
+                }
             />
         );
     }

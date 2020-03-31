@@ -1,5 +1,5 @@
 import { DragReorderList } from '@atlassianlabs/guipi-core-components';
-import { Box, darken, Grid, lighten, Paper, Theme } from '@material-ui/core';
+import { Box, darken, Grid, lighten, Paper, Theme, Typography } from '@material-ui/core';
 import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
 import makeStyles from '@material-ui/styles/makeStyles';
 import equal from 'fast-deep-equal/es6';
@@ -183,22 +183,30 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
                                     <DragIndicatorIcon color="disabled" />
                                 </span>
                             }
-                            listItems={internalList.map((item, i) => {
-                                return (
-                                    <JQLListItem
-                                        key={item.id}
-                                        id={item.id}
-                                        name={item.name}
-                                        enabled={item.enabled}
-                                        monitor={item.monitor}
-                                        filterId={item.filterId}
-                                        toggleEnabled={toggleEnabled}
-                                        toggleMonitor={toggleMonitor}
-                                        handleEdit={handleEdit}
-                                        handleDelete={handleDelete}
-                                    />
-                                );
-                            })}
+                            listItems={
+                                internalList.length > 0
+                                    ? internalList.map((item, i) => {
+                                          return (
+                                              <JQLListItem
+                                                  key={item.id}
+                                                  id={item.id}
+                                                  name={item.name}
+                                                  enabled={item.enabled}
+                                                  monitor={item.monitor}
+                                                  filterId={item.filterId}
+                                                  toggleEnabled={toggleEnabled}
+                                                  toggleMonitor={toggleMonitor}
+                                                  handleEdit={handleEdit}
+                                                  handleDelete={handleDelete}
+                                              />
+                                          );
+                                      })
+                                    : [
+                                          <Box width="100%">
+                                              <Typography align="center">No entries found.</Typography>
+                                          </Box>
+                                      ]
+                            }
                         />
                     </Paper>
                 </Grid>

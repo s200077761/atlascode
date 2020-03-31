@@ -55,10 +55,16 @@ export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorPro
                     <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
                         <InlineTextEditorList
                             options={triggers}
+                            reverseButtons={true}
                             addOptionButtonContent="Add Trigger"
                             disabled={disabled}
                             inputLabel="Trigger Text"
                             onChange={handleOptionsChange}
+                            emptyComponent={
+                                <Box width="100%">
+                                    <Typography align="center">No triggers found.</Typography>
+                                </Box>
+                            }
                         />
                     </Box>
                 </Box>
