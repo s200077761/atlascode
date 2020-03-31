@@ -61,9 +61,13 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
     const validateJql = useJqlValidator(site);
 
     register('jql', {
-        validate: async (value: string) => {
-            const jqlErrors: JQLErrors = await validateJql(value);
-            return jqlErrors.errors.length > 0 ? jqlErrors.errors.join(',') : undefined;
+        validate: async (value?: string) => {
+            if (value) {
+                console.log(`validating jql: '${value}'`);
+                const jqlErrors: JQLErrors = await validateJql(value);
+                return jqlErrors.errors.length > 0 ? jqlErrors.errors.join(',') : undefined;
+            }
+            return undefined;
         }
     });
 
