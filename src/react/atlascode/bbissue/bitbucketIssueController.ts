@@ -1,13 +1,15 @@
-import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
-import { BitbucketIssue } from '../../../bitbucket/model';
+import { BitbucketIssue, Comment } from '../../../bitbucket/model';
 import { BitbucketIssueAction } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
 import {
+    BitbucketIssueCommentsMessage,
     BitbucketIssueInitMessage,
     BitbucketIssueMessage,
     BitbucketIssueMessageType,
+    emptyBitbucketIssueCommentsMessage,
     emptyBitbucketIssueInitMessage
 } from '../../../lib/ipc/toUI/bbIssue';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -34,21 +36,25 @@ export const BitbucketIssueControllerContext = React.createContext(emptyApi);
 
 export interface BitbucketIssueState extends BitbucketIssueInitMessage {
     issue: BitbucketIssue;
+    comments: Comment[];
     isSomethingLoading: boolean;
 }
 
 const emptyState: BitbucketIssueState = {
     ...emptyBitbucketIssueInitMessage,
+    ...emptyBitbucketIssueCommentsMessage,
     isSomethingLoading: false
 };
 
 export enum BitbucketIssueUIActionType {
     Init = 'init',
+    Comments = 'comments',
     Loading = 'loading'
 }
 
 export type BitbucketIssueUIAction =
     | ReducerAction<BitbucketIssueUIActionType.Init, { data: BitbucketIssueInitMessage }>
+    | ReducerAction<BitbucketIssueUIActionType.Comments, { data: BitbucketIssueCommentsMessage }>
     | ReducerAction<BitbucketIssueUIActionType.Loading, {}>;
 
 export type BitbucketIssueChanges = { [key: string]: any };
@@ -56,6 +62,16 @@ export type BitbucketIssueChanges = { [key: string]: any };
 function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): BitbucketIssueState {
     switch (action.type) {
         case BitbucketIssueUIActionType.Init: {
+            const newstate = {
+                ...state,
+                ...action.data,
+                isSomethingLoading: false,
+                isErrorBannerOpen: false,
+                errorDetails: undefined
+            };
+            return newstate;
+        }
+        case BitbucketIssueUIActionType.Comments: {
             const newstate = {
                 ...state,
                 ...action.data,
@@ -82,8 +98,12 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 dispatch({ type: BitbucketIssueUIActionType.Init, data: message });
                 break;
             }
+            case BitbucketIssueMessageType.Comments: {
+                dispatch({ type: BitbucketIssueUIActionType.Comments, data: message });
+                break;
+            }
             default: {
-                // defaultActionGuard(message);
+                defaultActionGuard(message);
             }
         }
     }, []);
