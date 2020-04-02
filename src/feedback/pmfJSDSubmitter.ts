@@ -1,46 +1,16 @@
 import { version, window } from 'vscode';
 import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Container } from '../container';
-import { FeedbackUser } from '../ipc/configMessaging';
 import { LegacyPMFData } from '../ipc/messaging';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { PMFData } from '../lib/ipc/models/common';
+import { getFeedbackUser } from './feedbackUser';
 
 const q1Choices = {
     '0': 'Very disappointed',
     '1': 'Somewhat disappointed',
     '2': 'Not disappointed'
 };
-async function getFeedbackUser(): Promise<FeedbackUser> {
-    let firstAvailableUser: FeedbackUser | undefined = undefined;
-
-    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira).filter(site => site.isCloud);
-    if (jiraCloudSites.length > 0) {
-        const jiraUser = await Container.credentialManager.getAuthInfo(jiraCloudSites[0]);
-        if (jiraUser) {
-            firstAvailableUser = {
-                userName: jiraUser.user.displayName,
-                emailAddress: jiraUser.user.email
-            };
-        }
-    }
-
-    if (!firstAvailableUser) {
-        const bitbucketCloudSites = Container.siteManager
-            .getSitesAvailable(ProductBitbucket)
-            .filter(site => site.isCloud);
-        if (bitbucketCloudSites.length > 0) {
-            const bbUser = await Container.credentialManager.getAuthInfo(bitbucketCloudSites[0]);
-            if (bbUser) {
-                firstAvailableUser = {
-                    userName: bbUser.user.displayName,
-                    emailAddress: bbUser.user.email
-                };
-            }
-        }
-    }
-    return firstAvailableUser || { userName: '', emailAddress: '' };
-}
 
 export async function submitJSDPMF(pmfData: PMFData) {
     const user = await getFeedbackUser();

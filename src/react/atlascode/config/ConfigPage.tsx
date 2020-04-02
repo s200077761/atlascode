@@ -253,7 +253,7 @@ const ConfigPage: React.FunctionComponent = () => {
                     <Grid item xs={12} md={3} lg={2} xl={2}>
                         <Paper className={classes.paperOverflow}>
                             <Box margin={2}>
-                                <SidebarButtons />
+                                <SidebarButtons feedbackUser={state.feedbackUser} />
                             </Box>
                         </Paper>
                     </Grid>

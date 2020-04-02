@@ -235,16 +235,13 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 }
                 break;
             }
-            case CommonActionType.SubmitFeedback: {
-                this._api.submitFeedback(msg.feedback, id);
-                break;
-            }
 
             case CommonActionType.ExternalLink:
             case CommonActionType.DismissPMFLater:
             case CommonActionType.DismissPMFNever:
             case CommonActionType.OpenPMFSurvey:
-            case CommonActionType.SubmitPMF: {
+            case CommonActionType.SubmitPMF:
+            case CommonActionType.SubmitFeedback: {
                 this._commonHandler.onMessageReceived(msg);
                 break;
             }

@@ -5,7 +5,7 @@ import {
     JQLErrors
 } from '@atlassianlabs/jira-pi-common-models';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
-import { FeedbackData, FeedbackUser } from '../../../ipc/models/common';
+import { FeedbackUser } from '../../../ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
 
 export interface ConfigActionApi {
@@ -30,7 +30,6 @@ export interface ConfigActionApi {
     ) => Promise<FilterSearchResults>;
     validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal) => Promise<JQLErrors>;
     updateSettings(target: ConfigTarget, changes: { [key: string]: any }, removes?: string[]): Promise<void>;
-    submitFeedback(feedback: FeedbackData, source: string): Promise<void>;
     getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]];
     getFeedbackUser(): Promise<FeedbackUser>;
     getIsRemote(): boolean;

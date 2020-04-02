@@ -13,11 +13,11 @@ import { commands, ConfigurationTarget, env, Uri, window, workspace, WorkspaceEd
 import { AuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../atlclients/authInfo';
 import { configuration, IConfig, JQLEntry } from '../../config/configuration';
 import { Container } from '../../container';
+import { getFeedbackUser } from '../../feedback/feedbackUser';
 import { AnalyticsApi } from '../../lib/analyticsApi';
-import { FeedbackData, FeedbackUser } from '../../lib/ipc/models/common';
+import { FeedbackUser } from '../../lib/ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
-import { getFeedbackUser, submitFeedback } from '../../webviews/feedbackSubmitter';
 
 export class VSCConfigActionApi implements ConfigActionApi {
     private _analyticsApi: AnalyticsApi;
@@ -95,10 +95,6 @@ export class VSCConfigActionApi implements ConfigActionApi {
         }
 
         return await client.validateJql(jql, cancelToken);
-    }
-
-    public async submitFeedback(feedback: FeedbackData, source: string): Promise<void> {
-        submitFeedback(feedback, source);
     }
 
     public getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
