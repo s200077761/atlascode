@@ -1,15 +1,3 @@
-import Bug16Icon from '@atlaskit/icon-object/glyph/bug/16';
-import Improvement16Icon from '@atlaskit/icon-object/glyph/improvement/16';
-import PriorityBlockerIcon from '@atlaskit/icon-priority/glyph/priority-blocker';
-import PriorityCriticalIcon from '@atlaskit/icon-priority/glyph/priority-critical';
-import PriorityMajorIcon from '@atlaskit/icon-priority/glyph/priority-major';
-import PriorityMinorIcon from '@atlaskit/icon-priority/glyph/priority-minor';
-import PriorityTrivialIcon from '@atlaskit/icon-priority/glyph/priority-trivial';
-import LightbulbFilledIcon from '@atlaskit/icon/glyph/lightbulb-filled';
-import StarIcon from '@atlaskit/icon/glyph/star';
-import TaskIcon from '@atlaskit/icon/glyph/task';
-import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
-import WatchIcon from '@atlaskit/icon/glyph/watch';
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import {
     AppBar,
@@ -25,6 +13,17 @@ import {
     Tooltip,
     Typography
 } from '@material-ui/core';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import BlockIcon from '@material-ui/icons/Block';
+import BugReportIcon from '@material-ui/icons/BugReport';
+import CheckBoxOutlinedIcon from '@material-ui/icons/CheckBoxOutlined';
+import EmojiObjectsIcon from '@material-ui/icons/EmojiObjects';
+import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
+import RemoveRedEyeOutlinedIcon from '@material-ui/icons/RemoveRedEyeOutlined';
+import StarBorder from '@material-ui/icons/StarBorder';
 import { makeStyles } from '@material-ui/styles';
 import { format } from 'date-fns';
 import React from 'react';
@@ -34,18 +33,18 @@ import { BitbucketIssueControllerContext, useBitbucketIssueController } from './
 import InlinedRenderedTextEditor from './InlineRenderedTextEditor';
 
 const priorityIcon = {
-    trivial: <PriorityTrivialIcon label="trivial" />,
-    minor: <PriorityMinorIcon label="minor" />,
-    major: <PriorityMajorIcon label="major" />,
-    critical: <PriorityCriticalIcon label="critical" />,
-    blocker: <PriorityBlockerIcon label="blocker" />
+    trivial: <RadioButtonUncheckedIcon />,
+    minor: <ArrowDownwardIcon />,
+    major: <KeyboardArrowUpIcon />,
+    critical: <ArrowUpwardIcon />,
+    blocker: <BlockIcon />
 };
 
 const typeIcon = {
-    bug: <Bug16Icon label="bug" />,
-    enhancement: <Improvement16Icon label="enhancement" />,
-    proposal: <LightbulbFilledIcon label="proposal" primaryColor="0xFFAB00" />,
-    task: <TaskIcon label="task" primaryColor="0x2684FF" />
+    bug: <BugReportIcon />,
+    enhancement: <ArrowUpwardIcon />,
+    proposal: <EmojiObjectsIcon />,
+    task: <CheckBoxOutlinedIcon />
 };
 
 const useStyles = makeStyles(
@@ -87,7 +86,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                         </Typography>
                         <div className={classes.grow} />
                         <Tooltip title="Create a branch and assign issue to me">
-                            <Button variant="contained" color="primary" startIcon={<VidPlayIcon label="Start work" />}>
+                            <Button variant="contained" color="primary" startIcon={<PlayArrowIcon />}>
                                 Start work
                             </Button>
                         </Tooltip>
@@ -159,7 +158,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                 <Tooltip title="Watches">
                                                     <Button
                                                         variant="contained"
-                                                        startIcon={<WatchIcon label="Watches" />}
+                                                        startIcon={<RemoveRedEyeOutlinedIcon />}
                                                     >
                                                         {state.issue.data.watches}
                                                     </Button>
@@ -167,7 +166,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                             </Grid>
                                             <Grid item>
                                                 <Tooltip title="Votes">
-                                                    <Button variant="contained" startIcon={<StarIcon label="Votes" />}>
+                                                    <Button variant="contained" startIcon={<StarBorder />}>
                                                         {state.issue.data.votes}
                                                     </Button>
                                                 </Tooltip>
@@ -186,7 +185,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                 <strong>Kind</strong>
                                             </Typography>
                                         </Grid>
-                                        <Grid container spacing={1} direction="row" alignItems="baseline">
+                                        <Grid container spacing={1} direction="row">
                                             <Grid item>{typeIcon[state.issue.data.kind]}</Grid>
                                             <Grid item>
                                                 <Typography>{state.issue.data.kind}</Typography>
