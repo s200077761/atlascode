@@ -1,3 +1,5 @@
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { BitbucketIssue, Comment } from '../../bitbucket/model';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { BitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/bitbucketIssueActionApi';
 
@@ -7,5 +9,19 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
     constructor(analyticsApi: AnalyticsApi) {
         this._analyticsApi = analyticsApi;
         console.log(this._analyticsApi);
+    }
+    async getComments(issue: BitbucketIssue): Promise<Comment[]> {
+        const bbApi = await clientForSite(issue.site);
+        const [comments, changes] = await Promise.all([
+            bbApi.issues!.getComments(issue),
+            bbApi.issues!.getChanges(issue)
+        ]);
+
+        // replace comment with change data which contains additional details
+        const updatedComments = comments.data.map(
+            comment => changes.data.find(change => change.id! === comment.id!) || comment
+        );
+
+        return updatedComments;
     }
 }

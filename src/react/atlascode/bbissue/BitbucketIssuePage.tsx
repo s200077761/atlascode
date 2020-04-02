@@ -81,10 +81,8 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
             <Container maxWidth="xl" hidden={state.issue.data.id === ''}>
                 <AppBar position="relative">
                     <Toolbar>
-                        <Link href={state.issue.data.links?.html?.href} variant="h3">
-                            #{state.issue.data.id}
-                        </Link>
                         <Typography variant="h3" className={classes.title}>
+                            <Link href={state.issue.data.links?.html?.href}>#{state.issue.data.id}</Link>{' '}
                             {state.issue.data.title}
                         </Typography>
                         <div className={classes.grow} />
@@ -97,60 +95,62 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                     </Toolbar>
                 </AppBar>
                 <Grid container spacing={1}>
-                    <Grid item xs={12} md={9} lg={9} xl={9}>
-                        <Box margin={2}>
-                            <ErrorDisplay />
-                            <PMFDisplay postMessageFunc={controller.postMessage} />
-                            <Grid container spacing={2} direction="column">
-                                <Grid item>
-                                    <Box />
-                                </Grid>
-                                <Grid item>
-                                    <Typography variant="h4">
-                                        <Box fontWeight="fontWeightBold">Summary</Box>
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <InlinedRenderedTextEditor
-                                        fullWidth
-                                        defaultValue={state.issue.data.content.raw}
-                                        renderedHtml={state.issue.data.content.html}
-                                        onSave={() => {}}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <Typography variant="h4">
-                                        <Box fontWeight="fontWeightBold">Comments</Box>
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Grid container spacing={2} direction="column">
-                                        {state.comments.map(c => (
-                                            <Grid item>
-                                                <Grid container spacing={1} alignItems="flex-start">
-                                                    <Grid item>
-                                                        <Avatar src={c.user.avatarUrl} />
-                                                    </Grid>
-                                                    <Grid item>
-                                                        <Typography variant="subtitle2">
-                                                            {c.user.displayName}
-                                                            {'  '}
-                                                            {format(c.ts, 'YYYY-MM-DD h:mm A')}
-                                                        </Typography>
-                                                        <Typography
-                                                            dangerouslySetInnerHTML={{ __html: c.htmlContent }}
-                                                        />
+                    <Grid item xs={12} md={9} lg={10} xl={10}>
+                        <Paper className={classes.paper100}>
+                            <Box margin={2}>
+                                <ErrorDisplay />
+                                <PMFDisplay postMessageFunc={controller.postMessage} />
+                                <Grid container spacing={2} direction="column">
+                                    <Grid item>
+                                        <Box />
+                                    </Grid>
+                                    <Grid item>
+                                        <Typography variant="h4">
+                                            <Box fontWeight="fontWeightBold">Summary</Box>
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <InlinedRenderedTextEditor
+                                            fullWidth
+                                            defaultValue={state.issue.data.content.raw}
+                                            renderedHtml={state.issue.data.content.html}
+                                            onSave={() => {}}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <Typography variant="h4">
+                                            <Box fontWeight="fontWeightBold">Comments</Box>
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <Grid container spacing={2} direction="column">
+                                            {state.comments.map(c => (
+                                                <Grid item>
+                                                    <Grid container spacing={1} alignItems="flex-start">
+                                                        <Grid item>
+                                                            <Avatar src={c.user.avatarUrl} />
+                                                        </Grid>
+                                                        <Grid item>
+                                                            <Typography variant="subtitle2">
+                                                                {c.user.displayName}
+                                                                {'  '}
+                                                                {format(c.ts, 'YYYY-MM-DD h:mm A')}
+                                                            </Typography>
+                                                            <Typography
+                                                                dangerouslySetInnerHTML={{ __html: c.htmlContent }}
+                                                            />
+                                                        </Grid>
                                                     </Grid>
                                                 </Grid>
-                                            </Grid>
-                                        ))}
+                                            ))}
+                                        </Grid>
                                     </Grid>
                                 </Grid>
-                            </Grid>
-                        </Box>
+                            </Box>
+                        </Paper>
                     </Grid>
-                    <Grid item xs={12} md={3} lg={3} xl={3}>
-                        <Paper>
+                    <Grid item xs={12} md={3} lg={2} xl={2}>
+                        <Paper className={classes.paperOverflow}>
                             <Box margin={2}>
                                 <Grid container spacing={1} direction="column">
                                     <Grid item>

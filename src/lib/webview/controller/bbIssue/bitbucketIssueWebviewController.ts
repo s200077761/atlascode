@@ -1,7 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-import { clientForSite } from '../../../../bitbucket/bbUtils';
 import { BitbucketIssue, User } from '../../../../bitbucket/model';
-import { Container } from '../../../../container';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { BitbucketIssueAction } from '../../../ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -61,28 +59,13 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                 issue: this._issue
             });
 
-            const bbApi = await clientForSite(this._issue.site);
-            const [, issueLatest, comments, changes] = await Promise.all([
-                Container.bitbucketContext.currentUser(this._issue.site),
-                bbApi.issues!.refetch(this._issue),
-                bbApi.issues!.getComments(this._issue),
-                bbApi.issues!.getChanges(this._issue)
-            ]);
-
-            this._issue = issueLatest;
-
+            const comments = await this._api.getComments(this._issue);
             this._participants.clear();
-            comments.data.forEach(c => this._participants.set(c.user.accountId, c.user));
-
-            //@ts-ignore
-            // replace comment with change data which contains additional details
-            const updatedComments = comments.data.map(
-                comment => changes.data.find(change => change.id! === comment.id!) || comment
-            );
+            comments.forEach(c => this._participants.set(c.user.accountId, c.user));
 
             this.postMessage({
                 type: BitbucketIssueMessageType.Comments,
-                comments: updatedComments
+                comments: comments
             });
         } catch (e) {
             let err = new Error(`error updating bitbucket issue: ${e}`);
