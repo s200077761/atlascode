@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 import useConstant from 'use-constant';
 import { UIWSPort } from '../lib/ipc/models/ports';
+import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
 import { AtlLoader } from './atlascode/common/AtlLoader';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
@@ -89,6 +90,7 @@ const App = (): JSX.Element => {
                         <ErrorControllerContext.Provider value={errorController}>
                             <ErrorStateContext.Provider value={errorState}>
                                 <CssBaseline />
+                                <AtlGlobalStyles />
                                 <Page />
                             </ErrorStateContext.Provider>
                         </ErrorControllerContext.Provider>
