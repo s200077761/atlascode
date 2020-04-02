@@ -3,7 +3,7 @@ import { darken, lighten } from './colors';
 import { VSCodeStyles } from './styles';
 
 const body = document.body;
-const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
+export const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
 
 export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     return createMuiTheme({

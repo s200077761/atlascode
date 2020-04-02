@@ -1,8 +1,9 @@
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { DetailedSiteInfo, Product } from '../../../../atlclients/authInfo';
+import { Product } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonSubpanelProps } from '../../common/commonPanelProps';
 import { PanelSubtitle } from '../../common/PanelSubtitle';
 import { PanelTitle } from '../../common/PanelTitle';
@@ -10,7 +11,7 @@ import { SiteAuthenticator } from './SiteAuthenticator';
 
 type AuthPanelProps = CommonSubpanelProps & {
     isRemote: boolean;
-    sites: DetailedSiteInfo[];
+    sites: SiteWithAuthInfo[];
     product: Product;
     section: ConfigSection;
 };

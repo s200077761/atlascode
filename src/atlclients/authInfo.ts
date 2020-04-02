@@ -119,48 +119,54 @@ export interface AccessibleResource {
 }
 
 export const emptyUserInfo: UserInfo = {
-    id: 'empty',
-    displayName: 'empty',
-    email: 'empty',
-    avatarUrl: 'empty'
+    id: '',
+    displayName: '',
+    email: '',
+    avatarUrl: ''
 };
 
 export const emptyProduct: Product = {
-    name: 'empty',
-    key: 'empty'
+    name: '',
+    key: ''
 };
 
 export const emptySiteInfo: DetailedSiteInfo = {
-    id: 'empty',
-    name: 'empty',
-    avatarUrl: 'empty',
-    host: 'empty',
-    baseLinkUrl: 'empty',
-    baseApiUrl: 'empty',
+    id: '',
+    name: '',
+    avatarUrl: '',
+    host: '',
+    baseLinkUrl: '',
+    baseApiUrl: '',
     product: emptyProduct,
     isCloud: true,
-    userId: 'empty',
-    credentialId: 'emtpy'
+    userId: '',
+    credentialId: ''
 };
 
 export const emptyAccessibleResource: AccessibleResource = {
-    id: 'empty',
-    name: 'empty',
-    avatarUrl: 'empty',
+    id: '',
+    name: '',
+    avatarUrl: '',
     scopes: [],
-    url: 'empty'
+    url: ''
 };
 
 export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
-    id: 'empty',
-    name: 'empty',
-    avatarUrl: 'empty',
+    id: '',
+    name: '',
+    avatarUrl: '',
     scopes: [],
     baseUrlSuffix: 'atlassian.net'
 };
 
 export const emptyAuthInfo: AuthInfo = {
     user: emptyUserInfo
+};
+
+export const emptyBasicAuthInfo: BasicAuthInfo = {
+    user: emptyUserInfo,
+    username: '',
+    password: ''
 };
 
 export function isUpdateAuthEvent(a: AuthInfoEvent): a is UpdateAuthInfoEvent {
@@ -189,11 +195,11 @@ export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
 export function isEmptySiteInfo(a: any): boolean {
     return (
         a &&
-        (<DetailedSiteInfo>a).id === 'empty' &&
-        (<DetailedSiteInfo>a).name === 'empty' &&
-        (<DetailedSiteInfo>a).host === 'empty' &&
-        (<DetailedSiteInfo>a).baseLinkUrl === 'empty' &&
-        (<DetailedSiteInfo>a).baseApiUrl === 'empty'
+        (<DetailedSiteInfo>a).id === '' &&
+        (<DetailedSiteInfo>a).name === '' &&
+        (<DetailedSiteInfo>a).host === '' &&
+        (<DetailedSiteInfo>a).baseLinkUrl === '' &&
+        (<DetailedSiteInfo>a).baseApiUrl === ''
     );
 }
 
