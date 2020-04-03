@@ -4,7 +4,6 @@ import {
     Badge,
     Box,
     Container,
-    FormLabel,
     Grid,
     makeStyles,
     Paper,
@@ -175,7 +174,9 @@ const ConfigPage: React.FunctionComponent = () => {
                             />
                         </Tabs>
                         <div className={classes.grow} />
-                        <FormLabel classes={{ root: classes.targetSelectLabel }}>save settings to: </FormLabel>
+                        <Typography variant="h5" classes={{ root: classes.targetSelectLabel }}>
+                            save settings to:{' '}
+                        </Typography>
                         <ToggleButtonGroup
                             color="primary"
                             size="small"
