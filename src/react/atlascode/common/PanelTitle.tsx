@@ -11,7 +11,6 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             root: {
-                //color: theme.palette.text.primary,
                 marginRight: theme.spacing(2)
             }
         } as const)
