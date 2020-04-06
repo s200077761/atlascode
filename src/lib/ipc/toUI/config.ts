@@ -13,6 +13,7 @@ import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '
 
 export enum ConfigMessageType {
     Init = 'init',
+    SectionChange = 'sectionChange',
     Update = 'configUpdate',
     SitesUpdate = 'sitesAvailableUpdate',
     JQLOptionsResponse = 'jqlOptionsResponse',
@@ -24,6 +25,7 @@ export enum ConfigMessageType {
 export type ConfigMessage =
     | ReducerAction<ConfigMessageType.Init, ConfigInitMessage>
     | ReducerAction<ConfigMessageType.Update, ConfigUpdateMessage>
+    | ReducerAction<ConfigMessageType.SectionChange, SectionChangeMessage>
     | ReducerAction<ConfigMessageType.SitesUpdate, SitesUpdateMessage>;
 
 export type ConfigResponse =

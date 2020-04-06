@@ -18,6 +18,7 @@ import PersonIcon from '@material-ui/icons/Person';
 import WorkIcon from '@material-ui/icons/Work';
 import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
+import equal from 'fast-deep-equal/es6';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
 import { ErrorDisplay } from '../common/ErrorDisplay';
@@ -127,6 +128,26 @@ const ConfigPage: React.FunctionComponent = () => {
     useEffect(() => {
         controller.setConfigTarget(internalTarget);
     }, [internalTarget, controller]);
+
+    useEffect(() => {
+        setOpenSection(oldSection => {
+            if (state.openSection !== oldSection) {
+                return state.openSection;
+            }
+
+            return oldSection;
+        });
+    }, [state.openSection]);
+
+    useEffect(() => {
+        setOpenSubsections(oldSubSections => {
+            if (!equal(state.openSubSections, oldSubSections)) {
+                return { ...emptySubsections, [state.openSection]: state.openSubSections };
+            }
+
+            return oldSubSections;
+        });
+    }, [state.openSection, state.openSubSections]);
 
     return (
         <ConfigControllerContext.Provider value={controller}>
