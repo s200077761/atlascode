@@ -31,6 +31,7 @@ import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
 import InlinedRenderedTextEditor from './InlineRenderedTextEditor';
+import StatusMenu from './StatusMenu';
 
 const priorityIcon = {
     trivial: <RadioButtonUncheckedIcon />,
@@ -75,6 +76,10 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [state, controller] = useBitbucketIssueController();
 
+    const handleStatusChange = async (newStatus: string) => {
+        await controller.updateStatus(newStatus);
+    };
+
     return (
         <BitbucketIssueControllerContext.Provider value={controller}>
             <Container maxWidth="xl" hidden={state.issue.data.id === ''}>
@@ -84,7 +89,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                             <Link href={state.issue.data.links?.html?.href}>#{state.issue.data.id}</Link>{' '}
                             {state.issue.data.title}
                         </Typography>
-                        <div className={classes.grow} />
+                        <Box className={classes.grow} />
                         <Tooltip title="Create a branch and assign issue to me">
                             <Button variant="contained" color="primary" startIcon={<PlayArrowIcon />}>
                                 Start work
@@ -124,7 +129,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                     <Grid item>
                                         <Grid container spacing={2} direction="column">
                                             {state.comments.map(c => (
-                                                <Grid item>
+                                                <Grid item key={c.id}>
                                                     <Grid container spacing={1} alignItems="flex-start">
                                                         <Grid item>
                                                             <Avatar src={c.user.avatarUrl} />
@@ -160,14 +165,14 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                         variant="contained"
                                                         startIcon={<RemoveRedEyeOutlinedIcon />}
                                                     >
-                                                        {state.issue.data.watches}
+                                                        {state.issue.data.watches || 0}
                                                     </Button>
                                                 </Tooltip>
                                             </Grid>
                                             <Grid item>
                                                 <Tooltip title="Votes">
                                                     <Button variant="contained" startIcon={<StarBorder />}>
-                                                        {state.issue.data.votes}
+                                                        {state.issue.data.votes || 0}
                                                     </Button>
                                                 </Tooltip>
                                             </Grid>
@@ -177,7 +182,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                         <Typography variant="h6">
                                             <strong>Status</strong>
                                         </Typography>
-                                        <Typography>{state.issue.data.state}</Typography>
+                                        <StatusMenu status={state.issue.data.state} onChange={handleStatusChange} />
                                     </Grid>
                                     <Grid item>
                                         <Grid item>
@@ -244,7 +249,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                             </Typography>
                                         </Grid>
                                         <Grid item>
-                                            <Tooltip title={state.issue.data.created_on}>
+                                            <Tooltip title={state.issue.data.created_on || 'unknown'}>
                                                 <Typography>
                                                     {format(state.issue.data.created_on, 'YYYY-MM-DD h:mm A')}
                                                 </Typography>

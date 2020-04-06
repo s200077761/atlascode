@@ -1,9 +1,9 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { BitbucketIssue, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
-import { BitbucketIssueAction } from '../../../ipc/fromUI/bbIssue';
+import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../ipc/fromUI/common';
-import { BitbucketIssueMessage, BitbucketIssueMessageType } from '../../../ipc/toUI/bbIssue';
+import { BitbucketIssueMessage, BitbucketIssueMessageType, BitbucketIssueResponse } from '../../../ipc/toUI/bbIssue';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
@@ -43,7 +43,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
         return `Bitbucket issue #${this._issue.data.id}`;
     }
 
-    private postMessage(message: BitbucketIssueMessage | CommonMessage) {
+    private postMessage(message: BitbucketIssueMessage | BitbucketIssueResponse | CommonMessage) {
         this._messagePoster(message);
     }
 
@@ -54,6 +54,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
             }
 
             this._isRefreshing = true;
+            this._issue = await this._api.getIssue(this._issue);
             this.postMessage({
                 type: BitbucketIssueMessageType.Init,
                 issue: this._issue
@@ -82,6 +83,21 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
 
     public async onMessageReceived(msg: BitbucketIssueAction) {
         switch (msg.type) {
+            case BitbucketIssueActionType.UpdateStatus:
+                try {
+                    await this._api.updateStatus(this._issue, msg.status);
+                    this.postMessage({
+                        type: BitbucketIssueMessageType.UpdateStatusResponse
+                    });
+                    this.invalidate();
+                } catch (e) {
+                    this._logger.error(new Error(`error updating status: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating status')
+                    });
+                }
+                break;
             case CommonActionType.Refresh: {
                 try {
                     await this.invalidate();
@@ -94,10 +110,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                 }
                 break;
             }
-            case CommonActionType.SubmitFeedback: {
-                //this._api.submitFeedback(msg.feedback, id);
-                break;
-            }
+            case CommonActionType.SubmitFeedback:
             case CommonActionType.ExternalLink:
             case CommonActionType.DismissPMFLater:
             case CommonActionType.DismissPMFNever:

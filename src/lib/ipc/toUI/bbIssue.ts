@@ -3,19 +3,22 @@ import { BitbucketIssue, Comment, emptyBitbucketSite } from '../../../bitbucket/
 
 export enum BitbucketIssueMessageType {
     Init = 'init',
-    Comments = 'comments'
+    Comments = 'comments',
+    UpdateStatusResponse = 'updateStatusResponse'
 }
 
 export type BitbucketIssueMessage =
     | ReducerAction<BitbucketIssueMessageType.Init, BitbucketIssueInitMessage>
     | ReducerAction<BitbucketIssueMessageType.Comments, BitbucketIssueCommentsMessage>;
 
+export type BitbucketIssueResponse = ReducerAction<BitbucketIssueMessageType.UpdateStatusResponse>;
+
 export interface BitbucketIssueInitMessage {
     issue: BitbucketIssue;
 }
 
 export const emptyBitbucketIssueInitMessage: BitbucketIssueInitMessage = {
-    issue: { site: emptyBitbucketSite, data: { id: '', content: { html: '' } } }
+    issue: { site: emptyBitbucketSite, data: { id: '', state: '', content: { html: '' } } }
 };
 
 export interface BitbucketIssueCommentsMessage {
@@ -25,3 +28,7 @@ export interface BitbucketIssueCommentsMessage {
 export const emptyBitbucketIssueCommentsMessage: BitbucketIssueCommentsMessage = {
     comments: []
 };
+
+export interface BitbucketIssueChangesMessage {
+    changes: Partial<BitbucketIssue>;
+}

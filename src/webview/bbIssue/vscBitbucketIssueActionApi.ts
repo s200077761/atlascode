@@ -10,6 +10,13 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         this._analyticsApi = analyticsApi;
         console.log(this._analyticsApi);
     }
+
+    async getIssue(issue: BitbucketIssue): Promise<BitbucketIssue> {
+        const bbApi = await clientForSite(issue.site);
+
+        return bbApi.issues!.refetch(issue);
+    }
+
     async getComments(issue: BitbucketIssue): Promise<Comment[]> {
         const bbApi = await clientForSite(issue.site);
         const [comments, changes] = await Promise.all([
@@ -23,5 +30,10 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         );
 
         return updatedComments;
+    }
+
+    async updateStatus(issue: BitbucketIssue, status: string) {
+        const bbApi = await clientForSite(issue.site);
+        await bbApi.issues!.postChange(issue, status, issue.data.content.raw);
     }
 }
