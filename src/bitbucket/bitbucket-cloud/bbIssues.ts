@@ -163,47 +163,51 @@ export class BitbucketIssuesApiImpl {
         );
 
         const changes: any[] = (data.values || []).reverse();
+        const comments: Comment[] = changes.map(this.convertChangeToComment);
 
-        const updatedChanges: any[] = changes.map((change) => {
-            let content = '';
-            if (change.changes!.state) {
-                content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${
-                    change.changes!.state!.new
-                }</strong></em></li>`;
-            }
-            if (change.changes!.kind) {
-                content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${
-                    change.changes!.kind!.new
-                }</strong></em></li>`;
-            }
-            if (change.changes!.priority) {
-                content += `<li><em>changed issue priority from <strong>${
-                    change.changes!.priority!.old
-                }</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
-            }
+        return { data: comments, next: data.next };
+    }
+
+    private convertChangeToComment(change: any): Comment {
+        let content = '';
+        if (change.changes!.state) {
+            content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${
+                change.changes!.state!.new
+            }</strong></em></li>`;
+        }
+        if (change.changes!.kind) {
+            content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${
+                change.changes!.kind!.new
+            }</strong></em></li>`;
+        }
+        if (change.changes!.priority) {
+            content += `<li><em>changed issue priority from <strong>${
+                change.changes!.priority!.old
+            }</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
+        }
+        //@ts-ignore
+        if (change.changes!.attachment && change.changes!.attachment!.new) {
             //@ts-ignore
-            if (change.changes!.attachment && change.changes!.attachment!.new) {
-                //@ts-ignore
-                content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
-            }
-            //@ts-ignore
-            if (change.changes!.assignee_account_id) {
-                content += `<li><em>updated assignee</em></li>`;
-            }
-            if (change.changes!.content) {
-                content += `<li><em>updated description</em></li>`;
-            }
-            if (change.changes!.title) {
-                content += `<li><em>updated title</em></li>`;
-            }
+            content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
+        }
+        //@ts-ignore
+        if (change.changes!.assignee_account_id) {
+            content += `<li><em>updated assignee</em></li>`;
+        }
+        if (change.changes!.content) {
+            content += `<li><em>updated description</em></li>`;
+        }
+        if (change.changes!.title) {
+            content += `<li><em>updated title</em></li>`;
+        }
 
-            if (content === '') {
-                content += `<li><em>updated issue</em></li>`;
-            }
-            return { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
-        });
+        if (content === '') {
+            content += `<li><em>updated issue</em></li>`;
+        }
 
-        const updatedChangesAsComments: Comment[] = updatedChanges.map((change) => ({
+        change = { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
+
+        return {
             id: change.id as string,
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
@@ -223,25 +227,28 @@ export class BitbucketIssuesApiImpl {
                 : UnknownUser,
             children: [],
             tasks: [],
-        }));
-
-        return { data: updatedChangesAsComments, next: data.next };
+        };
     }
 
-    async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
+    async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<[any, any]> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`, {
-            type: 'issue_change',
-            changes: {
-                state: {
-                    new: newStatus,
+        const { data } = await this.client.post(
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
+            {
+                type: 'issue_change',
+                changes: {
+                    state: {
+                        new: newStatus,
+                    },
                 },
-            },
-            content: {
-                raw: content,
-            },
-        });
+                content: {
+                    raw: content,
+                },
+            }
+        );
+
+        return [data.changes.state.new, this.convertChangeToComment(data)];
     }
 
     async postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {

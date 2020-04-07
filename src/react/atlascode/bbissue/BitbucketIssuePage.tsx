@@ -77,7 +77,8 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
     const [state, controller] = useBitbucketIssueController();
 
     const handleStatusChange = async (newStatus: string) => {
-        await controller.updateStatus(newStatus);
+        const status = await controller.updateStatus(newStatus);
+        controller.applyChange({ state: status });
     };
 
     return (

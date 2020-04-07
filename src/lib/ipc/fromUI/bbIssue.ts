@@ -2,13 +2,13 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { CommonAction } from './common';
 
 export enum BitbucketIssueActionType {
-    UpdateStatus = 'updateStatus'
+    UpdateStatusRequest = 'updateStatusRequest'
 }
 
 export type BitbucketIssueAction =
-    | ReducerAction<BitbucketIssueActionType.UpdateStatus, UpdateStatusAction>
+    | ReducerAction<BitbucketIssueActionType.UpdateStatusRequest, UpdateStatusRequestAction>
     | CommonAction;
 
-export interface UpdateStatusAction {
+export interface UpdateStatusRequestAction {
     status: string;
 }

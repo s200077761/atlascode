@@ -1,5 +1,4 @@
-import { CircularProgress, Grid, MenuItem, Select, Theme } from '@material-ui/core';
-import { useTheme } from '@material-ui/styles';
+import { CircularProgress, Grid, MenuItem, TextField, Theme, useTheme } from '@material-ui/core';
 import React, { useState } from 'react';
 import Lozenge from '../common/Lozenge';
 
@@ -26,37 +25,43 @@ const StatusMenu: React.FC<StatusMenuProps> = (props: StatusMenuProps) => {
             value: string;
         }>
     ) => {
-        setLoading(true);
-        if (event?.target?.value) {
-            await props.onChange(event.target.value);
+        if (event?.target?.value && event?.target?.value === props.status) {
+            return;
         }
-        setLoading(false);
+        try {
+            setLoading(true);
+            if (event?.target?.value) {
+                setLoadingStatus(event.target.value);
+                await props.onChange(event.target.value);
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     const theme = useTheme<Theme>();
     const [loading, setLoading] = useState(false);
+    const [loadingStatus, setLoadingStatus] = useState(props.status);
 
     return (
-        <Select
-            value={props.status}
+        <TextField
+            select
+            variant="standard"
+            size="small"
+            value={loading ? loadingStatus : props.status}
             onChange={handleChange}
-            renderValue={(value: string) => {
-                return (
-                    <Grid container spacing={1} alignItems="center">
-                        <Grid item>{StatusRenderer[value]}</Grid>
-                        <Grid item hidden={loading}>
-                            <CircularProgress size={theme.typography.fontSize} />
-                        </Grid>
-                    </Grid>
-                );
-            }}
         >
             {Object.keys(StatusRenderer).map(status => (
                 <MenuItem key={status} value={status}>
-                    {StatusRenderer[status]}
+                    <Grid container spacing={1} alignItems="center">
+                        <Grid item>{StatusRenderer[status]}</Grid>
+                        <Grid item hidden={!loading}>
+                            <CircularProgress size={theme.typography.fontSize} />
+                        </Grid>
+                    </Grid>
                 </MenuItem>
             ))}
-        </Select>
+        </TextField>
     );
 };
 

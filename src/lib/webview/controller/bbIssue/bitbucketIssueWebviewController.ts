@@ -65,7 +65,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
             comments.forEach(c => this._participants.set(c.user.accountId, c.user));
 
             this.postMessage({
-                type: BitbucketIssueMessageType.Comments,
+                type: BitbucketIssueMessageType.InitComments,
                 comments: comments
             });
         } catch (e) {
@@ -83,13 +83,17 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
 
     public async onMessageReceived(msg: BitbucketIssueAction) {
         switch (msg.type) {
-            case BitbucketIssueActionType.UpdateStatus:
+            case BitbucketIssueActionType.UpdateStatusRequest:
                 try {
-                    await this._api.updateStatus(this._issue, msg.status);
+                    const [status, comment] = await this._api.updateStatus(this._issue, msg.status);
                     this.postMessage({
-                        type: BitbucketIssueMessageType.UpdateStatusResponse
+                        type: BitbucketIssueMessageType.UpdateStatusResponse,
+                        status: status
                     });
-                    this.invalidate();
+                    this.postMessage({
+                        type: BitbucketIssueMessageType.UpdateComments,
+                        comments: [comment]
+                    });
                 } catch (e) {
                     this._logger.error(new Error(`error updating status: ${e}`));
                     this.postMessage({

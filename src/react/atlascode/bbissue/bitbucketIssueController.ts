@@ -1,6 +1,6 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
-import { BitbucketIssue, Comment } from '../../../bitbucket/model';
+import { Comment } from '../../../bitbucket/model';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
@@ -11,7 +11,8 @@ import {
     BitbucketIssueMessage,
     BitbucketIssueMessageType,
     emptyBitbucketIssueCommentsMessage,
-    emptyBitbucketIssueInitMessage
+    emptyBitbucketIssueInitMessage,
+    UpdateStatusResponseMessage
 } from '../../../lib/ipc/toUI/bbIssue';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -20,7 +21,8 @@ export interface BitbucketIssueControllerApi {
     postMessage: PostMessageFunc<BitbucketIssueAction>;
     refresh: () => void;
     openLink: (linkId: KnownLinkID) => void;
-    updateStatus: (status: string) => Promise<void>;
+    updateStatus: (status: string) => Promise<string>;
+    applyChange: (issue: { state: string; [k: string]: any }) => void;
 }
 
 export const emptyApi: BitbucketIssueControllerApi = {
@@ -33,13 +35,13 @@ export const emptyApi: BitbucketIssueControllerApi = {
     openLink: linkId => {
         return;
     },
-    updateStatus: async (status: string) => {}
+    updateStatus: async (status: string) => status,
+    applyChange: (issue: { state: string; [k: string]: any }) => {}
 };
 
 export const BitbucketIssueControllerContext = React.createContext(emptyApi);
 
 export interface BitbucketIssueState extends BitbucketIssueInitMessage {
-    issue: BitbucketIssue;
     comments: Comment[];
     isSomethingLoading: boolean;
 }
@@ -52,14 +54,16 @@ const emptyState: BitbucketIssueState = {
 
 export enum BitbucketIssueUIActionType {
     Init = 'init',
-    Comments = 'comments',
+    InitComments = 'initComments',
+    UpdateComments = 'updateComments',
     LocalChange = 'localChange',
     Loading = 'loading'
 }
 
 export type BitbucketIssueUIAction =
     | ReducerAction<BitbucketIssueUIActionType.Init, { data: BitbucketIssueInitMessage }>
-    | ReducerAction<BitbucketIssueUIActionType.Comments, { data: BitbucketIssueCommentsMessage }>
+    | ReducerAction<BitbucketIssueUIActionType.InitComments, { data: BitbucketIssueCommentsMessage }>
+    | ReducerAction<BitbucketIssueUIActionType.UpdateComments, { data: BitbucketIssueCommentsMessage }>
     | ReducerAction<BitbucketIssueUIActionType.LocalChange, { data: BitbucketIssueChangesMessage }>
     | ReducerAction<BitbucketIssueUIActionType.Loading, {}>;
 
@@ -77,22 +81,26 @@ function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): Bi
             };
             return newstate;
         }
-        case BitbucketIssueUIActionType.Comments: {
-            const newstate = {
+        case BitbucketIssueUIActionType.InitComments: {
+            return {
                 ...state,
-                ...action.data,
-                isSomethingLoading: false,
-                isErrorBannerOpen: false,
-                errorDetails: undefined
+                comments: action.data.comments,
+                isSomethingLoading: false
             };
-            return newstate;
+        }
+        case BitbucketIssueUIActionType.UpdateComments: {
+            return {
+                ...state,
+                comments: [...state.comments, ...action.data.comments],
+                isSomethingLoading: false
+            };
         }
         case BitbucketIssueUIActionType.LocalChange: {
             return {
                 ...state,
                 issue: {
                     ...state.issue,
-                    data: { ...state.issue.data, ...action.data.changes.data }
+                    data: { ...state.issue.data, ...action.data }
                 },
                 isSomethingLoading: false
             };
@@ -114,8 +122,12 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 dispatch({ type: BitbucketIssueUIActionType.Init, data: message });
                 break;
             }
-            case BitbucketIssueMessageType.Comments: {
-                dispatch({ type: BitbucketIssueUIActionType.Comments, data: message });
+            case BitbucketIssueMessageType.InitComments: {
+                dispatch({ type: BitbucketIssueUIActionType.InitComments, data: message });
+                break;
+            }
+            case BitbucketIssueMessageType.UpdateComments: {
+                dispatch({ type: BitbucketIssueUIActionType.UpdateComments, data: message });
                 break;
             }
             default: {
@@ -129,20 +141,16 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
     );
 
     const updateStatus = useCallback(
-        (status: string): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
+        (status: string): Promise<string> => {
+            return new Promise<string>((resolve, reject) => {
                 (async () => {
                     try {
-                        await postMessagePromise(
-                            { type: BitbucketIssueActionType.UpdateStatus, status: status },
+                        const response = await postMessagePromise(
+                            { type: BitbucketIssueActionType.UpdateStatusRequest, status: status },
                             BitbucketIssueMessageType.UpdateStatusResponse,
                             ConnectionTimeout
                         );
-                        dispatch({
-                            type: BitbucketIssueUIActionType.LocalChange,
-                            data: { changes: { data: { state: status } } }
-                        });
-                        resolve();
+                        resolve((response as UpdateStatusResponseMessage).status);
                     } catch (e) {
                         reject(e);
                     }
@@ -150,6 +158,16 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             });
         },
         [postMessagePromise]
+    );
+
+    const applyChange = useCallback(
+        (issue: { state: string; [k: string]: any }) => {
+            dispatch({
+                type: BitbucketIssueUIActionType.LocalChange,
+                data: issue
+            });
+        },
+        [dispatch]
     );
 
     const sendRefresh = useCallback((): void => {
@@ -167,9 +185,10 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             postMessage: postMessage,
             refresh: sendRefresh,
             openLink,
-            updateStatus
+            updateStatus,
+            applyChange
         };
-    }, [openLink, postMessage, sendRefresh, updateStatus]);
+    }, [openLink, postMessage, sendRefresh, updateStatus, applyChange]);
 
     return [state, controllerApi];
 }

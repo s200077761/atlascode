@@ -32,8 +32,8 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         return updatedComments;
     }
 
-    async updateStatus(issue: BitbucketIssue, status: string) {
+    async updateStatus(issue: BitbucketIssue, status: string): Promise<[any, any]> {
         const bbApi = await clientForSite(issue.site);
-        await bbApi.issues!.postChange(issue, status, issue.data.content.raw);
+        return await bbApi.issues!.postChange(issue, status);
     }
 }
