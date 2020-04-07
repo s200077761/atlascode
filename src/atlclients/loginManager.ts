@@ -1,4 +1,4 @@
-import { window } from 'vscode';
+import { Event, EventEmitter, window } from 'vscode';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
@@ -18,12 +18,15 @@ import {
     ProductJira,
     SiteInfo
 } from './authInfo';
+import { displayAuthNotification, OnboardingNotificationPressedEvent } from './authNotification';
 import { CredentialManager } from './authStore';
 import { OAuthDancer } from './oauthDancer';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
+
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
+    private _onLoginNotificationAction = new EventEmitter<OnboardingNotificationPressedEvent>();
 
     constructor(
         private _credentialManager: CredentialManager,
@@ -62,7 +65,7 @@ export class LoginManager {
                 });
             });
 
-            window.showInformationMessage(`You are now authenticated with ${site.product.name}`);
+            displayAuthNotification(site, this._onLoginNotificationAction);
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -71,6 +74,10 @@ export class LoginManager {
                 window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
             }
         }
+    }
+
+    public get onLoginNotificationActionEvent(): Event<OnboardingNotificationPressedEvent> {
+        return this._onLoginNotificationAction.event;
     }
 
     private async getOAuthSiteDetails(
@@ -145,6 +152,7 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                displayAuthNotification(site, this._onLoginNotificationAction);
                 authenticatedEvent(siteDetails).then(e => {
                     this._analyticsClient.sendTrackEvent(e);
                 });

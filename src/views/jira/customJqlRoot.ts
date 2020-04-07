@@ -80,22 +80,34 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     async getFirstJQLResult() {
         const children = await this.getChildren(undefined);
 
-        //The 3rd child is the first one with children...
-        if (children.length >= 3) {
-            const issueNodes = await children[2].getChildren();
-            return issueNodes[0];
+        let firstJQLTree: CustomJQLTree | undefined;
+        for (let child of children) {
+            if (child instanceof CustomJQLTree) {
+                firstJQLTree = child;
+                const issueNodes = await firstJQLTree.getChildren();
+                return issueNodes[0];
+            }
         }
-        return children[0];
+        return undefined;
+    }
+
+    async getCreateIssueNode() {
+        const children = await this.getChildren(undefined);
+        return children[0] instanceof CreateJiraIssueNode ? children[0] : undefined;
     }
 
     async getChildren(element: IssueNode | undefined) {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return Promise.resolve([
-                new SimpleJiraIssueNode('Please login to Jira', {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Jira',
-                    arguments: [ProductJira]
-                })
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira]
+                    },
+                    undefined
+                )
             ]);
         }
 

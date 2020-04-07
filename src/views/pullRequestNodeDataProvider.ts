@@ -142,30 +142,30 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     async getFirstPullRequestNode(forceFocus: boolean): Promise<PullRequestTitlesNode | SimpleNode | undefined> {
         const children = await this.getChildren(undefined);
-
-        //The 3rd child is the first repo node...
-
-        let repoNode: AbstractBaseNode = new SimpleNode('');
-        for (let node of children) {
-            repoNode = node;
-            if (node instanceof RepositoriesNode) {
-                break;
-            }
-        }
+        const repoNode = children.find(node => node instanceof RepositoriesNode);
         if (repoNode instanceof RepositoriesNode) {
             const prTitlesNodes = await repoNode.getChildren();
             if (prTitlesNodes) {
                 return prTitlesNodes[0] as PullRequestTitlesNode;
             } else if (forceFocus) {
                 return children[0] as SimpleNode;
-            } else {
-                return undefined;
             }
+            return undefined;
         } else if (forceFocus) {
             return children[0] as SimpleNode;
-        } else {
-            return undefined;
         }
+        return undefined;
+    }
+
+    async getCreatePullRequestNode(forceFocus: boolean): Promise<CreatePullRequestNode | SimpleNode | undefined> {
+        const children = await this.getChildren(undefined);
+        const createPRNode = children.find(node => node instanceof CreatePullRequestNode);
+        if (createPRNode instanceof CreatePullRequestNode) {
+            return createPRNode;
+        } else if (forceFocus) {
+            return children[0] as SimpleNode;
+        }
+        return undefined;
     }
 
     async getDetailsNode(prTitlesNode: PullRequestTitlesNode): Promise<DescriptionNode> {

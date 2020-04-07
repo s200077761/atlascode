@@ -1,10 +1,13 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
-import { Disposable } from 'vscode';
+import { commands, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { OnboardingNotificationActions, OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
+import { Commands } from '../../commands';
 import { BaseTreeDataProvider, Explorer } from '../Explorer';
 import { IssueNode } from '../nodes/issueNode';
 import { CustomJQLRoot } from './customJqlRoot';
 import { CustomJQLTree } from './customJqlTree';
+import { CreateJiraIssueNode } from './headerNode';
 
 export interface Refreshable {
     refresh(): void;
@@ -76,6 +79,32 @@ export class JiraExplorer extends Explorer implements Refreshable {
         }
 
         return issue;
+    }
+
+    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+        const dataProvider = this.getDataProvider();
+        if (dataProvider instanceof CustomJQLRoot) {
+            if (e.action === OnboardingNotificationActions.VIEWISSUE) {
+                const firstJQLResult = await dataProvider.getFirstJQLResult();
+
+                //If the JQL query returns nothing, firstJQLResult will be a SimpleJirIssueNode saying "No issue match this query"
+                //In that case, the node gets focused, but nothing else happens.
+                //This is an acceptable behavior because there is only one default JQL configured, so checking for others doesn't make sense
+                if (firstJQLResult instanceof IssueNode) {
+                    this.reveal(firstJQLResult, { focus: true });
+                    const commandObj = firstJQLResult.getTreeItem().command;
+                    if (commandObj) {
+                        commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
+                    }
+                }
+            } else if (e.action === OnboardingNotificationActions.CREATEISSUE) {
+                const createIssueNode = dataProvider.getCreateIssueNode();
+                if (createIssueNode instanceof CreateJiraIssueNode) {
+                    this.reveal(createIssueNode, { focus: true });
+                    commands.executeCommand(Commands.CreateIssue, undefined, 'HintNotification');
+                }
+            }
+        }
     }
 
     async findIssueInChildren(
