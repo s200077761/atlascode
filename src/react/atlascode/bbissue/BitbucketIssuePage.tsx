@@ -26,7 +26,7 @@ import RemoveRedEyeOutlinedIcon from '@material-ui/icons/RemoveRedEyeOutlined';
 import StarBorder from '@material-ui/icons/StarBorder';
 import { makeStyles } from '@material-ui/styles';
 import { format } from 'date-fns';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
@@ -76,10 +76,13 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [state, controller] = useBitbucketIssueController();
 
-    const handleStatusChange = async (newStatus: string) => {
-        const status = await controller.updateStatus(newStatus);
-        controller.applyChange({ state: status });
-    };
+    const handleStatusChange = useCallback(
+        async (newStatus: string) => {
+            const status = await controller.updateStatus(newStatus);
+            controller.applyChange({ state: status });
+        },
+        [controller]
+    );
 
     return (
         <BitbucketIssueControllerContext.Provider value={controller}>

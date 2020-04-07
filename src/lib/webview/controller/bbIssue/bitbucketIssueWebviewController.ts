@@ -94,6 +94,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                         type: BitbucketIssueMessageType.UpdateComments,
                         comments: [comment]
                     });
+                    this._analytics.fireBBIssueCommentEvent(this._issue.site.details);
                 } catch (e) {
                     this._logger.error(new Error(`error updating status: ${e}`));
                     this.postMessage({
@@ -121,8 +122,6 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
             case CommonActionType.OpenPMFSurvey:
             case CommonActionType.SubmitPMF: {
                 this._commonHandler.onMessageReceived(msg);
-                console.log(this._api);
-                console.log(this._analytics);
                 break;
             }
 

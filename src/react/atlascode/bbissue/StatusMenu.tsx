@@ -1,5 +1,5 @@
 import { CircularProgress, Grid, MenuItem, TextField, Theme, useTheme } from '@material-ui/core';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Lozenge from '../common/Lozenge';
 
 type StatusMenuProps = {
@@ -19,25 +19,23 @@ const StatusRenderer = {
 };
 
 const StatusMenu: React.FC<StatusMenuProps> = (props: StatusMenuProps) => {
-    const handleChange = async (
-        event: React.ChangeEvent<{
-            name?: string | undefined;
-            value: string;
-        }>
-    ) => {
-        if (event?.target?.value && event?.target?.value === props.status) {
-            return;
-        }
-        try {
-            setLoading(true);
-            if (event?.target?.value) {
-                setLoadingStatus(event.target.value);
-                await props.onChange(event.target.value);
+    const handleChange = useCallback(
+        async (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => {
+            if (event?.target?.value && event?.target?.value === props.status) {
+                return;
             }
-        } finally {
-            setLoading(false);
-        }
-    };
+            try {
+                setLoading(true);
+                if (event?.target?.value) {
+                    setLoadingStatus(event.target.value);
+                    await props.onChange(event.target.value);
+                }
+            } finally {
+                setLoading(false);
+            }
+        },
+        [props]
+    );
 
     const theme = useTheme<Theme>();
     const [loading, setLoading] = useState(false);
