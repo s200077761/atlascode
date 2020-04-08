@@ -21,6 +21,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
     private _analytics: AnalyticsApi;
     private _commonHandler: CommonActionMessageHandler;
     private _isRefreshing: boolean;
+    private _currentUser: User;
     private _participants: Map<string, User> = new Map();
 
     constructor(
@@ -47,6 +48,10 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
         this._messagePoster(message);
     }
 
+    private async currentUser(): Promise<User> {
+        return this._currentUser || (await this._api.currentUser(this._issue));
+    }
+
     private async invalidate() {
         try {
             if (this._isRefreshing) {
@@ -57,7 +62,8 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
             this._issue = await this._api.getIssue(this._issue);
             this.postMessage({
                 type: BitbucketIssueMessageType.Init,
-                issue: this._issue
+                issue: this._issue,
+                currentUser: await this.currentUser()
             });
 
             const comments = await this._api.getComments(this._issue);
@@ -77,8 +83,8 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
         }
     }
 
-    public update(issue: BitbucketIssue) {
-        this.postMessage({ type: BitbucketIssueMessageType.Init, issue });
+    public async update(issue: BitbucketIssue) {
+        this.postMessage({ type: BitbucketIssueMessageType.Init, issue: issue, currentUser: await this.currentUser() });
     }
 
     public async onMessageReceived(msg: BitbucketIssueAction) {
@@ -94,12 +100,28 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                         type: BitbucketIssueMessageType.UpdateComments,
                         comments: [comment]
                     });
-                    this._analytics.fireBBIssueCommentEvent(this._issue.site.details);
+                    this._analytics.fireBBIssueTransitionedEvent(this._issue.site.details);
                 } catch (e) {
                     this._logger.error(new Error(`error updating status: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error updating status')
+                    });
+                }
+                break;
+            case BitbucketIssueActionType.AddCommentRequest:
+                try {
+                    const comment = await this._api.postComment(this._issue, msg.content);
+                    this.postMessage({
+                        type: BitbucketIssueMessageType.AddCommentResponse,
+                        comment: comment
+                    });
+                    this._analytics.fireBBIssueCommentEvent(this._issue.site.details);
+                } catch (e) {
+                    this._logger.error(new Error(`error adding comment: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error adding comment')
                     });
                 }
                 break;

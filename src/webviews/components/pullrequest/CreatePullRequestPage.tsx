@@ -13,15 +13,7 @@ import path from 'path';
 import React from 'react';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import {
-    BitbucketIssue,
-    BitbucketIssueData,
-    Commit,
-    emptyBitbucketSite,
-    FileDiff,
-    SiteRemote,
-    User,
-} from '../../../bitbucket/model';
+import { BitbucketIssue, Commit, emptyBitbucketSite, FileDiff, SiteRemote, User } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { LegacyPMFData } from '../../../ipc/messaging';
@@ -474,7 +466,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     onItemClick={() =>
                                         this.postMessage({
                                             action: 'openBitbucketIssue',
-                                            issue: this.state.issue as BitbucketIssueData,
+                                            issue: this.state.issue as BitbucketIssue,
                                         })
                                     }
                                 />

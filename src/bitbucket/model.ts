@@ -271,7 +271,10 @@ export function isBitbucketIssue(a: any): a is BitbucketIssue {
     return a && (<BitbucketIssue>a).site !== undefined && (<BitbucketIssue>a).data !== undefined;
 }
 
-export type BitbucketIssueData = any;
+export type BitbucketIssueData = {
+    state: string;
+    [k: string]: any;
+};
 export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {

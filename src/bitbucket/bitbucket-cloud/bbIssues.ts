@@ -127,27 +127,34 @@ export class BitbucketIssuesApiImpl {
         );
 
         return {
-            data: (data.values || []).reverse().map((comment: any) => ({
-                id: comment.id!,
-                parentId: comment.parent ? comment.parent.id! : undefined,
-                htmlContent: comment.content!.html!,
-                rawContent: comment.content!.raw!,
-                ts: comment.created_on!,
-                updatedTs: comment.updated_on!,
-                deleted: !!comment.deleted,
-                inline: comment.inline,
-                user: comment.user
-                    ? {
-                          accountId: comment.user.account_id!,
-                          displayName: comment.user.display_name!,
-                          url: comment.user.links!.html!.href!,
-                          avatarUrl: comment.user.links!.avatar!.href!,
-                          mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`,
-                      }
-                    : UnknownUser,
-                children: [],
-            })),
+            data: (data.values || []).reverse().map(this.toCommentModel),
             next: data.next,
+        };
+    }
+
+    private toCommentModel(comment: any): Comment {
+        return {
+            id: comment.id!,
+            parentId: comment.parent ? comment.parent.id! : undefined,
+            htmlContent: comment.content!.html!,
+            rawContent: comment.content!.raw!,
+            ts: comment.created_on!,
+            updatedTs: comment.updated_on!,
+            deleted: !!comment.deleted,
+            deletable: false,
+            editable: false,
+            inline: comment.inline,
+            user: comment.user
+                ? {
+                      accountId: comment.user.account_id!,
+                      displayName: comment.user.display_name!,
+                      url: comment.user.links!.html!.href!,
+                      avatarUrl: comment.user.links!.avatar!.href!,
+                      mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`,
+                  }
+                : UnknownUser,
+            children: [],
+            tasks: [],
         };
     }
 
@@ -212,8 +219,8 @@ export class BitbucketIssuesApiImpl {
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
             deleted: false,
-            deletable: true,
-            editable: true,
+            deletable: false,
+            editable: false,
             ts: change.created_on!,
             updatedTs: change.created_on!,
             user: change.user
@@ -264,15 +271,19 @@ export class BitbucketIssuesApiImpl {
         });
     }
 
-    async postComment(issue: BitbucketIssue, content: string): Promise<void> {
+    async postComment(issue: BitbucketIssue, content: string): Promise<Comment> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`, {
-            type: 'issue_comment',
-            content: {
-                raw: content,
-            },
-        });
+        const { data } = await this.client.post(
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`,
+            {
+                type: 'issue_comment',
+                content: {
+                    raw: content,
+                },
+            }
+        );
+        return this.toCommentModel(data);
     }
 
     async assign(issue: BitbucketIssue, account_id?: string): Promise<void> {

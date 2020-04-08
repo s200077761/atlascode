@@ -27,6 +27,7 @@ import StarBorder from '@material-ui/icons/StarBorder';
 import { makeStyles } from '@material-ui/styles';
 import { format } from 'date-fns';
 import React, { useCallback } from 'react';
+import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
@@ -79,7 +80,15 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
     const handleStatusChange = useCallback(
         async (newStatus: string) => {
             const status = await controller.updateStatus(newStatus);
-            controller.applyChange({ state: status });
+            controller.applyChange({ issue: { state: status } });
+        },
+        [controller]
+    );
+
+    const handleSaveComment = useCallback(
+        async (content: string) => {
+            const comment = await controller.postComment(content);
+            controller.applyChange({ comments: [comment] });
         },
         [controller]
     );
@@ -136,7 +145,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                 <Grid item key={c.id}>
                                                     <Grid container spacing={1} alignItems="flex-start">
                                                         <Grid item>
-                                                            <Avatar src={c.user.avatarUrl} />
+                                                            <Avatar src={c.user.avatarUrl} alt={c.user.displayName} />
                                                         </Grid>
                                                         <Grid item>
                                                             <Typography variant="subtitle2">
@@ -152,6 +161,9 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                 </Grid>
                                             ))}
                                         </Grid>
+                                    </Grid>
+                                    <Grid item>
+                                        <CommentForm currentUser={state.currentUser} onSave={handleSaveComment} />
                                     </Grid>
                                 </Grid>
                             </Box>

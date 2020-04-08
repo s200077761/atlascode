@@ -1,11 +1,19 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { BitbucketIssue, Comment, emptyBitbucketSite } from '../../../bitbucket/model';
+import {
+    BitbucketIssue,
+    BitbucketIssueData,
+    Comment,
+    emptyBitbucketSite,
+    emptyUser,
+    User
+} from '../../../bitbucket/model';
 
 export enum BitbucketIssueMessageType {
     Init = 'init',
     InitComments = 'initComments',
     UpdateComments = 'updateComments',
-    UpdateStatusResponse = 'updateStatusResponse'
+    UpdateStatusResponse = 'updateStatusResponse',
+    AddCommentResponse = 'addCommentResponse'
 }
 
 export type BitbucketIssueMessage =
@@ -13,17 +21,18 @@ export type BitbucketIssueMessage =
     | ReducerAction<BitbucketIssueMessageType.InitComments, BitbucketIssueCommentsMessage>
     | ReducerAction<BitbucketIssueMessageType.UpdateComments, BitbucketIssueCommentsMessage>;
 
-export type BitbucketIssueResponse = ReducerAction<
-    BitbucketIssueMessageType.UpdateStatusResponse,
-    UpdateStatusResponseMessage
->;
+export type BitbucketIssueResponse =
+    | ReducerAction<BitbucketIssueMessageType.UpdateStatusResponse, UpdateStatusResponseMessage>
+    | ReducerAction<BitbucketIssueMessageType.AddCommentResponse, AddCommentResponseMessage>;
 
 export interface BitbucketIssueInitMessage {
     issue: BitbucketIssue;
+    currentUser: User;
 }
 
 export const emptyBitbucketIssueInitMessage: BitbucketIssueInitMessage = {
-    issue: { site: emptyBitbucketSite, data: { id: '', state: '', content: { html: '' } } }
+    issue: { site: emptyBitbucketSite, data: { id: '', state: '', content: { html: '' } } },
+    currentUser: emptyUser
 };
 
 export interface BitbucketIssueCommentsMessage {
@@ -35,10 +44,14 @@ export const emptyBitbucketIssueCommentsMessage: BitbucketIssueCommentsMessage =
 };
 
 export interface BitbucketIssueChangesMessage {
-    state: string;
-    [k: string]: any;
+    issue: Partial<BitbucketIssueData>;
+    comments: Comment[];
 }
 
 export interface UpdateStatusResponseMessage {
     status: string;
+}
+
+export interface AddCommentResponseMessage {
+    comment: Comment;
 }

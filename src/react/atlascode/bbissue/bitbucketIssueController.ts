@@ -1,10 +1,11 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
-import { Comment } from '../../../bitbucket/model';
+import { BitbucketIssueData, Comment, emptyComment } from '../../../bitbucket/model';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
 import {
+    AddCommentResponseMessage,
     BitbucketIssueChangesMessage,
     BitbucketIssueCommentsMessage,
     BitbucketIssueInitMessage,
@@ -22,7 +23,8 @@ export interface BitbucketIssueControllerApi {
     refresh: () => void;
     openLink: (linkId: KnownLinkID) => void;
     updateStatus: (status: string) => Promise<string>;
-    applyChange: (issue: { state: string; [k: string]: any }) => void;
+    postComment: (content: string) => Promise<Comment>;
+    applyChange: (change: { issue?: Partial<BitbucketIssueData>; comments?: Comment[] }) => void;
 }
 
 export const emptyApi: BitbucketIssueControllerApi = {
@@ -36,7 +38,8 @@ export const emptyApi: BitbucketIssueControllerApi = {
         return;
     },
     updateStatus: async (status: string) => status,
-    applyChange: (issue: { state: string; [k: string]: any }) => {}
+    postComment: async (content: string) => emptyComment,
+    applyChange: (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {}
 };
 
 export const BitbucketIssueControllerContext = React.createContext(emptyApi);
@@ -98,10 +101,13 @@ function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): Bi
         case BitbucketIssueUIActionType.LocalChange: {
             return {
                 ...state,
-                issue: {
-                    ...state.issue,
-                    data: { ...state.issue.data, ...action.data }
-                },
+                issue: action.data.issue
+                    ? {
+                          ...state.issue,
+                          data: { ...state.issue.data, ...action.data }
+                      }
+                    : state.issue,
+                comments: action.data.comments ? [...state.comments, ...action.data.comments] : state.comments,
                 isSomethingLoading: false
             };
         }
@@ -160,11 +166,31 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         [postMessagePromise]
     );
 
+    const postComment = useCallback(
+        (content: string): Promise<Comment> => {
+            return new Promise<Comment>((resolve, reject) => {
+                (async () => {
+                    try {
+                        const response = await postMessagePromise(
+                            { type: BitbucketIssueActionType.AddCommentRequest, content: content },
+                            BitbucketIssueMessageType.AddCommentResponse,
+                            ConnectionTimeout
+                        );
+                        resolve((response as AddCommentResponseMessage).comment);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const applyChange = useCallback(
-        (issue: { state: string; [k: string]: any }) => {
+        (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {
             dispatch({
                 type: BitbucketIssueUIActionType.LocalChange,
-                data: issue
+                data: change
             });
         },
         [dispatch]
@@ -186,9 +212,10 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             refresh: sendRefresh,
             openLink,
             updateStatus,
+            postComment,
             applyChange
         };
-    }, [openLink, postMessage, sendRefresh, updateStatus, applyChange]);
+    }, [openLink, postMessage, sendRefresh, updateStatus, postComment, applyChange]);
 
     return [state, controllerApi];
 }

@@ -1,5 +1,5 @@
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { BitbucketIssue, Comment } from '../../bitbucket/model';
+import { BitbucketIssue, Comment, User } from '../../bitbucket/model';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { BitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/bitbucketIssueActionApi';
 
@@ -9,6 +9,11 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
     constructor(analyticsApi: AnalyticsApi) {
         this._analyticsApi = analyticsApi;
         console.log(this._analyticsApi);
+    }
+
+    async currentUser(issue: BitbucketIssue): Promise<User> {
+        const bbApi = await clientForSite(issue.site);
+        return await bbApi.pullrequests.getCurrentUser(issue.site.details);
     }
 
     async getIssue(issue: BitbucketIssue): Promise<BitbucketIssue> {
@@ -30,6 +35,11 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         );
 
         return updatedComments;
+    }
+
+    async postComment(issue: BitbucketIssue, content: string): Promise<Comment> {
+        const bbApi = await clientForSite(issue.site);
+        return await bbApi.issues!.postComment(issue, content);
     }
 
     async updateStatus(issue: BitbucketIssue, status: string): Promise<[any, any]> {
