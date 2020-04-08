@@ -128,7 +128,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             })
         ),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebview.createOrShow()),
-        commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebview.createOrShow()),
+        commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
             const uri = (await prNode.getTreeItem()).resourceUri;
             if (uri) {

@@ -9,6 +9,7 @@ import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { ConfigAction } from './lib/ipc/fromUI/config';
+import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
@@ -24,6 +25,8 @@ import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
+import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
@@ -124,7 +127,18 @@ export class Container {
             )
         );
 
+        const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
+            context.extensionPath,
+            new VSCOnboardingWebviewControllerFactory(
+                new VSCOnboardingActionApi(this._analyticsApi),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                settingsUrl
+            )
+        );
+
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
 
@@ -218,6 +232,11 @@ export class Container {
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
+    }
+
+    private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
+    static get onboardingWebviewFactory() {
+        return this._onboardingWebviewFactory;
     }
 
     private static _welcomeWebview: WelcomeWebview;
