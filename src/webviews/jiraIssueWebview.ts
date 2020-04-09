@@ -530,12 +530,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             }
                             const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
 
-                            if (
-                                !this._editUIData.fieldValues['worklog'] ||
-                                !this._editUIData.fieldValues['worklog'].worklogs ||
-                                !Array.isArray(this._editUIData.fieldValues['worklog'].worklogs)
-                            ) {
-                                this._editUIData.fieldValues['worklog'].worklogs = [];
+                            if (!Array.isArray(this._editUIData.fieldValues['worklog']?.worklogs)) {
+                                this._editUIData.fieldValues['worklog'] = { worklogs: [] };
                             }
 
                             this._editUIData.fieldValues['worklog'].worklogs.push(resp);
