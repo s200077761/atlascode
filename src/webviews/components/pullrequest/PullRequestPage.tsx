@@ -796,7 +796,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     onAddReviewer={this.handleReviewerAdded}
                     isLoading={this.state.isReviewersLoading}
                 />
-                {!pr.siteDetails.isCloud && (
+                {!pr.siteDetails.isCloud && this.state.pr.currentUser?.accountId !== pr.author.accountId && (
                     <Tooltip
                         content={
                             currentUserApprovalStatus === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'
@@ -816,16 +816,18 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         </Button>
                     </Tooltip>
                 )}
-                <Button
-                    className="ac-button"
-                    iconBefore={<CheckCircleOutlineIcon label="approve" />}
-                    isLoading={this.state.isApproveButtonLoading}
-                    onClick={() =>
-                        this.handleApprove(currentUserApprovalStatus === 'APPROVED' ? 'UNAPPROVED' : 'APPROVED')
-                    }
-                >
-                    {currentUserApprovalStatus === 'APPROVED' ? 'Unapprove' : 'Approve'}
-                </Button>
+                {pr.siteDetails.isCloud || this.state.pr.currentUser?.accountId !== pr.author.accountId ? (
+                    <Button
+                        className="ac-button"
+                        iconBefore={<CheckCircleOutlineIcon label="approve" />}
+                        isLoading={this.state.isApproveButtonLoading}
+                        onClick={() =>
+                            this.handleApprove(currentUserApprovalStatus === 'APPROVED' ? 'UNAPPROVED' : 'APPROVED')
+                        }
+                    >
+                        {currentUserApprovalStatus === 'APPROVED' ? 'Unapprove' : 'Approve'}
+                    </Button>
+                ) : null}
 
                 <div className="ac-inline-dialog">
                     <InlineDialog
