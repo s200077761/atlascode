@@ -188,15 +188,35 @@ export class SiteManager extends Disposable {
     }
 
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
+        // match for complete hostname
         let site = this.getSitesAvailable(product).find(site => site.host.includes(hostname));
+        if (site) {
+            return site;
+        }
+
+        // partial suffix match for hostname to support cases where git clone URL hostname is different from REST API hostname
+        // e.g. if hostname if abc.example.com, look for example.com
+        const hostnameComponents = hostname.split('.');
+        const domain = hostnameComponents.slice(hostnameComponents.length - 2).join('.');
+        site = this.getSitesAvailable(product).find(site => site.host.includes(domain));
+        if (site) {
+            return site;
+        }
+
+        // look for match in mirror hosts (for Bitbucket Server)
+        site = this.getSitesAvailable(product).find(site =>
+            Container.bitbucketContext
+                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !==
+                  undefined
+                : false
+        );
         if (site) {
             return site;
         }
 
         return this.getSitesAvailable(product).find(site =>
             Container.bitbucketContext
-                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !==
-                  undefined
+                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(domain)) !== undefined
                 : false
         );
     }
