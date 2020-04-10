@@ -268,6 +268,7 @@ const ConfigPage: React.FunctionComponent = () => {
                     doClose={authDialogController.close}
                     authEntry={authDialogEntry}
                     open={authDialogOpen}
+                    save={controller.login}
                     onExited={authDialogController.onExited}
                 />
             </AuthDialogControllerContext.Provider>

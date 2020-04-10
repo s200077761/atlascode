@@ -14,8 +14,9 @@ import {
 } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import React, { memo, useCallback, useContext, useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import {
+    AuthInfo,
     BasicAuthInfo,
     emptyAuthInfo,
     emptyUserInfo,
@@ -26,11 +27,11 @@ import {
 import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useFormValidation } from '../../common/form/useFormValidation';
 import { validateRequiredString, validateStartsWithProtocol } from '../../util/fieldValidators';
-import { ConfigControllerContext } from '../configController';
 export type AuthDialogProps = {
     open: boolean;
     doClose: () => void;
     onExited: () => void;
+    save: (site: SiteInfo, auth: AuthInfo) => void;
     product: Product;
     authEntry?: SiteWithAuthInfo;
 };
@@ -86,8 +87,7 @@ const isCustomUrl = (data?: string) => {
 };
 
 export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
-    ({ open, doClose, onExited, product, authEntry }) => {
-        const controller = useContext(ConfigControllerContext);
+    ({ open, doClose, onExited, save, product, authEntry }) => {
         const [authFormState, updateState] = useState(emptyAuthFormState);
 
         const defaultSiteWithAuth = authEntry ? authEntry : emptySiteWithAuthInfo;
@@ -138,20 +138,20 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 };
 
                 if (!isCustomUrl(data.baseUrl)) {
-                    controller.login(siteInfo, emptyAuthInfo);
+                    save(siteInfo, emptyAuthInfo);
                 } else {
                     const authInfo: BasicAuthInfo = {
                         username: data.username,
                         password: data.password,
                         user: emptyUserInfo
                     };
-                    controller.login(siteInfo, authInfo);
+                    save(siteInfo, authInfo);
                 }
 
                 updateState(emptyAuthFormState);
                 doClose();
             },
-            [controller, doClose, product]
+            [doClose, product, save]
         );
 
         const preventClickDefault = useCallback(
