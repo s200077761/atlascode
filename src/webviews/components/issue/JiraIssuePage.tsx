@@ -542,7 +542,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         />
                     </div>
                 )}
-                {this.state.fields['worklog'] && (
+                {this.state.fields['worklog'] && Array.isArray(this.state.fieldValues['worklog']?.worklogs) && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['worklog'].name}</label>
                         <Worklogs worklogs={this.state.fieldValues['worklog']} />
