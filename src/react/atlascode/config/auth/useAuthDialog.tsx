@@ -4,12 +4,14 @@ import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 
 interface AuthDialogController {
     openDialog: (product: Product, entry?: SiteWithAuthInfo) => void;
-    onClose: () => void;
+    close: () => void;
+    onExited: () => void;
 }
 
 const emptyController: AuthDialogController = {
     openDialog: (product: Product, entry?: SiteWithAuthInfo) => {},
-    onClose: () => {}
+    close: () => {},
+    onExited: () => {}
 };
 export const AuthDialogControllerContext = createContext<AuthDialogController>(emptyController);
 
@@ -24,14 +26,17 @@ export const useAuthDialog = () => {
         setOpen(true);
     }, []);
 
-    const onClose = useCallback(() => {
-        setAuthEntry(undefined);
+    const close = useCallback(() => {
         setOpen(false);
     }, []);
 
+    const onExited = useCallback(() => {
+        setAuthEntry(undefined);
+    }, []);
+
     const authDialogController = useMemo(() => {
-        return { onClose, openDialog };
-    }, [onClose, openDialog]);
+        return { close, openDialog, onExited };
+    }, [close, openDialog, onExited]);
 
     return {
         authDialogController,

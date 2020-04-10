@@ -1,11 +1,12 @@
 import { Fade, Grid } from '@material-ui/core';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ProductJira } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
 import { StatusBarPanel } from '../../common/StatusBarPanel';
 import { AuthPanel } from '../auth/AuthPanel';
+import { JiraExplorerPanel } from './subpanels/JiraExplorerPanel';
 import { JiraHoversPanel } from './subpanels/JiraHoversPanel';
 import { JiraTriggersPanel } from './subpanels/JiraTriggersPanel';
 
@@ -24,11 +25,11 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     sites,
     isRemote
 }) => {
-    // const siteInfos = useMemo(() => {
-    //     return sites.map(swa => {
-    //         return swa.site;
-    //     });
-    // }, [sites]);
+    const siteInfos = useMemo(() => {
+        return sites.map(swa => {
+            return swa.site;
+        });
+    }, [sites]);
 
     return (
         <>
@@ -51,7 +52,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                             />
                         </Grid>
                         <Grid item>
-                            {/* <JiraExplorerPanel
+                            <JiraExplorerPanel
                                 visible={visible}
                                 expanded={selectedSubSections.includes(ConfigSubSection.Issues)}
                                 onSubsectionChange={onSubsectionChange}
@@ -62,7 +63,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 fetchAllQueryResults={config[`${ConfigSection.Jira}.explorer.fetchAllQueryResults`]}
                                 monitorEnabled={config[`${ConfigSection.Jira}.explorer.monitorEnabled`]}
                                 refreshInterval={config[`${ConfigSection.Jira}.explorer.refreshInterval`]}
-                            /> */}
+                            />
                         </Grid>
                         <Grid item>
                             <JiraHoversPanel
