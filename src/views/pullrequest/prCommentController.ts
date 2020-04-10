@@ -878,13 +878,12 @@ export class PullRequestCommentController implements vscode.Disposable {
         prHref: string,
         prId: string
     ): Promise<PullRequestComment> {
-        let contextValueString = '';
-        if (comment.deletable && comment.editable) {
-            contextValueString = 'canEdit,canDelete,canAddReply,canAddTask';
-        } else if (comment.editable) {
-            contextValueString = 'canEdit,canAddTask,canAddReply';
-        } else if (comment.deletable) {
-            contextValueString = 'canDelete,canAddTask,canAddReply';
+        const contextValues = ['canAddReply', 'canAddTask'];
+        if (comment.editable) {
+            contextValues.push('canEdit');
+        }
+        if (comment.deletable) {
+            contextValues.push('canDelete');
         }
 
         return {
@@ -896,7 +895,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 iconPath: vscode.Uri.parse(comment.user.avatarUrl)
             },
             authorId: comment.user.accountId,
-            contextValue: contextValueString,
+            contextValue: contextValues.join(','),
             mode: vscode.CommentMode.Preview,
             prHref: prHref,
             prId: prId,
