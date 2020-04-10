@@ -1,4 +1,5 @@
 import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import orderBy from 'lodash.orderby';
 import * as vscode from 'vscode';
 import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
@@ -189,7 +190,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
 
             const workspaceRepos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];
 
-            const repoData: RepoData[] = await Promise.all(
+            const repoData: (RepoData & { hasSubmodules: boolean })[] = await Promise.all(
                 workspaceRepos
                     .filter(r => r.siteRemotes.length > 0)
                     .map(async wsRepo => {
@@ -232,7 +233,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                             remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
                             branchTypes: branchTypes,
                             developmentBranch: developmentBranch,
-                            isCloud: isCloud
+                            isCloud: isCloud,
+                            hasSubmodules: scm.state.submodules.length > 0
                         };
                     })
             );
@@ -255,7 +257,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
             const msg: StartWorkOnIssueData = {
                 type: 'update',
                 issue: issueClone,
-                repoData: repoData
+                repoData: orderBy(repoData, 'hasSubmodules', 'desc')
             };
             this.postMessage(msg);
         } catch (e) {
