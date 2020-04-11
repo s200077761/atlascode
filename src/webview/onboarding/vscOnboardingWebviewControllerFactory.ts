@@ -41,7 +41,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
     }
 
     public uiWebsocketPort(): number {
-        return UIWSPort.Settings;
+        return UIWSPort.Onboarding;
     }
 
     public createController(postMessage: PostMessageFunc): [OnboardingWebviewController, Disposable | undefined];
