@@ -43,8 +43,12 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
         this._messagePoster(message);
     }
 
-    public onSitesChanged(): void {
-        const [jiraSites, bbSites] = this._api.getSitesAvailable();
+    public title(): string {
+        return 'Getting Started';
+    }
+
+    public async onSitesChanged(): Promise<void> {
+        const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
         this.postMessage({
             type: OnboardingMessageType.SitesUpdate,
             jiraSites: jiraSites,
@@ -53,7 +57,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
     }
 
     private async invalidate() {
-        const [jiraSites, bbSites] = this._api.getSitesAvailable();
+        const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
         const target = this._api.getConfigTarget();
         const cfg = this._api.flattenedConfigForTarget(target);
         this.postMessage({

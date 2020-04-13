@@ -1,4 +1,4 @@
-import { JiraIcon } from '@atlaskit/logo';
+import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import {
     Box,
     Button,

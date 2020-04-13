@@ -1,5 +1,6 @@
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
 import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
+import { SiteWithAuthInfo } from '../../../ipc/toUI/config';
 
 export interface OnboardingActionApi {
     authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void>;
@@ -10,4 +11,5 @@ export interface OnboardingActionApi {
     getIsRemote(): boolean;
     getConfigTarget(): ConfigTarget;
     flattenedConfigForTarget(target: ConfigTarget): FlattenedConfig;
+    getSitesWithAuth(): Promise<[SiteWithAuthInfo[], SiteWithAuthInfo[]]>;
 }

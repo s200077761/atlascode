@@ -5,6 +5,7 @@ import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import {
     emptyOnboardingInitMessage,
     OnboardingInitMessage,
@@ -70,7 +71,7 @@ export type OnboardingUIAction =
     | ReducerAction<OnboardingUIActionType.Loading>
     | ReducerAction<
           OnboardingUIActionType.SitesUpdate,
-          { jiraSites: DetailedSiteInfo[]; bitbucketSites: DetailedSiteInfo[] }
+          { jiraSites: SiteWithAuthInfo[]; bitbucketSites: SiteWithAuthInfo[] }
       >;
 
 export type ConfigChanges = { [key: string]: any };

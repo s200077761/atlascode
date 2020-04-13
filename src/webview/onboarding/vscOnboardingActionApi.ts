@@ -1,11 +1,20 @@
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
 import { ConfigurationTarget, env } from 'vscode';
-import { AuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../atlclients/authInfo';
+import {
+    AuthInfo,
+    DetailedSiteInfo,
+    emptyAuthInfo,
+    emptyBasicAuthInfo,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo
+} from '../../atlclients/authInfo';
 import { configuration, IConfig } from '../../config/configuration';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onboardingActionApi';
 
 export class VSCOnboardingActionApi implements OnboardingActionApi {
@@ -32,6 +41,37 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
         const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
 
         return [jiraSitesAvailable, bitbucketSitesAvailable];
+    }
+
+    public async getSitesWithAuth(): Promise<[SiteWithAuthInfo[], SiteWithAuthInfo[]]> {
+        const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+        const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
+
+        const jiraSites = await Promise.all(
+            jiraSitesAvailable.map(
+                async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
+                    const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite);
+                    return {
+                        site: jiraSite,
+                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo
+                    };
+                }
+            )
+        );
+
+        const bitbucketSites = await Promise.all(
+            bitbucketSitesAvailable.map(
+                async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
+                    const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
+                    return {
+                        site: bitbucketSite,
+                        auth: bitbucketAuth ? bitbucketAuth : bitbucketSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo
+                    };
+                }
+            )
+        );
+
+        return [jiraSites, bitbucketSites];
     }
 
     public getIsRemote(): boolean {
