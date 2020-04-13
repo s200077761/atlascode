@@ -45,6 +45,10 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         return 'Atlassian Settings';
     }
 
+    public screenDetails() {
+        return { id: 'atlascodeSettings', site: undefined, product: undefined };
+    }
+
     private postMessage(message: ConfigMessage | ConfigResponse | CommonMessage) {
         this._messagePoster(message);
     }

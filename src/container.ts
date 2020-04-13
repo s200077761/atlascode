@@ -121,7 +121,8 @@ export class Container {
                 this._commonMessageHandler,
                 this._analyticsApi,
                 settingsUrl
-            )
+            ),
+            this._analyticsApi
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
