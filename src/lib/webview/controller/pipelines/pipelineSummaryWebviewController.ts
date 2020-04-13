@@ -24,7 +24,6 @@ export const title: string = 'Pipeline Summary';
 
 export class PipelineSummaryWebviewController implements WebviewController<Pipeline> {
     private steps: PipelineStep[];
-    private pipeline: Pipeline | undefined;
 
     constructor(
         private messagePoster: MessagePoster,
@@ -64,7 +63,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
                 }
                 break;
             }
-            case PipelineSummaryActionType.FetchLogRangeRequest: {
+            case PipelineSummaryActionType.FetchLogRange: {
                 if (!this.pipeline) {
                     this.logger.error(new Error(`Missing a pipeline. no idea`));
                     return;

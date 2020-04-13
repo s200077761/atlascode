@@ -17,4 +17,4 @@ export interface ViewLogsAction {
     reference: PipelineLogReference;
 }
 
-export interface ReRunPipelineRequestAction {}
+export interface ReRunPipelineAction {}
