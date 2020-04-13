@@ -146,6 +146,14 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
 
+    async getById(site: BitbucketSite, prId: number): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}`);
+
+        return CloudPullRequestApi.toPullRequestData(data, site, undefined);
+    }
+
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
