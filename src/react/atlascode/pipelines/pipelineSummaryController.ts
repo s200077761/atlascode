@@ -2,12 +2,12 @@ import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-cont
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../lib/ipc/fromUI/pipelineSummary';
+import { emptyPipeline } from '../../../lib/ipc/models/pipelineSummary';
 import {
-    emptyPipeline,
     PipelineSummaryInitMessage,
     PipelineSummaryMessage,
     PipelineSummaryMessageType,
-    PipelineSummaryResponse
+    PipelineSummaryResponse,
 } from '../../../lib/ipc/toUI/pipelineSummary';
 import { PipelineLogReference, PipelineStep } from '../../../pipelines/model';
 import { useMessagingApi } from '../messagingApi';
@@ -27,13 +27,13 @@ export const emptyApi: PipelineSummaryControllerApi = {
     },
     fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => {
         return Promise.resolve('');
-    }
+    },
 };
 
 export enum PipelineSummaryUIActionType {
     Update = 'update',
     StepsUpdate = 'stepsUpdate',
-    Refreshing = 'refreshing'
+    Refreshing = 'refreshing',
 }
 
 export type PipelineSummaryUIAction =
@@ -53,7 +53,7 @@ export interface PipelineSummaryState extends PipelineSummaryInitMessage {
 const emptyState: PipelineSummaryState = {
     pipeline: emptyPipeline,
     isSomethingLoading: false,
-    isRefreshing: false
+    isRefreshing: false,
 };
 
 function pipelineSummaryReducer(state: PipelineSummaryState, action: PipelineSummaryUIAction): PipelineSummaryState {
@@ -63,21 +63,21 @@ function pipelineSummaryReducer(state: PipelineSummaryState, action: PipelineSum
                 ...state,
                 pipeline: action.data,
                 steps: undefined,
-                isRefreshing: false
+                isRefreshing: false,
             };
             return newState;
         }
         case PipelineSummaryUIActionType.StepsUpdate: {
             const newState = {
                 ...state,
-                steps: action.steps
+                steps: action.steps,
             };
             return newState;
         }
         case PipelineSummaryUIActionType.Refreshing: {
             const newState = {
                 ...state,
-                isRefreshing: true
+                isRefreshing: true,
             };
             return newState;
         }
@@ -109,25 +109,25 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
     const sendRefresh = useCallback((): void => {
         dispatch({
             type: PipelineSummaryUIActionType.Refreshing,
-            data: {}
+            data: {},
         });
         postMessage({
-            type: CommonActionType.Refresh
+            type: CommonActionType.Refresh,
         });
     }, [postMessage]);
 
     const rerun = useCallback((): void => {
         postMessage({
-            type: PipelineSummaryActionType.ReRunPipeline
+            type: PipelineSummaryActionType.ReRunPipeline,
         });
     }, [postMessage]);
 
     const fetchLogs = useCallback(
         (stepUuid: string, logReference: PipelineLogReference) => {
             postMessage({
-                type: PipelineSummaryActionType.FetchLogRangeRequest,
+                type: PipelineSummaryActionType.FetchLogRange,
                 uuid: stepUuid,
-                reference: logReference
+                reference: logReference,
             });
         },
         [postMessage]
@@ -137,7 +137,7 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
         return {
             refresh: sendRefresh,
             rerun: rerun,
-            fetchLogs: fetchLogs
+            fetchLogs: fetchLogs,
         };
     }, [sendRefresh, rerun, fetchLogs]);
 

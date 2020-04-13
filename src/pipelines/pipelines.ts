@@ -93,7 +93,7 @@ export class PipelineApiImpl {
     ): Promise<string> {
         const { ownerSlug, repoSlug } = site;
         const {
-            data
+            data,
         } = await this.client.getOctetStream(
             `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`,
             { start: range.firstByte, end: range.lastByte }
@@ -120,7 +120,7 @@ export class PipelineApiImpl {
         } while (url);
         const stepRanges: PipelineStepLogRanges[] = [];
         if (Array.isArray(steps)) {
-            steps.forEach(step => {
+            steps.forEach((step) => {
                 const phases = step.tasks?.execution_phases;
                 const setupLogRange = this.splitPhase(phases.SETUP)[0];
                 const buildLogRanges = this.splitPhase(phases.MAIN);
@@ -128,7 +128,7 @@ export class PipelineApiImpl {
                 stepRanges.push({
                     setupLogRange: setupLogRange,
                     buildLogRanges: buildLogRanges,
-                    teardownLogRange: teardownLogRange
+                    teardownLogRange: teardownLogRange,
                 });
             });
         }
@@ -138,18 +138,18 @@ export class PipelineApiImpl {
     private splitPhase(phase: any): PipelineLogRange[] {
         if (Array.isArray(phase)) {
             return phase
-                .map(phaseBit => {
+                .map((phaseBit) => {
                     if (phaseBit.log_range) {
                         return {
                             firstByte: phaseBit.log_range.first_byte_position,
                             byteCount: phaseBit.log_range.byte_count,
-                            lastByte: phaseBit.log_range.last_byte_position
+                            lastByte: phaseBit.log_range.last_byte_position,
                         };
                     } else {
                         return undefined;
                     }
                 })
-                .filter(x => x !== undefined) as PipelineLogRange[];
+                .filter((x) => x !== undefined) as PipelineLogRange[];
         }
         return [];
     }

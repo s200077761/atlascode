@@ -5,7 +5,7 @@ import { PipelinesSummaryActionApi } from '../../lib/webview/controller/pipeline
 import {
     id,
     PipelineSummaryWebviewController,
-    title
+    title,
 } from '../../lib/webview/controller/pipelines/pipelineSummaryWebviewController';
 import { Logger } from '../../logger';
 import { Pipeline } from '../../pipelines/model';

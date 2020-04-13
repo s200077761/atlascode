@@ -104,7 +104,7 @@ export interface PipelineReferenceTarget extends PipelineTarget {
 export enum PipelineLogStage {
     SETUP,
     BUILD,
-    TEARDOWN
+    TEARDOWN,
 }
 
 export interface PipelineLogReference {

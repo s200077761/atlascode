@@ -3,18 +3,18 @@ import { PipelineLogReference } from '../../../pipelines/model';
 import { CommonAction } from './common';
 
 export enum PipelineSummaryActionType {
-    FetchLogRangeRequest = 'fetchLogRangeRequest',
-    ReRunPipeline = 'reRunPipeline'
+    FetchLogRange = 'fetchLogRange',
+    ReRunPipeline = 'reRunPipeline',
 }
 
 export type PipelineSummaryAction =
-    | ReducerAction<PipelineSummaryActionType.FetchLogRangeRequest, ViewLogsRequestAction>
-    | ReducerAction<PipelineSummaryActionType.ReRunPipeline, ReRunPipelineRequestAction>
+    | ReducerAction<PipelineSummaryActionType.FetchLogRange, ViewLogsAction>
+    | ReducerAction<PipelineSummaryActionType.ReRunPipeline, ReRunPipelineAction>
     | CommonAction;
 
-export interface ViewLogsRequestAction {
+export interface ViewLogsAction {
     uuid: string;
     reference: PipelineLogReference;
 }
 
-export interface ReRunPipelineRequestAction {}
+export interface ReRunPipelineAction {}

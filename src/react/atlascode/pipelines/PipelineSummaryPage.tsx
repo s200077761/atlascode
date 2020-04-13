@@ -9,11 +9,11 @@ import {
     Grid,
     makeStyles,
     Theme,
-    Toolbar
+    Toolbar,
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { distanceInWordsToNow } from 'date-fns';
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Pipeline,
     PipelineCommand,
@@ -21,7 +21,7 @@ import {
     PipelineLogStage,
     PipelineStep,
     Status,
-    statusForState
+    statusForState,
 } from '../../../pipelines/model';
 import { PipelineSummaryControllerContext, usePipelineSummaryController } from './pipelineSummaryController';
 
@@ -30,30 +30,30 @@ const useStyles = makeStyles(
         ({
             title: {
                 flexGrow: 0,
-                marginRight: theme.spacing(3)
+                marginRight: theme.spacing(3),
             },
             targetSelectLabel: {
-                marginRight: theme.spacing(1)
+                marginRight: theme.spacing(1),
             },
             grow: {
-                flexGrow: 1
+                flexGrow: 1,
             },
             alignRight: {
-                align: 'right'
+                align: 'right',
             },
             rightStuff: {
                 display: 'none',
                 [theme.breakpoints.up('md')]: {
-                    display: 'flex'
-                }
+                    display: 'flex',
+                },
             },
             paper100: {
                 overflow: 'hidden',
-                height: '100%'
+                height: '100%',
             },
             paperOverflow: {
-                overflow: 'hidden'
-            }
+                overflow: 'hidden',
+            },
         } as const)
 );
 
@@ -97,35 +97,6 @@ function statusForPipeline(pipeline: Pipeline): string {
     }
 }
 
-function setupAndTeardownSection(
-    stepUuid: string,
-    stepIndex: number,
-    stage: PipelineLogStage,
-    logs: string | undefined,
-    fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void
-) {
-    const title = stage === PipelineLogStage.SETUP ? 'Build setup' : 'Build teardown';
-    return (
-        <ExpansionPanel
-            square={false}
-            key={`${title}-${stepUuid}`}
-            onChange={(event: React.ChangeEvent<{}>, expanded: boolean) => {
-                if (expanded && !logs) {
-                    fetchLogs(stepUuid, {
-                        stepIndex: stepIndex,
-                        stage: stage
-                    });
-                }
-            }}
-        >
-            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} id={`${title}-${stepUuid}`}>
-                <pre>{title}</pre>
-            </ExpansionPanelSummary>
-            {logsExpansionPanelDetails(logs)}
-        </ExpansionPanel>
-    );
-}
-
 function logsExpansionPanelDetails(logs?: string): any {
     return (
         <ExpansionPanelDetails>
@@ -140,6 +111,50 @@ function logsExpansionPanelDetails(logs?: string): any {
     );
 }
 
+type SomethingProps = {
+    aKey: string;
+    name: string;
+    logs: string | undefined;
+    onChange: (event: React.ChangeEvent<{}>, expanded: boolean) => void;
+};
+
+function LogSection({ aKey, name, logs, onChange }: SomethingProps): any {
+    return (
+        <ExpansionPanel key={aKey} square={false} onChange={onChange}>
+            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} id={aKey}>
+                <pre>{name}</pre>
+            </ExpansionPanelSummary>
+            {logsExpansionPanelDetails(logs)}
+        </ExpansionPanel>
+    );
+}
+
+function setupAndTeardownSection(
+    stepUuid: string,
+    stepIndex: number,
+    stage: PipelineLogStage,
+    logs: string | undefined,
+    fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void
+) {
+    const title = stage === PipelineLogStage.SETUP ? 'Build setup' : 'Build teardown';
+    return (
+        <LogSection
+            aKey={`${title}-${stepUuid}`}
+            name={title}
+            logs={logs}
+            onChange={(event: React.ChangeEvent<{}>, expanded: boolean) => {
+                if (expanded && !logs) {
+                    fetchLogs(stepUuid, {
+                        stepIndex: stepIndex,
+                        stage: stage,
+                    });
+                }
+            }}
+            key={`${title}-${stepUuid}`}
+        />
+    );
+}
+
 function buildSection(
     stepUuid: string,
     stepIndex: number,
@@ -150,36 +165,36 @@ function buildSection(
         <div>
             {commands.map((command, index) => {
                 return (
-                    <ExpansionPanel
-                        key={`${stepUuid}-${index}`}
-                        square={false}
+                    <LogSection
+                        aKey={`${stepUuid}-${index}`}
+                        name={command.name}
+                        logs={command.logs}
                         onChange={(event: React.ChangeEvent<{}>, expanded: boolean) => {
                             if (expanded && !command.logs) {
                                 fetchLogs(stepUuid, {
                                     stepIndex: stepIndex,
                                     stage: PipelineLogStage.BUILD,
-                                    commandIndex: index
+                                    commandIndex: index,
                                 });
                             }
                         }}
-                    >
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} id={`${stepUuid}-${index}`}>
-                            <pre>{command.name}</pre>
-                        </ExpansionPanelSummary>
-                        {logsExpansionPanelDetails(command.logs)}
-                    </ExpansionPanel>
+                        key={`${stepUuid}-${index}`}
+                    />
                 );
             })}
         </div>
     );
 }
 
-function formatStep(
-    classes: any,
-    step: PipelineStep,
-    index: number,
-    fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void
-): any {
+type StepProps = {
+    classes: any;
+    step: PipelineStep;
+    index: number;
+    expanded: boolean;
+    fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void;
+};
+
+function PipelineStepItem({ classes, step, index, expanded, fetchLogs }: StepProps): any {
     return (
         <div>
             {step.name ?? `Step ${index + 1} `}
@@ -194,6 +209,34 @@ function formatStep(
 const PipelineSummaryPage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [state, controller] = usePipelineSummaryController();
+    const [openSections] = useState<Set<string>>(new Set());
+
+    const renderPipelineStep = useCallback(
+        (step: PipelineStep, index: number) => {
+            const key = `${step.uuid}-${index}`;
+            return (
+                <PipelineStepItem
+                    classes={classes}
+                    step={step}
+                    index={index}
+                    expanded={openSections.has(key)}
+                    fetchLogs={controller.fetchLogs}
+                    key={key}
+                />
+            );
+        },
+        [classes, controller.fetchLogs, openSections]
+    );
+
+    const pipelineSteps = useMemo(() => {
+        return state.steps ? (
+            state.steps.map((step, index) => renderPipelineStep(step, index))
+        ) : (
+            <Grid container justify="center">
+                <CircularProgress />
+            </Grid>
+        );
+    }, [renderPipelineStep, state.steps]);
 
     return (
         <PipelineSummaryControllerContext.Provider value={controller}>
@@ -215,13 +258,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                         <RefreshButton loading={state.isRefreshing} onClick={controller.refresh} />
                     </div>
                 </Toolbar>
-                {state.steps ? (
-                    state.steps.map((step, index) => formatStep(classes, step, index, controller.fetchLogs))
-                ) : (
-                    <Grid container justify="center">
-                        <CircularProgress />
-                    </Grid>
-                )}
+                {pipelineSteps}
             </Container>
         </PipelineSummaryControllerContext.Provider>
     );

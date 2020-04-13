@@ -1,9 +1,10 @@
+import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import {
     Pipeline,
     PipelineLogRange,
     PipelineLogReference,
     PipelineLogStage,
-    PipelineStep
+    PipelineStep,
 } from '../../../../pipelines/model';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../ipc/fromUI/pipelineSummary';
@@ -11,7 +12,7 @@ import { CommonMessage } from '../../../ipc/toUI/common';
 import {
     PipelineSummaryMessage,
     PipelineSummaryMessageType,
-    PipelineSummaryResponse
+    PipelineSummaryResponse,
 } from '../../../ipc/toUI/pipelineSummary';
 import { Logger } from '../../../logger';
 import { MessagePoster, WebviewController } from '../webviewController';
@@ -22,17 +23,13 @@ export const title: string = 'Pipeline Summary';
 
 export class PipelineSummaryWebviewController implements WebviewController<Pipeline> {
     private steps: PipelineStep[];
-    private pipeline: Pipeline | undefined;
 
     constructor(
         private messagePoster: MessagePoster,
         private api: PipelinesSummaryActionApi,
         private logger: Logger,
-        pipeline?: Pipeline
+        private pipeline?: Pipeline
     ) {
-        if (pipeline) {
-            this.update(pipeline);
-        }
         this.steps = [];
     }
 
@@ -48,6 +45,10 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
         }
     }
 
+    public screenDetails() {
+        return { id: 'pipelineSummaryScreen', site: this.pipeline?.site.details, product: ProductBitbucket };
+    }
+
     // From UI
     public async onMessageReceived(msg: PipelineSummaryAction) {
         switch (msg.type) {
@@ -60,7 +61,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
                 }
                 break;
             }
-            case PipelineSummaryActionType.FetchLogRangeRequest: {
+            case PipelineSummaryActionType.FetchLogRange: {
                 if (!this.pipeline) {
                     this.logger.error(new Error(`Missing a pipeline. no idea`));
                     return;
@@ -74,7 +75,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
 
                 this.postMessage({
                     type: PipelineSummaryMessageType.StepsUpdate,
-                    steps: this.steps
+                    steps: this.steps,
                 });
                 break;
             }
@@ -94,13 +95,13 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
 
         this.postMessage({
             type: PipelineSummaryMessageType.Update,
-            pipeline: this.pipeline
+            pipeline: this.pipeline,
         });
 
         this.steps = await this.api.fetchSteps(pipeline.site, pipeline.uuid, pipeline.build_number);
         this.postMessage({
             type: PipelineSummaryMessageType.StepsUpdate,
-            steps: this.steps
+            steps: this.steps,
         });
     }
 

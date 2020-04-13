@@ -78,7 +78,7 @@ export class HTTPClient {
         url = HTTPClient.addQueryParams(url, queryParams);
 
         const headers = {
-            accept: 'application/octet-stream'
+            accept: 'application/octet-stream',
         };
 
         if (range) {
@@ -87,7 +87,7 @@ export class HTTPClient {
 
         const res = await this.transport(url, {
             method: 'GET',
-            headers: headers
+            headers: headers,
         });
         return { data: res.data, headers: res.headers };
     }
