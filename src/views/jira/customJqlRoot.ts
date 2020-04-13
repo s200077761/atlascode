@@ -103,17 +103,27 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
             return element.getChildren();
         }
 
-        if (this._children.length > 0) {
-            return this._children;
-        }
-
         if (this._jqlList.length === 0) {
             return [new ConfigureJQLNode('Configure JQL entries in settings to view Jira issues')];
         }
 
-        /* This both creates the _children array and executes the queries on each child. This ensures all children are initialized 
-    prior to returning anything. Since executeQuery() returns an issue list for each child, we also accumulate those lists inside
-    of allIssues, and then dedupe them at the end. This gives us a searchable issue list for the QuickPick */
+        if (this._children.length === 0) {
+            await this.fetchChildren();
+        }
+
+        return [
+            createJiraIssueNode,
+            searchJiraIssuesNode,
+            ...this._children,
+            new ConfigureJQLNode('Configure filters...')
+        ];
+    }
+
+    /* This both creates the _children array and executes the queries on each child. This ensures all children are 
+    initialized  prior to returning anything. Since executeQuery() returns an issue list for each child, we also 
+    accumulate those lists inside of allIssues, and then dedupe them at the end. This gives us a searchable issue list 
+    for the QuickPick */
+    async fetchChildren() {
         let allIssues: MinimalORIssueLink<DetailedSiteInfo>[] = [];
         this._children = await Promise.all(
             this._jqlList.map(async (jql: JQLEntry) => {
@@ -129,13 +139,6 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
         );
         allIssues = [...new Map(allIssues.map(issue => [issue.key, issue])).values()]; //dedupe
         searchJiraIssuesNode.setIssues(allIssues);
-
-        return [
-            createJiraIssueNode,
-            searchJiraIssuesNode,
-            ...this._children,
-            new ConfigureJQLNode('Configure filters...')
-        ];
     }
 
     refresh() {

@@ -1,8 +1,9 @@
 import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, makeStyles, Theme } from '@material-ui/core';
+import { Box, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../../common/IntervalInput';
+import { useBorderBoxStyles } from '../../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../../configController';
 import { PipelinesExplorerOptions } from './PipelineExplorerOptions';
 import { PipelineFilterListEditor } from './PipelineFilterListEditor';
@@ -28,6 +29,7 @@ const useStyles = makeStyles(
 export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> = memo(
     ({ enabled, hideEmpty, hideFiltered, monitorEnabled, refreshInterval, filters }) => {
         const classes = useStyles();
+        const boxClass = useBorderBoxStyles();
         const controller = useContext(ConfigControllerContext);
 
         const [changes, setChanges] = useState<{ [key: string]: any }>({});
@@ -136,7 +138,11 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                 />
                 <Grid item>
                     <Box marginTop={2}>
-                        <PipelineFilterListEditor enabled={hideFiltered} filters={filters} />
+                        <Typography variant="h4">Pipeline Filters</Typography>
+
+                        <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
+                            <PipelineFilterListEditor enabled={hideFiltered} filters={filters} />
+                        </Box>
                     </Box>
                 </Grid>
             </Grid>

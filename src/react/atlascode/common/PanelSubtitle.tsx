@@ -22,7 +22,7 @@ export const PanelSubtitle: React.FC<PanelSubtitleProps> = memo(({ children, cla
 
     return (
         <Typography variant="subtitle1" className={clsx(classes.root, className)} {...other}>
-            {children || 'class names'}
+            {children || ''}
         </Typography>
     );
 });

@@ -1,7 +1,8 @@
 import { Fade, Grid } from '@material-ui/core';
-import React from 'react';
-import { DetailedSiteInfo, ProductJira } from '../../../../atlclients/authInfo';
+import React, { useMemo } from 'react';
+import { ProductJira } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
 import { StatusBarPanel } from '../../common/StatusBarPanel';
 import { AuthPanel } from '../auth/AuthPanel';
@@ -11,7 +12,7 @@ import { JiraTriggersPanel } from './subpanels/JiraTriggersPanel';
 
 type JiraPanelProps = CommonPanelProps & {
     config: { [key: string]: any };
-    sites: DetailedSiteInfo[];
+    sites: SiteWithAuthInfo[];
     isRemote: boolean;
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
 };
@@ -24,6 +25,12 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     sites,
     isRemote
 }) => {
+    const siteInfos = useMemo(() => {
+        return sites.map(swa => {
+            return swa.site;
+        });
+    }, [sites]);
+
     return (
         <>
             <Fade in={visible}>
@@ -49,7 +56,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 visible={visible}
                                 expanded={selectedSubSections.includes(ConfigSubSection.Issues)}
                                 onSubsectionChange={onSubsectionChange}
-                                sites={sites}
+                                sites={siteInfos}
                                 jqlList={config[`${ConfigSection.Jira}.jqlList`]}
                                 enabled={config[`${ConfigSection.Jira}.explorer.enabled`]}
                                 nestSubtasks={config[`${ConfigSection.Jira}.explorer.nestSubtasks`]}

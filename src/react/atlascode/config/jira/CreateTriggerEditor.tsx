@@ -1,6 +1,7 @@
 import { InlineTextEditorList, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Grid } from '@material-ui/core';
+import { Box, Grid, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
+import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
 
 type CreateTriggerEditorProps = {
@@ -11,7 +12,7 @@ type CreateTriggerEditorProps = {
 export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorProps> = memo(({ triggers, disabled }) => {
     const controller = useContext(ConfigControllerContext);
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
-
+    const boxClass = useBorderBoxStyles();
     const handleEnableToggle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const changes = Object.create(null);
         changes['jira.todoIssues.enabled'] = e.target.checked;
@@ -35,7 +36,7 @@ export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorPro
         <Grid container direction="column" spacing={2}>
             <Grid item>
                 <SwitchWithLabel
-                    label="Enable prompt to create Jira issues for TODO style comments"
+                    label="Show code action to 'Create Jira issue' for comment triggers"
                     size="small"
                     color="primary"
                     id="jiraHoverEnabled"
@@ -44,13 +45,29 @@ export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorPro
                 />
             </Grid>
             <Grid item>
-                <InlineTextEditorList
-                    options={triggers}
-                    addOptionButtonContent="Add Trigger"
-                    disabled={disabled}
-                    inputLabel="Trigger Text"
-                    onChange={handleOptionsChange}
-                />
+                <Box marginTop={2}>
+                    <Typography variant="h4">Comment Triggers</Typography>
+
+                    <Typography variant="caption">
+                        Strings (in comments) that will cause the 'Create Jira issue' code action to show
+                    </Typography>
+
+                    <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
+                        <InlineTextEditorList
+                            options={triggers}
+                            reverseButtons={true}
+                            addOptionButtonContent="Add Trigger"
+                            disabled={disabled}
+                            inputLabel="Trigger Text"
+                            onChange={handleOptionsChange}
+                            emptyComponent={
+                                <Box width="100%">
+                                    <Typography align="center">No triggers found.</Typography>
+                                </Box>
+                            }
+                        />
+                    </Box>
+                </Box>
             </Grid>
         </Grid>
     );

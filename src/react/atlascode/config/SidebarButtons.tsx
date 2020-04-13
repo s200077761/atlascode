@@ -1,13 +1,16 @@
 import { IconLink } from '@atlassianlabs/guipi-core-components';
-import { Button, Grid } from '@material-ui/core';
+import { Grid } from '@material-ui/core';
 import React, { memo, useContext } from 'react';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { FeedbackUser, KnownLinkID } from '../../../lib/ipc/models/common';
+import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import { ConfigControllerContext } from './configController';
 
-type SidebarButtonProps = {};
+type SidebarButtonProps = {
+    feedbackUser: FeedbackUser;
+};
 
-export const SidebarButtons: React.FunctionComponent<SidebarButtonProps> = memo(({}) => {
+export const SidebarButtons: React.FunctionComponent<SidebarButtonProps> = memo(({ feedbackUser }) => {
     const controller = useContext(ConfigControllerContext);
 
     return (
@@ -15,9 +18,7 @@ export const SidebarButtons: React.FunctionComponent<SidebarButtonProps> = memo(
             <Grid item>
                 <Grid container spacing={2} direction="column" alignItems="flex-start">
                     <Grid item>
-                        <Button variant="contained" color="primary">
-                            Send Feedback
-                        </Button>
+                        <FeedbackDialogButton user={feedbackUser} postMessageFunc={controller.postMessage} />
                     </Grid>
                     <Grid item>
                         <IconLink

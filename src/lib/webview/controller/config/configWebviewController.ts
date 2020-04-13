@@ -12,7 +12,6 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { ConfigActionApi } from './configActionApi';
 
 export const id: string = 'atlascodeSettingsV2';
-export const title: string = 'Atlassian Settings';
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
     private _messagePoster: MessagePoster;
@@ -42,12 +41,16 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this._initialSection = section;
     }
 
+    public title(): string {
+        return 'Atlassian Settings';
+    }
+
     private postMessage(message: ConfigMessage | ConfigResponse | CommonMessage) {
         this._messagePoster(message);
     }
 
-    public onSitesChanged(): void {
-        const [jiraSites, bbSites] = this._api.getSitesAvailable();
+    public async onSitesChanged(): Promise<void> {
+        const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
         this.postMessage({
             type: ConfigMessageType.SitesUpdate,
             jiraSites: jiraSites,
@@ -62,7 +65,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             }
 
             this._isRefreshing = true;
-            const [jiraSites, bbSites] = this._api.getSitesAvailable();
+            const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
             const target = this._api.getConfigTarget();
             const section = this._initialSection ? this._initialSection : {};
             const cfg = this._api.flattenedConfigForTarget(target);
@@ -232,16 +235,13 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 }
                 break;
             }
-            case CommonActionType.SubmitFeedback: {
-                this._api.submitFeedback(msg.feedback, id);
-                break;
-            }
 
             case CommonActionType.ExternalLink:
             case CommonActionType.DismissPMFLater:
             case CommonActionType.DismissPMFNever:
             case CommonActionType.OpenPMFSurvey:
-            case CommonActionType.SubmitPMF: {
+            case CommonActionType.SubmitPMF:
+            case CommonActionType.SubmitFeedback: {
                 this._commonHandler.onMessageReceived(msg);
                 break;
             }

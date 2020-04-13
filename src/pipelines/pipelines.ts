@@ -170,7 +170,10 @@ export class PipelineApiImpl {
         return undefined;
     }
 
-    readSelector(selector: any): PipelineSelector {
+    readSelector(selector: any): PipelineSelector | undefined {
+        if (!selector) {
+            return undefined;
+        }
         return {
             pattern: selector.pattern,
             type: this.readSelectorType(selector.type)

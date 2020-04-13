@@ -12,24 +12,28 @@ import {
     RadioGroup,
     TextField
 } from '@material-ui/core';
-import DomainIcon from '@material-ui/icons/Domain';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import React, { useContext, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { memo, useCallback, useState } from 'react';
 import {
+    AuthInfo,
     BasicAuthInfo,
     emptyAuthInfo,
     emptyUserInfo,
     Product,
-    ProductBitbucket,
+    ProductJira,
     SiteInfo
 } from '../../../../atlclients/authInfo';
-import { validateUrl } from '../../util/fieldValidators';
-import { ConfigControllerContext } from '../configController';
-
-type CustomAuthDialogButtonProps = {
+import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { useFormValidation } from '../../common/form/useFormValidation';
+import { validateRequiredString, validateStartsWithProtocol } from '../../util/fieldValidators';
+export type AuthDialogProps = {
+    open: boolean;
+    doClose: () => void;
+    onExited: () => void;
+    save: (site: SiteInfo, auth: AuthInfo) => void;
     product: Product;
+    authEntry?: SiteWithAuthInfo;
 };
 
 type FormFields = {
@@ -46,13 +50,11 @@ type FormFields = {
 };
 
 interface AuthFormState {
-    authFormOpen: boolean;
     showPassword: boolean;
     showPFXPassphrase: boolean;
 }
 
 const emptyAuthFormState: AuthFormState = {
-    authFormOpen: false,
     showPassword: false,
     showPFXPassphrase: false
 };
@@ -64,25 +66,12 @@ const normalizeContextPath = (cPath: string): string | undefined => {
     return '/' + cPath.replace(/^\/+/g, '').split('/');
 };
 
-export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogButtonProps> = ({ product }) => {
-    const loginText = `Add Custom ${product.name} Site`;
-    const controller = useContext(ConfigControllerContext);
-    const [authFormState, updateState] = useState(emptyAuthFormState);
+const isCustomUrl = (data?: string) => {
+    if (!data) {
+        return false;
+    }
 
-    const { register, handleSubmit, watch, errors, formState } = useForm<FormFields>({
-        mode: 'onChange',
-        defaultValues: {
-            customSSLType: 'customServerSSL',
-            baseUrl: ''
-        }
-    });
-
-    const watches = watch(['baseUrl', 'contextPathEnabled', 'customSSLEnabled', 'customSSLType']);
-
-    const isCustomUrl = (data?: string) => {
-        if (!data) {
-            return false;
-        }
+    try {
         const url = new URL(data);
 
         return (
@@ -92,96 +81,119 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
             !url.hostname.endsWith('bitbucket.org') &&
             !url.hostname.endsWith('bb-inf.net')
         );
-    };
+    } catch (e) {
+        return false;
+    }
+};
 
-    const helperText =
-        product.key === ProductBitbucket.key
-            ? 'You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com'
-            : 'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
+export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
+    ({ open, doClose, onExited, save, product, authEntry }) => {
+        const [authFormState, updateState] = useState(emptyAuthFormState);
 
-    const handleSave = (data: any) => {
-        const customSSLCerts =
-            data.customSSLEnabled && data.customSSLType === 'customServerSSL' ? data.sslCertPaths : undefined;
-        const pfxCert = data.customSSLEnabled && data.customSSLType === 'customClientSSL' ? data.pfxPath : undefined;
-        const pfxPassphrase =
-            data.customSSLEnabled && data.customSSLType === 'customClientSSL' ? data.pfxPassphrase : undefined;
-        const contextPath = data.contextPathEnabled ? normalizeContextPath(data.contextPath) : undefined;
+        const defaultSiteWithAuth = authEntry ? authEntry : emptySiteWithAuthInfo;
 
-        const url = new URL(data.baseUrl);
+        const defaultSSLType =
+            defaultSiteWithAuth.site.pfxPath !== undefined && defaultSiteWithAuth.site.pfxPath !== ''
+                ? 'customClientSSL'
+                : 'customServerSSL';
+        const defaultContextPathEnabled =
+            defaultSiteWithAuth.site.contextPath !== undefined && defaultSiteWithAuth.site.contextPath !== '';
 
-        const siteInfo: SiteInfo = {
-            host: url.host,
-            protocol: url.protocol,
-            product: product,
-            customSSLCertPaths: customSSLCerts,
-            pfxPath: pfxCert,
-            pfxPassphrase: pfxPassphrase,
-            contextPath: contextPath
-        };
+        const defaultSSLEnabled =
+            defaultSiteWithAuth.site.customSSLCertPaths !== undefined &&
+            defaultSiteWithAuth.site.customSSLCertPaths !== '';
 
-        if (!isCustomUrl(data.baseUrl)) {
-            controller.login(siteInfo, emptyAuthInfo);
-        } else {
-            const authInfo: BasicAuthInfo = {
-                username: data.username,
-                password: data.password,
-                user: emptyUserInfo
-            };
+        const { register, watches, handleSubmit, errors, isValid } = useFormValidation<FormFields>({
+            baseUrl: defaultSiteWithAuth.site.baseLinkUrl,
+            contextPathEnabled: defaultContextPathEnabled,
+            customSSLEnabled: defaultSSLEnabled,
+            customSSLType: defaultSSLType
+        });
 
-            controller.login(siteInfo, authInfo);
-        }
+        const helperText =
+            product.key === ProductJira.key
+                ? 'You can enter a cloud or server url like https://jiracloud.atlassian.net or https://jira.mydomain.com'
+                : 'You can enter a cloud or server url like https://bitbucket.org or https://bitbucket.mydomain.com';
 
-        updateState(emptyAuthFormState);
-    };
+        const handleSave = useCallback(
+            (data: any) => {
+                const customSSLCerts =
+                    data.customSSLEnabled && data.customSSLType === 'customServerSSL' ? data.sslCertPaths : undefined;
+                const pfxCert =
+                    data.customSSLEnabled && data.customSSLType === 'customClientSSL' ? data.pfxPath : undefined;
+                const pfxPassphrase =
+                    data.customSSLEnabled && data.customSSLType === 'customClientSSL' ? data.pfxPassphrase : undefined;
+                const contextPath = data.contextPathEnabled ? normalizeContextPath(data.contextPath) : undefined;
 
-    const handleDialogClose = () => {
-        updateState({ ...authFormState, authFormOpen: false });
-    };
+                const url = new URL(data.baseUrl);
 
-    return (
-        <div>
-            <Button
-                color="primary"
-                startIcon={<DomainIcon />}
-                onClick={() => updateState({ ...authFormState, authFormOpen: true })}
-            >
-                {loginText}
-            </Button>
+                const siteInfo: SiteInfo = {
+                    host: url.host,
+                    protocol: url.protocol,
+                    product: product,
+                    customSSLCertPaths: customSSLCerts,
+                    pfxPath: pfxCert,
+                    pfxPassphrase: pfxPassphrase,
+                    contextPath: contextPath
+                };
 
-            <Dialog fullWidth maxWidth="md" open={authFormState.authFormOpen} onClose={handleDialogClose}>
+                if (!isCustomUrl(data.baseUrl)) {
+                    save(siteInfo, emptyAuthInfo);
+                } else {
+                    const authInfo: BasicAuthInfo = {
+                        username: data.username,
+                        password: data.password,
+                        user: emptyUserInfo
+                    };
+                    save(siteInfo, authInfo);
+                }
+
+                updateState(emptyAuthFormState);
+                doClose();
+            },
+            [doClose, product, save]
+        );
+
+        const preventClickDefault = useCallback(
+            (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault(),
+            []
+        );
+
+        const registerUrl = useCallback(register(validateStartsWithProtocol), []);
+        const registerRequiredString = useCallback(register(validateRequiredString), []);
+        return (
+            <Dialog fullWidth maxWidth="md" open={open} onExited={onExited}>
                 <DialogTitle>Authenticate</DialogTitle>
                 <DialogContent>
                     <DialogContentText>{`Add ${product.name} Site`}</DialogContentText>
                     <Grid container direction="column" spacing={2}>
                         <Grid item>
                             <TextField
+                                name="baseUrl"
+                                defaultValue={defaultSiteWithAuth.site.baseLinkUrl}
                                 required
                                 autoFocus
                                 autoComplete="off"
                                 margin="dense"
                                 id="baseUrl"
-                                name="baseUrl"
                                 label="Base URL"
-                                helperText={errors.baseUrl ? errors.baseUrl.message : helperText}
+                                helperText={errors.baseUrl ? errors.baseUrl : helperText}
                                 fullWidth
+                                inputRef={registerUrl}
                                 error={!!errors.baseUrl}
-                                inputRef={register({
-                                    required: 'Base URL is required',
-                                    validate: (value: string) => validateUrl('Base URL', value)
-                                })}
                             />
                         </Grid>
                         {!errors.baseUrl && isCustomUrl(watches.baseUrl) && (
                             <React.Fragment>
                                 <Grid item>
                                     <SwitchWithLabel
+                                        name="contextPathEnabled"
+                                        defaultChecked={defaultContextPathEnabled}
                                         size="small"
                                         color="primary"
                                         id="contextPathEnabled"
-                                        name="contextPathEnabled"
-                                        value="contextPathEnabled"
-                                        inputRef={register}
                                         label="Use context path"
+                                        inputRef={register}
                                     />
                                 </Grid>
                                 {watches.contextPathEnabled && (
@@ -194,16 +206,15 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                                 id="contextPath"
                                                 name="contextPath"
                                                 label="Context path"
+                                                defaultValue={defaultSiteWithAuth.site.contextPath}
                                                 helperText={
                                                     errors.contextPath
-                                                        ? errors.contextPath.message
+                                                        ? errors.contextPath
                                                         : 'The context path your server is mounted at (e.g. /issues or /jira)'
                                                 }
                                                 fullWidth
                                                 error={!!errors.contextPath}
-                                                inputRef={register({
-                                                    required: 'Context path is required'
-                                                })}
+                                                inputRef={registerRequiredString}
                                             />
                                         </Grid>
                                     </Box>
@@ -215,12 +226,11 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                         id="username"
                                         name="username"
                                         label="Username"
-                                        helperText={errors.username ? errors.username.message : undefined}
+                                        defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
+                                        helperText={errors.username ? errors.username : undefined}
                                         fullWidth
                                         error={!!errors.username}
-                                        inputRef={register({
-                                            required: 'Username is required'
-                                        })}
+                                        inputRef={registerRequiredString}
                                     />
                                 </Grid>
                                 <Grid item>
@@ -230,13 +240,12 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                         id="password"
                                         name="password"
                                         label="Password"
+                                        defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
                                         type={authFormState.showPassword ? 'text' : 'password'}
-                                        helperText={errors.password ? errors.password.message : undefined}
+                                        helperText={errors.password ? errors.password : undefined}
                                         fullWidth
                                         error={!!errors.password}
-                                        inputRef={register({
-                                            required: 'Password is required'
-                                        })}
+                                        inputRef={registerRequiredString}
                                         InputProps={{
                                             endAdornment: (
                                                 <IconButton
@@ -246,9 +255,7 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                                             showPassword: !authFormState.showPassword
                                                         })
                                                     }
-                                                    onMouseDown={(event: React.MouseEvent<HTMLButtonElement>) =>
-                                                        event.preventDefault()
-                                                    }
+                                                    onMouseDown={preventClickDefault}
                                                 >
                                                     {authFormState.showPassword ? (
                                                         <Visibility fontSize="small" />
@@ -262,13 +269,14 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                 </Grid>
                                 <Grid item>
                                     <SwitchWithLabel
+                                        defaultChecked={defaultSSLEnabled}
+                                        name="customSSLEnabled"
                                         size="small"
                                         color="primary"
                                         id="customSSLEnabled"
-                                        name="customSSLEnabled"
                                         value="customSSLEnabled"
-                                        inputRef={register}
                                         label="Use Custom SSL Settings"
+                                        inputRef={register}
                                     />
                                 </Grid>
 
@@ -278,18 +286,18 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                             <RadioGroup
                                                 id="customSSLType"
                                                 name="customSSLType"
-                                                defaultValue="customServerSSL"
+                                                defaultValue={defaultSSLType}
                                             >
                                                 <SmallRadioWithLabel
+                                                    inputRef={register}
                                                     color="primary"
                                                     value="customServerSSL"
-                                                    inputRef={register}
                                                     label="Use custom CA certificate(s) (e.g. a self-signed cert)"
                                                 />
                                                 <SmallRadioWithLabel
+                                                    inputRef={register}
                                                     value="customClientSSL"
                                                     color="primary"
-                                                    inputRef={register}
                                                     label="Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)"
                                                 />
                                             </RadioGroup>
@@ -306,16 +314,15 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                                 id="sslCertPaths"
                                                 name="sslCertPaths"
                                                 label="sslCertPaths"
+                                                defaultValue={defaultSiteWithAuth.site.customSSLCertPaths}
                                                 helperText={
                                                     errors.sslCertPaths
-                                                        ? errors.sslCertPaths.message
+                                                        ? errors.sslCertPaths
                                                         : 'The full absolute path to your custom certificates separated by commas'
                                                 }
                                                 fullWidth
                                                 error={!!errors.sslCertPaths}
-                                                inputRef={register({
-                                                    required: 'Custom SSL certificate path(s)  is required'
-                                                })}
+                                                inputRef={registerRequiredString}
                                             />
                                         </Grid>
                                     </Box>
@@ -330,16 +337,15 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                                 id="pfxPath"
                                                 name="pfxPath"
                                                 label="pfxPath"
+                                                defaultValue={defaultSiteWithAuth.site.pfxPath}
                                                 helperText={
                                                     errors.pfxPath
-                                                        ? errors.pfxPath.message
+                                                        ? errors.pfxPath
                                                         : 'The full absolute path to your custom pfx file'
                                                 }
                                                 fullWidth
                                                 error={!!errors.pfxPath}
-                                                inputRef={register({
-                                                    required: 'Custom PFX certificate path'
-                                                })}
+                                                inputRef={registerRequiredString}
                                             />
                                         </Grid>
                                         <Grid item>
@@ -351,6 +357,7 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                                 type={authFormState.showPFXPassphrase ? 'text' : 'password'}
                                                 helperText="The passphrase used to decrypt the pfx file (if required)"
                                                 fullWidth
+                                                defaultValue={defaultSiteWithAuth.site.pfxPassphrase}
                                                 inputRef={register}
                                                 InputProps={{
                                                     endAdornment: (
@@ -361,9 +368,7 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                                                                     showPFXPassphrase: !authFormState.showPFXPassphrase
                                                                 })
                                                             }
-                                                            onMouseDown={(event: React.MouseEvent<HTMLButtonElement>) =>
-                                                                event.preventDefault()
-                                                            }
+                                                            onMouseDown={preventClickDefault}
                                                         >
                                                             {authFormState.showPFXPassphrase ? (
                                                                 <Visibility fontSize="small" />
@@ -382,20 +387,15 @@ export const CustomAuthDialogButton: React.FunctionComponent<CustomAuthDialogBut
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button
-                        disabled={!formState.isValid}
-                        onClick={handleSubmit(handleSave)}
-                        variant="contained"
-                        color="primary"
-                    >
+                    <Button disabled={!isValid} onClick={handleSubmit(handleSave)} variant="contained" color="primary">
                         Save Site
                     </Button>
-                    <Button onClick={handleDialogClose} color="primary">
+                    <Button onClick={doClose} color="primary">
                         Cancel
                     </Button>
                 </DialogActions>
                 <Box marginBottom={2} />
             </Dialog>
-        </div>
-    );
-};
+        );
+    }
+);

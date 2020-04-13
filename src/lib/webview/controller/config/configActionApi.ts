@@ -5,8 +5,9 @@ import {
     JQLErrors
 } from '@atlassianlabs/jira-pi-common-models';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
-import { FeedbackData, FeedbackUser } from '../../../ipc/models/common';
+import { FeedbackUser } from '../../../ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
+import { SiteWithAuthInfo } from '../../../ipc/toUI/config';
 
 export interface ConfigActionApi {
     authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void>;
@@ -30,8 +31,9 @@ export interface ConfigActionApi {
     ) => Promise<FilterSearchResults>;
     validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal) => Promise<JQLErrors>;
     updateSettings(target: ConfigTarget, changes: { [key: string]: any }, removes?: string[]): Promise<void>;
-    submitFeedback(feedback: FeedbackData, source: string): Promise<void>;
     getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]];
+
+    getSitesWithAuth(): Promise<[SiteWithAuthInfo[], SiteWithAuthInfo[]]>;
     getFeedbackUser(): Promise<FeedbackUser>;
     getIsRemote(): boolean;
     getConfigTarget(): ConfigTarget;
