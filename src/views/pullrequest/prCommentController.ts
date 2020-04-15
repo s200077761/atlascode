@@ -21,6 +21,14 @@ turndownService.addRule('mention', {
         return `${options.emDelimiter}${content}${options.emDelimiter}`;
     }
 });
+turndownService.addRule('emoji', {
+    filter: function(node) {
+        return node.nodeName === 'IMG' && node.classList.contains('emoji') && node.getAttribute('alt') !== null;
+    },
+    replacement: function(_, node: HTMLElement) {
+        return node.getAttribute('alt')!;
+    }
+});
 turndownService.addRule('highlightedCodeBlock', {
     filter: function(node) {
         return (
