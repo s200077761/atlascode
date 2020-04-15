@@ -13,7 +13,7 @@ import {
     FileStatus,
     isBitbucketIssue,
     PullRequest,
-    User
+    User,
 } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
@@ -30,7 +30,7 @@ import {
     isFetchDetails,
     isFetchIssue,
     isFetchUsers,
-    isOpenDiffPreview
+    isOpenDiffPreview,
 } from '../ipc/prActions';
 import { RepoData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
@@ -92,7 +92,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             const repos = Container.bitbucketContext.getBitbucketRepositories();
 
             const state: RepoData[] = await Promise.all(
-                repos.map(async wsRepo => {
+                repos.map(async (wsRepo) => {
                     const site = wsRepo.mainSiteRemote.site!;
                     const bbApi = await clientForSite(site);
                     const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
@@ -100,28 +100,28 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     const [, repo, developmentBranch] = await Promise.all([
                         scm.fetch(),
                         bbApi.repositories.get(site),
-                        bbApi.repositories.getDevelopmentBranch(site)
+                        bbApi.repositories.getDevelopmentBranch(site),
                     ]);
 
                     let parentBranches: Ref[] = [];
                     const parentRemoteName = `${repo.parentFullName} (parent repo)`;
-                    if (repo.parentFullName && !wsRepo.siteRemotes.some(s => s.remote.name === parentRemoteName)) {
+                    if (repo.parentFullName && !wsRepo.siteRemotes.some((s) => s.remote.name === parentRemoteName)) {
                         const parentSite: BitbucketSite = {
                             ...site,
                             ownerSlug: repo.parentFullName.slice(0, repo.parentFullName.lastIndexOf('/')),
-                            repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1)
+                            repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1),
                         };
 
                         wsRepo.siteRemotes.push({
                             remote: { name: parentRemoteName, fetchUrl: '', isReadOnly: true },
-                            site: parentSite
+                            site: parentSite,
                         });
 
                         const remoteBranches = await bbApi.repositories.getBranches(parentSite);
-                        parentBranches = remoteBranches.map(name => ({
+                        parentBranches = remoteBranches.map((name) => ({
                             type: RefType.RemoteHead,
                             name: name,
-                            remote: parentRemoteName
+                            remote: parentRemoteName,
                         }));
                     }
 
@@ -129,20 +129,20 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                         workspaceRepo: wsRepo,
                         href: repo.url,
                         avatarUrl: repo.avatarUrl,
-                        localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                        localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
                         remoteBranches: [
                             ...parentBranches,
                             ...scm.state.refs
                                 .filter(
-                                    ref =>
+                                    (ref) =>
                                         ref.type === RefType.RemoteHead &&
                                         ref.name &&
-                                        scm.state.remotes.find(rem => ref.name!.startsWith(rem.name))
+                                        scm.state.remotes.find((rem) => ref.name!.startsWith(rem.name))
                                 )
-                                .map(ref => ({
+                                .map((ref) => ({
                                     ...ref,
-                                    remote: scm.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name
-                                }))
+                                    remote: scm.state.remotes.find((rem) => ref.name!.startsWith(rem.name))!.name,
+                                })),
                         ],
                         branchTypes: [],
                         developmentBranch: developmentBranch,
@@ -151,7 +151,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                                 scm.state.indexChanges.length +
                                 scm.state.mergeChanges.length >
                             0,
-                        isCloud: site.details.isCloud
+                        isCloud: site.details.isCloud,
                     };
                 })
             );
@@ -164,7 +164,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     bbSites.length === 0
                         ? 'Authenticate with Bitbucket and try again'
                         : `No Bitbucket repositories found in the current workspace in VS Code corresponding to the authenticated Bitbucket instances: ${bbSites
-                              .map(site => site.host)
+                              .map((site) => site.host)
                               .join(', ')}`;
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket repos') });
             }
@@ -320,20 +320,20 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         );
         const gitCommits = this.parseGitCommits(diff);
 
-        return gitCommits.map(c => ({
+        return gitCommits.map((c) => ({
             author: {
                 accountId: '',
                 displayName: c.authorEmail!,
                 avatarUrl: '',
                 mention: '',
-                url: ''
+                url: '',
             },
             ts: c.authorDate!.toString(),
             hash: c.hash,
             message: c.message,
             url: '',
             htmlSummary: '',
-            rawSummary: ''
+            rawSummary: '',
         }));
     }
 
@@ -361,7 +361,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 authorName: ` ${authorName}`.substr(1),
                 authorEmail: ` ${authorEmail}`.substr(1),
                 //@ts-ignore
-                commitDate: new Date(Number(commitDate) * 1000)
+                commitDate: new Date(Number(commitDate) * 1000),
             });
         } while (true);
 
@@ -372,7 +372,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         const bbApi = await clientForSite(site);
         const currentUserId = site.details.userId;
         let reviewers = await bbApi.pullrequests.getReviewers(site, query);
-        reviewers = reviewers.filter(r => r.accountId !== currentUserId);
+        reviewers = reviewers.filter((r) => r.accountId !== currentUserId);
         return reviewers;
     }
 
@@ -451,15 +451,15 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     repoUri: repo.workspaceRepo.rootUri,
                     branchName: destinationBranch.name,
                     commitHash: forkPoint,
-                    path: lhsFilePath
+                    path: lhsFilePath,
                 } as FileDiffQueryParams,
                 rhsQueryParams: {
                     lhs: false,
                     repoUri: repo.workspaceRepo.rootUri,
                     branchName: sourceBranch.name,
                     commitHash: sourceBranch.commit,
-                    path: rhsFilePath
-                } as FileDiffQueryParams
+                    path: rhsFilePath,
+                } as FileDiffQueryParams,
             });
         }
 
@@ -472,15 +472,15 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         fileDisplayName: string
     ) {
         const lhsQuery = {
-            query: JSON.stringify(lhsQueryParam)
+            query: JSON.stringify(lhsQueryParam),
         };
         const rhsQuery = {
-            query: JSON.stringify(rhsQueryParam)
+            query: JSON.stringify(rhsQueryParam),
         };
 
         const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQuery);
         const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQuery);
-        viewScreenEvent(Registry.screen.pullRequestPreviewDiffScreen, undefined, ProductBitbucket).then(e => {
+        viewScreenEvent(Registry.screen.pullRequestPreviewDiffScreen, undefined, ProductBitbucket).then((e) => {
             Container.analyticsClient.sendScreenEvent(e);
         });
         vscode.commands.executeCommand('vscode.diff', lhsUri, rhsUri, fileDisplayName);
@@ -506,7 +506,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (wsRepo.mainSiteRemote.site) {
                         const bbApi = await clientForSite(wsRepo.mainSiteRemote.site);
                         const bbIssues = await bbApi.issues!.getIssuesForKeys(wsRepo.mainSiteRemote.site, [
-                            bbIssueKeys[0]
+                            bbIssueKeys[0],
                         ]);
                         if (bbIssues.length > 0) {
                             issue = bbIssues[0];
@@ -517,7 +517,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
             this.postMessage({
                 type: 'fetchIssueResult',
-                issue: issue
+                issue: issue,
             });
         }
     }
@@ -527,7 +527,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             return;
         }
         if (isMinimalIssue(issue)) {
-            const transition = issue.transitions.find(t => t.to.id === issue.status.id);
+            const transition = issue.transitions.find((t) => t.to.id === issue.status.id);
             if (transition) {
                 await transitionIssue(issue, transition);
             }
@@ -549,7 +549,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             destinationBranch,
             pushLocalChanges,
             closeSourceBranch,
-            issue
+            issue,
         } = createPullRequestAction;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(`${destinationBranch.remote}/`, '');
@@ -570,12 +570,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 sourceBranchName: sourceBranchName,
                 destinationBranchName: destinationBranchName,
                 closeSourceBranch: closeSourceBranch,
-                reviewerAccountIds: reviewers.map(reviewer => reviewer.accountId)
+                reviewerAccountIds: reviewers.map((reviewer) => reviewer.accountId),
             })
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-                prCreatedEvent(destinationSite.details).then(e => {
+                prCreatedEvent(destinationSite.details).then((e) => {
                     Container.analyticsClient.sendTrackEvent(e);
                 });
             });

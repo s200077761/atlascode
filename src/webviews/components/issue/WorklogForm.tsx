@@ -27,7 +27,7 @@ const emptyForm = {
     started: '',
     timeSpent: '',
     newEstimate: '',
-    autoAdjust: true
+    autoAdjust: true,
 };
 
 export default class WorklogForm extends React.Component<MyProps, MyState> {
@@ -36,7 +36,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         this.state = {
             ...emptyForm,
             savingDisabled: true,
-            started: format(Date.now(), 'YYYY-MM-DD')
+            started: format(Date.now(), 'YYYY-MM-DD'),
         };
     }
 
@@ -59,7 +59,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
             started: format(new Date(formData.started), 'YYYY-MM-DDTHH:mm:ss.SSSZZ'),
             timeSpent: formData.timeSpent,
             adjustEstimate: formData.newEstimate && formData.newEstimate !== '' ? 'new' : 'auto',
-            newEstimate: formData.newEstimate
+            newEstimate: formData.newEstimate,
         };
 
         if (this.props.onSave) {
@@ -122,11 +122,11 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                     className="ac-select-container"
                                                     datePickerSelectProps={{
                                                         className: 'ac-select-container',
-                                                        classNamePrefix: 'ac-select'
+                                                        classNamePrefix: 'ac-select',
                                                     }}
                                                     timePickerSelectProps={{
                                                         className: 'ac-select-container',
-                                                        classNamePrefix: 'ac-select'
+                                                        classNamePrefix: 'ac-select',
                                                     }}
                                                     onChange={FieldValidators.chain(
                                                         fieldArgs.fieldProps.onChange,
@@ -231,7 +231,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                                         { newEstimate: item.target.value },
                                                                         () => {
                                                                             this.setState({
-                                                                                savingDisabled: this.disableSaving()
+                                                                                savingDisabled: this.disableSaving(),
                                                                             });
                                                                         }
                                                                     );

@@ -9,20 +9,20 @@ export default class ErrorBanner extends React.Component<
     constructor(props: any) {
         super(props);
         this.state = {
-            errorDetails: this.props.errorDetails
+            errorDetails: this.props.errorDetails,
         };
     }
 
     componentWillReceiveProps(nextProps: any) {
         this.setState({
-            errorDetails: nextProps.errorDetails
+            errorDetails: nextProps.errorDetails,
         });
     }
 
     render() {
         let errorMarkup = [];
         if (isErrorCollection(this.state.errorDetails)) {
-            Object.keys(this.state.errorDetails.errors).forEach(key => {
+            Object.keys(this.state.errorDetails.errors).forEach((key) => {
                 errorMarkup.push(
                     <p className="force-wrap">
                         <b>{key}:</b>
@@ -33,7 +33,7 @@ export default class ErrorBanner extends React.Component<
                 );
             });
 
-            this.state.errorDetails.errorMessages.forEach(msg => {
+            this.state.errorDetails.errorMessages.forEach((msg) => {
                 errorMarkup.push(
                     <p className="force-wrap">
                         <span className="force-wrap" style={{ marginLeft: '5px' }}>
@@ -43,7 +43,7 @@ export default class ErrorBanner extends React.Component<
                 );
             });
         } else if (isErrorWithMessages(this.state.errorDetails)) {
-            this.state.errorDetails.errorMessages.forEach(msg => {
+            this.state.errorDetails.errorMessages.forEach((msg) => {
                 errorMarkup.push(
                     <p className="force-wrap">
                         <span className="force-wrap" style={{ marginLeft: '5px' }}>
@@ -53,7 +53,7 @@ export default class ErrorBanner extends React.Component<
                 );
             });
         } else if (typeof this.state.errorDetails === 'object') {
-            Object.keys(this.state.errorDetails).forEach(key => {
+            Object.keys(this.state.errorDetails).forEach((key) => {
                 errorMarkup.push(
                     <p className="force-wrap">
                         <b>{key}:</b>
@@ -78,8 +78,8 @@ export default class ErrorBanner extends React.Component<
                         onClick: () => {
                             this.setState({ errorDetails: undefined });
                             this.props.onDismissError();
-                        }
-                    }
+                        },
+                    },
                 ]}
             >
                 <div>{errorMarkup}</div>

@@ -10,7 +10,7 @@ import {
     emptyTransition,
     isMinimalIssue,
     MinimalIssue,
-    Transition
+    Transition,
 } from '@atlassianlabs/jira-pi-common-models';
 import * as path from 'path';
 import * as React from 'react';
@@ -23,13 +23,13 @@ import {
     CopyJiraIssueLinkAction,
     OpenJiraIssueAction,
     RefreshIssueAction,
-    StartWorkAction
+    StartWorkAction,
 } from '../../../ipc/issueActions';
 import {
     isStartWorkOnIssueData,
     isStartWorkOnIssueResult,
     StartWorkOnIssueData,
-    StartWorkOnIssueResult
+    StartWorkOnIssueResult,
 } from '../../../ipc/issueMessaging';
 import { HostErrorMessage } from '../../../ipc/messaging';
 import { BranchType, RepoData } from '../../../ipc/prMessaging';
@@ -55,12 +55,12 @@ const emptyRepoData: RepoData = {
     workspaceRepo: {
         rootUri: '',
         mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } },
-        siteRemotes: []
+        siteRemotes: [],
     },
     localBranches: [],
     remoteBranches: [],
     branchTypes: [],
-    isCloud: true
+    isCloud: true,
 };
 
 type State = {
@@ -95,7 +95,7 @@ const emptyState: State = {
     result: { type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined },
     isErrorBannerOpen: false,
     errorDetails: undefined,
-    isOnline: true
+    isOnline: true,
 };
 
 export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, State> {
@@ -118,7 +118,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                         this.isEmptyRepo(this.state.repo) && e.repoData.length > 0 ? e.repoData[0] : this.state.repo;
                     const transition =
                         this.state.transition === emptyTransition
-                            ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition
+                            ? e.issue.transitions.find((t) => t.to.id === e.issue.status.id) || this.state.transition
                             : this.state.transition;
                     const issueType = 'jiraIssue';
                     const issueId = e.issue.key;
@@ -136,7 +136,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     let repo = this.state.repo;
                     if (this.isEmptyRepo(this.state.repo) && e.repoData.length > 0) {
                         const issueRepo =
-                            e.repoData.find(r => r.href === e.issue.data.repository!.links!.html!.href) ||
+                            e.repoData.find((r) => r.href === e.issue.data.repository!.links!.html!.href) ||
                             e.repoData[0];
                         repo = issueRepo;
                     }
@@ -158,7 +158,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                         isStartButtonLoading: false,
                         result: e,
                         isErrorBannerOpen: false,
-                        errorDetails: undefined
+                        errorDetails: undefined,
                     });
                 }
                 break;
@@ -185,10 +185,10 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     ...this.state.data,
                     issue: {
                         ...this.state.data.issue,
-                        status: { ...this.state.data.issue.status, id: item.to.id, name: item.to.name }
-                    }
+                        status: { ...this.state.data.issue.status, id: item.to.id, name: item.to.name },
+                    },
                 },
-                transition: item
+                transition: item,
             });
         }
     };
@@ -198,13 +198,13 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             ? this.state.data.issue.key
             : `issue-#${this.state.data.issue.data.id}`;
         const sourceBranchValue = repo.localBranches.find(
-            b => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1
+            (b) => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1
         );
         this.setState({
             repo: repo,
             sourceBranch: sourceBranchValue,
             branchType: repo.branchTypes.length > 0 ? repo.branchTypes[0] : undefined,
-            existingBranchOptions: this.getExistingBranchOptions(repo, issueId)
+            existingBranchOptions: this.getExistingBranchOptions(repo, issueId),
         });
     };
 
@@ -217,22 +217,22 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
     };
 
     handleSelectExistingBranch = (branchName: string) => {
-        const branchType = this.state.repo.branchTypes.find(b => branchName.startsWith(b.prefix));
+        const branchType = this.state.repo.branchTypes.find((b) => branchName.startsWith(b.prefix));
         this.setState({
             branchType: branchType,
-            localBranch: branchType ? branchName.substring(branchType.prefix.length) : branchName
+            localBranch: branchType ? branchName.substring(branchType.prefix.length) : branchName,
         });
     };
 
     toggleJiraSetupEnabled = (e: any) => {
         this.setState({
-            jiraSetupEnabled: e.target.checked
+            jiraSetupEnabled: e.target.checked,
         });
     };
 
     toggleBitbucketSetupEnabled = (e: any) => {
         this.setState({
-            bitbucketSetupEnabled: e.target.checked
+            bitbucketSetupEnabled: e.target.checked,
         });
     };
 
@@ -257,7 +257,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             remoteName: this.state.siteRemote ? this.state.siteRemote.remote.name : '',
             transition: this.state.transition,
             setupJira: this.state.jiraSetupEnabled,
-            setupBitbucket: this.isEmptyRepo(this.state.repo) ? false : this.state.bitbucketSetupEnabled
+            setupBitbucket: this.isEmptyRepo(this.state.repo) ? false : this.state.bitbucketSetupEnabled,
         });
     };
 
@@ -267,14 +267,15 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
 
     private getExistingBranchOptions(repo: RepoData, issueId: string): string[] {
         const matchingLocalBranches = repo.localBranches
-            .filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase()))
-            .map(b => b.name!);
+            .filter((b) => b.name!.toLowerCase().includes(issueId.toLowerCase()))
+            .map((b) => b.name!);
         const matchingRemoteBranches = repo.remoteBranches
-            .filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase()))
+            .filter((b) => b.name!.toLowerCase().includes(issueId.toLowerCase()))
             .filter(
-                remoteBranch => !repo.localBranches.some(localBranch => remoteBranch.name!.endsWith(localBranch.name!))
+                (remoteBranch) =>
+                    !repo.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!))
             )
-            .map(b => b.name!.replace(`${b.remote!}/`, ''));
+            .map((b) => b.name!.replace(`${b.remote!}/`, ''));
 
         return [...matchingLocalBranches, ...matchingRemoteBranches];
     }
@@ -294,14 +295,10 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
 
         const localBranch =
             this.state.localBranch ||
-            `${issueId}-${issueTitle
-                .substring(0, 50)
-                .trim()
-                .toLowerCase()
-                .replace(/\W+/g, '-')}`;
+            `${issueId}-${issueTitle.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`;
         const sourceBranch =
             this.state.sourceBranch ||
-            repo.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1) ||
+            repo.localBranches.find((b) => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1) ||
             repo.localBranches[0];
 
         let siteRemote = this.state.siteRemote;
@@ -321,7 +318,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             siteRemote: siteRemote,
             bitbucketSetupEnabled: this.isEmptyRepo(repo) ? false : this.state.bitbucketSetupEnabled,
             isErrorBannerOpen: false,
-            errorDetails: undefined
+            errorDetails: undefined,
         });
     }
 
@@ -377,8 +374,8 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                                         action: 'openJiraIssue',
                                                         issueOrKey: {
                                                             siteDetails: issue.siteDetails,
-                                                            key: issue.parentKey!
-                                                        }
+                                                            key: issue.parentKey!,
+                                                        },
                                                     })
                                                 }
                                             />
@@ -490,7 +487,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                         margin: 10,
                                         borderLeftWidth: 'initial',
                                         borderLeftStyle: 'solid',
-                                        borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)'
+                                        borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
                                     }}
                                 >
                                     <div style={{ margin: 10 }}>
@@ -522,7 +519,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                     margin: 10,
                                     borderLeftWidth: 'initial',
                                     borderLeftStyle: 'solid',
-                                    borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)'
+                                    borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
                                 }}
                             >
                                 <div style={{ margin: 10 }}>
@@ -544,7 +541,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                     margin: 10,
                                     borderLeftWidth: 'initial',
                                     borderLeftStyle: 'solid',
-                                    borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)'
+                                    borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
                                 }}
                             >
                                 <div style={{ margin: 10 }}>
@@ -613,7 +610,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                                     inputProps={{ className: 'ac-inputField' }}
                                                     viewProps={{
                                                         id: 'start-work-branch-name',
-                                                        className: 'ac-inline-input-view-p'
+                                                        className: 'ac-inline-input-view-p',
                                                     }}
                                                     editButtonClassName="ac-inline-edit-button"
                                                     cancelButtonClassName="ac-inline-cancel-button"
@@ -633,7 +630,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                                         )
                                                     </p>
                                                     <ul>
-                                                        {this.state.existingBranchOptions.map(branchName => (
+                                                        {this.state.existingBranchOptions.map((branchName) => (
                                                             <li>
                                                                 <Button
                                                                     className="ac-link-button"

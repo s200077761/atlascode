@@ -17,7 +17,7 @@ import {
     getAgent,
     jiraCloudAuthProvider,
     jiraServerAuthProvider,
-    jiraTransportFactory
+    jiraTransportFactory,
 } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
@@ -72,7 +72,7 @@ export class ClientManager implements Disposable {
     }
 
     public async bbClient(site: DetailedSiteInfo): Promise<BitbucketApi> {
-        return this.getClient<BitbucketApi>(site, info => {
+        return this.getClient<BitbucketApi>(site, (info) => {
             let result: BitbucketApi;
             if (site.isCloud) {
                 result = {
@@ -87,7 +87,7 @@ export class ClientManager implements Disposable {
                         : undefined!,
                     pipelines: isOAuthInfo(info)
                         ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info.access))
-                        : undefined!
+                        : undefined!,
                 };
             } else {
                 result = {
@@ -98,7 +98,7 @@ export class ClientManager implements Disposable {
                         ? new ServerPullRequestApi(this.createBasicHTTPClient(site, info.username, info.password))
                         : undefined!,
                     issues: undefined,
-                    pipelines: undefined
+                    pipelines: undefined,
                 };
             }
 
@@ -107,7 +107,7 @@ export class ClientManager implements Disposable {
     }
 
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
-        return this.getClient<JiraClient<DetailedSiteInfo>>(site, info => {
+        return this.getClient<JiraClient<DetailedSiteInfo>>(site, (info) => {
             let client: any = undefined;
 
             if (isOAuthInfo(info)) {

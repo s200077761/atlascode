@@ -15,8 +15,8 @@ import { Container } from './container';
 export const Registry = {
     screen: {
         pullRequestDiffScreen: 'pullRequestDiffScreen',
-        pullRequestPreviewDiffScreen: 'pullRequestPreviewDiffScreen'
-    }
+        pullRequestPreviewDiffScreen: 'pullRequestPreviewDiffScreen',
+    },
 };
 
 class AnalyticsPlatform {
@@ -29,7 +29,7 @@ class AnalyticsPlatform {
         openbsd: 'desktop',
         sunos: 'desktop',
         win32: 'windows',
-        cygwin: 'windows'
+        cygwin: 'windows',
     };
 
     static for(p: string): string {
@@ -45,13 +45,13 @@ export async function installedEvent(version: string): Promise<TrackEvent> {
 
 export async function upgradedEvent(version: string, previousVersion: string): Promise<TrackEvent> {
     return trackEvent('upgraded', 'atlascode', {
-        attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion }
+        attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion },
     });
 }
 
 export async function launchedEvent(location: string): Promise<TrackEvent> {
     return trackEvent('launched', 'atlascode', {
-        attributes: { machineId: Container.machineId, extensionLocation: location }
+        attributes: { machineId: Container.machineId, extensionLocation: location },
     });
 }
 
@@ -62,19 +62,19 @@ export async function featureChangeEvent(featureId: string, enabled: boolean): P
 
 export async function authenticatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'authenticated', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name },
     });
 }
 
 export async function editedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'edited', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name },
     });
 }
 
 export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'unauthenticated', 'atlascode', {
-        attributes: { machineId: Container.machineId, hostProduct: site.product.name }
+        attributes: { machineId: Container.machineId, hostProduct: site.product.name },
     });
 }
 
@@ -108,7 +108,7 @@ export async function issueUpdatedEvent(
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'updated', 'issue', {
         actionSubjectId: issueKey,
-        attributes: { fieldName: fieldName, fieldKey: fieldKey }
+        attributes: { fieldName: fieldName, fieldKey: fieldKey },
     });
 }
 
@@ -215,7 +215,7 @@ export async function viewScreenEvent(
     let screenEvent = instanceType(
         {
             origin: 'desktop',
-            platform: AnalyticsPlatform.for(process.platform)
+            platform: AnalyticsPlatform.for(process.platform),
         },
         site,
         product
@@ -228,7 +228,7 @@ export async function viewScreenEvent(
     const e = {
         tenantIdType: null,
         name: screenName,
-        screenEvent: screenEvent
+        screenEvent: screenEvent,
     };
 
     const tenantId: string | undefined = site ? site.id : undefined;
@@ -250,8 +250,8 @@ export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
             containerType: 'treeview',
             containerId: BitbucketIssuesTreeViewId,
             objectType: 'treenode',
-            objectId: 'paginationNode'
-        }
+            objectId: 'paginationNode',
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -269,8 +269,8 @@ export async function prPaginationEvent(): Promise<UIEvent> {
             containerType: 'treeview',
             containerId: PullRequestTreeViewId,
             objectType: 'treenode',
-            objectId: 'paginationNode'
-        }
+            objectId: 'paginationNode',
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -285,8 +285,8 @@ export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> 
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'moreSettingsButton',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -301,8 +301,8 @@ export async function doneButtonEvent(source: string): Promise<UIEvent> {
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'doneButton',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -318,8 +318,8 @@ export async function authenticateButtonEvent(source: string, site: SiteInfo, is
             actionSubject: 'button',
             actionSubjectId: 'authenticateButton',
             source: source,
-            attributes: { instanceType: isCloud ? 'cloud' : 'server', hostProduct: site.product.name }
-        }
+            attributes: { instanceType: isCloud ? 'cloud' : 'server', hostProduct: site.product.name },
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -334,8 +334,8 @@ export async function editButtonEvent(source: string): Promise<UIEvent> {
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'editCredentialsButton',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -350,8 +350,8 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'logoutButton',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -366,8 +366,8 @@ export async function configureJQLButtonEvent(source: string): Promise<UIEvent> 
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'configureJQLButton',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -383,8 +383,8 @@ export async function openSettingsButtonEvent(source: string): Promise<UIEvent> 
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'openSettingsButton',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -399,8 +399,8 @@ export async function openWorkbenchRepositoryButtonEvent(source: string): Promis
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'openWorkbenchRepository',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -415,8 +415,8 @@ export async function openWorkbenchWorkspaceButtonEvent(source: string): Promise
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'openWorkbenchWorkspace',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -431,8 +431,8 @@ export async function cloneRepositoryButtonEvent(source: string): Promise<UIEven
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'cloneRepository',
-            source: source
-        }
+            source: source,
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -447,8 +447,8 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'cloneRepository',
-            source: 'statusBar'
-        }
+            source: 'statusBar',
+        },
     };
 
     return anyUserOrAnonymous<UIEvent>(e);
@@ -473,7 +473,7 @@ async function instanceTrackEvent(
 async function trackEvent(action: string, actionSubject: string, eventProps: any = {}): Promise<TrackEvent> {
     const e = {
         tenantIdType: null,
-        trackEvent: event(action, actionSubject, eventProps)
+        trackEvent: event(action, actionSubject, eventProps),
     };
 
     return anyUserOrAnonymous<TrackEvent>(e);
@@ -488,7 +488,7 @@ async function tenantTrackEvent(
     const e = {
         tenantIdType: 'cloudId',
         tenantId: tenentId,
-        trackEvent: event(action, actionSubject, eventProps)
+        trackEvent: event(action, actionSubject, eventProps),
     };
 
     return anyUserOrAnonymous<TrackEvent>(e);
@@ -500,7 +500,7 @@ function event(action: string, actionSubject: string, attributes: any): any {
         platform: AnalyticsPlatform.for(process.platform),
         action: action,
         actionSubject: actionSubject,
-        source: 'vscode'
+        source: 'vscode',
     };
     return Object.assign(event, attributes);
 }

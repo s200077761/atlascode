@@ -11,18 +11,18 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             type: isDark ? 'dark' : 'light',
             primary: {
                 contrastText: vscStyles.buttonForeground,
-                main: vscStyles.buttonBackground
+                main: vscStyles.buttonBackground,
             },
             text: {
-                primary: vscStyles.foreground
+                primary: vscStyles.foreground,
             },
             background: {
                 default: vscStyles.editorBackground,
-                paper: isDark ? lighten(vscStyles.editorBackground, 3) : darken(vscStyles.editorBackground, 3)
-            }
+                paper: isDark ? lighten(vscStyles.editorBackground, 3) : darken(vscStyles.editorBackground, 3),
+            },
         },
         typography: {
-            fontFamily: vscStyles.fontFamily
+            fontFamily: vscStyles.fontFamily,
         },
         overrides: {
             MuiChip: {
@@ -30,58 +30,58 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     backgroundColor: isDark
                         ? lighten(vscStyles.editorBackground, 20)
                         : darken(vscStyles.editorBackground, 3),
-                    color: vscStyles.editorForeground
-                }
+                    color: vscStyles.editorForeground,
+                },
             },
             MuiButton: {
                 root: {
-                    color: vscStyles.buttonForeground
+                    color: vscStyles.buttonForeground,
                 },
                 contained: {
                     '&:hover': {
-                        backgroundColor: vscStyles.buttonHoverBackground
-                    }
+                        backgroundColor: vscStyles.buttonHoverBackground,
+                    },
                 },
                 text: {
                     '&:hover': {
-                        backgroundColor: vscStyles.buttonHoverBackground
-                    }
-                }
+                        backgroundColor: vscStyles.buttonHoverBackground,
+                    },
+                },
             },
             MuiAppBar: {
                 colorDefault: {
                     backgroundColor: vscStyles.activityBarBackground,
-                    color: vscStyles.activityBarForeground
+                    color: vscStyles.activityBarForeground,
                 },
                 colorPrimary: {
                     backgroundColor: vscStyles.activityBarBackground,
-                    color: vscStyles.activityBarForeground
-                }
+                    color: vscStyles.activityBarForeground,
+                },
             },
             MuiExpansionPanelSummary: {
                 root: {
                     backgroundColor: vscStyles.titleBarActiveBackground,
-                    color: vscStyles.titleBarActiveForeground
-                }
+                    color: vscStyles.titleBarActiveForeground,
+                },
             },
             MuiFilledInput: {
                 root: {
                     backgroundColor: vscStyles.dropdownBackground,
-                    color: vscStyles.dropdownForeground
-                }
+                    color: vscStyles.dropdownForeground,
+                },
             },
             MuiLink: {
                 root: {
-                    color: vscStyles.textLinkForeground
-                }
+                    color: vscStyles.textLinkForeground,
+                },
             },
             MuiTableRow: {
                 root: {
                     '&$selected, &$selected:hover': {
-                        backgroundColor: vscStyles.listActiveSelectionBackground
-                    }
-                }
-            }
-        }
+                        backgroundColor: vscStyles.listActiveSelectionBackground,
+                    },
+                },
+            },
+        },
     });
 };

@@ -29,7 +29,7 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

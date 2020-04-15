@@ -13,7 +13,7 @@ import {
     TableRow,
     TextField,
     Toolbar,
-    Typography
+    Typography,
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
 import StarIcon from '@material-ui/icons/Star';
@@ -53,7 +53,7 @@ type HeadCell = {
 const headCells: HeadCell[] = [
     { id: 'name', disablePadding: true, label: 'Filter Name', align: 'left' },
     { id: 'owner', disablePadding: false, label: 'Owner', align: 'left' },
-    { id: 'favorite', disablePadding: false, label: 'Favorite', align: 'center' }
+    { id: 'favorite', disablePadding: false, label: 'Favorite', align: 'center' },
 ];
 
 const emptyResults: FilterSearchResults = {
@@ -61,43 +61,43 @@ const emptyResults: FilterSearchResults = {
     isLast: true,
     maxResults: 25,
     offset: 0,
-    total: 0
+    total: 0,
 };
 
-const useToolbarStyles = makeStyles(theme => ({
+const useToolbarStyles = makeStyles((theme) => ({
     root: {
         paddingLeft: theme.spacing(2),
         paddingRight: theme.spacing(1),
-        marginBottom: theme.spacing(2)
+        marginBottom: theme.spacing(2),
     },
     highlight: (props: VSCodeStyles) => ({
         color: props.listActiveSelectionForeground,
-        backgroundColor: props.listActiveSelectionBackground
+        backgroundColor: props.listActiveSelectionBackground,
     }),
 
     title: {
-        flex: '1 1 100%'
-    }
+        flex: '1 1 100%',
+    },
 }));
 
-const useTableStyles = makeStyles(theme => ({
+const useTableStyles = makeStyles((theme) => ({
     root: {
-        width: '100%'
+        width: '100%',
     },
     paper: {
         width: '100%',
-        marginBottom: theme.spacing(2)
+        marginBottom: theme.spacing(2),
     },
     container: {
-        maxHeight: 440
-    }
+        maxHeight: 440,
+    },
 }));
 
 const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
     numSelected,
     inputText,
     setInputText,
-    loading
+    loading,
 }) => {
     const vscStyles = useContext(VSCodeStylesContext);
     const classes = useToolbarStyles(vscStyles);
@@ -105,7 +105,7 @@ const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
     return (
         <Toolbar
             className={clsx(classes.root, {
-                [classes.highlight]: numSelected > 0
+                [classes.highlight]: numSelected > 0,
             })}
         >
             {numSelected > 0 ? (
@@ -121,7 +121,7 @@ const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
             <TextField
                 label="Search for filters"
                 value={inputText}
-                onChange={e => setInputText(e.target.value)}
+                onChange={(e) => setInputText(e.target.value)}
                 fullWidth
                 variant="standard"
                 InputProps={{
@@ -134,7 +134,7 @@ const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
                         <React.Fragment>
                             {loading ? <CircularProgress color="inherit" size={20} /> : null}
                         </React.Fragment>
-                    )
+                    ),
                 }}
             />
         </Toolbar>
@@ -144,7 +144,7 @@ const FilterTableToolbar: React.FunctionComponent<FilterTableToolbarProps> = ({
 const FilterTableHead: React.FunctionComponent<FilterTableHeadProps> = ({
     onSelectAllClick,
     numSelected,
-    rowCount
+    rowCount,
 }) => {
     return (
         <TableHead>
@@ -157,7 +157,7 @@ const FilterTableHead: React.FunctionComponent<FilterTableHeadProps> = ({
                         color="primary"
                     />
                 </TableCell>
-                {headCells.map(headCell => (
+                {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
                         align={headCell.align}
@@ -173,7 +173,7 @@ const FilterTableHead: React.FunctionComponent<FilterTableHeadProps> = ({
 
 export const FilterSearchResultsTable: React.FunctionComponent<FilterSearchResultsTableProps> = ({
     site,
-    onSelected
+    onSelected,
 }) => {
     const classes = useTableStyles();
     const [selected, setSelected] = useState<FilterSearchResult[]>([]);
@@ -200,7 +200,7 @@ export const FilterSearchResultsTable: React.FunctionComponent<FilterSearchResul
     };
 
     const handleClick = (event: React.MouseEvent, filter: FilterSearchResult) => {
-        const selectedIndex = selected.findIndex(f => f.id === filter.id);
+        const selectedIndex = selected.findIndex((f) => f.id === filter.id);
         let newSelected: FilterSearchResult[] = [];
 
         if (selectedIndex === -1) {
@@ -222,7 +222,7 @@ export const FilterSearchResultsTable: React.FunctionComponent<FilterSearchResul
         //filterSearch.execute();
     };
 
-    const isSelected = (id: string) => selected.findIndex(f => f.id === id) !== -1;
+    const isSelected = (id: string) => selected.findIndex((f) => f.id === id) !== -1;
 
     //const emptyRows = rowsPerPage - Math.min(rowsPerPage, results.filters.length - page * rowsPerPage);
 
@@ -261,7 +261,7 @@ export const FilterSearchResultsTable: React.FunctionComponent<FilterSearchResul
                                 return (
                                     <TableRow
                                         hover
-                                        onClick={event => handleClick(event, row)}
+                                        onClick={(event) => handleClick(event, row)}
                                         role="checkbox"
                                         aria-checked={isItemSelected}
                                         tabIndex={-1}

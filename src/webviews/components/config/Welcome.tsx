@@ -20,7 +20,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
     constructor(props: any) {
         super(props);
         this.state = {
-            feedbackUser: { userName: '', emailAddress: '' }
+            feedbackUser: { userName: '', emailAddress: '' },
         };
     }
 

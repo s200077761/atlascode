@@ -30,7 +30,7 @@ export class Backend {
 
         const result = Container.bitbucketContext
             .getBitbucketRepositories()
-            .find(repo => editorUri.startsWith(repo.rootUri));
+            .find((repo) => editorUri.startsWith(repo.rootUri));
         if (!result) {
             throw new Error('Unable to find a Bitbucket repository');
         }

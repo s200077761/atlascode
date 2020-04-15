@@ -6,7 +6,7 @@ export enum OnboardingNotificationActions {
     CREATEISSUE = 'Create an issue',
     VIEWISSUE = 'View an issue',
     CREATEPULLREQUEST = 'Create a pull request',
-    VIEWPULLREQUEST = 'View a pull request'
+    VIEWPULLREQUEST = 'View a pull request',
 }
 
 export type OnboardingNotificationPressedEvent = {
@@ -21,16 +21,16 @@ export function displayAuthNotification(site: SiteInfo, event: EventEmitter<Onbo
                 OnboardingNotificationActions.CREATEISSUE,
                 OnboardingNotificationActions.VIEWISSUE
             )
-            .then(selection => {
+            .then((selection) => {
                 if (selection) {
                     if (selection === OnboardingNotificationActions.CREATEISSUE) {
                         event.fire({
-                            action: OnboardingNotificationActions.CREATEISSUE
+                            action: OnboardingNotificationActions.CREATEISSUE,
                         });
                         commands.executeCommand(Commands.CreateIssue, undefined, 'auth notification');
                     } else if (selection === OnboardingNotificationActions.VIEWISSUE) {
                         event.fire({
-                            action: OnboardingNotificationActions.VIEWISSUE
+                            action: OnboardingNotificationActions.VIEWISSUE,
                         });
                     }
                 }
@@ -42,16 +42,16 @@ export function displayAuthNotification(site: SiteInfo, event: EventEmitter<Onbo
                 OnboardingNotificationActions.CREATEPULLREQUEST,
                 OnboardingNotificationActions.VIEWPULLREQUEST
             )
-            .then(selection => {
+            .then((selection) => {
                 if (selection) {
                     if (selection === OnboardingNotificationActions.CREATEPULLREQUEST) {
                         event.fire({
-                            action: OnboardingNotificationActions.CREATEPULLREQUEST
+                            action: OnboardingNotificationActions.CREATEPULLREQUEST,
                         });
                         commands.executeCommand(Commands.CreatePullRequest);
                     } else if (selection === OnboardingNotificationActions.VIEWPULLREQUEST) {
                         event.fire({
-                            action: OnboardingNotificationActions.VIEWPULLREQUEST
+                            action: OnboardingNotificationActions.VIEWPULLREQUEST,
                         });
                     }
                 }

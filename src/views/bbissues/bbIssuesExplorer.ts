@@ -19,7 +19,7 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
             commands.registerCommand(Commands.BitbucketIssuesRefresh, this.refresh, this),
             commands.registerCommand(Commands.CreateBitbucketIssue, (source?: string) => {
                 Container.createBitbucketIssueWebview.createOrShow();
-                startIssueCreationEvent(source || 'explorer', ProductBitbucket).then(e => {
+                startIssueCreationEvent(source || 'explorer', ProductBitbucket).then((e) => {
                     Container.analyticsClient.sendTrackEvent(e);
                 });
             }),

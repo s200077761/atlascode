@@ -33,13 +33,13 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({ a
         <TableTree
             columns={[Filename, Size, Delete]}
             columnWidths={['100%', '150px', '50px']}
-            items={attachments.map(attachment => {
+            items={attachments.map((attachment) => {
                 return {
                     id: attachment.id,
                     content: {
                         attachment: attachment,
-                        delfunc: onDelete
-                    }
+                        delfunc: onDelete,
+                    },
                 };
             })}
         />

@@ -11,7 +11,7 @@ import {
     ListItemSecondaryAction,
     ListItemText,
     Theme,
-    Typography
+    Typography,
 } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -37,11 +37,11 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             root: {
-                flexGrow: 1
+                flexGrow: 1,
             },
             iconStyle: {
-                color: theme.palette.grey[600]
-            }
+                color: theme.palette.grey[600],
+            },
         } as const)
 );
 
@@ -61,7 +61,7 @@ function generateListItems(
                 <Box width="100%">
                     <Typography align="center">No sites found.</Typography>
                 </Box>
-            </ListItem>
+            </ListItem>,
         ];
     }
     return sites.map((swa: SiteWithAuthInfo, i: number) => {

@@ -39,16 +39,16 @@ export const useFilterSearch = (
     );
 
     const filterSearch = useAsyncAbortable(
-        async abortSignal => {
+        async (abortSignal) => {
             return debouncedSearch(fetcher, site, inputText, maxResults, startAt, abortSignal);
         },
         [inputText, site, startAt, maxResults],
-        { setLoading: state => ({ ...state, loading: true }) }
+        { setLoading: (state) => ({ ...state, loading: true }) }
     );
 
     return {
         inputText,
         setInputText,
-        filterSearch
+        filterSearch,
     };
 };

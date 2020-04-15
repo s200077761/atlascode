@@ -24,7 +24,7 @@ export type WorkspaceRepo = {
 export const emptyBitbucketSite = {
     details: emptySiteInfo,
     ownerSlug: '',
-    repoSlug: ''
+    repoSlug: '',
 };
 
 export type User = {
@@ -41,7 +41,7 @@ export const UnknownUser = {
     displayName: 'Unknown User',
     url: '',
     avatarUrl: '',
-    mention: ''
+    mention: '',
 };
 
 export type Reviewer = User & {
@@ -99,7 +99,7 @@ export const emptyUser = {
     displayName: '',
     url: '',
     avatarUrl: '',
-    mention: ''
+    mention: '',
 };
 
 export const emptyTask = {
@@ -111,7 +111,7 @@ export const emptyTask = {
     id: '',
     editable: false,
     deletable: false,
-    content: ''
+    content: '',
 };
 
 export const emptyComment = {
@@ -125,7 +125,7 @@ export const emptyComment = {
     updatedTs: '',
     deleted: false,
     children: [],
-    tasks: []
+    tasks: [],
 };
 
 export type Commit = {
@@ -175,7 +175,7 @@ export enum FileStatus {
     MODIFIED = 'M',
     RENAMED = 'R',
     CONFLICT = 'CONFLICT',
-    UNKNOWN = 'X'
+    UNKNOWN = 'X',
 }
 
 export interface FileDiff {

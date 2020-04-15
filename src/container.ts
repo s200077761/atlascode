@@ -51,7 +51,7 @@ export class Container {
             product: 'externalProductIntegrations',
             subproduct: 'atlascode',
             version: version,
-            deviceId: env.machineId
+            deviceId: env.machineId,
         });
 
         this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient);
@@ -111,7 +111,7 @@ export class Container {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
             let disposable: Disposable;
-            disposable = configuration.onDidChange(e => {
+            disposable = configuration.onDidChange((e) => {
                 if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));
@@ -142,7 +142,7 @@ export class Container {
             try {
                 const args = process.execArgv;
 
-                this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
+                this._isDebugging = args ? args.some((arg) => isDebuggingRegex.test(arg)) : false;
             } catch {}
         }
 

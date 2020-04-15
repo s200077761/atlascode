@@ -7,7 +7,7 @@ import {
     StatusBarAlignment,
     StatusBarItem,
     TextEditor,
-    window
+    window,
 } from 'vscode';
 import { openActiveIssueEvent } from '../../analytics';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -34,7 +34,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
 
     constructor(bbCtx: BitbucketContext) {
         Container.context.subscriptions.push(
-            configuration.onDidChange(e => this.handleConfigurationChange(e)),
+            configuration.onDidChange((e) => this.handleConfigurationChange(e)),
             bbCtx.onDidChangeBitbucketContext(() => this.handleRepoChange())
         );
         void this.handleConfigurationChange(configuration.initializingChangeEvent);
@@ -55,7 +55,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
         this.repoListeners = Disposable.from(
             ...Container.bitbucketContext
                 .getAllRepositoriesRaw()
-                .map(scm => scm.state.onDidChange(() => this.handleActiveIssueChange(undefined)))
+                .map((scm) => scm.state.onDidChange(() => this.handleActiveIssueChange(undefined)))
         );
     }
 
@@ -67,11 +67,11 @@ export class JiraActiveIssueStatusBar implements Disposable {
             this.disposable ||
             Disposable.from(
                 this.statusBarItem,
-                window.onDidChangeActiveTextEditor(e => this.handleActiveIssueChange(e)),
+                window.onDidChangeActiveTextEditor((e) => this.handleActiveIssueChange(e)),
                 commands.registerCommand(JiraActiveIssueStatusBar.OpenActiveIssueCommand, () => {
                     if (this.activeIssue) {
                         showIssue(this.activeIssue);
-                        openActiveIssueEvent().then(e => Container.analyticsClient.sendUIEvent(e));
+                        openActiveIssueEvent().then((e) => Container.analyticsClient.sendUIEvent(e));
                     }
                 })
             );
@@ -118,7 +118,7 @@ export class JiraActiveIssueStatusBar implements Disposable {
             return branchName;
         }
 
-        const scm = Container.bitbucketContext?.getAllRepositoriesRaw().find(repo => {
+        const scm = Container.bitbucketContext?.getAllRepositoriesRaw().find((repo) => {
             try {
                 const uriPath = fs.realpathSync(editor.document.uri.fsPath);
                 return uriPath.startsWith(repo.rootUri.fsPath);

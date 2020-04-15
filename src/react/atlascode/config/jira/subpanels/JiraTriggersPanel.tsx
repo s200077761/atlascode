@@ -27,7 +27,7 @@ export const JiraTriggersPanel: React.FunctionComponent<JiraTriggersPanelProps> 
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }
@@ -36,7 +36,7 @@ export const JiraTriggersPanel: React.FunctionComponent<JiraTriggersPanelProps> 
         }, [expanded]);
 
         useEffect(() => {
-            setInternalList(oldList => {
+            setInternalList((oldList) => {
                 if (!equal(oldList, triggers)) {
                     return triggers;
                 }

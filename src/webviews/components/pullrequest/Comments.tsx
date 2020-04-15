@@ -33,7 +33,7 @@ class NestedComment extends React.Component<
             showCommentForm: false,
             commentEditMode: false,
             isCreatingTask: false,
-            receivedDataFromServer: true
+            receivedDataFromServer: true,
         };
     }
 
@@ -148,7 +148,7 @@ class NestedComment extends React.Component<
             id: '',
             editable: false,
             deletable: false,
-            content: ''
+            content: '',
         } as Task;
     };
 
@@ -214,7 +214,7 @@ class NestedComment extends React.Component<
                         />
                     )}
                     {node.tasks &&
-                        node.tasks.map(task => (
+                        node.tasks.map((task) => (
                             <TaskComponent
                                 task={task}
                                 onEdit={this.props.onTaskEdit}
@@ -224,7 +224,7 @@ class NestedComment extends React.Component<
                             />
                         ))}
                     {node.children &&
-                        node.children.map(child => (
+                        node.children.map((child) => (
                             <NestedComment
                                 node={child}
                                 currentUser={currentUser}
@@ -268,8 +268,8 @@ export default class Comments extends React.Component<
             return null;
         }
         const result = this.props.comments
-            .filter(comment => !comment.inline)
-            .map(comment => (
+            .filter((comment) => !comment.inline)
+            .map((comment) => (
                 <NestedComment
                     key={comment.id}
                     node={comment}
@@ -299,7 +299,7 @@ class EditForm extends React.Component<
     constructor(props: any) {
         super(props);
         this.state = {
-            editInput: this.props.commentData.rawContent ? this.props.commentData.rawContent : ''
+            editInput: this.props.commentData.rawContent ? this.props.commentData.rawContent : '',
         };
     }
 

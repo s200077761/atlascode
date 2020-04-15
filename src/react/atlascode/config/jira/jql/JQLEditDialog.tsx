@@ -9,7 +9,7 @@ import {
     DialogContentText,
     DialogTitle,
     Grid,
-    TextField
+    TextField,
 } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useAsync } from 'react-async-hook';
@@ -37,7 +37,7 @@ type FormFields = {
 const emptyJQLOptions: JqlAutocompleteRestData = {
     visibleFieldNames: [],
     visibleFunctionNames: [],
-    jqlReservedWords: []
+    jqlReservedWords: [],
 };
 
 export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
@@ -45,7 +45,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
     sites,
     jqlEntry,
     onCancel,
-    onSave
+    onSave,
 }) => {
     const controller = useContext(ConfigControllerContext);
     const [site, setSite] = useState(Array.isArray(sites) && sites.length > 0 ? sites[0] : emptySiteInfo);
@@ -55,7 +55,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
     }, [site]);
 
     const { register, handleSubmit, errors, formState, control } = useForm<FormFields>({
-        mode: 'onChange'
+        mode: 'onChange',
     });
 
     const validateJql = useJqlValidator(site);
@@ -67,7 +67,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                 return jqlErrors.errors.length > 0 ? jqlErrors.errors.join(',') : undefined;
             }
             return undefined;
-        }
+        },
     });
 
     const jqlFetcher = useCallback(
@@ -95,7 +95,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
             var newEntry = Object.assign({}, entry, {
                 siteId: data.site,
                 name: data.name,
-                query: data.jql
+                query: data.jql,
             });
 
             onSave(newEntry);
@@ -111,7 +111,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
 
     useEffect(() => {
         if (jqlEntry) {
-            var foundSite = sites.find(s => s.id === jqlEntry.siteId);
+            var foundSite = sites.find((s) => s.id === jqlEntry.siteId);
             if (foundSite) {
                 setSite(foundSite);
             }
@@ -135,7 +135,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
                             fullWidth
                             error={!!errors.name}
                             inputRef={register({
-                                required: 'Name is required'
+                                required: 'Name is required',
                             })}
                         />
                     </Grid>

@@ -8,7 +8,7 @@ export enum CodebucketCommands {
     OpenInBitbucket = 'atlascode.bb.openInBitbucket',
     OpenChangeset = 'atlascode.bb.openChangeset',
     ViewPullRequest = 'atlascode.bb.viewPullRequest',
-    CopyPullRequest = 'atlascode.bb.copyPullRequest'
+    CopyPullRequest = 'atlascode.bb.copyPullRequest',
 }
 
 export function activate(context: ExtensionContext) {

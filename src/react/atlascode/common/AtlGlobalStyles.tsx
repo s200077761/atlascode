@@ -9,15 +9,15 @@ const useStyles = makeStyles(
                     'background-color':
                         theme.palette.type === 'dark'
                             ? lighten(theme.palette.background.default, 0.15)
-                            : darken(theme.palette.background.default, 0.15)
+                            : darken(theme.palette.background.default, 0.15),
                 },
                 '.user-mention': {
                     'background-color':
                         theme.palette.type === 'dark'
                             ? lighten(theme.palette.background.default, 0.15)
-                            : darken(theme.palette.background.default, 0.15)
-                }
-            }
+                            : darken(theme.palette.background.default, 0.15),
+                },
+            },
         } as const)
 );
 

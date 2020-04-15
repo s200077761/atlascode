@@ -16,9 +16,9 @@ export abstract class AbstractBaseNode implements Disposable {
 
     dispose() {
         if (this.disposables) {
-            this.disposables.forEach(d => d.dispose());
+            this.disposables.forEach((d) => d.dispose());
         }
-        this.getChildren().then((children: AbstractBaseNode[]) => children.forEach(child => child.dispose()));
+        this.getChildren().then((children: AbstractBaseNode[]) => children.forEach((child) => child.dispose()));
     }
 
     getParent(): AbstractBaseNode | undefined {

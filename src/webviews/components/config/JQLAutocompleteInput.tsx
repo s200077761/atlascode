@@ -52,7 +52,7 @@ export class JQLAutocompleteInput extends PureComponent<
         jql: this.props.initialValue,
         isOpen: false,
         suggestions: [],
-        focusedItemIndex: undefined
+        focusedItemIndex: undefined,
     };
 
     componentDidMount() {
@@ -64,11 +64,11 @@ export class JQLAutocompleteInput extends PureComponent<
                 this.props.getSuggestionsRequest(fieldName, fieldValue).then((response: any) => {
                     onSuccess(response.results);
                 });
-            }, 400)
+            }, 400),
         };
         this.jql = new JQLAutocomplete(this.constructorData);
 
-        this.props.getAutocompleteDataRequest().then(response => {
+        this.props.getAutocompleteDataRequest().then((response) => {
             this.jql.passAutocompleteData(response);
         });
 
@@ -87,7 +87,7 @@ export class JQLAutocompleteInput extends PureComponent<
             <div
                 style={{ width: '100%', cursor: 'default' }}
                 onKeyDown={this.handleKeyboardInteractions}
-                ref={element => {
+                ref={(element) => {
                     this.containerNode = element;
                 }}
             >
@@ -128,10 +128,10 @@ export class JQLAutocompleteInput extends PureComponent<
 
     renderItems = () => {
         return this.state.suggestions.map((item: any, index: number) => {
-            const createMarkup = function() {
+            const createMarkup = function () {
                 return { __html: item.text };
             };
-            const ItemText = function() {
+            const ItemText = function () {
                 return <span dangerouslySetInnerHTML={createMarkup()} />;
             };
             return (
@@ -188,7 +188,7 @@ export class JQLAutocompleteInput extends PureComponent<
     onOpenChange = (attrs: any) => {
         this.setState({
             focusedItemIndex: undefined,
-            isOpen: attrs.isOpen
+            isOpen: attrs.isOpen,
         });
         this.props.onEditorOpenChange(attrs.isOpen);
     };
@@ -197,7 +197,7 @@ export class JQLAutocompleteInput extends PureComponent<
         const { focusedItemIndex, suggestions } = this.state;
         const nextItemIndex = this.getNextFocusable(focusedItemIndex!, suggestions.length);
         this.setState({
-            focusedItemIndex: nextItemIndex
+            focusedItemIndex: nextItemIndex,
         });
         this.scrollToFocused(nextItemIndex);
     };
@@ -206,7 +206,7 @@ export class JQLAutocompleteInput extends PureComponent<
         const { focusedItemIndex, suggestions } = this.state;
         const nextItemIndex = this.getPrevFocusable(focusedItemIndex!, suggestions.length);
         this.setState({
-            focusedItemIndex: nextItemIndex
+            focusedItemIndex: nextItemIndex,
         });
         this.scrollToFocused(nextItemIndex);
     };
@@ -221,7 +221,7 @@ export class JQLAutocompleteInput extends PureComponent<
     handleItemSelect = (item: any) => {
         this.setState({
             focusedItemIndex: undefined,
-            isOpen: false
+            isOpen: false,
         });
         if (item) {
             item.onClick();

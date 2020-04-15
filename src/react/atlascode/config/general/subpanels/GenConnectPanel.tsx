@@ -25,7 +25,7 @@ export const GenConnectPanel: React.FunctionComponent<GenConnectPanelProps> = me
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

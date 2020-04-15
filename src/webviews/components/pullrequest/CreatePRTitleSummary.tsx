@@ -30,7 +30,7 @@ export const CreatePRTitleSummary: React.FC<TitleSummaryProps> = (props: TitleSu
                               .message!.substring(props.commits[0].message!.indexOf('\n') + 1)
                               .trimLeft()}${createdFromAtlascodeFooter}`
                         : `${props.commits
-                              .map(c => `* ${c.message.trimRight()}`)
+                              .map((c) => `* ${c.message.trimRight()}`)
                               .join('\n\n')}${createdFromAtlascodeFooter}`
                 );
             } else {

@@ -37,7 +37,7 @@ export class OnlineDetector extends Disposable {
         this._disposable = Disposable.from(configuration.onDidChange(this.onConfigurationChanged, this));
 
         this._transport = axios.create({
-            timeout: ConnectionTimeout
+            timeout: ConnectionTimeout,
         });
 
         if (Container.config.enableCurlLogging) {
@@ -94,7 +94,7 @@ export class OnlineDetector extends Disposable {
         const urlList = Container.config.onlineCheckerUrls.slice();
         const promise = async () =>
             await pAny(
-                urlList.map(url => {
+                urlList.map((url) => {
                     return (async () => {
                         Logger.debug(`Online check attempting to connect to ${url}`);
                         await this._transport(url, { method: 'HEAD', ...getAgent() });
@@ -106,11 +106,11 @@ export class OnlineDetector extends Disposable {
 
         return await pRetry<boolean>(promise, {
             retries: 4,
-            onFailedAttempt: error => {
+            onFailedAttempt: (error) => {
                 Logger.debug(
                     `Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`
                 );
-            }
+            },
         }).catch(() => false);
     }
 

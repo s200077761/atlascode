@@ -73,8 +73,8 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
             let steps = await bbApi.pipelines!.getSteps(this.pipeline.site, this.pipeline.uuid);
             this.updateSteps(steps);
 
-            steps.map(step => {
-                bbApi.pipelines!.getStepLog(this.pipeline!.site, this.pipeline!.uuid, step.uuid).then(logs => {
+            steps.map((step) => {
+                bbApi.pipelines!.getStepLog(this.pipeline!.site, this.pipeline!.uuid, step.uuid).then((logs) => {
                     const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
                     logs.map((log, ix) => {
                         if (ix < commands.length) {

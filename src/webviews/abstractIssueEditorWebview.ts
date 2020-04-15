@@ -5,7 +5,7 @@ import {
     isProject,
     isProjectsResult,
     IssuePickerIssue,
-    IssuePickerResult
+    IssuePickerResult,
 } from '@atlassianlabs/jira-pi-common-models';
 import { ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { showIssue } from '../commands/jira/showIssue';
@@ -31,11 +31,11 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
         } else if (isGroupPickerResult(result)) {
             // NOTE: since the group endpoint doesn't support OAuth 2, this will never be called, but
             // we're keeping it here for future wackiness.
-            suggestions = result.groups.map(result => {
+            suggestions = result.groups.map((result) => {
                 return { label: result.html, value: result.name };
             });
         } else if (isAutocompleteSuggestionsResult(result)) {
-            suggestions = result.results.map(result => {
+            suggestions = result.results.map((result) => {
                 return { label: result.displayName, value: result.value };
             });
         } else if (isProjectsResult(result)) {
@@ -43,7 +43,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             suggestions = msg.site.isCloud
                 ? result.values
                 : result.values.filter(
-                      project =>
+                      (project) =>
                           project.name.toLowerCase().includes(msg.query.toLowerCase()) ||
                           project.key.toLowerCase().includes(msg.query.toLowerCase())
                   );
@@ -51,7 +51,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             suggestions = msg.site.isCloud
                 ? result
                 : result.filter(
-                      project =>
+                      (project) =>
                           project.name.toLowerCase().includes(msg.query.toLowerCase()) ||
                           project.key.toLowerCase().includes(msg.query.toLowerCase())
                   );
@@ -90,14 +90,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 this.postMessage({
                                     type: 'issueSuggestionsList',
                                     issues: suggestions,
-                                    nonce: msg.nonce
+                                    nonce: msg.nonce,
                                 });
                             } catch (e) {
                                 Logger.error(new Error(`error posting comment: ${e}`));
                                 this.postMessage({
                                     type: 'error',
                                     reason: this.formatErrorReason(e, 'Error fetching issues'),
-                                    nonce: msg.nonce
+                                    nonce: msg.nonce,
                                 });
                             }
                         }
@@ -122,7 +122,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 this.postMessage({
                                     type: 'error',
                                     reason: this.formatErrorReason(e, 'Error fetching options'),
-                                    nonce: msg.nonce
+                                    nonce: msg.nonce,
                                 });
                             }
                         }
@@ -147,7 +147,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 this.postMessage({
                                     type: 'error',
                                     reason: this.formatErrorReason(e, 'Error creating select option'),
-                                    nonce: msg.nonce
+                                    nonce: msg.nonce,
                                 });
                             }
                         }

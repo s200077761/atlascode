@@ -11,7 +11,7 @@ interface AuthDialogController {
 const emptyController: AuthDialogController = {
     openDialog: (product: Product, entry?: SiteWithAuthInfo) => {},
     close: () => {},
-    onExited: () => {}
+    onExited: () => {},
 };
 export const AuthDialogControllerContext = createContext<AuthDialogController>(emptyController);
 
@@ -42,6 +42,6 @@ export const useAuthDialog = () => {
         authDialogController,
         authDialogProduct,
         authDialogOpen,
-        authDialogEntry
+        authDialogEntry,
     };
 };

@@ -11,7 +11,7 @@ export class CreateBitbucketIssueNode extends AbstractBaseNode {
         treeItem.command = {
             command: Commands.CreateBitbucketIssue,
             title: 'Create Bitbucket issue',
-            arguments: ['explorerNode']
+            arguments: ['explorerNode'],
         };
 
         return treeItem;

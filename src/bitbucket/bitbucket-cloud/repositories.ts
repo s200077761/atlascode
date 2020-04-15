@@ -41,7 +41,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/refs/branches`, {
             pagelen: 100,
-            fields: 'values.name'
+            fields: 'values.name',
         });
 
         return data.values.map((val: any) => val.name);
@@ -69,19 +69,19 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/commits`, {
             include: includeRef,
             exclude: excludeRef,
-            pagelen: maxItemsSupported.commits
+            pagelen: maxItemsSupported.commits,
         });
 
         const commits: any[] = data.values || [];
 
-        return commits.map(commit => ({
+        return commits.map((commit) => ({
             hash: commit.hash!,
             message: commit.message!,
             ts: commit.date!,
             url: commit.links!.html!.href!,
             htmlSummary: commit.summary ? commit.summary.html! : '',
             rawSummary: commit.summary ? commit.summary.raw! : '',
-            author: commit.author ? CloudPullRequestApi.toUserModel(commit.author!.user) : UnknownUser
+            author: commit.author ? CloudPullRequestApi.toUserModel(commit.author!.user) : UnknownUser,
         }));
     }
 
@@ -105,7 +105,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
                 url: '',
                 avatarUrl: '',
                 mainbranch: undefined,
-                issueTrackerEnabled: false
+                issueTrackerEnabled: false,
             };
         }
 
@@ -118,7 +118,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             url: bbRepo.links!.html!.href!,
             avatarUrl: bbRepo.links!.avatar!.href!,
             mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
-            issueTrackerEnabled: !!bbRepo.has_issues
+            issueTrackerEnabled: !!bbRepo.has_issues,
         };
     }
 }

@@ -7,20 +7,20 @@ export async function extractIssueKeys(pr: PullRequest, commits: Commit[], allCo
     const result = new Set<string>();
 
     try {
-        const text = commits.map(c => c.message).join('\n');
+        const text = commits.map((c) => c.message).join('\n');
         const commitMessageMatches = parseJiraIssueKeys(text);
-        commitMessageMatches.forEach(m => result.add(m));
+        commitMessageMatches.forEach((m) => result.add(m));
 
         const prTitleMatches = parseJiraIssueKeys(pr.data.title);
-        prTitleMatches.forEach(m => result.add(m));
+        prTitleMatches.forEach((m) => result.add(m));
 
         const prSummaryMatches = parseJiraIssueKeys(pr.data.rawSummary);
-        prSummaryMatches.forEach(m => result.add(m));
+        prSummaryMatches.forEach((m) => result.add(m));
 
         const prCommentsMatches = allComments
-            .map(c => parseJiraIssueKeys(c.rawContent))
+            .map((c) => parseJiraIssueKeys(c.rawContent))
             .reduce((prev, curr) => prev.concat(curr), []);
-        prCommentsMatches.forEach(m => result.add(m));
+        prCommentsMatches.forEach((m) => result.add(m));
 
         return Array.from(result);
     } catch (e) {
@@ -37,20 +37,20 @@ export async function extractBitbucketIssueKeys(
     const result = new Set<string>();
 
     try {
-        const text = commits.map(c => c.message).join('\n');
+        const text = commits.map((c) => c.message).join('\n');
         const commitMessageMatches = parseBitbucketIssueKeys(text);
-        commitMessageMatches.forEach(m => result.add(m));
+        commitMessageMatches.forEach((m) => result.add(m));
 
         const prTitleMatches = parseBitbucketIssueKeys(pr.data.title!);
-        prTitleMatches.forEach(m => result.add(m));
+        prTitleMatches.forEach((m) => result.add(m));
 
         const prSummaryMatches = parseBitbucketIssueKeys(pr.data.rawSummary);
-        prSummaryMatches.forEach(m => result.add(m));
+        prSummaryMatches.forEach((m) => result.add(m));
 
         const prCommentsMatches = allComments
-            .map(c => parseBitbucketIssueKeys(c.rawContent))
+            .map((c) => parseBitbucketIssueKeys(c.rawContent))
             .reduce((prev, curr) => prev.concat(curr), []);
-        prCommentsMatches.forEach(m => result.add(m));
+        prCommentsMatches.forEach((m) => result.add(m));
 
         return Array.from(result);
     } catch (e) {

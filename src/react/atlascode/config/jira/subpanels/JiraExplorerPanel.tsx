@@ -31,7 +31,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
         monitorEnabled,
         refreshInterval,
         sites,
-        jqlList
+        jqlList,
     }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
         const [internalSites, setInternalSites] = useState(sites);
@@ -46,7 +46,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
         );
 
         useEffect(() => {
-            setInternalSites(oldSites => {
+            setInternalSites((oldSites) => {
                 if (!equal(oldSites, sites)) {
                     return sites;
                 }
@@ -55,7 +55,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
         }, [sites]);
 
         useEffect(() => {
-            setInternalJql(oldJql => {
+            setInternalJql((oldJql) => {
                 if (!equal(oldJql, jqlList)) {
                     return jqlList;
                 }
@@ -64,7 +64,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
         }, [jqlList]);
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

@@ -28,12 +28,12 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
             if (!bbApi.pipelines) {
                 return; //Bitbucket Server instances will not have pipelines
             }
-            bbApi.pipelines.getRecentActivity(site).then(newResults => {
+            bbApi.pipelines.getRecentActivity(site).then((newResults) => {
                 var diffs = this.diffResults(previousResults, newResults);
-                diffs = diffs.filter(p => this.shouldDisplayTarget(p.target));
+                diffs = diffs.filter((p) => this.shouldDisplayTarget(p.target));
                 const buttonText = diffs.length === 1 ? 'View' : 'View Pipeline Explorer';
                 if (diffs.length > 0) {
-                    window.showInformationMessage(this.composeMessage(diffs), buttonText).then(selection => {
+                    window.showInformationMessage(this.composeMessage(diffs), buttonText).then((selection) => {
                         if (selection) {
                             if (diffs.length === 1) {
                                 commands.executeCommand(Commands.ShowPipeline, diffs[0]);

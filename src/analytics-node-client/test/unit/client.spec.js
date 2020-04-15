@@ -1,8 +1,6 @@
 'use strict';
 
-const requireWithMocks = require('proxyquire')
-    .noCallThru()
-    .noPreserveCache();
+const requireWithMocks = require('proxyquire').noCallThru().noPreserveCache();
 const { buildTrackEvent, buildUIEvent, buildScreenEvent } = require('../helpers/event-builder');
 
 describe('unit/analytics-client', () => {
@@ -21,11 +19,11 @@ describe('unit/analytics-client', () => {
     function MockAnalyticsClient() {
         return {
             track: mockTrackFn,
-            page: mockScreenFn
+            page: mockScreenFn,
         };
     }
     const { AnalyticsClient } = requireWithMocks('../../src/client', {
-        'analytics-node': MockAnalyticsClient
+        'analytics-node': MockAnalyticsClient,
     });
     const client = new AnalyticsClient({
         env: 'my-env',
@@ -33,7 +31,7 @@ describe('unit/analytics-client', () => {
         subproduct: 'my-subproduct',
         origin: 'my-origin',
         datacenter: 'my-datacenter',
-        version: 'my-version'
+        version: 'my-version',
     });
     it('calls the segment library with the right track event parameters', () => {
         const trackEvent = buildTrackEvent();
@@ -43,7 +41,7 @@ describe('unit/analytics-client', () => {
                 userIdType,
                 tenantIdType,
                 tenantId,
-                trackEvent
+                trackEvent,
             })
             .then(() => {
                 expect(mockTrackFn).toHaveBeenCalledWith(
@@ -70,9 +68,9 @@ describe('unit/analytics-client', () => {
                             origin: 'my-origin',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'track'
+                            eventType: 'track',
                         },
-                        event: 'my-action-subject my-action'
+                        event: 'my-action-subject my-action',
                     },
                     jasmine.anything()
                 );
@@ -86,7 +84,7 @@ describe('unit/analytics-client', () => {
                 userIdType,
                 tenantIdType,
                 tenantId,
-                uiEvent
+                uiEvent,
             })
             .then(() => {
                 expect(mockTrackFn).toHaveBeenCalledWith(
@@ -113,9 +111,9 @@ describe('unit/analytics-client', () => {
                             origin: 'my-origin',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'ui'
+                            eventType: 'ui',
                         },
-                        event: 'my-action-subject my-action'
+                        event: 'my-action-subject my-action',
                     },
                     jasmine.anything()
                 );
@@ -130,7 +128,7 @@ describe('unit/analytics-client', () => {
                 tenantIdType,
                 tenantId,
                 name,
-                screenEvent
+                screenEvent,
             })
             .then(() => {
                 expect(mockScreenFn).toHaveBeenCalledWith(
@@ -151,8 +149,8 @@ describe('unit/analytics-client', () => {
                             platform: 'my-platform',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'screen'
-                        }
+                            eventType: 'screen',
+                        },
                     },
                     jasmine.anything()
                 );
@@ -167,7 +165,7 @@ describe('unit/analytics-client', () => {
                 tenantIdType,
                 tenantId,
                 subproduct: 'customSubProduct',
-                trackEvent
+                trackEvent,
             })
             .then(() => {
                 expect(mockTrackFn).toHaveBeenCalledWith(
@@ -194,9 +192,9 @@ describe('unit/analytics-client', () => {
                             origin: 'my-origin',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'track'
+                            eventType: 'track',
                         },
-                        event: 'my-action-subject my-action'
+                        event: 'my-action-subject my-action',
                     },
                     jasmine.anything()
                 );
@@ -211,7 +209,7 @@ describe('unit/analytics-client', () => {
                 tenantIdType,
                 tenantId,
                 subproduct: 'customSubProduct',
-                uiEvent
+                uiEvent,
             })
             .then(() => {
                 expect(mockTrackFn).toHaveBeenCalledWith(
@@ -238,9 +236,9 @@ describe('unit/analytics-client', () => {
                             origin: 'my-origin',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'ui'
+                            eventType: 'ui',
                         },
-                        event: 'my-action-subject my-action'
+                        event: 'my-action-subject my-action',
                     },
                     jasmine.anything()
                 );
@@ -256,7 +254,7 @@ describe('unit/analytics-client', () => {
                 tenantId,
                 subproduct: 'customSubProduct',
                 name,
-                screenEvent
+                screenEvent,
             })
             .then(() => {
                 expect(mockScreenFn).toHaveBeenCalledWith(
@@ -277,8 +275,8 @@ describe('unit/analytics-client', () => {
                             platform: 'my-platform',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'screen'
-                        }
+                            eventType: 'screen',
+                        },
                     },
                     jasmine.anything()
                 );
@@ -293,7 +291,7 @@ describe('unit/analytics-client', () => {
                 tenantIdType,
                 tenantId,
                 anonymousId: 'customAnonymousId',
-                trackEvent
+                trackEvent,
             })
             .then(() => {
                 expect(mockTrackFn).toHaveBeenCalledWith(
@@ -320,9 +318,9 @@ describe('unit/analytics-client', () => {
                             origin: 'my-origin',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'track'
+                            eventType: 'track',
                         },
-                        event: 'my-action-subject my-action'
+                        event: 'my-action-subject my-action',
                     },
                     jasmine.anything()
                 );
@@ -337,7 +335,7 @@ describe('unit/analytics-client', () => {
                 tenantIdType,
                 tenantId,
                 anonymousId: 'customAnonymousId',
-                uiEvent
+                uiEvent,
             })
             .then(() => {
                 expect(mockTrackFn).toHaveBeenCalledWith(
@@ -364,9 +362,9 @@ describe('unit/analytics-client', () => {
                             origin: 'my-origin',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'ui'
+                            eventType: 'ui',
                         },
-                        event: 'my-action-subject my-action'
+                        event: 'my-action-subject my-action',
                     },
                     jasmine.anything()
                 );
@@ -382,7 +380,7 @@ describe('unit/analytics-client', () => {
                 tenantId,
                 anonymousId: 'customAnonymousId',
                 name,
-                screenEvent
+                screenEvent,
             })
             .then(() => {
                 expect(mockScreenFn).toHaveBeenCalledWith(
@@ -403,8 +401,8 @@ describe('unit/analytics-client', () => {
                             platform: 'my-platform',
                             datacenter: 'my-datacenter',
                             version: 'my-version',
-                            eventType: 'screen'
-                        }
+                            eventType: 'screen',
+                        },
                     },
                     jasmine.anything()
                 );

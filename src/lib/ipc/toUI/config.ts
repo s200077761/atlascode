@@ -3,7 +3,7 @@ import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
-    JQLErrors
+    JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
 import { flatten } from 'flatten-anything';
 import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
@@ -19,7 +19,7 @@ export enum ConfigMessageType {
     JQLOptionsResponse = 'jqlOptionsResponse',
     JQLSuggestionsResponse = 'JQLSuggestionsResponse',
     FilterSearchResponse = 'filterSearchResponse',
-    ValidateJqlResponse = 'validateJqlResponse'
+    ValidateJqlResponse = 'validateJqlResponse',
 }
 
 export type ConfigMessage =
@@ -54,7 +54,7 @@ export const emptyConfigInitMessage: ConfigInitMessage = {
     isRemote: false,
     showTunnelOption: false,
     target: ConfigTarget.User,
-    section: ConfigSection.Jira
+    section: ConfigSection.Jira,
 };
 
 export interface ConfigUpdateMessage {
@@ -69,7 +69,7 @@ export interface SiteWithAuthInfo {
 
 export const emptySiteWithAuthInfo: SiteWithAuthInfo = {
     site: emptySiteInfo,
-    auth: emptyBasicAuthInfo
+    auth: emptyBasicAuthInfo,
 };
 
 export interface SitesUpdateMessage {

@@ -6,7 +6,7 @@ import { PostMessageFunc } from '../../messagingApi';
 
 export enum PMFDismissal {
     LATER = 'later',
-    NEVER = 'never'
+    NEVER = 'never',
 }
 export interface PMFControllerApi {
     showPMFBanner: () => void;
@@ -19,7 +19,7 @@ export const emptyPMFController: PMFControllerApi = {
     showPMFBanner: () => {},
     showPMFSurvey: () => {},
     submitPMFSurvey: (pmfData: PMFData) => {},
-    dismissPMFBanner: (howLong: PMFDismissal) => {}
+    dismissPMFBanner: (howLong: PMFDismissal) => {},
 };
 
 export type PMFState = {
@@ -29,14 +29,14 @@ export type PMFState = {
 
 export const emptyPMFState: PMFState = {
     isPMFBannerOpen: false,
-    isPMFSurveyOpen: false
+    isPMFSurveyOpen: false,
 };
 
 export enum PMFActionType {
     ShowPMFBanner = 'showPMFBanner',
     ShowPMFSurvey = 'showPMFSurvey',
     SubmitPMFSurvey = 'submitPMFSurvey',
-    DismissPMFBanner = 'dismissPMFBanner'
+    DismissPMFBanner = 'dismissPMFBanner',
 }
 
 export type PMFAction =
@@ -50,25 +50,25 @@ function pmfReducer(state: PMFState, action: PMFAction): PMFState {
         case PMFActionType.ShowPMFBanner: {
             return {
                 ...state,
-                isPMFBannerOpen: true
+                isPMFBannerOpen: true,
             };
         }
         case PMFActionType.ShowPMFSurvey: {
             return {
                 isPMFBannerOpen: false,
-                isPMFSurveyOpen: true
+                isPMFSurveyOpen: true,
             };
         }
         case PMFActionType.SubmitPMFSurvey: {
             return {
                 isPMFBannerOpen: false,
-                isPMFSurveyOpen: false
+                isPMFSurveyOpen: false,
             };
         }
         case PMFActionType.DismissPMFBanner: {
             return {
                 isPMFBannerOpen: false,
-                isPMFSurveyOpen: false
+                isPMFSurveyOpen: false,
             };
         }
 
@@ -115,7 +115,7 @@ export function usePMFController(postMessageFunc: PostMessageFunc<CommonAction>)
             showPMFBanner: showBanner,
             showPMFSurvey: showSurvey,
             submitPMFSurvey: submitSurvey,
-            dismissPMFBanner: dismissBanner
+            dismissPMFBanner: dismissBanner,
         };
     }, [showBanner, showSurvey, submitSurvey, dismissBanner]);
 

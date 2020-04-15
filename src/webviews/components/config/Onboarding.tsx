@@ -36,7 +36,7 @@ const emptyViewState = {
     isErrorBannerOpen: false,
     enableJiraConfig: true,
     enableBitbucketConfig: true,
-    errorDetails: undefined
+    errorDetails: undefined,
 };
 
 type Emit = LoginAuthAction | LogoutAuthAction | SaveSettingsAction | Action;
@@ -61,7 +61,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                     bitbucketCloudSites: e.bitbucketCloudSites,
                     bitbucketServerSites: e.bitbucketServerSites,
                     enableJiraConfig: e.enableJiraConfig,
-                    enableBitbucketConfig: e.enableBitbucketConfig
+                    enableBitbucketConfig: e.enableBitbucketConfig,
                 });
                 break;
             }
@@ -72,7 +72,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                     bitbucketCloudSites: e.bitbucketCloudSites,
                     bitbucketServerSites: e.bitbucketServerSites,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
+                    errorDetails: undefined,
                 });
                 break;
             }
@@ -147,7 +147,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 <Grid>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.jiraCloudSites.map(s => {
+                                                            sites={this.state.jiraCloudSites.map((s) => {
                                                                 return { site: s, auth: undefined };
                                                             })}
                                                             product={ProductJira}
@@ -160,7 +160,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     </GridColumn>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.jiraServerSites.map(s => {
+                                                            sites={this.state.jiraServerSites.map((s) => {
                                                                 return { site: s, auth: undefined };
                                                             })}
                                                             product={ProductJira}
@@ -182,7 +182,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 <Grid>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.bitbucketCloudSites.map(s => {
+                                                            sites={this.state.bitbucketCloudSites.map((s) => {
                                                                 return { site: s, auth: undefined };
                                                             })}
                                                             product={ProductBitbucket}
@@ -195,7 +195,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     </GridColumn>
                                                     <GridColumn medium={5}>
                                                         <SiteEditor
-                                                            sites={this.state.bitbucketServerSites.map(s => {
+                                                            sites={this.state.bitbucketServerSites.map((s) => {
                                                                 return { site: s, auth: undefined };
                                                             })}
                                                             product={ProductBitbucket}
@@ -217,7 +217,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     display: 'inline-block',
                                                     float: 'right',
                                                     marginLeft: '10px',
-                                                    marginTop: '150px'
+                                                    marginTop: '150px',
                                                 }}
                                             >
                                                 <div style={{ marginRight: '5px', display: 'inline-block' }}>

@@ -31,7 +31,7 @@ import {
     CreateJiraIssueAction,
     OpenStartWorkPageAction,
     PostChange,
-    PostComment
+    PostComment,
 } from '../../../ipc/bitbucketIssueActions';
 import { BitbucketIssueMessageData } from '../../../ipc/bitbucketIssueMessaging';
 import { RefreshIssueAction } from '../../../ipc/issueActions';
@@ -52,14 +52,14 @@ const priorityIcon = {
     minor: <PriorityMinorIcon label="minor" />,
     major: <PriorityMajorIcon label="major" />,
     critical: <PriorityCriticalIcon label="critical" />,
-    blocker: <PriorityBlockerIcon label="blocker" />
+    blocker: <PriorityBlockerIcon label="blocker" />,
 };
 
 const typeIcon = {
     bug: <Bug16Icon label="bug" />,
     enhancement: <Improvement16Icon label="enhancement" />,
     proposal: <LightbulbFilledIcon label="proposal" primaryColor="0xFFAB00" />,
-    task: <TaskIcon label="task" primaryColor="0x2684FF" />
+    task: <TaskIcon label="task" primaryColor="0x2684FF" />,
 };
 
 type Emit =
@@ -89,7 +89,7 @@ const emptyIssueData: BitbucketIssueMessageData = {
     currentUser: UnknownUser,
     comments: [],
     hasMore: false,
-    showJiraButton: false
+    showJiraButton: false,
 };
 
 const emptyState = {
@@ -98,7 +98,7 @@ const emptyState = {
     isAnyCommentLoading: false,
     isErrorBannerOpen: false,
     isOnline: true,
-    errorDetails: undefined
+    errorDetails: undefined,
 };
 
 const UserOption = (props: any) => {
@@ -147,7 +147,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                     isStatusButtonLoading: false,
                     isAnyCommentLoading: false,
                     isErrorBannerOpen: true,
-                    errorDetails: e.reason
+                    errorDetails: e.reason,
                 });
                 break;
             }
@@ -192,7 +192,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     };
 
     loadUserOptions = (input: string): Promise<any> => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
             this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.data.issue.site });
@@ -282,8 +282,8 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                             {
                                 accountId: this.state.data.currentUser.accountId,
                                 avatarUrl: '',
-                                displayName: 'Assign to me'
-                            }
+                                displayName: 'Assign to me',
+                            },
                         ]}
                         onChange={this.handleAssign}
                         loadOptions={this.loadUserOptions}

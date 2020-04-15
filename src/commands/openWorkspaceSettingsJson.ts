@@ -16,7 +16,7 @@ export function openWorkspaceSettingsJson(rootPath: string) {
     editor.createFile(openPath, { ignoreIfExists: true });
     // open workspace settings.json
     vscode.workspace.applyEdit(editor).then(() => {
-        vscode.workspace.openTextDocument(openPath).then(doc => {
+        vscode.workspace.openTextDocument(openPath).then((doc) => {
             vscode.window.showTextDocument(doc);
         });
     });

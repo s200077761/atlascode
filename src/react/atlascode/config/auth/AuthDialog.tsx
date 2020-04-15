@@ -10,7 +10,7 @@ import {
     Grid,
     IconButton,
     RadioGroup,
-    TextField
+    TextField,
 } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
@@ -22,7 +22,7 @@ import {
     emptyUserInfo,
     Product,
     ProductJira,
-    SiteInfo
+    SiteInfo,
 } from '../../../../atlclients/authInfo';
 import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useFormValidation } from '../../common/form/useFormValidation';
@@ -56,7 +56,7 @@ interface AuthFormState {
 
 const emptyAuthFormState: AuthFormState = {
     showPassword: false,
-    showPFXPassphrase: false
+    showPFXPassphrase: false,
 };
 
 const normalizeContextPath = (cPath: string): string | undefined => {
@@ -107,7 +107,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
             baseUrl: defaultSiteWithAuth.site.baseLinkUrl,
             contextPathEnabled: defaultContextPathEnabled,
             customSSLEnabled: defaultSSLEnabled,
-            customSSLType: defaultSSLType
+            customSSLType: defaultSSLType,
         });
 
         const helperText =
@@ -134,7 +134,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                     customSSLCertPaths: customSSLCerts,
                     pfxPath: pfxCert,
                     pfxPassphrase: pfxPassphrase,
-                    contextPath: contextPath
+                    contextPath: contextPath,
                 };
 
                 if (!isCustomUrl(data.baseUrl)) {
@@ -143,7 +143,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                     const authInfo: BasicAuthInfo = {
                         username: data.username,
                         password: data.password,
-                        user: emptyUserInfo
+                        user: emptyUserInfo,
                     };
                     save(siteInfo, authInfo);
                 }
@@ -252,7 +252,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                                     onClick={() =>
                                                         updateState({
                                                             ...authFormState,
-                                                            showPassword: !authFormState.showPassword
+                                                            showPassword: !authFormState.showPassword,
                                                         })
                                                     }
                                                     onMouseDown={preventClickDefault}
@@ -263,7 +263,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                                         <VisibilityOff fontSize="small" />
                                                     )}
                                                 </IconButton>
-                                            )
+                                            ),
                                         }}
                                     />
                                 </Grid>
@@ -365,7 +365,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                                             onClick={() =>
                                                                 updateState({
                                                                     ...authFormState,
-                                                                    showPFXPassphrase: !authFormState.showPFXPassphrase
+                                                                    showPFXPassphrase: !authFormState.showPFXPassphrase,
                                                                 })
                                                             }
                                                             onMouseDown={preventClickDefault}
@@ -376,7 +376,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                                                 <VisibilityOff fontSize="small" />
                                                             )}
                                                         </IconButton>
-                                                    )
+                                                    ),
                                                 }}
                                             />
                                         </Grid>

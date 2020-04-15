@@ -49,7 +49,7 @@ export class IssueHoverProvider implements HoverProvider {
         text.push(new vscode.MarkdownString(issueLinksLine));
         text[text.length - 1].isTrusted = true;
 
-        viewScreenEvent('issueHover', issue.siteDetails).then(e => {
+        viewScreenEvent('issueHover', issue.siteDetails).then((e) => {
             Container.analyticsClient.sendScreenEvent(e);
         });
 

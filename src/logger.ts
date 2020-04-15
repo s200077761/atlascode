@@ -100,10 +100,7 @@ export class Logger {
 
     private get timestamp(): string {
         const now = new Date();
-        const time = now
-            .toISOString()
-            .replace(/T/, ' ')
-            .replace(/\..+/, '');
+        const time = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
         return `[${time}:${('00' + now.getUTCMilliseconds()).slice(-3)}]`;
     }
 }

@@ -16,9 +16,9 @@ module.exports = {
                     '@atlassianlabs/jira-pi-common-models/*',
                     '@atlassianlabs/pi-client-common/*',
                     '**/*/container',
-                    '**/*/extension'
-                ]
-            }
-        ]
-    }
+                    '**/*/extension',
+                ],
+            },
+        ],
+    },
 };

@@ -26,7 +26,7 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
         enabled,
         showProduct,
         showUser,
-        showLogin
+        showLogin,
     }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
@@ -39,7 +39,7 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

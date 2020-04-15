@@ -19,7 +19,7 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
     enabled,
     showProduct,
     showUser,
-    showLogin
+    showLogin,
 }) => {
     const controller = useContext(ConfigControllerContext);
 

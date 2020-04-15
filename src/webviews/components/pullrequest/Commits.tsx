@@ -31,13 +31,13 @@ const Timestamp = (props: ColumnProps) => {
     );
 };
 
-export const Commits: React.FunctionComponent<{ commits: Commit[] }> = props => {
-    const commitsData = props.commits.map(commit => {
+export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props) => {
+    const commitsData = props.commits.map((commit) => {
         return {
             hash: commit.hash,
             message: commit.message,
             href: commit.url,
-            ts: commit.ts
+            ts: commit.ts,
         };
     });
 
@@ -45,12 +45,12 @@ export const Commits: React.FunctionComponent<{ commits: Commit[] }> = props => 
         <TableTree
             columns={[Hash, Message, Timestamp]}
             columnWidths={['120px', '100%', '180px']}
-            items={commitsData.map(c => {
+            items={commitsData.map((c) => {
                 const props: ColumnProps = {
                     hash: c.hash.substring(0, 8),
                     message: c.message,
                     href: c.href,
-                    ts: c.ts
+                    ts: c.ts,
                 };
                 return { id: c.hash, content: props };
             })}

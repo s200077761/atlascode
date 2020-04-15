@@ -43,7 +43,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             selectedIssue: undefined,
             editorContainerClassname: 'ac-hidden',
             defaultIssueValue: undefined,
-            selectedLinkType: props.linkTypes.length > 0 ? props.linkTypes[0] : undefined
+            selectedLinkType: props.linkTypes.length > 0 ? props.linkTypes[0] : undefined,
         };
     }
 
@@ -92,7 +92,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             isEditing: false,
             defaultIssueValue: undefined,
             selectedIssue: undefined,
-            selectedLinkType: this.props.linkTypes.length > 0 ? this.props.linkTypes[0] : undefined
+            selectedLinkType: this.props.linkTypes.length > 0 ? this.props.linkTypes[0] : undefined,
         });
     };
 
@@ -101,12 +101,12 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             isEditing: false,
             defaultIssueValue: undefined,
             selectedIssue: undefined,
-            selectedLinkType: this.props.linkTypes.length > 0 ? this.props.linkTypes[0] : undefined
+            selectedLinkType: this.props.linkTypes.length > 0 ? this.props.linkTypes[0] : undefined,
         });
 
         this.props.onSave({
             type: this.state.selectedLinkType!,
-            issueKey: this.state.selectedIssue!.key
+            issueKey: this.state.selectedIssue!.key,
         });
     };
 
@@ -155,7 +155,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
                                         onChange={this.handleIssueChange}
                                         components={{
                                             Option: SelectFieldHelper.IssueSuggestionOption,
-                                            SingleValue: SelectFieldHelper.IssueSuggestionValue
+                                            SingleValue: SelectFieldHelper.IssueSuggestionValue,
                                         }}
                                     />
                                 </div>

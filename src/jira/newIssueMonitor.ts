@@ -40,7 +40,7 @@ export class NewIssueMonitor {
         try {
             const enabledJQLs = Container.jqlManager.notifiableJQLEntries();
             const jqlPromises: Promise<JQLSettleResult>[] = [];
-            enabledJQLs.forEach(entry => {
+            enabledJQLs.forEach((entry) => {
                 jqlPromises.push(
                     (async () => {
                         const site = Container.siteManager.getSiteForId(ProductJira, entry.siteId);
@@ -56,11 +56,11 @@ export class NewIssueMonitor {
             const foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
             let jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
-            jqlResults.forEach(result => {
+            jqlResults.forEach((result) => {
                 if (result.isFulfilled) {
-                    const newIssues = result.value.issues.filter(issue => issue.created! > this._timestamp);
+                    const newIssues = result.value.issues.filter((issue) => issue.created! > this._timestamp);
                     if (newIssues.length > 0) {
-                        newIssues.forEach(issue => {
+                        newIssues.forEach((issue) => {
                             foundIssues.push(issue);
                             if (issue.created! > this._timestamp) {
                                 this._timestamp = issue.created!;
@@ -72,7 +72,7 @@ export class NewIssueMonitor {
 
             const notifyIssues = foundIssues.reduce(
                 (result: MinimalIssue<DetailedSiteInfo>[], item: MinimalIssue<DetailedSiteInfo>) => {
-                    if (!result.find(iss => iss.key === item.key && iss.siteDetails.id === item.siteDetails.id)) {
+                    if (!result.find((iss) => iss.key === item.key && iss.siteDetails.id === item.siteDetails.id)) {
                         return result.concat(item);
                     } else {
                         return result;
@@ -92,19 +92,20 @@ export class NewIssueMonitor {
             return;
         }
 
-        const issueNames = newIssues.map(issue => `[${issue.key}] "${issue.summary}"`);
+        const issueNames = newIssues.map((issue) => `[${issue.key}] "${issue.summary}"`);
         var message = '';
         if (newIssues.length === 1) {
             message = `${issueNames[0]} added to explorer`;
         } else if (newIssues.length <= 3) {
             message = `${issueNames.slice(0, -1).join(', ')} and ${issueNames.slice(-1)} added to explorer`;
         } else {
-            message = `${issueNames.slice(0, 2).join(', ')} and ${newIssues.length -
-                2} other new issues added to explorer`;
+            message = `${issueNames.slice(0, 2).join(', ')} and ${
+                newIssues.length - 2
+            } other new issues added to explorer`;
         }
 
         const title = newIssues.length === 1 ? 'Open Issue' : 'View Atlassian Explorer';
-        window.showInformationMessage(message, title).then(selection => {
+        window.showInformationMessage(message, title).then((selection) => {
             if (selection) {
                 if (newIssues.length === 1) {
                     showIssue(newIssues[0]);

@@ -8,7 +8,7 @@ export interface ErrorControllerApi {
 
 export const emptyErrorController: ErrorControllerApi = {
     showError: (details: any) => {},
-    dismissError: () => {}
+    dismissError: () => {},
 };
 
 export type ErrorState = {
@@ -18,12 +18,12 @@ export type ErrorState = {
 
 export const emptyErrorState: ErrorState = {
     isErrorBannerOpen: false,
-    errorDetails: undefined
+    errorDetails: undefined,
 };
 
 export enum ErrorActionType {
     ShowError = 'showError',
-    DismissError = 'dismissError'
+    DismissError = 'dismissError',
 }
 
 export type ErrorAction =
@@ -35,13 +35,13 @@ function errorReducer(state: ErrorState, action: ErrorAction): ErrorState {
         case ErrorActionType.ShowError: {
             return {
                 isErrorBannerOpen: true,
-                errorDetails: action.data
+                errorDetails: action.data,
             };
         }
         case ErrorActionType.DismissError: {
             return {
                 isErrorBannerOpen: false,
-                errorDetails: undefined
+                errorDetails: undefined,
             };
         }
 
@@ -64,7 +64,7 @@ export function useErrorController(): [ErrorState, ErrorControllerApi] {
     const controllerApi = useMemo<ErrorControllerApi>((): ErrorControllerApi => {
         return {
             showError: showError,
-            dismissError: dismissError
+            dismissError: dismissError,
         };
     }, [showError, dismissError]);
 

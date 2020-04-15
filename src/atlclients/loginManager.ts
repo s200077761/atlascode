@@ -16,7 +16,7 @@ import {
     Product,
     ProductBitbucket,
     ProductJira,
-    SiteInfo
+    SiteInfo,
 } from './authInfo';
 import { displayAuthNotification, OnboardingNotificationPressedEvent } from './authNotification';
 import { CredentialManager } from './authStore';
@@ -47,7 +47,7 @@ export class LoginManager {
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
                 refresh: resp.refresh,
-                user: resp.user
+                user: resp.user,
             };
 
             const siteDetails = await this.getOAuthSiteDetails(
@@ -57,10 +57,10 @@ export class LoginManager {
                 resp.accessibleResources
             );
 
-            siteDetails.forEach(async siteInfo => {
+            siteDetails.forEach(async (siteInfo) => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
                 this._siteManager.addSites([siteInfo]);
-                authenticatedEvent(siteInfo).then(e => {
+                authenticatedEvent(siteInfo).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             });
@@ -114,8 +114,8 @@ export class LoginManager {
                             product: ProductBitbucket,
                             isCloud: true,
                             userId: userId,
-                            credentialId: credentialId
-                        }
+                            credentialId: credentialId,
+                        },
                     ];
                 }
                 break;
@@ -126,7 +126,7 @@ export class LoginManager {
                 //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
                 //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
 
-                newSites = resources.map(r => {
+                newSites = resources.map((r) => {
                     const credentialId = CredentialManager.generateCredentialId(r.id, userId);
 
                     return {
@@ -139,7 +139,7 @@ export class LoginManager {
                         product: ProductJira,
                         isCloud: true,
                         userId: userId,
-                        credentialId: credentialId
+                        credentialId: credentialId,
                     };
                 });
                 break;
@@ -153,7 +153,7 @@ export class LoginManager {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
                 displayAuthNotification(site, this._onLoginNotificationAction);
-                authenticatedEvent(siteDetails).then(e => {
+                authenticatedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
@@ -168,7 +168,7 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                editedEvent(siteDetails).then(e => {
+                editedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
@@ -210,9 +210,9 @@ export class LoginManager {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: authHeader
+                Authorization: authHeader,
             },
-            ...getAgent(site)
+            ...getAgent(site),
         });
         const json = res.data;
 
@@ -234,7 +234,7 @@ export class LoginManager {
             credentialId: credentialId,
             customSSLCertPaths: site.customSSLCertPaths,
             pfxPath: site.pfxPath,
-            pfxPassphrase: site.pfxPassphrase
+            pfxPassphrase: site.pfxPassphrase,
         };
 
         if (site.product.key === ProductJira.key) {
@@ -242,14 +242,14 @@ export class LoginManager {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrls['48x48']
+                avatarUrl: json.avatarUrls['48x48'],
             };
         } else {
             credentials.user = {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrl
+                avatarUrl: json.avatarUrl,
             };
         }
 

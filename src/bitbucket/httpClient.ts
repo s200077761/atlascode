@@ -17,9 +17,9 @@ export class HTTPClient {
             headers: {
                 'Accept-Encoding': 'gzip, deflate',
                 'Content-Type': 'application/json',
-                Authorization: this.authHeader
+                Authorization: this.authHeader,
             },
-            ...this.agent
+            ...this.agent,
         });
 
         if (Container.config.enableCurlLogging) {
@@ -27,8 +27,8 @@ export class HTTPClient {
         }
 
         this.transport.interceptors.response.use(
-            response => response,
-            async error => {
+            (response) => response,
+            async (error) => {
                 return error.response ? Promise.reject(await this.errorHandler(error.response)) : Promise.reject(error);
             }
         );
@@ -38,7 +38,7 @@ export class HTTPClient {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
         const res = await this.transport(url, {
-            method: 'GET'
+            method: 'GET',
         });
         return { data: res.data, headers: res.headers };
     }
@@ -51,7 +51,7 @@ export class HTTPClient {
             method: 'GET',
             // axios tries to parse response as JSON by default
             // prevent that and pass through the raw data
-            transformResponse: data => data
+            transformResponse: (data) => data,
         });
         return { data: res.data, headers: res.headers };
     }
@@ -63,8 +63,8 @@ export class HTTPClient {
         const res = await this.transport(url, {
             method: 'GET',
             headers: {
-                accept: 'application/octet-stream'
-            }
+                accept: 'application/octet-stream',
+            },
         });
         return { data: res.data, headers: res.headers };
     }
@@ -77,10 +77,10 @@ export class HTTPClient {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: this.authHeader
+                    Authorization: this.authHeader,
                 },
                 data: JSON.stringify(body),
-                ...this.agent
+                ...this.agent,
             });
 
             return { data: res.data, headers: res.headers };
@@ -99,7 +99,7 @@ export class HTTPClient {
 
         const res = await this.transport(url, {
             method: 'PUT',
-            data: JSON.stringify(body)
+            data: JSON.stringify(body),
         });
 
         return { data: res.data, headers: res.headers };
@@ -111,7 +111,7 @@ export class HTTPClient {
 
         const res = await this.transport(url, {
             method: 'DELETE',
-            data: JSON.stringify(body)
+            data: JSON.stringify(body),
         });
 
         return { data: res.data, headers: res.headers };
@@ -147,7 +147,7 @@ export class ClientError implements Error {
     toJSON() {
         return {
             name: this.name,
-            message: this.message
+            message: this.message,
         };
     }
 }

@@ -13,7 +13,7 @@ export function getHtmlForView(extensionPath: string, viewId: string): string {
         return tmpl({
             view: viewId,
             scriptUri: scriptUri,
-            baseUri: Uri.file(extensionPath).with({ scheme: 'vscode-resource' })
+            baseUri: Uri.file(extensionPath).with({ scheme: 'vscode-resource' }),
         });
     } else {
         return Resources.htmlNotFound({ resource: 'reactWebviewHtml' });

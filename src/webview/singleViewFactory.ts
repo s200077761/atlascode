@@ -7,7 +7,7 @@ import {
     ViewColumn,
     WebviewPanel,
     WebviewPanelOnDidChangeViewStateEvent,
-    window
+    window,
 } from 'vscode';
 import { Container } from '../container';
 import { AnalyticsApi } from '../lib/analyticsApi';
@@ -74,8 +74,8 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                 enableScripts: true,
                 localResourceRoots: [
                     Uri.file(path.join(this._extensionPath, 'build')),
-                    Uri.file(path.join(this._extensionPath, 'images'))
-                ]
+                    Uri.file(path.join(this._extensionPath, 'images')),
+                ],
             });
 
             this._panel.iconPath = Uri.file(this._controllerFactory.tabIconPath());
@@ -101,7 +101,7 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                     : {
                           dispose: () => {
                               return;
-                          }
+                          },
                       },
                 this._ws
             );

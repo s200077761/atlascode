@@ -3,7 +3,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 export enum CommonMessageType {
     Error = 'error',
     OnlineStatus = 'onlineStatus',
-    PMFStatus = 'pmfStatus'
+    PMFStatus = 'pmfStatus',
 }
 
 export type CommonMessage =

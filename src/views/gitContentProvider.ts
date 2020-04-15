@@ -44,7 +44,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                     const bbApi = await clientForSite(site);
                     const fileContent = await bbApi.pullrequests.getFileContent(site, commitHash, path);
                     return fileContent;
-                })()
+                })(),
             ]);
         } catch (err) {
             vscode.window.showErrorMessage(

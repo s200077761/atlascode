@@ -82,15 +82,15 @@ export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({ issue
         <TableTree
             columns={[IssueKey, Summary, Priority, StatusColumn]}
             columnWidths={['150px', '100%', '20px', '150px']}
-            items={issuelinks.map(issuelink => {
+            items={issuelinks.map((issuelink) => {
                 return {
                     id: issuelink.id,
                     content: {
                         linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
                         issue: issuelink.inwardIssue || issuelink.outwardIssue,
                         onIssueClick: onIssueClick,
-                        onDelete: onDelete
-                    }
+                        onDelete: onDelete,
+                    },
                 };
             })}
         />
