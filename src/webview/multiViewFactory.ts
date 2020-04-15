@@ -1,4 +1,5 @@
 import { Disposable, ViewColumn } from 'vscode';
+import { AnalyticsApi } from '../lib/analyticsApi';
 import { SingleWebview } from './singleViewFactory';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
 
@@ -7,7 +8,11 @@ import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
 export class MultiWebview<FD, R> implements Disposable {
     private _map = new Map<string, SingleWebview<FD, R>>();
 
-    constructor(private readonly extensionPath: string, private controllerFactory: VSCWebviewControllerFactory<FD>) {}
+    constructor(
+        private readonly extensionPath: string,
+        private controllerFactory: VSCWebviewControllerFactory<FD>,
+        private analyticsApi: AnalyticsApi
+    ) {}
 
     // createOrShow delegates the call to the corresponding ReactWebview based on the webviewId.
     // webviewId must be unique for each instance of a view (e.g. Jira issue key)
@@ -17,7 +22,7 @@ export class MultiWebview<FD, R> implements Disposable {
         column: ViewColumn = ViewColumn.Active
     ): Promise<void> {
         if (!this._map.has(webviewId)) {
-            const view = new SingleWebview(this.extensionPath, this.controllerFactory);
+            const view = new SingleWebview(this.extensionPath, this.controllerFactory, this.analyticsApi);
             this._map.set(webviewId, view);
             view.onDidPanelDispose()(() => {
                 this._map.delete(webviewId);
