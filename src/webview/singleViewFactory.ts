@@ -10,6 +10,7 @@ import {
     window,
 } from 'vscode';
 import { Container } from '../container';
+import { AnalyticsApi } from '../lib/analyticsApi';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
@@ -40,11 +41,13 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
     private _onDidPanelDispose = new EventEmitter<void>();
     private _controller: WebviewController<FD> | undefined;
     private _controllerFactory: VSCWebviewControllerFactory<FD>;
+    private _analyticsApi: AnalyticsApi;
     private _ws: UIWebsocket;
 
-    constructor(extensionPath: string, controllerFactory: VSCWebviewControllerFactory<FD>) {
+    constructor(extensionPath: string, controllerFactory: VSCWebviewControllerFactory<FD>, analyticsApi: AnalyticsApi) {
         this._extensionPath = extensionPath;
         this._controllerFactory = controllerFactory;
+        this._analyticsApi = analyticsApi;
 
         // Note: this is super lightweight and does nothing until you call start()
         this._ws = new UIWebsocket(controllerFactory.uiWebsocketPort());
@@ -105,6 +108,9 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
 
             this._panel.title = this._controller.title();
             this._panel.webview.html = this._controllerFactory.webviewHtml(this._extensionPath);
+
+            const { id, site, product } = this._controller.screenDetails();
+            this._analyticsApi.fireViewScreenEvent(id, site, product);
         } else {
             this._panel.webview.html = this._controllerFactory.webviewHtml(this._extensionPath);
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);

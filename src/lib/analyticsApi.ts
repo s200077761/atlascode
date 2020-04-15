@@ -37,4 +37,5 @@ export interface AnalyticsApi {
     fireDoneButtonEvent(source: string): Promise<void>;
     fireAuthenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<void>;
     fireLogoutButtonEvent(source: string): Promise<void>;
+    fireExternalUriEvent(source: string, target: string): Promise<void>;
 }

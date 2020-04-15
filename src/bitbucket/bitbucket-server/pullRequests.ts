@@ -124,6 +124,20 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(data, taskCount, site, workspaceRepo);
     }
 
+    async getById(site: BitbucketSite, prId: number): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
+        );
+
+        return ServerPullRequestApi.toPullRequestModel(data, 0, site, undefined);
+    }
+
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
         const { ownerSlug, repoSlug } = pr.site;
 

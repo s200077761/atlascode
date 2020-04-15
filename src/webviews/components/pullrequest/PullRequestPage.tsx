@@ -9,6 +9,7 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
+import SectionMessage from '@atlaskit/section-message';
 import Select from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
@@ -965,6 +966,14 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                     onPMFNever={() => this.onPMFNever()}
                                     onPMFSubmit={(data: LegacyPMFData) => this.onPMFSubmit(data)}
                                 />
+                            )}
+                            {!this.state.pr.pr?.workspaceRepo && (
+                                <SectionMessage
+                                    appearance="warning"
+                                    title={`Repository ${pr.destination.repo.fullName} is not in the current VS Code workspace`}
+                                >
+                                    <p>Open the repository in VS Code to access all the features of the extension</p>
+                                </SectionMessage>
                             )}
                             <PageHeader actions={actionsContent} breadcrumbs={breadcrumbs}>
                                 <React.Fragment>

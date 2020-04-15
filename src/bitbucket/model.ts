@@ -286,6 +286,7 @@ export interface PullRequestApi {
     getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest>;
+    getById(site: BitbucketSite, prId: number): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
