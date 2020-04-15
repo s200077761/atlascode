@@ -9,6 +9,7 @@ import {
     bbIssueWorkStartedEvent,
     customJQLCreatedEvent,
     doneButtonEvent,
+    externalUriEvent,
     featureChangeEvent,
     installedEvent,
     issueCommentEvent,
@@ -222,6 +223,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async firePmfClosed(): Promise<void> {
         return pmfClosed().then(e => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireExternalUriEvent(source: string, target: string): Promise<void> {
+        return externalUriEvent(source, target).then(e => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

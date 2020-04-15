@@ -1,4 +1,4 @@
-import { commands, env, version } from 'vscode';
+import { commands, env } from 'vscode';
 import {
     authenticateButtonEvent,
     doneButtonEvent,
@@ -15,10 +15,8 @@ import { isLoginAuthAction, isLogoutAuthAction } from '../ipc/configActions';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { SitesAvailableUpdateEvent } from '../siteManager';
+import { ONBOARDING_URL } from '../uriHandler';
 import { AbstractReactWebview } from './abstractWebview';
-const onboardingUrl = version.endsWith('-insider')
-    ? 'vscode-insiders://atlassian.atlascode/openOnboarding'
-    : 'vscode://atlassian.atlascode/openOnboarding';
 
 interface ChangeEnabledAction extends Action {
     changes: {
@@ -147,7 +145,7 @@ export class OnboardingWebview extends AbstractReactWebview {
                                 });
                             }
                         } else {
-                            authenticateCloud(msg.siteInfo, onboardingUrl);
+                            authenticateCloud(msg.siteInfo, ONBOARDING_URL);
                         }
                         authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then(e => {
                             Container.analyticsClient.sendUIEvent(e);
