@@ -51,6 +51,11 @@ export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
                         ProductIcon={<BitbucketIcon color={'primary'} fontSize={'inherit'} />}
                     />
                 </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="h3" align="center">
+                        This can be changed later
+                    </Typography>
+                </Grid>
             </Grid>
         </div>
     );

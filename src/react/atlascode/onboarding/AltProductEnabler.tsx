@@ -26,6 +26,8 @@ const useStyles = makeStyles(theme => ({
     },
     buttonSubtext: {
         marginBottom: 30,
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(1),
         color: 'gray'
     }
 }));
@@ -51,13 +53,6 @@ export const AltProductEnabler: React.FunctionComponent<AltProductEnablerProps> 
         <Tooltip title={enabled ? `Disable ${label} features` : `Enable ${label} features`}>
             <ToggleButton className={classes.button} onClick={() => onToggle(!enabled)} selected={enabled}>
                 <Box className={classes.box}>
-                    {enabled && (
-                        <CheckCircleIcon
-                            fontSize={'large'}
-                            htmlColor={'#07b82b'}
-                            style={{ float: 'right', margin: '7px' }}
-                        />
-                    )}
                     <div className={classes.icon}>
                         {label} {ProductIcon}
                     </div>
@@ -65,6 +60,13 @@ export const AltProductEnabler: React.FunctionComponent<AltProductEnablerProps> 
                         {subtext}
                     </Typography>
                 </Box>
+                {enabled && (
+                    <CheckCircleIcon
+                        fontSize={'large'}
+                        htmlColor={'#07b82b'}
+                        style={{ top: '0px', right: '0px', position: 'absolute', margin: '7px' }}
+                    />
+                )}
             </ToggleButton>
         </Tooltip>
     );

@@ -123,6 +123,26 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 this._analytics.fireLogoutButtonEvent(id);
                 break;
             }
+            case OnboardingActionType.CreateJiraIssue: {
+                this._api.createJiraIssue();
+                break;
+            }
+            case OnboardingActionType.ViewJiraIssue: {
+                this._api.viewJiraIssue();
+                this._analytics.fireLogoutButtonEvent(id);
+                break;
+            }
+            case OnboardingActionType.CreatePullRequest: {
+                this._api.createPullRequest();
+                this._analytics.fireLogoutButtonEvent(id);
+                break;
+            }
+            case OnboardingActionType.ViewPullRequest: {
+                this._api.viewPullRequest();
+                this._analytics.fireLogoutButtonEvent(id);
+                break;
+            }
+
             case CommonActionType.SubmitFeedback:
             case CommonActionType.ExternalLink:
             case CommonActionType.DismissPMFLater:

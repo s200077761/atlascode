@@ -22,6 +22,10 @@ export interface OnboardingControllerApi {
     openLink: (linkId: KnownLinkID) => void;
     login: (site: SiteInfo, auth: AuthInfo) => void;
     logout: (site: DetailedSiteInfo) => void;
+    createPullRequest: () => void;
+    viewPullRequest: () => void;
+    createJiraIssue: () => void;
+    viewJiraIssue: () => void;
 }
 
 export const emptyApi: OnboardingControllerApi = {
@@ -41,6 +45,18 @@ export const emptyApi: OnboardingControllerApi = {
         return;
     },
     logout: (site: DetailedSiteInfo) => {
+        return;
+    },
+    createPullRequest: (): void => {
+        return;
+    },
+    viewPullRequest: (): void => {
+        return;
+    },
+    createJiraIssue: (): void => {
+        return;
+    },
+    viewJiraIssue: (): void => {
         return;
     }
 };
@@ -193,6 +209,26 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
         [postMessage]
     );
 
+    const createPullRequest = useCallback((): void => {
+        dispatch({ type: OnboardingUIActionType.Loading });
+        postMessage({ type: OnboardingActionType.CreatePullRequest });
+    }, [postMessage]);
+
+    const viewPullRequest = useCallback((): void => {
+        dispatch({ type: OnboardingUIActionType.Loading });
+        postMessage({ type: OnboardingActionType.ViewPullRequest });
+    }, [postMessage]);
+
+    const createJiraIssue = useCallback((): void => {
+        dispatch({ type: OnboardingUIActionType.Loading });
+        postMessage({ type: OnboardingActionType.CreateJiraIssue });
+    }, [postMessage]);
+
+    const viewJiraIssue = useCallback((): void => {
+        dispatch({ type: OnboardingUIActionType.Loading });
+        postMessage({ type: OnboardingActionType.ViewJiraIssue });
+    }, [postMessage]);
+
     const controllerApi = useMemo<OnboardingControllerApi>((): OnboardingControllerApi => {
         return {
             postMessage: postMessage,
@@ -200,7 +236,11 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             refresh: sendRefresh,
             openLink: openLink,
             login: login,
-            logout: logout
+            logout: logout,
+            createJiraIssue: createJiraIssue,
+            createPullRequest: createPullRequest,
+            viewPullRequest: viewPullRequest,
+            viewJiraIssue: viewJiraIssue
         };
     }, [handleConfigChange, login, logout, openLink, postMessage, sendRefresh]);
 

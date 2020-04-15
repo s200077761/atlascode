@@ -147,4 +147,9 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
             }
         }
     }
+
+    public createJiraIssue(): void {}
+    public viewJiraIssue(): void {}
+    public createPullRequest(): void {}
+    public viewPullRequest(): void {}
 }

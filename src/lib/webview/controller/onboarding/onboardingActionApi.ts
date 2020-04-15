@@ -12,4 +12,8 @@ export interface OnboardingActionApi {
     getConfigTarget(): ConfigTarget;
     flattenedConfigForTarget(target: ConfigTarget): FlattenedConfig;
     getSitesWithAuth(): Promise<[SiteWithAuthInfo[], SiteWithAuthInfo[]]>;
+    createJiraIssue(): void;
+    viewJiraIssue(): void;
+    createPullRequest(): void;
+    viewPullRequest(): void;
 }

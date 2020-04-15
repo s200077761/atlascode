@@ -1,26 +1,14 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import {
-    Box,
-    Button,
-    Container,
-    darken,
-    Grid,
-    lighten,
-    makeStyles,
-    Step,
-    StepLabel,
-    Stepper,
-    Theme,
-    Typography
-} from '@material-ui/core';
+import { Button, Container, Grid, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
-import { SiteAuthenticator } from '../config/auth/SiteAuthenticator';
+import { AuthDialog } from '../config/auth/AuthDialog';
+import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import DemoButton from './DemoButton';
 import { OnboardingControllerContext, useOnboardingController } from './onboardingController';
 import ProductSelector from './ProductSelector';
+import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -33,15 +21,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     pageContent: {
         marginTop: theme.spacing(5),
         marginBottom: theme.spacing(4)
-    },
-    authContainer: {
-        padding: theme.spacing(3),
-        paddingBottom: theme.spacing(8),
-        width: '100%',
-        backgroundColor:
-            theme.palette.type === 'dark'
-                ? lighten(theme.palette.background.paper, 0.02)
-                : darken(theme.palette.background.paper, 0.02)
     }
 }));
 
@@ -53,6 +32,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
     const [state, controller] = useOnboardingController();
+    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
 
     const [activeStep, setActiveStep] = React.useState(0);
     const steps = getSteps();
@@ -62,7 +42,11 @@ export const OnboardingPage: React.FunctionComponent = () => {
     };
 
     const handleBack = () => {
-        setActiveStep(prevActiveStep => prevActiveStep - 1);
+        if (activeStep === 2) {
+            setActiveStep(prevActiveStep => prevActiveStep - 2);
+        } else {
+            setActiveStep(prevActiveStep => prevActiveStep - 1);
+        }
     };
 
     const handleReset = () => {
@@ -101,37 +85,13 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 );
             case 1:
                 return (
-                    <React.Fragment>
-                        <Grid container spacing={3} direction="row" alignItems="center" justify="center">
-                            <Grid item xs={12}>
-                                <Typography variant="h1" align="center">
-                                    Authenticate with the selected products
-                                </Typography>
-                            </Grid>
-                            {state.config['jira.enabled'] && (
-                                <Grid item xs={7}>
-                                    <Box className={classes.authContainer}>
-                                        <SiteAuthenticator
-                                            product={ProductJira}
-                                            isRemote={state.isRemote}
-                                            sites={state.jiraSites}
-                                        />
-                                    </Box>
-                                </Grid>
-                            )}
-                            {state.config['bitbucket.enabled'] && (
-                                <Grid item xs={7}>
-                                    <Box className={classes.authContainer}>
-                                        <SiteAuthenticator
-                                            product={ProductBitbucket}
-                                            isRemote={state.isRemote}
-                                            sites={state.bitbucketSites}
-                                        />
-                                    </Box>
-                                </Grid>
-                            )}
-                        </Grid>
-                    </React.Fragment>
+                    <SimpleSiteAuthenticator
+                        enableBitbucket={state.config['bitbucket.enabled']}
+                        enableJira={state.config['jira.enabled']}
+                        bitbucketSites={state.bitbucketSites}
+                        jiraSites={state.jiraSites}
+                        onFinished={handleNext}
+                    />
                 );
             case 2:
                 return (
@@ -142,11 +102,22 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                 {<CheckCircleIcon fontSize={'large'} htmlColor={'#07b82b'} />}
                             </Typography>
                         </Grid>
-                        {state.config['jira.enabled'] && (
+                        <Grid item xs={12}>
+                            <Typography variant="h3" align="center">
+                                The Atlassian sidebar provides quick access to most of our features. Be sure to check it
+                                out by pressing the Atlassian logo in the extension sidebar!
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Typography variant="h3" align="center">
+                                Try out some common actions by pressing on the buttons below!
+                            </Typography>
+                        </Grid>
+                        {state.config['bitbucket.enabled'] && state.bitbucketSites.length > 0 && (
                             <React.Fragment>
                                 <Grid item xs={3}>
                                     <DemoButton
-                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/b174e2b360854b526aec766fa5b5a3b34c49b148/resources/tutorialGifs/StartWorkTutorial.gif"
+                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreatePullRequest.gif"
                                         description="Create a pull request"
                                         productIcon={
                                             <BitbucketIcon
@@ -158,7 +129,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                 </Grid>
                                 <Grid item xs={3}>
                                     <DemoButton
-                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/b174e2b360854b526aec766fa5b5a3b34c49b148/resources/tutorialGifs/StartWorkTutorial.gif"
+                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewAndApprovePullRequest.gif"
                                         description="Review a pull request"
                                         productIcon={
                                             <BitbucketIcon
@@ -170,18 +141,18 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                 </Grid>
                             </React.Fragment>
                         )}
-                        {state.config['bitbucket.enabled'] && (
+                        {state.config['jira.enabled'] && state.jiraSites.length > 0 && (
                             <React.Fragment>
                                 <Grid item xs={3}>
                                     <DemoButton
-                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/b174e2b360854b526aec766fa5b5a3b34c49b148/resources/tutorialGifs/StartWorkTutorial.gif"
+                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreateJiraIssue.gif"
                                         description="Create a Jira issue"
                                         productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                                     />
                                 </Grid>
                                 <Grid item xs={3}>
                                     <DemoButton
-                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/b174e2b360854b526aec766fa5b5a3b34c49b148/resources/tutorialGifs/StartWorkTutorial.gif"
+                                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewJiraIssue.gif"
                                         description="View a Jira issue"
                                         productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                                     />
@@ -197,51 +168,67 @@ export const OnboardingPage: React.FunctionComponent = () => {
 
     return (
         <OnboardingControllerContext.Provider value={controller}>
-            <Container maxWidth="xl">
-                <div className={classes.root}>
-                    <Stepper activeStep={activeStep}>
-                        {steps.map((label, index) => {
-                            const stepProps = {};
-                            const labelProps = {};
-                            return (
-                                <Step key={label} {...stepProps}>
-                                    <StepLabel {...labelProps}>{label}</StepLabel>
-                                </Step>
-                            );
-                        })}
-                    </Stepper>
-                    <div>
-                        {activeStep === steps.length ? (
-                            <div>
-                                <Typography className={classes.pageContent}>
-                                    All steps completed - you&apos;re finished
-                                </Typography>
-                                <Button onClick={handleReset} className={classes.button}>
-                                    Reset
-                                </Button>
-                            </div>
-                        ) : (
-                            <div>
-                                <div className={classes.pageContent}>{getStepContent(activeStep)}</div>
+            <AuthDialogControllerContext.Provider value={authDialogController}>
+                <Container maxWidth="xl">
+                    <div className={classes.root}>
+                        <Stepper activeStep={activeStep}>
+                            {steps.map((label, index) => {
+                                const stepProps = {};
+                                const labelProps = {};
+                                return (
+                                    <Step key={label} {...stepProps}>
+                                        <StepLabel {...labelProps}>{label}</StepLabel>
+                                    </Step>
+                                );
+                            })}
+                        </Stepper>
+                        <div>
+                            {activeStep === steps.length ? (
                                 <div>
-                                    <Button disabled={activeStep === 0} onClick={handleBack} className={classes.button}>
-                                        Back
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={handleNext}
-                                        className={classes.button}
-                                        disabled={!state.config['bitbucket.enabled'] && !state.config['jira.enabled']}
-                                    >
-                                        {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+                                    <Typography className={classes.pageContent}>
+                                        All steps completed - you&apos;re finished
+                                    </Typography>
+                                    <Button onClick={handleReset} className={classes.button}>
+                                        Reset
                                     </Button>
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div>
+                                    <div className={classes.pageContent}>{getStepContent(activeStep)}</div>
+                                    <div>
+                                        <Button
+                                            disabled={activeStep === 0}
+                                            onClick={handleBack}
+                                            className={classes.button}
+                                        >
+                                            Back
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleNext}
+                                            className={classes.button}
+                                            disabled={
+                                                !state.config['bitbucket.enabled'] && !state.config['jira.enabled']
+                                            }
+                                        >
+                                            {activeStep === 1 ? 'Skip' : 'Next'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </Container>
+                </Container>
+                <AuthDialog
+                    product={authDialogProduct}
+                    doClose={authDialogController.close}
+                    authEntry={authDialogEntry}
+                    open={authDialogOpen}
+                    save={controller.login}
+                    onExited={authDialogController.onExited}
+                />
+            </AuthDialogControllerContext.Provider>
         </OnboardingControllerContext.Provider>
     );
 };

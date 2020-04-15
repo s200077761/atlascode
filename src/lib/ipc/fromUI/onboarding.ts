@@ -6,13 +6,21 @@ import { CommonAction } from './common';
 export enum OnboardingActionType {
     Login = 'login',
     Logout = 'logout',
-    SaveSettings = 'saveSettings'
+    SaveSettings = 'saveSettings',
+    CreateJiraIssue = 'createJiraIssue',
+    ViewJiraIssue = 'viewJiraIssue',
+    CreatePullRequest = 'createPullRequest',
+    ViewPullRequest = 'viewPullRequest'
 }
 
 export type OnboardingAction =
     | ReducerAction<OnboardingActionType.Login, LoginAuthAction>
     | ReducerAction<OnboardingActionType.Logout, LogoutAuthAction>
     | ReducerAction<OnboardingActionType.SaveSettings, SaveSettingsAction>
+    | ReducerAction<OnboardingActionType.CreateJiraIssue>
+    | ReducerAction<OnboardingActionType.ViewJiraIssue>
+    | ReducerAction<OnboardingActionType.CreatePullRequest>
+    | ReducerAction<OnboardingActionType.ViewPullRequest>
     | CommonAction;
 
 export interface AuthAction {
