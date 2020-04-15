@@ -49,8 +49,8 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this._messagePoster(message);
     }
 
-    public onSitesChanged(): void {
-        const [jiraSites, bbSites] = this._api.getSitesAvailable();
+    public async onSitesChanged(): Promise<void> {
+        const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
         this.postMessage({
             type: ConfigMessageType.SitesUpdate,
             jiraSites: jiraSites,
@@ -65,7 +65,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             }
 
             this._isRefreshing = true;
-            const [jiraSites, bbSites] = this._api.getSitesAvailable();
+            const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
             const target = this._api.getConfigTarget();
             const section = this._initialSection ? this._initialSection : {};
             const cfg = this._api.flattenedConfigForTarget(target);

@@ -4,6 +4,7 @@ import {
     Badge,
     Box,
     Container,
+    FormLabel,
     Grid,
     makeStyles,
     Paper,
@@ -23,6 +24,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ConfigSection, ConfigSubSection, ConfigTarget } from '../../../lib/ipc/models/config';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
+import { AuthDialog } from './auth/AuthDialog';
+import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
 import { BitbucketPanel } from './bitbucket/BitbucketPanel';
 import { ConfigControllerContext, useConfigController } from './configController';
 import { GeneralPanel } from './general/GeneralPanel';
@@ -73,6 +76,7 @@ const ConfigPage: React.FunctionComponent = () => {
         return { ...emptySubsections, [state.openSection]: state.openSubSections };
     });
 
+    const { authDialogController, authDialogOpen, authDialogProduct, authDialogEntry } = useAuthDialog();
     const handleTabChange = useCallback((event: React.ChangeEvent<{}>, section: ConfigSection) => {
         setOpenSection(section);
     }, []);
@@ -151,136 +155,144 @@ const ConfigPage: React.FunctionComponent = () => {
 
     return (
         <ConfigControllerContext.Provider value={controller}>
-            <Container maxWidth="xl">
-                <AppBar position="relative">
-                    <Toolbar>
-                        <Typography variant="h3" className={classes.title}>
-                            Atlassian Settings
-                        </Typography>
-                        <Tabs
-                            value={openSection}
-                            onChange={handleTabChange}
-                            aria-label="simple tabs example"
-                            indicatorColor="primary"
-                        >
-                            <Tab
-                                id="simple-tab-0"
-                                aria-controls="simple-tabpanel-0"
-                                value={ConfigSection.Jira}
-                                label={
-                                    <ProductEnabler
-                                        label="Jira"
-                                        enabled={state.config['jira.enabled']}
-                                        onToggle={handleJiraToggle}
-                                    />
-                                }
-                            />
-                            <Tab
-                                id="simple-tab-1"
-                                aria-controls="simple-tabpanel-1"
-                                value={ConfigSection.Bitbucket}
-                                label={
-                                    <ProductEnabler
-                                        label="Bitbucket"
-                                        enabled={state.config['bitbucket.enabled']}
-                                        onToggle={handleBitbucketToggle}
-                                    />
-                                }
-                            />
-                            <Tab
-                                id="simple-tab-2"
-                                aria-controls="simple-tabpanel-2"
-                                value={ConfigSection.General}
-                                label="General"
-                            />
-                        </Tabs>
-                        <div className={classes.grow} />
-                        <Typography variant="h5" classes={{ root: classes.targetSelectLabel }}>
-                            save settings to:{' '}
-                        </Typography>
-                        <ToggleButtonGroup
-                            color="primary"
-                            size="small"
-                            value={internalTarget}
-                            exclusive
-                            onChange={handleTargetChange}
-                        >
-                            <Tooltip title="User settings">
-                                <ToggleButton
-                                    key={1}
-                                    value={ConfigTarget.User}
-                                    selected={internalTarget !== ConfigTarget.User}
-                                    disableRipple={internalTarget === ConfigTarget.User}
-                                >
-                                    <Badge
-                                        color="primary"
-                                        variant="dot"
-                                        invisible={internalTarget !== ConfigTarget.User}
+            <AuthDialogControllerContext.Provider value={authDialogController}>
+                <Container maxWidth="xl">
+                    <AppBar position="relative">
+                        <Toolbar>
+                            <Typography variant="h3" className={classes.title}>
+                                Atlassian Settings
+                            </Typography>
+                            <Tabs
+                                value={openSection}
+                                onChange={handleTabChange}
+                                aria-label="simple tabs example"
+                                indicatorColor="primary"
+                            >
+                                <Tab
+                                    id="simple-tab-0"
+                                    aria-controls="simple-tabpanel-0"
+                                    value={ConfigSection.Jira}
+                                    label={
+                                        <ProductEnabler
+                                            label="Jira"
+                                            enabled={state.config['jira.enabled']}
+                                            onToggle={handleJiraToggle}
+                                        />
+                                    }
+                                />
+                                <Tab
+                                    id="simple-tab-1"
+                                    aria-controls="simple-tabpanel-1"
+                                    value={ConfigSection.Bitbucket}
+                                    label={
+                                        <ProductEnabler
+                                            label="Bitbucket"
+                                            enabled={state.config['bitbucket.enabled']}
+                                            onToggle={handleBitbucketToggle}
+                                        />
+                                    }
+                                />
+                                <Tab
+                                    id="simple-tab-2"
+                                    aria-controls="simple-tabpanel-2"
+                                    value={ConfigSection.General}
+                                    label="General"
+                                />
+                            </Tabs>
+                            <div className={classes.grow} />
+                            <FormLabel classes={{ root: classes.targetSelectLabel }}>save settings to: </FormLabel>
+                            <ToggleButtonGroup
+                                color="primary"
+                                size="small"
+                                value={internalTarget}
+                                exclusive
+                                onChange={handleTargetChange}
+                            >
+                                <Tooltip title="User settings">
+                                    <ToggleButton
+                                        key={1}
+                                        value={ConfigTarget.User}
+                                        selected={internalTarget !== ConfigTarget.User}
+                                        disableRipple={internalTarget === ConfigTarget.User}
                                     >
-                                        <PersonIcon />
-                                    </Badge>
-                                </ToggleButton>
-                            </Tooltip>
-                            <Tooltip title="Workspace settings">
-                                <ToggleButton
-                                    key={2}
-                                    value={ConfigTarget.Workspace}
-                                    selected={internalTarget !== ConfigTarget.Workspace}
-                                    disableRipple={internalTarget === ConfigTarget.Workspace}
-                                >
-                                    <Badge
-                                        color="primary"
-                                        variant="dot"
-                                        invisible={internalTarget !== ConfigTarget.Workspace}
+                                        <Badge
+                                            color="primary"
+                                            variant="dot"
+                                            invisible={internalTarget !== ConfigTarget.User}
+                                        >
+                                            <PersonIcon />
+                                        </Badge>
+                                    </ToggleButton>
+                                </Tooltip>
+                                <Tooltip title="Workspace settings">
+                                    <ToggleButton
+                                        key={2}
+                                        value={ConfigTarget.Workspace}
+                                        selected={internalTarget !== ConfigTarget.Workspace}
+                                        disableRipple={internalTarget === ConfigTarget.Workspace}
                                     >
-                                        <WorkIcon />
-                                    </Badge>
-                                </ToggleButton>
-                            </Tooltip>
-                        </ToggleButtonGroup>
-                        <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
-                    </Toolbar>
-                </AppBar>
-                <Grid container spacing={1}>
-                    <Grid item xs={12} md={9} lg={10} xl={10}>
-                        <Paper className={classes.paper100}>
-                            <ErrorDisplay />
-                            <PMFDisplay postMessageFunc={controller.postMessage} />
-                            <Box margin={2}>
-                                <JiraPanel
-                                    visible={openSection === ConfigSection.Jira}
-                                    selectedSubSections={openSubsections[ConfigSection.Jira]}
-                                    onSubsectionChange={handleSubsectionChange}
-                                    config={state.config!}
-                                    sites={state.jiraSites}
-                                    isRemote={state.isRemote}
-                                />
-                                <BitbucketPanel
-                                    visible={openSection === ConfigSection.Bitbucket}
-                                    selectedSubSections={openSubsections[ConfigSection.Bitbucket]}
-                                    onSubsectionChange={handleSubsectionChange}
-                                    config={state.config!}
-                                    sites={state.bitbucketSites}
-                                    isRemote={state.isRemote}
-                                />
-                                <GeneralPanel
-                                    visible={openSection === ConfigSection.General}
-                                    selectedSubSections={openSubsections[ConfigSection.General]}
-                                    onSubsectionChange={handleSubsectionChange}
-                                    config={state.config!}
-                                />
-                            </Box>
-                        </Paper>
+                                        <Badge
+                                            color="primary"
+                                            variant="dot"
+                                            invisible={internalTarget !== ConfigTarget.Workspace}
+                                        >
+                                            <WorkIcon />
+                                        </Badge>
+                                    </ToggleButton>
+                                </Tooltip>
+                            </ToggleButtonGroup>
+                            <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                        </Toolbar>
+                    </AppBar>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12} md={9} lg={10} xl={10}>
+                            <Paper className={classes.paper100}>
+                                <ErrorDisplay />
+                                <PMFDisplay postMessageFunc={controller.postMessage} />
+                                <Box margin={2}>
+                                    <JiraPanel
+                                        visible={openSection === ConfigSection.Jira}
+                                        selectedSubSections={openSubsections[ConfigSection.Jira]}
+                                        onSubsectionChange={handleSubsectionChange}
+                                        config={state.config!}
+                                        sites={state.jiraSites}
+                                        isRemote={state.isRemote}
+                                    />
+                                    <BitbucketPanel
+                                        visible={openSection === ConfigSection.Bitbucket}
+                                        selectedSubSections={openSubsections[ConfigSection.Bitbucket]}
+                                        onSubsectionChange={handleSubsectionChange}
+                                        config={state.config!}
+                                        sites={state.bitbucketSites}
+                                        isRemote={state.isRemote}
+                                    />
+                                    <GeneralPanel
+                                        visible={openSection === ConfigSection.General}
+                                        selectedSubSections={openSubsections[ConfigSection.General]}
+                                        onSubsectionChange={handleSubsectionChange}
+                                        config={state.config!}
+                                    />
+                                </Box>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12} md={3} lg={2} xl={2}>
+                            <Paper className={classes.paperOverflow}>
+                                <Box margin={2}>
+                                    <SidebarButtons feedbackUser={state.feedbackUser} />
+                                </Box>
+                            </Paper>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={12} md={3} lg={2} xl={2}>
-                        <Paper className={classes.paperOverflow}>
-                            <Box margin={2}>
-                                <SidebarButtons feedbackUser={state.feedbackUser} />
-                            </Box>
-                        </Paper>
-                    </Grid>
-                </Grid>
-            </Container>
+                </Container>
+                <AuthDialog
+                    product={authDialogProduct}
+                    doClose={authDialogController.close}
+                    authEntry={authDialogEntry}
+                    open={authDialogOpen}
+                    save={controller.login}
+                    onExited={authDialogController.onExited}
+                />
+            </AuthDialogControllerContext.Provider>
         </ConfigControllerContext.Provider>
     );
 };

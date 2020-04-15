@@ -6,7 +6,7 @@ import {
     JQLErrors
 } from '@atlassianlabs/jira-pi-common-models';
 import { flatten } from 'flatten-anything';
-import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { emptyConfig } from '../../../config/model';
 import { emptyFeedbackUser, FeedbackUser } from '../models/common';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../models/config';
@@ -36,8 +36,8 @@ export type ConfigResponse =
 
 export interface ConfigInitMessage {
     config: FlattenedConfig;
-    jiraSites: DetailedSiteInfo[];
-    bitbucketSites: DetailedSiteInfo[];
+    jiraSites: SiteWithAuthInfo[];
+    bitbucketSites: SiteWithAuthInfo[];
     feedbackUser: FeedbackUser;
     isRemote: boolean;
     showTunnelOption: boolean;
@@ -62,9 +62,19 @@ export interface ConfigUpdateMessage {
     target: ConfigTarget;
 }
 
+export interface SiteWithAuthInfo {
+    site: DetailedSiteInfo;
+    auth: AuthInfo;
+}
+
+export const emptySiteWithAuthInfo: SiteWithAuthInfo = {
+    site: emptySiteInfo,
+    auth: emptyBasicAuthInfo
+};
+
 export interface SitesUpdateMessage {
-    jiraSites: DetailedSiteInfo[];
-    bitbucketSites: DetailedSiteInfo[];
+    jiraSites: SiteWithAuthInfo[];
+    bitbucketSites: SiteWithAuthInfo[];
 }
 
 export interface JQLOptionsResponseMessage {

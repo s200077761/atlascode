@@ -16,6 +16,7 @@ import {
     FilterSearchResponseMessage,
     JQLOptionsResponseMessage,
     JQLSuggestionsResponseMessage,
+    SiteWithAuthInfo,
     SectionChangeMessage,
     ValidateJqlResponseMessage
 } from '../../../lib/ipc/toUI/config';
@@ -144,7 +145,7 @@ export type ConfigUIAction =
     | ReducerAction<ConfigUIActionType.Loading>
     | ReducerAction<
           ConfigUIActionType.SitesUpdate,
-          { jiraSites: DetailedSiteInfo[]; bitbucketSites: DetailedSiteInfo[] }
+          { jiraSites: SiteWithAuthInfo[]; bitbucketSites: SiteWithAuthInfo[] }
       >;
 
 export type ConfigChanges = { [key: string]: any };

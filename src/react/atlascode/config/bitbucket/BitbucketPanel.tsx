@@ -1,7 +1,8 @@
 import { Fade, Grid } from '@material-ui/core';
 import React from 'react';
-import { DetailedSiteInfo, ProductBitbucket } from '../../../../atlclients/authInfo';
+import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
 import { StatusBarPanel } from '../../common/StatusBarPanel';
 import { AuthPanel } from '../auth/AuthPanel';
@@ -12,7 +13,7 @@ import { PRExplorerPanel } from './subpanels/PRExplorerPanel';
 
 type BitbucketPanelProps = CommonPanelProps & {
     config: { [key: string]: any };
-    sites: DetailedSiteInfo[];
+    sites: SiteWithAuthInfo[];
     isRemote: boolean;
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
 };
