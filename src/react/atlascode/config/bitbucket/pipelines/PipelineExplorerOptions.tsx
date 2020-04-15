@@ -12,7 +12,7 @@ export const PipelinesExplorerOptions: React.FunctionComponent<PipelinesExplorer
     monitorItem,
     hideEmptyItem,
     hideFilteredItem,
-    intervalItem
+    intervalItem,
 }) => {
     return (
         <>

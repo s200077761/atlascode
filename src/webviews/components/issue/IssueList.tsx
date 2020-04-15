@@ -68,13 +68,13 @@ export default class IssueList extends React.Component<
             <TableTree
                 columns={[IssueKey, Summary, Priority, StatusColumn]}
                 columnWidths={['150px', '100%', '20px', '150px']}
-                items={this.props.issues.map(issue => {
+                items={this.props.issues.map((issue) => {
                     return {
                         id: issue.key,
                         content: {
                             issue: issue,
-                            onIssueClick: this.props.onIssueClick
-                        }
+                            onIssueClick: this.props.onIssueClick,
+                        },
                     };
                 })}
             />

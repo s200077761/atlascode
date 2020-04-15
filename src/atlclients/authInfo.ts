@@ -2,7 +2,7 @@
 
 export enum AuthChangeType {
     Update = 'update',
-    Remove = 'remove'
+    Remove = 'remove',
 }
 export interface AuthInfoEvent {
     type: AuthChangeType;
@@ -26,19 +26,19 @@ export interface Product {
 
 export const ProductJira = {
     name: 'Jira',
-    key: 'jira'
+    key: 'jira',
 };
 
 export const ProductBitbucket = {
     name: 'Bitbucket',
-    key: 'bitbucket'
+    key: 'bitbucket',
 };
 
 export enum OAuthProvider {
     BitbucketCloud = 'bbcloud',
     BitbucketCloudStaging = 'bbcloudstaging',
     JiraCloud = 'jiracloud',
-    JiraCloudStaging = 'jiracloudstaging'
+    JiraCloudStaging = 'jiracloudstaging',
 }
 export interface AuthInfoV1 {
     access: string;
@@ -122,12 +122,12 @@ export const emptyUserInfo: UserInfo = {
     id: '',
     displayName: '',
     email: '',
-    avatarUrl: ''
+    avatarUrl: '',
 };
 
 export const emptyProduct: Product = {
     name: '',
-    key: ''
+    key: '',
 };
 
 export const emptySiteInfo: DetailedSiteInfo = {
@@ -140,7 +140,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     product: emptyProduct,
     isCloud: true,
     userId: '',
-    credentialId: ''
+    credentialId: '',
 };
 
 export const emptyAccessibleResource: AccessibleResource = {
@@ -148,7 +148,7 @@ export const emptyAccessibleResource: AccessibleResource = {
     name: '',
     avatarUrl: '',
     scopes: [],
-    url: ''
+    url: '',
 };
 
 export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
@@ -156,17 +156,17 @@ export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
     name: '',
     avatarUrl: '',
     scopes: [],
-    baseUrlSuffix: 'atlassian.net'
+    baseUrlSuffix: 'atlassian.net',
 };
 
 export const emptyAuthInfo: AuthInfo = {
-    user: emptyUserInfo
+    user: emptyUserInfo,
 };
 
 export const emptyBasicAuthInfo: BasicAuthInfo = {
     user: emptyUserInfo,
     username: '',
-    password: ''
+    password: '',
 };
 
 export function isUpdateAuthEvent(a: AuthInfoEvent): a is UpdateAuthInfoEvent {

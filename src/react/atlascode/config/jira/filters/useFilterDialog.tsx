@@ -28,6 +28,6 @@ export const useFilterDialog = (sites: DetailedSiteInfo[], onSave: (jqlEntry: JQ
     );
     return {
         openFilterDialog,
-        filterDialog
+        filterDialog,
     };
 };

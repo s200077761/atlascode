@@ -6,7 +6,7 @@ import {
     isEmptySiteInfo,
     Product,
     ProductBitbucket,
-    ProductJira
+    ProductJira,
 } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
@@ -62,7 +62,7 @@ export class AuthStatusBar extends Disposable {
         }
     }
     dispose() {
-        this._authenticationStatusBarItems.forEach(item => {
+        this._authenticationStatusBarItems.forEach((item) => {
             item.dispose();
         });
         this._authenticationStatusBarItems.clear();

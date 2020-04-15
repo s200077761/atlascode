@@ -37,7 +37,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
 
     dispose() {
         super.dispose();
-        this._disposables.forEach(d => d.dispose());
+        this._disposables.forEach((d) => d.dispose());
     }
 
     public async findIssue(

@@ -27,7 +27,7 @@ export const BitbucketIssuesPanel: React.FunctionComponent<BitbucketIssuesPanelP
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

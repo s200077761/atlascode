@@ -12,8 +12,8 @@ const useStyles = makeStyles(
         ({
             root: {
                 fontSize: theme.typography.pxToRem(14),
-                fontStyle: 'italic'
-            }
+                fontStyle: 'italic',
+            },
         } as const)
 );
 

@@ -16,7 +16,7 @@ import {
     isMinimalIssue,
     MinimalIssue,
     MinimalIssueOrKeyAndSite,
-    Transition
+    Transition,
 } from '@atlassianlabs/jira-pi-common-models';
 import { distanceInWordsToNow, format } from 'date-fns';
 import React from 'react';
@@ -31,7 +31,7 @@ import {
     FileDiff,
     MergeStrategy,
     PullRequestData,
-    Task
+    Task,
 } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -54,7 +54,7 @@ import {
     RefreshPullRequest,
     UpdateApproval,
     UpdateSummary,
-    UpdateTitle
+    UpdateTitle,
 } from '../../../ipc/prActions';
 import {
     CheckoutResult,
@@ -65,7 +65,7 @@ import {
     isUpdateRelatedBitbucketIssues,
     isUpdateRelatedJiraIssues,
     isUpdateTasks,
-    PRData
+    PRData,
 } from '../../../ipc/prMessaging';
 import { ConnectionTimeout } from '../../../util/time';
 import { AtlLoader } from '../AtlLoader';
@@ -147,7 +147,7 @@ const emptyPR: PRData = {
     fileDiffs: [],
     mergeStrategies: [],
     relatedJiraIssues: [],
-    relatedBitbucketIssues: []
+    relatedBitbucketIssues: [],
 };
 
 const emptyState: ViewState = {
@@ -175,7 +175,7 @@ const emptyState: ViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
-    showPMF: false
+    showPMF: false,
 };
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, ViewState> {
@@ -189,7 +189,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         //This only executes once the javascript on the page is loaded, which ensures the controller doesn't
         //send data before this page is able to receive it.
         this.postMessage({
-            action: 'ready'
+            action: 'ready',
         });
     }
 
@@ -197,7 +197,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isApproveButtonLoading: true });
         this.postMessage({
             action: 'updateApproval',
-            status: status
+            status: status,
         });
     };
 
@@ -208,7 +208,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             mergeStrategy: this.state.mergeStrategy.value,
             commitMessage: this.state.commitMessage || this.state.defaultCommitMessage,
             closeSourceBranch: this.state.closeSourceBranch,
-            issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
+            issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined,
         });
     };
 
@@ -216,7 +216,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'deleteComment',
-            commentId: commentId
+            commentId: commentId,
         });
     };
 
@@ -225,7 +225,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.postMessage({
             action: 'editComment',
             content: content,
-            commentId: commentId
+            commentId: commentId,
         });
     };
 
@@ -234,14 +234,14 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.postMessage({
             action: 'comment',
             content: content,
-            parentCommentId: parentCommentId
+            parentCommentId: parentCommentId,
         });
     };
 
     handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {
         this.postMessage({
             action: 'openJiraIssue',
-            issueOrKey: issueOrKey
+            issueOrKey: issueOrKey,
         });
     };
 
@@ -250,13 +250,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.postMessage({
             action: 'checkout',
             branch: branchName,
-            isSourceBranch: true
+            isSourceBranch: true,
         });
     };
 
     handleCopyLink = () => {
         this.postMessage({
-            action: 'copyPullRequestLink'
+            action: 'copyPullRequestLink',
         });
     };
 
@@ -264,21 +264,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.postMessage({
             action: 'createTask',
             task: task,
-            commentId: commentId
+            commentId: commentId,
         });
     };
 
     handleTaskEdit = (task: Task) => {
         this.postMessage({
             action: 'editTask',
-            task: task
+            task: task,
         });
     };
 
     handleTaskDelete = (task: Task) => {
         this.postMessage({
             action: 'deleteTask',
-            task: task
+            task: task,
         });
     };
 
@@ -286,12 +286,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isReviewersLoading: true });
         this.postMessage({
             action: 'addReviewer',
-            accountId: accountId
+            accountId: accountId,
         });
     };
 
     loadUserOptions = (input: string): Promise<any> => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
             this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.pr.pr!.site });
@@ -312,7 +312,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     getNumberOfTasksComplete = () => {
-        return this.state.tasks.filter(task => task.isComplete).length;
+        return this.state.tasks.filter((task) => task.isComplete).length;
     };
 
     onMessageReceived(e: any): boolean {
@@ -325,7 +325,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     isAnyCommentLoading: false,
                     isReviewersLoading: false,
                     isErrorBannerOpen: true,
-                    errorDetails: e.reason
+                    errorDetails: e.reason,
                 });
                 break;
             }
@@ -335,7 +335,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     isMergeButtonLoading: false,
                     isCheckoutButtonLoading: false,
                     isReviewersLoading: false,
-                    pr: { ...this.state.pr, currentBranch: e.currentBranch }
+                    pr: { ...this.state.pr, currentBranch: e.currentBranch },
                 });
                 break;
             }
@@ -350,7 +350,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             return {
                                 pr: {
                                     ...state.pr,
-                                    ...e
+                                    ...e,
                                 },
                                 isFileDiffsLoading: false,
                                 isApproveButtonLoading: false,
@@ -360,18 +360,18 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 closeSourceBranch:
                                     this.state.closeSourceBranch === undefined
                                         ? e.pr!.data.closeSourceBranch
-                                        : this.state.closeSourceBranch
+                                        : this.state.closeSourceBranch,
                             };
                         },
                         () => {
                             this.state.mergeStrategy.value === undefined
                                 ? this.handleMergeStrategyChange(
-                                      this.state.pr.mergeStrategies.find(strategy => strategy.isDefault === true)
+                                      this.state.pr.mergeStrategies.find((strategy) => strategy.isDefault === true)
                                   )
                                 : this.setState({
                                       defaultCommitMessage: this.getDefaultCommitMessage(
                                           this.state.mergeStrategy as MergeStrategy
-                                      )
+                                      ),
                                   });
                         }
                     );
@@ -383,7 +383,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     this.setState({
                         comments: e.comments,
                         isCommentsLoading: false,
-                        isAnyCommentLoading: false
+                        isAnyCommentLoading: false,
                     });
                 }
                 break;
@@ -394,9 +394,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         return {
                             pr: {
                                 ...state.pr,
-                                relatedJiraIssues: e.relatedJiraIssues
+                                relatedJiraIssues: e.relatedJiraIssues,
                             },
-                            isRelatedJiraIssuesLoading: false
+                            isRelatedJiraIssuesLoading: false,
                         };
                     });
                 }
@@ -408,9 +408,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         return {
                             pr: {
                                 ...state.pr,
-                                relatedBitbucketIssues: e.relatedBitbucketIssues
+                                relatedBitbucketIssues: e.relatedBitbucketIssues,
                             },
-                            isRelatedBitbucketIssuesLoading: false
+                            isRelatedBitbucketIssuesLoading: false,
                         };
                     });
                 }
@@ -420,7 +420,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 if (isUpdateTasks(e)) {
                     this.setState({
                         tasks: e.tasks,
-                        isTasksLoading: false
+                        isTasksLoading: false,
                     });
                 }
                 break;
@@ -429,7 +429,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 if (isUpdateCommits(e)) {
                     this.setState({
                         commits: e.commits,
-                        isCommitsLoading: false
+                        isCommitsLoading: false,
                     });
                 }
                 break;
@@ -440,9 +440,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         return {
                             pr: {
                                 ...state.pr,
-                                fileDiffs: e.fileDiffs
+                                fileDiffs: e.fileDiffs,
                             },
-                            isFileDiffsLoading: false
+                            isFileDiffsLoading: false,
                         };
                     });
                 }
@@ -481,10 +481,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     status: {
                         ...(this.state.pr.mainIssue as MinimalIssue<DetailedSiteInfo>).status,
                         id: item.to.id,
-                        name: item.to.name
-                    }
-                }
-            }
+                        name: item.to.name,
+                    },
+                },
+            },
         });
     };
 
@@ -494,7 +494,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...issue, data: newIssueData } }
+            pr: { ...this.state.pr, mainIssue: { ...issue, data: newIssueData } },
         });
     };
 
@@ -509,7 +509,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     handleTitleChange = (text: string) =>
         this.postMessage({
             action: 'updateTitle',
-            text: text
+            text: text,
         });
 
     handleSummaryChange = async (text: string): Promise<void> => {
@@ -518,7 +518,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             {
                 action: 'updateSummary',
                 summary: text,
-                nonce: nonce
+                nonce: nonce,
             } as UpdateSummary,
             'updatePullRequestSummary',
             ConnectionTimeout,
@@ -540,7 +540,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             mergeStrategy: item,
             commitMessage: undefined,
-            defaultCommitMessage: this.getDefaultCommitMessage(item)
+            defaultCommitMessage: this.getDefaultCommitMessage(item),
         });
 
     handleOpenDiffView = (fileDiff: FileDiff) => {
@@ -568,15 +568,15 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             if (commits.length !== 1 || commits[0].message !== title) {
                 const commitMessages = commits
                     .reverse()
-                    .map(commit => `* ${commit.message}`)
+                    .map((commit) => `* ${commit.message}`)
                     .join('\n');
                 defaultCommitMessage += `\n\n${commitMessages}`;
             }
         }
 
-        const approvers = participants.filter(p => p.status === 'APPROVED');
+        const approvers = participants.filter((p) => p.status === 'APPROVED');
         if (approvers.length > 0) {
-            const approverInfo = approvers.map(approver => `Approved-by: ${approver.displayName}`).join('\n');
+            const approverInfo = approvers.map((approver) => `Approved-by: ${approver.displayName}`).join('\n');
             defaultCommitMessage += `\n\n${approverInfo}`;
         }
 
@@ -711,7 +711,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         let currentUserApprovalStatus: ApprovalStatus = 'UNAPPROVED';
         if (pr.participants) {
             const foundCurrentUser = pr.participants!.find(
-                participant => participant.accountId === this.state.pr.currentUser!.accountId
+                (participant) => participant.accountId === this.state.pr.currentUser!.accountId
             );
             if (foundCurrentUser) {
                 currentUserApprovalStatus = foundCurrentUser.status;
@@ -740,7 +740,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 marginLeft: 20,
                                 borderLeftWidth: 'initial',
                                 borderLeftStyle: 'solid',
-                                borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)'
+                                borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
                             }}
                         >
                             <div style={{ marginLeft: 10 }}>
@@ -772,7 +772,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 marginLeft: 20,
                                 borderLeftWidth: 'initial',
                                 borderLeftStyle: 'solid',
-                                borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)'
+                                borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
                             }}
                         >
                             <div style={{ marginLeft: 10 }}>
@@ -871,7 +871,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                                 inputProps={{ className: 'ac-inputField', rows: 4 }}
                                                 viewProps={{
                                                     id: 'commit-message',
-                                                    className: 'ac-inline-input-view-p'
+                                                    className: 'ac-inline-input-view-p',
                                                 }}
                                                 editButtonClassName="ac-inline-edit-button"
                                                 cancelButtonClassName="ac-inline-cancel-button"

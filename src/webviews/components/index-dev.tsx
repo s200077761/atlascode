@@ -38,22 +38,22 @@ const routes = {
     ),
     createBitbucketIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')
-    )
+    ),
 };
 
 class VsCodeApi {
     private conn: WebSocket;
     constructor(callback: () => void) {
         this.conn = new WebSocket('ws://127.0.0.1:13988');
-        this.conn.onopen = function() {
+        this.conn.onopen = function () {
             callback();
         };
-        this.conn.onerror = function(error) {
+        this.conn.onerror = function (error) {
             // just in there were some problems with connection...
             console.error('websocket error', error);
         };
         // most important part - incoming messages
-        this.conn.onmessage = function(message) {
+        this.conn.onmessage = function (message) {
             try {
                 var json = JSON.parse(message.data);
                 window.postMessage(json.data, '*');

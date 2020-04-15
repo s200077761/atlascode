@@ -10,7 +10,7 @@ import {
     Product,
     ProductBitbucket,
     ProductJira,
-    UserInfo
+    UserInfo,
 } from '../atlclients/authInfo';
 import { CredentialManager } from '../atlclients/authStore';
 import { OAuthRefesher } from '../atlclients/oauthRefresher';
@@ -122,7 +122,7 @@ export class V1toV2Migrator {
             const newInfo: OAuthInfo = {
                 access: accessToken,
                 refresh: info.refresh,
-                user: user
+                user: user,
             };
 
             let newSite: DetailedSiteInfo = {
@@ -135,7 +135,7 @@ export class V1toV2Migrator {
                 product: ProductJira,
                 isCloud: true,
                 userId: info.user.id,
-                credentialId: Buffer.from(resource.id + '::' + info.user.id).toString('base64')
+                credentialId: Buffer.from(resource.id + '::' + info.user.id).toString('base64'),
             };
 
             await this._credentialManager.saveAuthInfo(newSite, newInfo);
@@ -172,7 +172,7 @@ export class V1toV2Migrator {
                 monitor: true,
                 name: name,
                 query: query,
-                siteId: siteId
+                siteId: siteId,
             });
         }
 
@@ -187,7 +187,7 @@ export class V1toV2Migrator {
                 monitor: true,
                 name: name,
                 query: query,
-                siteId: siteId
+                siteId: siteId,
             });
         }
 
@@ -207,10 +207,10 @@ export class V1toV2Migrator {
         const newJql: JQLEntry[] = [];
         const v1Custom: SiteJQLV1[] = configuration
             .get<SiteJQLV1[]>('jira.customJql')
-            .filter(entry => entry.siteId === siteId);
+            .filter((entry) => entry.siteId === siteId);
         const projectKey = this._workingProject ? Container.config.jira.workingProject.key : undefined;
-        v1Custom.forEach(siteJql => {
-            siteJql.jql.forEach(jqlEntry => {
+        v1Custom.forEach((siteJql) => {
+            siteJql.jql.forEach((jqlEntry) => {
                 const query = projectKey
                     ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`)
                     : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
@@ -220,7 +220,7 @@ export class V1toV2Migrator {
                     monitor: true,
                     name: jqlEntry.name,
                     query: query,
-                    siteId: siteId
+                    siteId: siteId,
                 });
             });
         });
@@ -244,7 +244,7 @@ export class V1toV2Migrator {
         const newInfo: OAuthInfo = {
             access: accessToken,
             refresh: info.refresh,
-            user: user
+            user: user,
         };
 
         // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
@@ -258,7 +258,7 @@ export class V1toV2Migrator {
             product: ProductBitbucket,
             isCloud: true,
             userId: info.user.id,
-            credentialId: Buffer.from(provider + '::' + info.user.id).toString('base64')
+            credentialId: Buffer.from(provider + '::' + info.user.id).toString('base64'),
         };
 
         this._siteManager.addSites([newSite]);
@@ -281,9 +281,9 @@ export class V1toV2Migrator {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
                 },
-                ...getAgent()
+                ...getAgent(),
             });
 
             if (product.key === ProductJira.key) {
@@ -291,15 +291,15 @@ export class V1toV2Migrator {
                     id: userRes.data.accountId,
                     displayName: userRes.data.displayName,
                     avatarUrl: userRes.data.avatarUrls['48x48'],
-                    email: userRes.data.emailAddress
+                    email: userRes.data.emailAddress,
                 };
             } else {
                 const emailRes = await client(emailUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${accessToken}`
-                    }
+                        Authorization: `Bearer ${accessToken}`,
+                    },
                 });
 
                 let email = 'do-not-reply@atlassian.com';
@@ -314,7 +314,7 @@ export class V1toV2Migrator {
                     id: userRes.data.account_id,
                     displayName: userRes.data.display_name,
                     avatarUrl: userRes.data.links.avatar.href,
-                    email: email
+                    email: email,
                 };
             }
         } catch (e) {
@@ -337,7 +337,7 @@ export function migrateAllWorkspaceCustomJQLS(deleteV1: boolean): void {
     if (Array.isArray(inspect.workspaceValue)) {
         const projectKey = Container.config.jira.workingProject ? Container.config.jira.workingProject.key : undefined;
         inspect.workspaceValue.forEach((siteJql: SiteJQLV1) => {
-            siteJql.jql.forEach(jqlEntry => {
+            siteJql.jql.forEach((jqlEntry) => {
                 const query = projectKey
                     ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`)
                     : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
@@ -347,7 +347,7 @@ export function migrateAllWorkspaceCustomJQLS(deleteV1: boolean): void {
                     monitor: true,
                     name: jqlEntry.name,
                     query: query,
-                    siteId: siteJql.siteId
+                    siteId: siteJql.siteId,
                 });
             });
         });

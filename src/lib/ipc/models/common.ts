@@ -3,13 +3,13 @@ export enum FeedbackType {
     Comment = 'comment',
     Suggestion = 'suggestion',
     Question = 'question',
-    Empty = ''
+    Empty = '',
 }
 
 export enum KnownLinkID {
     AtlascodeRepo = 'atlascodeRepoLink',
     AtlascodeIssues = 'atlascodeIssuesLink',
-    AtlascodeDocs = 'atlascodeDocsLink'
+    AtlascodeDocs = 'atlascodeDocsLink',
 }
 
 export interface FeedbackData {
@@ -28,13 +28,13 @@ export interface FeedbackUser {
 
 export const emptyFeedbackUser: FeedbackUser = {
     userName: '',
-    emailAddress: ''
+    emailAddress: '',
 };
 
 export enum PMFLevel {
     VERY = 'Very disappointed',
     SOMEWHAT = 'Somewhat disappointed',
-    NOT = 'Not disappointed'
+    NOT = 'Not disappointed',
 }
 
 export function numForPMFLevel(level: PMFLevel): string {

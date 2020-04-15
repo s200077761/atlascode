@@ -16,7 +16,7 @@ export async function postComment(
             ? await client.addComment(issue.key, comment, restriction)
             : await client.updateComment(issue.key, commentId, comment, restriction);
 
-    issueCommentEvent(issue.siteDetails).then(e => {
+    issueCommentEvent(issue.siteDetails).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
 

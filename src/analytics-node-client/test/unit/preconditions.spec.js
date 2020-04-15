@@ -6,7 +6,7 @@ const {
     validateUIEvent,
     validateScreenEvent,
     requireValidUserData,
-    requireValidTenantData
+    requireValidTenantData,
 } = require('../../src/preconditions');
 
 describe('unit/preconditions', () => {
@@ -22,7 +22,7 @@ describe('unit/preconditions', () => {
 
     const screenFields = ['origin', 'platform'];
 
-    trackFields.forEach(trackField => {
+    trackFields.forEach((trackField) => {
         it(`fails if a track event's ${trackField} is null`, () => {
             const trackEvent = buildTrackEvent({ [trackField]: null });
 
@@ -31,16 +31,16 @@ describe('unit/preconditions', () => {
                 userIdType,
                 tenantId,
                 tenantIdType,
-                trackEvent
+                trackEvent,
             })
                 .then(() => fail('Expected exception to be thrown'))
-                .catch(err => {
+                .catch((err) => {
                     expect(err.message).toEqual(`Value trackEvent.${trackField} cannot be undefined`);
                 });
         });
     });
 
-    uiFields.forEach(uiField => {
+    uiFields.forEach((uiField) => {
         it(`fails if a UI event's ${uiField} is null`, () => {
             const uiEvent = buildUIEvent({ [uiField]: null });
 
@@ -49,16 +49,16 @@ describe('unit/preconditions', () => {
                 userIdType,
                 tenantId,
                 tenantIdType,
-                uiEvent
+                uiEvent,
             })
                 .then(() => fail('Expected exception to be thrown'))
-                .catch(err => {
+                .catch((err) => {
                     expect(err.message).toEqual(`Value uiEvent.${uiField} cannot be undefined`);
                 });
         });
     });
 
-    screenFields.forEach(screenField => {
+    screenFields.forEach((screenField) => {
         it(`fails if a screen event's ${screenField} is null`, () => {
             const screenEvent = buildScreenEvent({ [screenField]: null });
 
@@ -68,10 +68,10 @@ describe('unit/preconditions', () => {
                 tenantId,
                 tenantIdType,
                 name: 'my-name',
-                screenEvent
+                screenEvent,
             })
                 .then(() => fail('Expected exception to be thrown'))
-                .catch(err => {
+                .catch((err) => {
                     expect(err.message).toEqual(`Value screenEvent.${screenField} cannot be undefined`);
                 });
         });
@@ -83,10 +83,10 @@ describe('unit/preconditions', () => {
             userIdType,
             tenantId,
             tenantIdType,
-            screenEvent: buildScreenEvent()
+            screenEvent: buildScreenEvent(),
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Value name cannot be undefined');
             });
     });
@@ -95,7 +95,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidUserData({
                 userId,
-                userIdType: 'foobar'
+                userIdType: 'foobar',
             });
         }).toThrowError('Unknown userIdType foobar');
     });
@@ -104,7 +104,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidTenantData({
                 tenantId,
-                tenantIdType: 'foobar'
+                tenantIdType: 'foobar',
             });
         }).toThrowError('Unknown tenantIdType foobar');
     });
@@ -112,14 +112,14 @@ describe('unit/preconditions', () => {
     it('allows null tenantIds if the type is none', () => {
         requireValidTenantData({
             tenantId: null,
-            tenantIdType: 'none'
+            tenantIdType: 'none',
         });
     });
 
     it('allows events that lack both the tenantId and tenantIdType', () => {
         requireValidTenantData({
             tenantId: undefined,
-            tenantIdType: undefined
+            tenantIdType: undefined,
         });
     });
 
@@ -127,7 +127,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidTenantData({
                 tenantId: null,
-                tenantIdType
+                tenantIdType,
             });
         }).toThrowError('Value tenantId cannot be undefined');
     });
@@ -136,7 +136,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidTenantData({
                 tenantId,
-                tenantIdType: null
+                tenantIdType: null,
             });
         }).toThrowError('Value tenantIdType cannot be undefined');
     });
@@ -145,7 +145,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidTenantData({
                 tenantId: null,
-                tenantIdType
+                tenantIdType,
             });
         }).toThrowError('Value tenantId cannot be undefined');
     });
@@ -153,7 +153,7 @@ describe('unit/preconditions', () => {
     it('allows a null userId if an anonymousId is present', () => {
         requireValidUserData({
             userId: null,
-            anonymousId
+            anonymousId,
         });
     });
 
@@ -161,7 +161,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidUserData({
                 userId: null,
-                userIdType
+                userIdType,
             });
         }).toThrowError('Value userId cannot be undefined');
     });
@@ -170,7 +170,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidUserData({
                 userId,
-                userIdType: null
+                userIdType: null,
             });
         }).toThrowError('Value userIdType cannot be undefined');
     });
@@ -179,7 +179,7 @@ describe('unit/preconditions', () => {
         expect(() => {
             requireValidUserData({
                 userId: undefined,
-                anonymousId: undefined
+                anonymousId: undefined,
             });
         }).toThrowError('At least one set of identifiers must be passed - userIdType and userId, or anonymousId');
     });
@@ -188,17 +188,17 @@ describe('unit/preconditions', () => {
         requireValidUserData({
             userId,
             userIdType,
-            anonymousId
+            anonymousId,
         });
     });
 
     it('user data is validated in track events', () => {
         return validateTrackEvent({
             userIdType: 'blah',
-            userId
+            userId,
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Unknown userIdType blah');
             });
     });
@@ -208,10 +208,10 @@ describe('unit/preconditions', () => {
             userIdType,
             userId,
             tenantId,
-            tenantIdType: 'foobar'
+            tenantIdType: 'foobar',
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Unknown tenantIdType foobar');
             });
     });
@@ -219,10 +219,10 @@ describe('unit/preconditions', () => {
     it('user data is validated in UI events', () => {
         return validateUIEvent({
             userIdType: 'blah',
-            userId
+            userId,
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Unknown userIdType blah');
             });
     });
@@ -232,10 +232,10 @@ describe('unit/preconditions', () => {
             userIdType,
             userId,
             tenantId,
-            tenantIdType: 'foobar'
+            tenantIdType: 'foobar',
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Unknown tenantIdType foobar');
             });
     });
@@ -243,10 +243,10 @@ describe('unit/preconditions', () => {
     it('user data is validated in screen events', () => {
         return validateScreenEvent({
             userIdType: 'blah',
-            userId
+            userId,
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Unknown userIdType blah');
             });
     });
@@ -256,10 +256,10 @@ describe('unit/preconditions', () => {
             userIdType,
             userId,
             tenantId,
-            tenantIdType: 'foobar'
+            tenantIdType: 'foobar',
         })
             .then(() => fail('Expected exception to be thrown'))
-            .catch(err => {
+            .catch((err) => {
                 expect(err.message).toEqual('Unknown tenantIdType foobar');
             });
     });

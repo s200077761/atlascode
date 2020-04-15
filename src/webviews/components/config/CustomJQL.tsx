@@ -42,7 +42,7 @@ export default class CustomJQL extends React.Component<
             editingId: undefined,
             importing: false,
             dragTargetIndex: undefined,
-            dragSourceIndex: undefined
+            dragSourceIndex: undefined,
         };
     }
 
@@ -59,7 +59,7 @@ export default class CustomJQL extends React.Component<
         const id = v4();
         this.setState({
             editingId: id,
-            editingEntry: { siteId: '', id: id, name: '', query: '', enabled: true, monitor: true }
+            editingEntry: { siteId: '', id: id, name: '', query: '', enabled: true, monitor: true },
         });
     };
 
@@ -74,7 +74,7 @@ export default class CustomJQL extends React.Component<
         if (entry) {
             this.setState({
                 editingId: entry.id,
-                editingEntry: Object.assign({}, entry)
+                editingEntry: Object.assign({}, entry),
             });
         } else {
             // This entry has disappered from under us.
@@ -149,7 +149,7 @@ export default class CustomJQL extends React.Component<
 
         this.setState({
             editingId: undefined,
-            editingEntry: undefined
+            editingEntry: undefined,
         });
         this.publishChanges(jqlList);
     };

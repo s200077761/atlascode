@@ -17,9 +17,9 @@ export interface DiffViewArgs {
 }
 
 export async function getInlineComments(allComments: Comment[]): Promise<Map<string, Comment[][]>> {
-    const inlineComments = allComments.filter(c => c.inline && c.inline.path);
+    const inlineComments = allComments.filter((c) => c.inline && c.inline.path);
     const threads: Map<string, Comment[][]> = new Map();
-    inlineComments.forEach(val => {
+    inlineComments.forEach((val) => {
         if (!threads.get(val.inline!.path)) {
             threads.set(val.inline!.path, []);
         }
@@ -116,8 +116,8 @@ export async function getArgsForDiffView(
             commentThreads: lhsCommentThreads,
             addedLines: fileChange.hunkMeta.oldPathAdditions,
             deletedLines: fileChange.hunkMeta.oldPathDeletions,
-            lineContextMap: fileChange.hunkMeta.newPathContextMap
-        } as PRFileDiffQueryParams)
+            lineContextMap: fileChange.hunkMeta.newPathContextMap,
+        } as PRFileDiffQueryParams),
     };
     const rhsQueryParam = {
         query: JSON.stringify({
@@ -134,8 +134,8 @@ export async function getArgsForDiffView(
             commentThreads: rhsCommentThreads,
             addedLines: fileChange.hunkMeta.newPathAdditions,
             deletedLines: fileChange.hunkMeta.newPathDeletions,
-            lineContextMap: fileChange.hunkMeta.newPathContextMap
-        } as PRFileDiffQueryParams)
+            lineContextMap: fileChange.hunkMeta.newPathContextMap,
+        } as PRFileDiffQueryParams),
     };
 
     const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam);
@@ -148,7 +148,7 @@ export async function getArgsForDiffView(
         },
         lhsUri,
         rhsUri,
-        fileDisplayName
+        fileDisplayName,
     ];
 
     return {
@@ -157,7 +157,7 @@ export async function getArgsForDiffView(
             prUrl: pr.data.url,
             fileDisplayName: fileDisplayName,
             fileChangeStatus: fileChange.status,
-            numberOfComments: comments.length ? comments.length : 0
-        }
+            numberOfComments: comments.length ? comments.length : 0,
+        },
     };
 }

@@ -12,7 +12,7 @@ import {
     Grid,
     Radio,
     RadioGroup,
-    TextField
+    TextField,
 } from '@material-ui/core';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -26,7 +26,7 @@ export type PMFDialogProps = {
 
 export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCancel, onSave }) => {
     const { register, handleSubmit, errors, formState, triggerValidation, control, reset } = useForm<PMFData>({
-        mode: 'onChange'
+        mode: 'onChange',
     });
 
     const handleSave = useCallback(

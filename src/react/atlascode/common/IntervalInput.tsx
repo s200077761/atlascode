@@ -16,17 +16,17 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             root: {
-                width: 250
+                width: 250,
             },
             input: {
-                width: 48
+                width: 48,
             },
             label: {
                 '&$disabled': {
-                    color: theme.palette.text.disabled
-                }
+                    color: theme.palette.text.disabled,
+                },
             },
-            disabled: {}
+            disabled: {},
         } as const)
 );
 
@@ -88,7 +88,7 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
                                     className={classes.input}
                                     value={value}
                                     margin="dense"
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         setValueAndInterval(e.target.value === '' ? 0 : Number(e.target.value))
                                     }
                                     onBlur={() => {
@@ -102,7 +102,7 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
                                         step: 5,
                                         min: 0,
                                         max: max,
-                                        type: 'number'
+                                        type: 'number',
                                     }}
                                 />
                             </Grid>

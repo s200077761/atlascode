@@ -19,7 +19,7 @@ export interface SiteAuthInfo {
 
 export const emptySiteAuthInfo: SiteAuthInfo = {
     site: emptySiteInfo,
-    auth: undefined
+    auth: undefined,
 };
 
 export type ConfigInspect = { [key: string]: any };
@@ -41,10 +41,10 @@ export const emptyConfigData: ConfigData = {
     workspaceFolders: [],
     feedbackUser: {
         userName: '',
-        emailAddress: ''
+        emailAddress: '',
     },
     isRemote: false,
-    showTunnelOption: false
+    showTunnelOption: false,
 };
 
 export interface ConfigUpdate extends Message {

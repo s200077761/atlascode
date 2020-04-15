@@ -11,7 +11,7 @@ const q1 = { id: 'q1', question: 'How would you feel if you could no longer use 
 const q2 = { id: 'q2', question: '(optional) How can we improve this extension for you?' };
 const q3 = {
     id: 'q3',
-    question: '(optional) What would you use as an alternative if this extension were no longer available?'
+    question: '(optional) What would you use as an alternative if this extension were no longer available?',
 };
 const q4 = { id: 'q4', question: '(optional) What is the main benefit you receive from this extension?' };
 
@@ -63,7 +63,7 @@ export default class PMFBBanner extends React.Component<
         const radioItems = [
             { name: '0', label: 'Very disappointed', value: '0' },
             { name: '1', label: 'Somewhat disappointed', value: '1' },
-            { name: '2', label: 'Not disappointed', value: '2' }
+            { name: '2', label: 'Not disappointed', value: '2' },
         ];
 
         return (
@@ -163,7 +163,7 @@ export default class PMFBBanner extends React.Component<
                                                     style={{
                                                         display: 'inline-flex',
                                                         marginRight: '4px',
-                                                        marginLeft: '4px;'
+                                                        marginLeft: '4px;',
                                                     }}
                                                 >
                                                     <Button
@@ -178,7 +178,7 @@ export default class PMFBBanner extends React.Component<
                                                     style={{
                                                         display: 'inline-flex',
                                                         marginRight: '4px',
-                                                        marginLeft: '4px;'
+                                                        marginLeft: '4px;',
                                                     }}
                                                 >
                                                     <Button className="ac-button" onClick={this.handleLater}>

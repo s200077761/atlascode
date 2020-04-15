@@ -19,7 +19,7 @@ import {
     Task,
     UnknownUser,
     User,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../model';
 import { ServerRepositoriesApi } from './repositories';
 
@@ -39,7 +39,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests`, {
             markup: true,
             avatarSize: 64,
-            ...queryParams
+            ...queryParams,
         });
         const prs: PullRequest[] = data.values!.map((pr: any) =>
             ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo)
@@ -51,7 +51,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                       markup: true,
                       avatarSize: 64,
                       ...queryParams,
-                      start: data.nextPageStart
+                      start: data.nextPageStart,
                   });
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
@@ -65,7 +65,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(workspaceRepo, {
             'username.1': currentUser,
-            'role.1': 'AUTHOR'
+            'role.1': 'AUTHOR',
         });
     }
 
@@ -73,7 +73,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(workspaceRepo, {
             'username.1': currentUser,
-            'role.1': 'REVIEWER'
+            'role.1': 'REVIEWER',
         });
     }
 
@@ -99,13 +99,13 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.getList(workspaceRepo, {
             'username.1': currentUser,
             'role.1': 'REVIEWER',
-            limit: 2
+            limit: 2,
         });
     }
 
     async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
-            state: 'ALL'
+            state: 'ALL',
         });
     }
 
@@ -116,7 +116,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}`,
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
 
@@ -131,14 +131,14 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/settings/pull-requests`,
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
 
         return data.mergeConfig.strategies.map((strategy: any) => ({
             label: strategy.name,
             value: strategy.id,
-            isDefault: strategy.id === data.mergeConfig.defaultStrategy.id
+            isDefault: strategy.id === data.mergeConfig.defaultStrategy.id,
         }));
     }
 
@@ -169,14 +169,14 @@ export class ServerPullRequestApi implements PullRequestApi {
         let { data } = await this.client.post(`/rest/api/latest/tasks`, {
             anchor: {
                 id: commentId,
-                type: 'COMMENT'
+                type: 'COMMENT',
             },
             pendingSync: true,
             permittedOperations: {},
             pullRequestId: prId,
             repositoryId: repo.id,
             state: 'OPEN',
-            text: content
+            text: content,
         });
 
         return this.convertDataToTask(data, site);
@@ -185,7 +185,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { data } = await this.client.put(`/rest/api/1.0/tasks/${task.id}`, {
             id: task.id,
             text: task.content,
-            state: task.isComplete ? 'RESOLVED' : 'OPEN'
+            state: task.isComplete ? 'RESOLVED' : 'OPEN',
         });
 
         return this.convertDataToTask(data, site);
@@ -207,7 +207,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             editable: taskBelongsToUser && taskData.permittedOperations.editable,
             deletable: taskBelongsToUser && taskData.permittedOperations.deletable,
             id: taskData.id,
-            content: taskData.text
+            content: taskData.text,
         };
     }
 
@@ -218,7 +218,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
 
@@ -234,7 +234,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     {
                         markup: true,
                         avatarSize: 64,
-                        start: data.nextPageStart
+                        start: data.nextPageStart,
                     }
                 )
             );
@@ -242,7 +242,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             accumulatedDiffStats.push(...(data.diffs || []));
         }
 
-        const result: FileChange[] = accumulatedDiffStats.map(diffStat => {
+        const result: FileChange[] = accumulatedDiffStats.map((diffStat) => {
             let status: FileStatus = FileStatus.MODIFIED;
             if (!diffStat.source) {
                 status = FileStatus.ADDED;
@@ -308,8 +308,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                     oldPathDeletions: Array.from(sourceDeletions),
                     newPathAdditions: Array.from(destinationAdditions),
                     newPathDeletions: Array.from(destinationDeletions),
-                    newPathContextMap: contextMap
-                }
+                    newPathContextMap: contextMap,
+                },
             };
         });
 
@@ -320,7 +320,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const userSlug = site.userId;
         const { data } = await this.client.get(`/rest/api/1.0/users/${userSlug}`, {
             markup: true,
-            avatarSize: 64
+            avatarSize: 64,
         });
 
         return ServerPullRequestApi.toUser(site, data);
@@ -333,7 +333,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/commits`,
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
 
@@ -349,7 +349,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     {
                         markup: true,
                         avatarSize: 64,
-                        start: data.nextPageStart
+                        start: data.nextPageStart,
                     }
                 )
             );
@@ -364,7 +364,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             message: commit.message,
             url: '',
             htmlSummary: '',
-            rawSummary: ''
+            rawSummary: '',
         }));
     }
 
@@ -399,7 +399,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`,
             {
                 text: content,
-                version: data.version
+                version: data.version,
             },
             {}
         );
@@ -414,10 +414,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
                 {
                     markup: true,
-                    avatarSize: 64
+                    avatarSize: 64,
                 }
             ),
-            await this.getTasks(pr)
+            await this.getTasks(pr),
         ]);
         const [commentResp, tasks] = await commentsAndTaskPromise;
         let { data } = commentResp;
@@ -434,7 +434,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     {
                         markup: true,
                         avatarSize: 64,
-                        start: data.nextPageStart
+                        start: data.nextPageStart,
                     }
                 )
             );
@@ -443,8 +443,8 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
 
         const activities = accumulatedActivities
-            .filter(activity => activity.action === 'COMMENTED')
-            .filter(activity =>
+            .filter((activity) => activity.action === 'COMMENTED')
+            .filter((activity) =>
                 activity.commentAnchor
                     ? activity.commentAnchor.diffType === 'EFFECTIVE' && activity.commentAnchor.orphaned === false
                     : true
@@ -453,12 +453,12 @@ export class ServerPullRequestApi implements PullRequestApi {
         return {
             data: (
                 await Promise.all(
-                    activities.map(activity =>
+                    activities.map((activity) =>
                         this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks)
                     )
                 )
             )
-                .filter(comment => this.shouldDisplayComment(comment))
+                .filter((comment) => this.shouldDisplayComment(comment))
                 .sort((a, b) => {
                     //Comment threads are not retrieved from the API by posting order, so that must be restored to display them properly
                     if (a.ts > b.ts) {
@@ -469,7 +469,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     }
                     return 0;
                 }),
-            next: undefined
+            next: undefined,
         };
     }
 
@@ -484,7 +484,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         }
         comment.children = filteredChildren;
-        return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
+        return hasUndeletedChild || !comment.deleted || comment.tasks.some((task) => !task.isComplete);
     }
 
     private async toNestedCommentModel(
@@ -529,26 +529,26 @@ export class ServerPullRequestApi implements PullRequestApi {
                 ? {
                       path: commentAnchor.path,
                       from: commentAnchor.fileType === 'TO' ? undefined : commentAnchor.line,
-                      to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined
+                      to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined,
                   }
                 : undefined,
             user: user,
             children: [],
-            tasks: []
+            tasks: [],
         };
     }
 
     async getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
         const { data } = await this.client.get(`/rest/build-status/1.0/commits/${pr.data.source.commitHash}`, {
             markup: true,
-            avatarSize: 64
+            avatarSize: 64,
         });
 
         return (data.values || []).map((val: any) => ({
             name: val.name,
             state: val.state,
             url: val.url,
-            ts: val.dateAdded
+            ts: val.dateAdded,
         }));
     }
 
@@ -563,7 +563,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 'permission.1.projectKey': ownerSlug,
                 'permission.1.repositorySlug': repoSlug,
                 filter: query,
-                limit: 10
+                limit: 10,
             });
 
             return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));
@@ -586,7 +586,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 sourceRepoId: Number(repo.id),
                 targetRepoId: Number(repo.id),
                 sourceRefId: repo.mainbranch!,
-                targetRefId: repo.mainbranch!
+                targetRefId: repo.mainbranch!,
             }
         );
 
@@ -615,22 +615,22 @@ export class ServerPullRequestApi implements PullRequestApi {
                     repository: {
                         slug: createPrData.sourceSite.repoSlug,
                         project: {
-                            key: createPrData.sourceSite.ownerSlug
-                        }
-                    }
+                            key: createPrData.sourceSite.ownerSlug,
+                        },
+                    },
                 },
                 toRef: {
-                    id: createPrData.destinationBranchName
+                    id: createPrData.destinationBranchName,
                 },
-                reviewers: createPrData.reviewerAccountIds.map(accountId => ({
+                reviewers: createPrData.reviewerAccountIds.map((accountId) => ({
                     user: {
-                        name: accountId
-                    }
-                }))
+                        name: accountId,
+                    },
+                })),
             },
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
 
@@ -644,11 +644,11 @@ export class ServerPullRequestApi implements PullRequestApi {
             version: pr.data.version,
             title: title,
             description: summary,
-            reviewers: reviewerAccountIds.map(accountId => ({
+            reviewers: reviewerAccountIds.map((accountId) => ({
                 user: {
-                    name: accountId
-                }
-            }))
+                    name: accountId,
+                },
+            })),
         };
 
         const { data } = await this.client.put(
@@ -667,7 +667,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         await this.client.put(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
-                status: status
+                status: status,
             }
         );
     }
@@ -707,13 +707,13 @@ export class ServerPullRequestApi implements PullRequestApi {
                           line: inline!.to || inline!.from,
                           lineType: lineMeta || 'CONTEXT',
                           fileType: inline!.to ? 'TO' : 'FROM',
-                          path: inline!.path
+                          path: inline!.path,
                       }
-                    : undefined
+                    : undefined,
             },
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
         return this.convertDataToComment(site, data);
@@ -729,7 +729,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
 
         const { data } = await this.client.getRaw(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${path}`, {
-            at: commitHash
+            at: commitHash,
         });
 
         this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
@@ -754,7 +754,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             emailAddress: input.emailAddress,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
             avatarUrl: ServerPullRequestApi.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl),
-            mention: `@${input.slug}`
+            mention: `@${input.slug}`,
         };
     }
 
@@ -780,7 +780,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 participants: data.reviewers.map((reviewer: any) => ({
                     ...this.toUser(site.details, reviewer.user),
                     role: reviewer.role,
-                    status: reviewer.status
+                    status: reviewer.status,
                 })),
                 source: source,
                 destination: destination,
@@ -792,8 +792,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 state: data.state,
                 closeSourceBranch: false,
                 taskCount: taskCount,
-                buildStatuses: []
-            }
+                buildStatuses: [],
+            },
         };
     }
 
@@ -812,7 +812,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return {
             repo: repo,
             branchName: branchName,
-            commitHash: commitHash
+            commitHash: commitHash,
         };
     }
 }

@@ -25,7 +25,7 @@ export const GenMiscPanel: React.FunctionComponent<GenMiscPanelProps> = memo(
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

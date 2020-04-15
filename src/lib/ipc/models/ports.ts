@@ -1,3 +1,3 @@
 export enum UIWSPort {
-    Settings = 13901
+    Settings = 13901,
 }

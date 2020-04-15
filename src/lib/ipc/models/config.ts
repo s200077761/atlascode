@@ -2,19 +2,19 @@ export enum ConfigMessages {
     Init = 'init',
     ConfigUpdate = 'configUpdate',
     JQLOptionsResponse = 'jqlOptionsResponse',
-    SitesUpdate = 'sitesUpdate'
+    SitesUpdate = 'sitesUpdate',
 }
 
 export enum ConfigTarget {
     User = 'user',
     Workspace = 'workspace',
-    WorkspaceFolder = 'workspacefolder'
+    WorkspaceFolder = 'workspacefolder',
 }
 
 export enum ConfigSection {
     Jira = 'jira',
     Bitbucket = 'bitbucket',
-    General = 'general'
+    General = 'general',
 }
 
 export enum ConfigSubSection {
@@ -28,7 +28,7 @@ export enum ConfigSubSection {
     ContextMenus = 'contextMenus',
     Misc = 'misc',
     Connectivity = 'connect',
-    Debug = 'debug'
+    Debug = 'debug',
 }
 
 export function configTargetForString(target: string): ConfigTarget {

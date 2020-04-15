@@ -11,7 +11,7 @@ import {
     makeStyles,
     Theme,
     Tooltip,
-    Typography
+    Typography,
 } from '@material-ui/core';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 import clsx from 'clsx';
@@ -36,11 +36,11 @@ const useStyles = makeStyles(
                 paddingBottom: theme.spacing(1),
                 borderWidth: 1,
                 borderColor: theme.palette.divider,
-                borderStyle: 'solid'
+                borderStyle: 'solid',
             },
             hidden: {
-                display: 'none'
-            }
+                display: 'none',
+            },
         } as const)
 );
 
@@ -58,7 +58,7 @@ function toFileWithPath(f: File): FileWithPath {
         value: typeof webkitRelativePath === 'string' && webkitRelativePath.length > 0 ? webkitRelativePath : f.name,
         writable: false,
         configurable: false,
-        enumerable: true
+        enumerable: true,
     });
 
     return f as FileWithPath;
@@ -140,7 +140,7 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                     <Fade in={enableCharles} timeout={1000}>
                         <div
                             className={clsx(classes.box, {
-                                [classes.hidden]: !enableCharles
+                                [classes.hidden]: !enableCharles,
                             })}
                         >
                             <Grid container direction="column" spacing={3}>

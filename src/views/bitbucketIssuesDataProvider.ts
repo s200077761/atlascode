@@ -29,7 +29,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
                 const bbApi = await clientForSite(issues.site);
                 const result = await bbApi.issues!.nextPage(issues);
                 this.addItems(result);
-                bbIssuesPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
+                bbIssuesPaginationEvent().then((e) => Container.analyticsClient.sendUIEvent(e));
             }),
             ctx.onDidChangeBitbucketContext(() => {
                 this.refresh();
@@ -44,7 +44,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         this._childrenMap.clear();
         const workspaceRepos = this.ctx.getBitbucketCloudRepositories();
         const expand = workspaceRepos.length === 1;
-        workspaceRepos.forEach(wsRepo => {
+        workspaceRepos.forEach((wsRepo) => {
             this._childrenMap!.set(wsRepo.rootUri, new BitbucketIssuesRepositoryNode(wsRepo, expand));
         });
     }

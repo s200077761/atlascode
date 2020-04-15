@@ -2,7 +2,7 @@ import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
-    JQLErrors
+    JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 import axios, { CancelToken } from 'axios';
@@ -17,7 +17,7 @@ import {
     emptyBasicAuthInfo,
     ProductBitbucket,
     ProductJira,
-    SiteInfo
+    SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, IConfig, JQLEntry } from '../../config/configuration';
 import { Container } from '../../container';
@@ -123,7 +123,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
                     const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite);
                     return {
                         site: jiraSite,
-                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo
+                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
                     };
                 }
             )
@@ -135,7 +135,11 @@ export class VSCConfigActionApi implements ConfigActionApi {
                     const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
                     return {
                         site: bitbucketSite,
-                        auth: bitbucketAuth ? bitbucketAuth : bitbucketSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo
+                        auth: bitbucketAuth
+                            ? bitbucketAuth
+                            : bitbucketSite.isCloud
+                            ? emptyAuthInfo
+                            : emptyBasicAuthInfo,
                     };
                 }
             )
@@ -228,7 +232,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
                 if (Array.isArray(value)) {
                     const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
                     const newJqls = value.filter(
-                        (entry: JQLEntry) => currentJQLs.find(cur => cur.id === entry.id) === undefined
+                        (entry: JQLEntry) => currentJQLs.find((cur) => cur.id === entry.id) === undefined
                     );
                     if (newJqls.length > 0) {
                         jqlSiteId = newJqls[0].siteId;
@@ -285,7 +289,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
         editor.createFile(openPath, { ignoreIfExists: true });
         // open workspace settings.json
         workspace.applyEdit(editor).then(() => {
-            workspace.openTextDocument(openPath).then(doc => {
+            workspace.openTextDocument(openPath).then((doc) => {
                 window.showTextDocument(doc);
             });
         });

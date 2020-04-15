@@ -7,7 +7,7 @@ export class CopyBitbucketPullRequestCommand extends BitbucketPullRequestCommand
     protected async execute(): Promise<void> {
         const url = await this.pullRequestUrl();
         await vscode.env.clipboard.writeText(url);
-        prUrlCopiedEvent().then(e => {
+        prUrlCopiedEvent().then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
     }

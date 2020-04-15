@@ -54,7 +54,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this.postMessage({
             type: ConfigMessageType.SitesUpdate,
             jiraSites: jiraSites,
-            bitbucketSites: bbSites
+            bitbucketSites: bbSites,
         });
     }
 
@@ -78,7 +78,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 target: target,
                 showTunnelOption: this._api.shouldShowTunnelOption(),
                 config: cfg,
-                ...section
+                ...section,
             });
 
             if (this._initialSection) {
@@ -106,7 +106,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                     this._logger.error(new Error(`error refreshing config: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing config')
+                        reason: formatError(e, 'Error refeshing config'),
                     });
                 }
                 break;
@@ -122,7 +122,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         this._logger.error(err);
                         this.postMessage({
                             type: CommonMessageType.Error,
-                            reason: formatError(e, 'Authentication error')
+                            reason: formatError(e, 'Authentication error'),
                         });
                     }
                 } else {
@@ -141,7 +141,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 this.postMessage({
                     type: ConfigMessageType.Update,
                     config: this._api.flattenedConfigForTarget(msg.target),
-                    target: msg.target
+                    target: msg.target,
                 });
                 break;
             }
@@ -161,7 +161,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         );
                         this.postMessage({
                             type: ConfigMessageType.JQLSuggestionsResponse,
-                            data: data
+                            data: data,
                         });
                     } catch (e) {
                         let err = new Error(`JQL fetch error: ${e}`);
@@ -177,7 +177,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         const data = await this._api.fetchJqlOptions(msg.site);
                         this.postMessage({
                             type: ConfigMessageType.JQLOptionsResponse,
-                            data: data
+                            data: data,
                         });
                     } catch (e) {
                         let err = new Error(`JQL fetch error: ${e}`);
@@ -199,7 +199,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         );
                         this.postMessage({
                             type: ConfigMessageType.FilterSearchResponse,
-                            data: data
+                            data: data,
                         });
                     } catch (e) {
                         let err = new Error(`Filter fetch error: ${e}`);
@@ -215,7 +215,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                         const data = await this._api.validateJql(msg.site, msg.jql, msg.abortSignal);
                         this.postMessage({
                             type: ConfigMessageType.ValidateJqlResponse,
-                            data: data
+                            data: data,
                         });
                     } catch (e) {
                         let err = new Error(`JQL Validate network error: ${e}`);

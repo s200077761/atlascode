@@ -15,8 +15,8 @@ export function shouldDisplay(branchName: string | undefined): boolean {
         return false;
     }
 
-    const filters = Container.config.bitbucket.pipelines.branchFilters.filter(f => f.length > 0);
-    const reString = filters.map(t => t.replace(/(\W)/g, '\\$1')).join('|');
+    const filters = Container.config.bitbucket.pipelines.branchFilters.filter((f) => f.length > 0);
+    const reString = filters.map((t) => t.replace(/(\W)/g, '\\$1')).join('|');
     const regex = new RegExp(reString);
     return regex.test(branchName);
 }
@@ -30,7 +30,7 @@ export function descriptionForState(result: Pipeline, excludePipelinePrefix?: bo
         pipeline_state_completed_successful: 'was successful',
         pipeline_state_completed_failed: 'has failed',
         pipeline_state_completed_error: 'has failed',
-        pipeline_state_completed_stopped: 'has been stopped'
+        pipeline_state_completed_stopped: 'has been stopped',
     };
 
     var words = 'has done something';

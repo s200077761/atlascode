@@ -7,7 +7,7 @@ import {
     MinimalIssueOrKeyAndSite,
     Project,
     Transition,
-    User
+    User,
 } from '@atlassianlabs/jira-pi-common-models';
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo } from '../atlclients/authInfo';

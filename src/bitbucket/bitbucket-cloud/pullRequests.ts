@@ -20,7 +20,7 @@ import {
     Task,
     UnknownUser,
     User,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../model';
 import { CloudRepositoriesApi } from './repositories';
 
@@ -28,14 +28,14 @@ export const maxItemsSupported = {
     commits: 100,
     comments: 100,
     reviewers: 100,
-    buildStatuses: 100
+    buildStatuses: 100,
 };
 export const defaultPagelen = 25;
 
 const mergeStrategyLabels = {
     merge_commit: 'Merge commit',
     squash: 'Squash',
-    fast_forward: 'Fast forward'
+    fast_forward: 'Fast forward',
 };
 
 const TEAM_MEMBERS_CACHE_LIMIT = 4000;
@@ -67,7 +67,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             emailAddress: undefined,
             displayName: displayName,
             url: url,
-            mention: mention
+            mention: mention,
         };
     }
 
@@ -84,7 +84,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests`, {
             pagelen: defaultPagelen,
             fields: '+values.participants',
-            ...queryParams
+            ...queryParams,
         });
 
         const prs: PullRequest[] = data.values!.map((pr: any) =>
@@ -101,13 +101,13 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
-            q: `state="OPEN" and author.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`
+            q: `state="OPEN" and author.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`,
         });
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
-            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`
+            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`,
         });
     }
 
@@ -127,14 +127,14 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(workspaceRepo, {
             pagelen: 2,
             sort: '-created_on',
-            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`
+            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`,
         });
     }
 
     async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
             sort: '-created_on',
-            q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"'
+            q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"',
         });
     }
 
@@ -150,13 +150,13 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`, {
-            fields: 'destination.branch.merge_strategies,destination.branch.default_merge_strategy'
+            fields: 'destination.branch.merge_strategies,destination.branch.default_merge_strategy',
         });
 
         return data.destination.branch.merge_strategies.map((strategy: string) => ({
             label: mergeStrategyLabels[strategy],
             value: strategy,
-            isDefault: strategy === data.destination.branch.default_merge_strategy
+            isDefault: strategy === data.destination.branch.default_merge_strategy,
         }));
     }
 
@@ -178,7 +178,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             accumulatedDiffStats.push(...(data.values || []));
         }
 
-        return accumulatedDiffStats.map(diffStat => ({
+        return accumulatedDiffStats.map((diffStat) => ({
             linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
             linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: this.mapStatusWordsToFileStatus(diffStat.status!),
@@ -189,8 +189,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 oldPathDeletions: [],
                 newPathAdditions: [],
                 newPathDeletions: [],
-                newPathContextMap: {}
-            }
+                newPathContextMap: {},
+            },
         }));
     }
 
@@ -216,7 +216,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         let { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/commits`,
             {
-                pagelen: maxItemsSupported.commits
+                pagelen: maxItemsSupported.commits,
             }
         );
 
@@ -231,14 +231,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             accumulatedCommits.push(...(data.values || []));
         }
 
-        return accumulatedCommits.map(commit => ({
+        return accumulatedCommits.map((commit) => ({
             hash: commit.hash!,
             message: commit.message!,
             ts: commit.date!,
             url: commit.links!.html!.href!,
             htmlSummary: commit.summary ? commit.summary.html! : undefined,
             rawSummary: commit.summary ? commit.summary.raw! : undefined,
-            author: CloudPullRequestApi.toUserModel(commit.author!.user!)
+            author: CloudPullRequestApi.toUserModel(commit.author!.user!),
         }));
     }
 
@@ -258,8 +258,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`,
             {
                 content: {
-                    raw: content
-                }
+                    raw: content,
+                },
             }
         );
 
@@ -303,8 +303,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                     ...commentData,
                     completed: false,
                     content: {
-                        raw: content
-                    }
+                        raw: content,
+                    },
                 }
             );
 
@@ -324,14 +324,14 @@ export class CloudPullRequestApi implements PullRequestApi {
                 `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
                 {
                     comment: {
-                        comment: task.commentId
+                        comment: task.commentId,
                     },
                     completed: task.isComplete,
                     content: {
-                        raw: task.content
+                        raw: task.content,
                     },
                     id: task.id,
-                    state: task.isComplete ? 'RESOLVED' : 'UNRESOLVED'
+                    state: task.isComplete ? 'RESOLVED' : 'UNRESOLVED',
                 }
             );
 
@@ -370,7 +370,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             editable: taskBelongsToUser && taskData.state === 'UNRESOLVED',
             deletable: taskBelongsToUser && taskData.state === 'UNRESOLVED',
             id: taskData.id,
-            content: taskData.content.raw
+            content: taskData.content.raw,
         };
     }
 
@@ -379,9 +379,9 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const commentsAndTaskPromise = Promise.all([
             this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`, {
-                pagelen: maxItemsSupported.comments
+                pagelen: maxItemsSupported.comments,
             }),
-            await this.getTasks(pr)
+            await this.getTasks(pr),
         ]);
         const [commentResp, tasks] = await commentsAndTaskPromise;
         let { data } = commentResp;
@@ -397,7 +397,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             accumulatedComments.push(...(data.values || []));
         }
 
-        const comments = accumulatedComments.map(c => {
+        const comments = accumulatedComments.map((c) => {
             if (!c.deleted && c.content && c.content.raw && c.content.raw.trim().length > 0) {
                 return c;
             }
@@ -406,14 +406,14 @@ export class CloudPullRequestApi implements PullRequestApi {
                 content: {
                     markup: 'markdown',
                     raw: '*Comment deleted*',
-                    html: '<p><em>Comment deleted</em></p>'
+                    html: '<p><em>Comment deleted</em></p>',
                 },
-                deleted: true
+                deleted: true,
             } as any;
         });
 
         const convertedComments = await Promise.all(
-            comments.map(commentData => this.convertDataToComment(commentData, pr.site))
+            comments.map((commentData) => this.convertDataToComment(commentData, pr.site))
         );
 
         let commentIdMap = new Map<string, number>();
@@ -428,10 +428,10 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         const nestedComments = this.toNestedList(convertedComments);
-        const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
+        const visibleComments = nestedComments.filter((comment) => this.shouldDisplayComment(comment));
         return {
             data: visibleComments,
-            next: undefined
+            next: undefined,
         };
     }
 
@@ -445,13 +445,13 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         }
         comment.children = filteredChildren;
-        return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
+        return hasUndeletedChild || !comment.deleted || comment.tasks.some((task) => !task.isComplete);
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
         const commentsTreeMap = new Map<string, Comment>();
-        comments.forEach(c => commentsTreeMap.set(c.id!, c));
-        comments.forEach(c => {
+        comments.forEach((c) => commentsTreeMap.set(c.id!, c));
+        comments.forEach((c) => {
             const n = commentsTreeMap.get(c.id!);
             const pid = c.parentId;
             if (pid && commentsTreeMap.get(pid)) {
@@ -460,7 +460,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
 
         const result: Comment[] = [];
-        commentsTreeMap.forEach(val => {
+        commentsTreeMap.forEach((val) => {
             if (!val.parentId) {
                 result.push(val);
             }
@@ -475,7 +475,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/statuses`,
             {
-                pagelen: maxItemsSupported.buildStatuses
+                pagelen: maxItemsSupported.buildStatuses,
             }
         );
 
@@ -486,7 +486,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 name: status.name!,
                 state: status.state!,
                 url: status.url!,
-                ts: status.created_on!
+                ts: status.created_on!,
             }));
     }
 
@@ -506,7 +506,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             let { data } = await this.client.get(`/teams/${ownerSlug}/members`, {
                 pagelen: 100,
                 fields:
-                    'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href'
+                    'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href',
             });
             const teamMembers = data.values || [];
 
@@ -532,7 +532,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             const cacheItem = this.teamMembersCache.getItem<User[]>(cacheKey);
             if (cacheItem !== undefined && cacheItem.length > 0) {
                 return cacheItem
-                    .filter(user => user.displayName.toLowerCase().includes(query.toLowerCase()))
+                    .filter((user) => user.displayName.toLowerCase().includes(query.toLowerCase()))
                     .slice(0, 20);
             }
 
@@ -548,7 +548,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/default-reviewers`, {
-            pagelen: maxItemsSupported.reviewers
+            pagelen: maxItemsSupported.reviewers,
         });
 
         const result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
@@ -566,26 +566,26 @@ export class CloudPullRequestApi implements PullRequestApi {
             type: 'pullrequest',
             title: createPrData.title,
             summary: {
-                raw: createPrData.summary
+                raw: createPrData.summary,
             },
             source: {
                 repository: {
-                    full_name: `${createPrData.sourceSite.ownerSlug}/${createPrData.sourceSite.repoSlug}`
+                    full_name: `${createPrData.sourceSite.ownerSlug}/${createPrData.sourceSite.repoSlug}`,
                 },
                 branch: {
-                    name: createPrData.sourceBranchName
-                }
+                    name: createPrData.sourceBranchName,
+                },
             },
             destination: {
                 branch: {
-                    name: createPrData.destinationBranchName
-                }
+                    name: createPrData.destinationBranchName,
+                },
             },
-            reviewers: createPrData.reviewerAccountIds.map(accountId => ({
+            reviewers: createPrData.reviewerAccountIds.map((accountId) => ({
                 type: 'user',
-                account_id: accountId
+                account_id: accountId,
             })),
-            close_source_branch: createPrData.closeSourceBranch
+            close_source_branch: createPrData.closeSourceBranch,
         };
 
         const { ownerSlug, repoSlug } = site;
@@ -601,12 +601,12 @@ export class CloudPullRequestApi implements PullRequestApi {
         let prBody = {
             title: title,
             summary: {
-                raw: summary
+                raw: summary,
             },
-            reviewers: reviewerAccountIds.map(accountId => ({
+            reviewers: reviewerAccountIds.map((accountId) => ({
                 type: 'user',
-                account_id: accountId
-            }))
+                account_id: accountId,
+            })),
         };
 
         const { data } = await this.client.put(
@@ -632,7 +632,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             body = {
                 ...body,
                 merge_strategy: mergeStrategy,
-                message: commitMessage
+                message: commitMessage,
             };
         }
 
@@ -652,9 +652,9 @@ export class CloudPullRequestApi implements PullRequestApi {
             {
                 parent: parentCommentId ? { id: parentCommentId } : undefined,
                 content: {
-                    raw: text
+                    raw: text,
                 },
-                inline: inline
+                inline: inline,
             }
         );
 
@@ -693,7 +693,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             inline: data.inline,
             user: data.user ? CloudPullRequestApi.toUserModel(data.user) : UnknownUser,
             children: [],
-            tasks: []
+            tasks: [],
         };
     }
 
@@ -714,7 +714,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
-                    status: !!participant.approved ? 'APPROVED' : 'UNAPPROVED'
+                    status: !!participant.approved ? 'APPROVED' : 'UNAPPROVED',
                 })),
                 source: source,
                 destination: destination,
@@ -725,8 +725,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 updatedTs: pr.updated_on!,
                 state: pr.state!,
                 closeSourceBranch: !!pr.close_source_branch,
-                taskCount: pr.task_count || 0
-            }
+                taskCount: pr.task_count || 0,
+            },
         };
     }
 
@@ -738,7 +738,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return {
             repo: repo,
             branchName: branchName,
-            commitHash: commitHash
+            commitHash: commitHash,
         };
     }
 }

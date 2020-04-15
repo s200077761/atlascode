@@ -33,13 +33,13 @@ const emptyRepoData: RepoData = {
     workspaceRepo: {
         rootUri: '',
         mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } },
-        siteRemotes: []
+        siteRemotes: [],
     },
     localBranches: [],
     remoteBranches: [],
     branchTypes: [],
     href: '',
-    isCloud: true
+    isCloud: true,
 };
 
 const emptyState: MyState = {
@@ -49,7 +49,7 @@ const emptyState: MyState = {
     isSubmitButtonLoading: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
-    isOnline: true
+    isOnline: true,
 };
 export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
     constructor(props: any) {
@@ -103,7 +103,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
             title: title,
             description: description,
             kind: kind.value,
-            priority: priority.value
+            priority: priority.value,
         });
     }
 
@@ -197,7 +197,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                         <Field
                                             defaultValue={{
                                                 label: path.basename(defaultRepo.workspaceRepo.rootUri),
-                                                value: defaultRepo
+                                                value: defaultRepo,
                                             }}
                                             label="Repository"
                                             isRequired
@@ -210,10 +210,10 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                         {...fieldArgs.fieldProps}
                                                         className="ac-select-container"
                                                         classNamePrefix="ac-select"
-                                                        options={this.state.repoData.map(repo => {
+                                                        options={this.state.repoData.map((repo) => {
                                                             return {
                                                                 label: path.basename(repo.workspaceRepo.rootUri),
-                                                                value: repo
+                                                                value: repo,
                                                             };
                                                         })}
                                                         onChange={FieldValidators.chain(
@@ -268,10 +268,12 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                         {...fieldArgs.fieldProps}
                                                         className="ac-select-container"
                                                         classNamePrefix="ac-select"
-                                                        options={['bug', 'enhancement', 'proposal', 'task'].map(v => ({
-                                                            label: v,
-                                                            value: v
-                                                        }))}
+                                                        options={['bug', 'enhancement', 'proposal', 'task'].map(
+                                                            (v) => ({
+                                                                label: v,
+                                                                value: v,
+                                                            })
+                                                        )}
                                                     />
                                                     {fieldArgs.error && (
                                                         <ErrorMessage>Issue type is required</ErrorMessage>
@@ -298,8 +300,8 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                             'minor',
                                                             'major',
                                                             'critical',
-                                                            'blocker'
-                                                        ].map(v => ({ label: v, value: v }))}
+                                                            'blocker',
+                                                        ].map((v) => ({ label: v, value: v }))}
                                                     />
                                                     {fieldArgs.error && (
                                                         <ErrorMessage>Issue type is required</ErrorMessage>

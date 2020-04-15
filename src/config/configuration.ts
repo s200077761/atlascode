@@ -10,13 +10,13 @@ import {
     ExtensionContext,
     Uri,
     workspace,
-    WorkspaceConfiguration
+    WorkspaceConfiguration,
 } from 'vscode';
 import {
     extensionId,
     JiraCreateSiteAndProjectKey,
     JiraLegacyWorkingSiteConfigurationKey,
-    JiraV1WorkingProjectConfigurationKey
+    JiraV1WorkingProjectConfigurationKey,
 } from '../constants';
 import { SiteIdAndProjectKey } from './model';
 
@@ -57,7 +57,7 @@ export class Configuration extends Disposable {
     // initializingChangeEvent is an event instance that can be used to determine if the config
     // is being initialized for the first time rather than actually receiving a *real* change event.
     readonly initializingChangeEvent: ConfigurationChangeEvent = {
-        affectsConfiguration: (section: string, resource?: Uri) => false
+        affectsConfiguration: (section: string, resource?: Uri) => false,
     };
 
     // get returns a strongly type config section/value
@@ -161,7 +161,7 @@ export class Configuration extends Disposable {
         if (config) {
             await Promise.all([
                 config.update(section, value, ConfigurationTarget.Workspace),
-                config.update(section, value, ConfigurationTarget.Global)
+                config.update(section, value, ConfigurationTarget.Global),
             ]);
         } else {
             await this.updateEffective(section, value);

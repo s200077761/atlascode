@@ -71,7 +71,7 @@ export default class BitbucketExplorer extends React.Component<
                     style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        paddingLeft: '24px'
+                        paddingLeft: '24px',
                     }}
                 >
                     <CheckboxField

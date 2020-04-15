@@ -8,7 +8,7 @@ import {
     DialogContentText,
     Grid,
     MenuItem,
-    TextField
+    TextField,
 } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -24,7 +24,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
     const [formOpen, setFormOpen] = useState(false);
 
     const { register, handleSubmit, errors, watch, formState, reset } = useForm<FeedbackData>({
-        mode: 'onChange'
+        mode: 'onChange',
     });
 
     const watches = watch(['canBeContacted']);
@@ -102,7 +102,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 fullWidth
                                 error={!!errors.description}
                                 inputRef={register({
-                                    required: 'Description URL is required'
+                                    required: 'Description URL is required',
                                 })}
                             />
                         </Grid>
@@ -119,7 +119,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                 fullWidth
                                 error={!!errors.userName}
                                 inputRef={register({
-                                    required: 'Your name is required'
+                                    required: 'Your name is required',
                                 })}
                             />
                         </Grid>
@@ -149,7 +149,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                                     fullWidth
                                     error={!!errors.emailAddress}
                                     inputRef={register({
-                                        required: 'Your contact email is required'
+                                        required: 'Your contact email is required',
                                     })}
                                 />
                             )}

@@ -17,7 +17,7 @@ export const colorToLozengeAppearanceMap: { [key: string]: string } = {
     red: 'removed',
     'warm-red': 'removed',
     yellow: 'inprogress',
-    green: 'success'
+    green: 'success',
 };
 
 export function darken(color: string, percentage: number): string {
@@ -63,7 +63,7 @@ export function toRgba(color: string): number[] | null {
                     parseInt(hex.substring(0, 2), 16),
                     parseInt(hex.substring(2, 4), 16),
                     parseInt(hex.substring(4, 6), 16),
-                    1
+                    1,
                 ];
         }
 

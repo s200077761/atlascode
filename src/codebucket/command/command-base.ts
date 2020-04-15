@@ -73,7 +73,7 @@ export abstract class CommandBase {
      */
     protected getLineRanges(): string[] {
         const editor = CommandBase.getOpenEditor();
-        return editor.selections.map(selection => {
+        return editor.selections.map((selection) => {
             // vscode provides 0-based line numbers but Bitbucket line numbers start with 1.
             return `${selection.start.line + 1}:${selection.end.line + 1}`;
         });

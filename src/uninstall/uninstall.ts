@@ -11,7 +11,7 @@ class AnalyticsPlatform {
         openbsd: 'desktop',
         sunos: 'desktop',
         win32: 'windows',
-        cygwin: 'windows'
+        cygwin: 'windows',
     };
 
     static for(p: string): string {
@@ -26,10 +26,7 @@ function handleUninstall() {
         }
 
         const { version } = require('../../package.json');
-        const machineId = require('crypto')
-            .createHash('sha256')
-            .update(macAddress, 'utf8')
-            .digest('hex');
+        const machineId = require('crypto').createHash('sha256').update(macAddress, 'utf8').digest('hex');
 
         const e = {
             tenantIdType: null,
@@ -39,8 +36,8 @@ function handleUninstall() {
                 platform: AnalyticsPlatform.for(process.platform),
                 action: 'uninstalled',
                 actionSubject: 'atlascode',
-                source: 'vscode'
-            }
+                source: 'vscode',
+            },
         } as TrackEvent;
 
         const c = new AnalyticsClient({
@@ -49,7 +46,7 @@ function handleUninstall() {
             product: 'externalProductIntegrations',
             subproduct: 'atlascode',
             version: version,
-            deviceId: machineId
+            deviceId: machineId,
         });
         c.sendTrackEvent(e);
     });

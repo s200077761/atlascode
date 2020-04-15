@@ -16,7 +16,7 @@ export class PullRequestsExplorer extends BitbucketExplorer {
         Container.context.subscriptions.push(
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this.refresh()),
             commands.registerCommand(Commands.BitbucketToggleFileNesting, () => this.toggleFileNesting()),
-            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async pr => {
+            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
             commands.registerCommand(

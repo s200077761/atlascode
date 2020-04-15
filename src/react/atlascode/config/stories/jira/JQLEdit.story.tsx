@@ -11,7 +11,7 @@ import { JQLEditDialog } from '../../jira/jql/JQLEditDialog';
 import { JQLListEditor } from '../../jira/jql/JQLListEditor';
 import restdata from './__fixtures__/autocompletedata.json';
 export default {
-    title: 'Config/jira/JQLEdit'
+    title: 'Config/jira/JQLEdit',
 };
 
 const mockConfigController: ConfigControllerApi = {
@@ -25,7 +25,7 @@ const mockConfigController: ConfigControllerApi = {
     },
 
     fetchJqlOptions: (site: DetailedSiteInfo): Promise<JqlAutocompleteRestData> => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             console.log('fetching options');
             setTimeout(resolve, 1000, restdata);
         });
@@ -37,12 +37,12 @@ const mockConfigController: ConfigControllerApi = {
         predicateName?: string,
         abortSignal?: AbortSignal
     ): Promise<Suggestion[]> => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             resolve([
                 { value: 'VSCODE', displayName: 'VSCODE (VSCode)' },
                 { value: 'VTC', displayName: 'VTC (Classic)' },
                 { value: 'VTS', displayName: 'VTS (Server)' },
-                { value: 'VTN', displayName: 'VTN (Next Gen)' }
+                { value: 'VTN', displayName: 'VTN (Next Gen)' },
             ]);
         });
     },
@@ -61,7 +61,7 @@ const mockConfigController: ConfigControllerApi = {
                     owner: 'me',
                     jql: 'project = one',
                     viewUrlPath: 'http://viewurl/one',
-                    favorite: false
+                    favorite: false,
                 },
                 {
                     id: '2',
@@ -69,7 +69,7 @@ const mockConfigController: ConfigControllerApi = {
                     owner: 'you',
                     jql: 'project = two',
                     viewUrlPath: 'http://viewurl/two',
-                    favorite: true
+                    favorite: true,
                 },
                 {
                     id: '3',
@@ -77,25 +77,25 @@ const mockConfigController: ConfigControllerApi = {
                     owner: 'someone else',
                     jql: 'project = three',
                     viewUrlPath: 'http://viewurl/three',
-                    favorite: false
-                }
+                    favorite: false,
+                },
             ],
             isLast: true,
             maxResults: 25,
             offset: 0,
-            total: 0
+            total: 0,
         };
 
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             setTimeout(resolve, 1000, filterResults);
         });
-    }
+    },
 };
 
 const sites: DetailedSiteInfo[] = [
     { ...emptySiteInfo, id: '1', name: 'one', avatarUrl: 'badurl' },
     { ...emptySiteInfo, id: '2', name: 'two', avatarUrl: 'badurl' },
-    { ...emptySiteInfo, id: '3', name: 'three', avatarUrl: 'badurl' }
+    { ...emptySiteInfo, id: '3', name: 'three', avatarUrl: 'badurl' },
 ];
 
 const handleJQLSave = (jqlEntry: JQLEntry) => {
@@ -114,14 +114,14 @@ export const ErrorEditDialog = () => {
     const errorController: ConfigControllerApi = {
         ...mockConfigController,
         validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal): Promise<JQLErrors> => {
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
                 if (jql.length > 0) {
                     resolve({ errors: ['bad, bad jql. baddest jql in the whole damn town.'] });
                 } else {
                     resolve({ errors: [] });
                 }
             });
-        }
+        },
     };
 
     return (
@@ -141,14 +141,14 @@ export const EditList = () => {
             siteId: '1',
             query: 'project = VTC',
             monitor: true,
-            enabled: true
-        }
+            enabled: true,
+        },
     ]);
     const listController: ConfigControllerApi = {
         ...mockConfigController,
         updateConfig: (changes: ConfigChanges, removes?: string[]) => {
             setJQLList(changes['jira.jqlList']);
-        }
+        },
     };
 
     const theme = useTheme();

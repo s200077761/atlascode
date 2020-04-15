@@ -9,7 +9,7 @@ import { getFeedbackUser } from './feedbackUser';
 const q1Choices = {
     '0': 'Very disappointed',
     '1': 'Somewhat disappointed',
-    '2': 'Not disappointed'
+    '2': 'Not disappointed',
 };
 
 export async function submitJSDPMF(pmfData: PMFData) {
@@ -19,19 +19,19 @@ export async function submitJSDPMF(pmfData: PMFData) {
         extensionVersion: Container.version,
         vscodeVersion: version,
         platform: process.platform,
-        jiraCloud: Container.siteManager.getSitesAvailable(ProductJira).find(site => site.isCloud) !== undefined,
-        jiraServer: Container.siteManager.getSitesAvailable(ProductJira).find(site => !site.isCloud) !== undefined,
+        jiraCloud: Container.siteManager.getSitesAvailable(ProductJira).find((site) => site.isCloud) !== undefined,
+        jiraServer: Container.siteManager.getSitesAvailable(ProductJira).find((site) => !site.isCloud) !== undefined,
         bitbucketCloud:
-            Container.siteManager.getSitesAvailable(ProductBitbucket).find(site => site.isCloud) !== undefined,
+            Container.siteManager.getSitesAvailable(ProductBitbucket).find((site) => site.isCloud) !== undefined,
         bitbucketServer:
-            Container.siteManager.getSitesAvailable(ProductBitbucket).find(site => !site.isCloud) !== undefined
+            Container.siteManager.getSitesAvailable(ProductBitbucket).find((site) => !site.isCloud) !== undefined,
     };
 
     const payload = {
         fields: [
             {
                 id: 'summary',
-                value: `Atlascode: PMF Survey from ${user.userName}`
+                value: `Atlascode: PMF Survey from ${user.userName}`,
             },
             {
                 id: 'description',
@@ -47,47 +47,47 @@ export async function submitJSDPMF(pmfData: PMFData) {
 
                 *Benefits*
 
-                ${pmfData.benefits}`
+                ${pmfData.benefits}`,
             },
             {
                 // Context (text)
                 id: 'customfield_10047',
-                value: JSON.stringify(context, undefined, 4)
+                value: JSON.stringify(context, undefined, 4),
             },
             {
                 // Request type (comment)
                 id: 'customfield_10042',
                 value: {
-                    id: '10106'
-                }
+                    id: '10106',
+                },
             },
             {
                 // User name (text, optional)
                 id: 'customfield_10045',
-                value: user.userName
+                value: user.userName,
             },
             {
                 // Can be contacted? (no)
                 id: 'customfield_10043',
                 value: [
                     {
-                        id: '10111'
-                    }
-                ]
+                        id: '10111',
+                    },
+                ],
             },
             {
                 id: 'email',
-                value: user.emailAddress
+                value: user.emailAddress,
             },
             {
                 id: 'components',
                 value: [
                     {
-                        id: '10097'
-                    }
-                ]
-            }
-        ]
+                        id: '10097',
+                    },
+                ],
+            },
+        ],
     };
 
     const transport = getAxiosInstance();
@@ -97,10 +97,10 @@ export async function submitJSDPMF(pmfData: PMFData) {
         {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             data: JSON.stringify(payload),
-            ...getAgent()
+            ...getAgent(),
         }
     );
 
@@ -114,19 +114,19 @@ export async function submitLegacyJSDPMF(feedback: LegacyPMFData) {
         extensionVersion: Container.version,
         vscodeVersion: version,
         platform: process.platform,
-        jiraCloud: Container.siteManager.getSitesAvailable(ProductJira).find(site => site.isCloud) !== undefined,
-        jiraServer: Container.siteManager.getSitesAvailable(ProductJira).find(site => !site.isCloud) !== undefined,
+        jiraCloud: Container.siteManager.getSitesAvailable(ProductJira).find((site) => site.isCloud) !== undefined,
+        jiraServer: Container.siteManager.getSitesAvailable(ProductJira).find((site) => !site.isCloud) !== undefined,
         bitbucketCloud:
-            Container.siteManager.getSitesAvailable(ProductBitbucket).find(site => site.isCloud) !== undefined,
+            Container.siteManager.getSitesAvailable(ProductBitbucket).find((site) => site.isCloud) !== undefined,
         bitbucketServer:
-            Container.siteManager.getSitesAvailable(ProductBitbucket).find(site => !site.isCloud) !== undefined
+            Container.siteManager.getSitesAvailable(ProductBitbucket).find((site) => !site.isCloud) !== undefined,
     };
 
     const payload = {
         fields: [
             {
                 id: 'summary',
-                value: `Atlascode: PMF Survey from ${user.userName}`
+                value: `Atlascode: PMF Survey from ${user.userName}`,
             },
             {
                 id: 'description',
@@ -142,47 +142,47 @@ export async function submitLegacyJSDPMF(feedback: LegacyPMFData) {
 
                 *Benefits*
 
-                ${feedback.q4}`
+                ${feedback.q4}`,
             },
             {
                 // Context (text)
                 id: 'customfield_10047',
-                value: JSON.stringify(context, undefined, 4)
+                value: JSON.stringify(context, undefined, 4),
             },
             {
                 // Request type (comment)
                 id: 'customfield_10042',
                 value: {
-                    id: '10106'
-                }
+                    id: '10106',
+                },
             },
             {
                 // User name (text, optional)
                 id: 'customfield_10045',
-                value: user.userName
+                value: user.userName,
             },
             {
                 // Can be contacted? (no)
                 id: 'customfield_10043',
                 value: [
                     {
-                        id: '10111'
-                    }
-                ]
+                        id: '10111',
+                    },
+                ],
             },
             {
                 id: 'email',
-                value: user.emailAddress
+                value: user.emailAddress,
             },
             {
                 id: 'components',
                 value: [
                     {
-                        id: '10097'
-                    }
-                ]
-            }
-        ]
+                        id: '10097',
+                    },
+                ],
+            },
+        ],
     };
 
     const transport = getAxiosInstance();
@@ -192,10 +192,10 @@ export async function submitLegacyJSDPMF(feedback: LegacyPMFData) {
         {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             data: JSON.stringify(payload),
-            ...getAgent()
+            ...getAgent(),
         }
     );
 

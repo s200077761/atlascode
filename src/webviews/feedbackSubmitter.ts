@@ -11,19 +11,19 @@ const feedbackTypeIds = {
     [FeedbackType.Comment]: '10106',
     [FeedbackType.Suggestion]: '10107',
     [FeedbackType.Question]: '10108',
-    [FeedbackType.Empty]: '10107'
+    [FeedbackType.Empty]: '10107',
 };
 
 export async function getFeedbackUser(): Promise<FeedbackUser> {
     let firstAvailableUser: FeedbackUser | undefined = undefined;
 
-    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira).filter(site => site.isCloud);
+    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira).filter((site) => site.isCloud);
     if (jiraCloudSites.length > 0) {
         const jiraUser = await Container.credentialManager.getAuthInfo(jiraCloudSites[0]);
         if (jiraUser) {
             firstAvailableUser = {
                 userName: jiraUser.user.displayName,
-                emailAddress: jiraUser.user.email
+                emailAddress: jiraUser.user.email,
             };
         }
     }
@@ -31,13 +31,13 @@ export async function getFeedbackUser(): Promise<FeedbackUser> {
     if (!firstAvailableUser) {
         const bitbucketCloudSites = Container.siteManager
             .getSitesAvailable(ProductBitbucket)
-            .filter(site => site.isCloud);
+            .filter((site) => site.isCloud);
         if (bitbucketCloudSites.length > 0) {
             const bbUser = await Container.credentialManager.getAuthInfo(bitbucketCloudSites[0]);
             if (bbUser) {
                 firstAvailableUser = {
                     userName: bbUser.user.displayName,
-                    emailAddress: bbUser.user.email
+                    emailAddress: bbUser.user.email,
                 };
             }
         }
@@ -51,12 +51,12 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
         extensionVersion: Container.version,
         vscodeVersion: version,
         platform: process.platform,
-        jiraCloud: Container.siteManager.getSitesAvailable(ProductJira).find(site => site.isCloud) !== undefined,
-        jiraServer: Container.siteManager.getSitesAvailable(ProductJira).find(site => !site.isCloud) !== undefined,
+        jiraCloud: Container.siteManager.getSitesAvailable(ProductJira).find((site) => site.isCloud) !== undefined,
+        jiraServer: Container.siteManager.getSitesAvailable(ProductJira).find((site) => !site.isCloud) !== undefined,
         bitbucketCloud:
-            Container.siteManager.getSitesAvailable(ProductBitbucket).find(site => site.isCloud) !== undefined,
+            Container.siteManager.getSitesAvailable(ProductBitbucket).find((site) => site.isCloud) !== undefined,
         bitbucketServer:
-            Container.siteManager.getSitesAvailable(ProductBitbucket).find(site => !site.isCloud) !== undefined
+            Container.siteManager.getSitesAvailable(ProductBitbucket).find((site) => !site.isCloud) !== undefined,
     };
 
     const payload = {
@@ -65,52 +65,52 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
                 id: 'summary',
                 value: `Atlascode: ${truncate(feedback.description.trim().split('\n', 1)[0], {
                     length: 100,
-                    separator: /,?\s+/
-                }).trim()}`
+                    separator: /,?\s+/,
+                }).trim()}`,
             },
             {
                 id: 'description',
-                value: feedback.description
+                value: feedback.description,
             },
             {
                 // Context (text)
                 id: 'customfield_10047',
-                value: JSON.stringify(context, undefined, 4)
+                value: JSON.stringify(context, undefined, 4),
             },
             {
                 // Request type (bug/comment/improvement/question)
                 id: 'customfield_10042',
                 value: {
-                    id: feedbackTypeIds[feedback.type]
-                }
+                    id: feedbackTypeIds[feedback.type],
+                },
             },
             {
                 // User name (text, optional)
                 id: 'customfield_10045',
-                value: feedback.userName
+                value: feedback.userName,
             },
             {
                 // Can be contacted?
                 id: 'customfield_10043',
                 value: [
                     {
-                        id: feedback.canBeContacted ? '10109' : '10111'
-                    }
-                ]
+                        id: feedback.canBeContacted ? '10109' : '10111',
+                    },
+                ],
             },
             {
                 id: 'email',
-                value: feedback.emailAddress
+                value: feedback.emailAddress,
             },
             {
                 id: 'components',
                 value: [
                     {
-                        id: '10097'
-                    }
-                ]
-            }
-        ]
+                        id: '10097',
+                    },
+                ],
+            },
+        ],
     };
 
     const transport = getAxiosInstance();
@@ -120,10 +120,10 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
         {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             data: JSON.stringify(payload),
-            ...getAgent()
+            ...getAgent(),
         }
     );
 

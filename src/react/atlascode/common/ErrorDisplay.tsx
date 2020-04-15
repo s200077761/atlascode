@@ -12,8 +12,8 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             indent: {
-                marginLeft: theme.spacing(3)
-            }
+                marginLeft: theme.spacing(3),
+            },
         } as const)
 );
 
@@ -25,7 +25,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
     const [snackbarOpen, setSnackbarOpen] = useState(state.isErrorBannerOpen);
 
     useEffect(() => {
-        setSnackbarOpen(old => {
+        setSnackbarOpen((old) => {
             if (old !== state.isErrorBannerOpen) {
                 return state.isErrorBannerOpen;
             }
@@ -36,7 +36,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
 
     const errorMarkup = [];
     if (isErrorCollection(state.errorDetails)) {
-        Object.keys(state.errorDetails.errors).forEach(key => {
+        Object.keys(state.errorDetails.errors).forEach((key) => {
             errorMarkup.push(
                 <p key={key}>
                     <b>{key}:</b>
@@ -45,7 +45,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
             );
         });
 
-        state.errorDetails.errorMessages.forEach(msg => {
+        state.errorDetails.errorMessages.forEach((msg) => {
             errorMarkup.push(
                 <p key={v4()}>
                     <span className={classes.indent}>{msg}</span>
@@ -53,7 +53,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
             );
         });
     } else if (isErrorWithMessages(state.errorDetails)) {
-        state.errorDetails.errorMessages.forEach(msg => {
+        state.errorDetails.errorMessages.forEach((msg) => {
             errorMarkup.push(
                 <p key={v4()}>
                     <span className={classes.indent}>{msg}</span>
@@ -61,7 +61,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
             );
         });
     } else if (typeof state.errorDetails === 'object') {
-        Object.keys(state.errorDetails).forEach(key => {
+        Object.keys(state.errorDetails).forEach((key) => {
             errorMarkup.push(
                 <p key={key}>
                     <b>{key}:</b>

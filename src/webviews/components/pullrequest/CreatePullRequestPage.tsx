@@ -20,7 +20,7 @@ import {
     emptyBitbucketSite,
     FileDiff,
     SiteRemote,
-    User
+    User,
 } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -32,7 +32,7 @@ import {
     FetchIssue,
     FetchUsers,
     OpenDiffPreviewAction,
-    RefreshPullRequest
+    RefreshPullRequest,
 } from '../../../ipc/prActions';
 import {
     CommitsResult,
@@ -41,7 +41,7 @@ import {
     isCommitsResult,
     isCreatePRData,
     isDiffResult,
-    RepoData
+    RepoData,
 } from '../../../ipc/prMessaging';
 import { Branch, Ref } from '../../../typings/git';
 import { ConnectionTimeout } from '../../../util/time';
@@ -97,18 +97,18 @@ const emptyRepoData: RepoData = {
     workspaceRepo: {
         rootUri: '',
         mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } },
-        siteRemotes: []
+        siteRemotes: [],
     },
     localBranches: [],
     remoteBranches: [],
     branchTypes: [],
-    isCloud: true
+    isCloud: true,
 };
 
 const emptyState = {
     data: {
         type: 'createPullRequest',
-        repositories: []
+        repositories: [],
     },
     repo: emptyRepoData,
     sourceSiteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
@@ -123,7 +123,7 @@ const emptyState = {
     errorDetails: undefined,
     isOnline: true,
     showPMF: false,
-    isSomethingLoading: false
+    isSomethingLoading: false,
 };
 
 const UserOption = (props: any) => {
@@ -180,14 +180,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     resetRepoAndRemoteState = (repo: RepoData, sourceSiteRemote: SiteRemote, destinationSiteRemote: SiteRemote) => {
         const remoteBranches = repo.remoteBranches.filter(
-            branch => branch.remote === destinationSiteRemote.remote.name
+            (branch) => branch.remote === destinationSiteRemote.remote.name
         );
 
         const sourceBranch = repo.localBranches[0];
         let destinationBranch = remoteBranches[0];
         if (repo.developmentBranch) {
             const mainRemoteBranch = repo.remoteBranches.find(
-                b =>
+                (b) =>
                     b.remote === destinationSiteRemote.remote.name &&
                     b.name !== undefined &&
                     b.name.indexOf(repo.developmentBranch!) !== -1
@@ -201,7 +201,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 sourceSiteRemote: sourceSiteRemote,
                 destinationSiteRemote: destinationSiteRemote,
                 sourceBranch: sourceBranch,
-                destinationBranch: destinationBranch
+                destinationBranch: destinationBranch,
             },
             this.handleBranchChange
         );
@@ -220,7 +220,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             action: 'openDiffPreview',
             lhsQuery: fileDiff.lhsQueryParams!,
             rhsQuery: fileDiff.rhsQueryParams!,
-            fileDisplayName: fileDiff.file
+            fileDisplayName: fileDiff.file,
         });
     };
 
@@ -236,7 +236,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             commits: [],
             defaultReviewers: [],
             issue: undefined,
-            sourceRemoteBranchName: sourceRemoteBranchName
+            sourceRemoteBranchName: sourceRemoteBranchName,
         };
 
         this.setState(newState as any);
@@ -245,7 +245,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             this.postMessage({
                 action: 'fetchIssue',
                 repoUri: this.state.repo.workspaceRepo.rootUri,
-                sourceBranch: this.state.sourceBranch
+                sourceBranch: this.state.sourceBranch,
             });
         }
 
@@ -262,7 +262,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 action: 'updateDiff',
                 repoData: this.state.repo,
                 sourceBranch: this.state.sourceBranch!,
-                destinationBranch: this.state.destinationBranch!
+                destinationBranch: this.state.destinationBranch!,
             });
 
             if (this.state.destinationSiteRemote) {
@@ -271,7 +271,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     wsRepo: this.state.repo.workspaceRepo,
                     site: this.state.destinationSiteRemote.site!,
                     sourceBranch: this.state.sourceBranch!,
-                    destinationBranch: this.state.destinationBranch!
+                    destinationBranch: this.state.destinationBranch!,
                 });
             }
         } else {
@@ -292,9 +292,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 status: {
                     ...(this.state.issue as MinimalIssue<DetailedSiteInfo>).status,
                     id: item.to.id,
-                    name: item.to.name
-                }
-            }
+                    name: item.to.name,
+                },
+            },
         });
     };
 
@@ -302,7 +302,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         const issue = this.state.issue as BitbucketIssue;
         const newIssueData = { ...issue.data, state: item };
         this.setState({
-            issue: { ...issue, data: newIssueData }
+            issue: { ...issue, data: newIssueData },
         });
     };
 
@@ -310,7 +310,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         if (!this.state.destinationSiteRemote || !this.state.repo) {
             return Promise.resolve([]);
         }
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             const nonce = uuid.v4();
             (async () => {
                 const result = await this.postMessageWithEventPromise(
@@ -338,7 +338,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             destinationBranch: this.state.destinationBranch!,
             pushLocalChanges: e.pushLocalChanges,
             closeSourceBranch: e.closeSourceBranch,
-            issue: this.state.issueSetupEnabled ? this.state.issue : undefined
+            issue: this.state.issueSetupEnabled ? this.state.issue : undefined,
         });
     };
 
@@ -349,7 +349,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     isCreateButtonLoading: false,
                     fileDiffsLoading: false,
                     isErrorBannerOpen: true,
-                    errorDetails: e.reason
+                    errorDetails: e.reason,
                 });
                 break;
             }
@@ -372,14 +372,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 if (isCommitsResult(e)) {
                     this.setState({
                         isCreateButtonLoading: false,
-                        commits: e.commits
+                        commits: e.commits,
                     });
                 }
                 break;
             }
             case 'fetchDefaultReviewersResult': {
                 this.setState({
-                    defaultReviewers: e.users
+                    defaultReviewers: e.users,
                 });
                 break;
             }
@@ -387,7 +387,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 if (isDiffResult(e)) {
                     this.setState({
                         fileDiffs: e.fileDiffs,
-                        fileDiffsLoading: false
+                        fileDiffsLoading: false,
                     });
                 }
                 break;
@@ -461,7 +461,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     onItemClick={() =>
                                         this.postMessage({
                                             action: 'openJiraIssue',
-                                            issueOrKey: this.state.issue as MinimalIssue<DetailedSiteInfo>
+                                            issueOrKey: this.state.issue as MinimalIssue<DetailedSiteInfo>,
                                         })
                                     }
                                 />
@@ -474,7 +474,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     onItemClick={() =>
                                         this.postMessage({
                                             action: 'openBitbucketIssue',
-                                            issue: this.state.issue as BitbucketIssueData
+                                            issue: this.state.issue as BitbucketIssueData,
                                         })
                                     }
                                 />
@@ -489,7 +489,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 margin: 10,
                                 borderLeftWidth: 'initial',
                                 borderLeftStyle: 'solid',
-                                borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)'
+                                borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)',
                             }}
                         >
                             <div style={{ margin: 10 }}>
@@ -582,7 +582,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                                 </div>
                                                                 <Select
                                                                     options={repo.workspaceRepo.siteRemotes.filter(
-                                                                        r => !r.remote.name.endsWith('(parent repo)')
+                                                                        (r) => !r.remote.name.endsWith('(parent repo)')
                                                                     )}
                                                                     getOptionLabel={(s: SiteRemote) => s.remote.name}
                                                                     getOptionValue={(s: SiteRemote) => s}
@@ -654,7 +654,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                             </div>
                                                             <Select
                                                                 options={repo.remoteBranches.filter(
-                                                                    branch =>
+                                                                    (branch) =>
                                                                         branch.remote ===
                                                                         this.state.destinationSiteRemote.remote.name
                                                                 )}
@@ -727,7 +727,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                                 isMulti
                                                                 components={{
                                                                     Option: UserOption,
-                                                                    MultiValueLabel: UserValue
+                                                                    MultiValueLabel: UserValue,
                                                                 }}
                                                                 isDisabled={this.state.isSomethingLoading}
                                                                 isLoading={this.state.isSomethingLoading}

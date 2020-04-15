@@ -553,7 +553,7 @@ const emptyStyles: VSCodeStyles = {
     walkThroughEmbeddedEditorBackground: '',
     dropdownForeground: '',
     settingsCheckboxForeground: '',
-    settingsDropdownForeground: ''
+    settingsDropdownForeground: '',
 };
 export const VSCodeStylesContext = createContext<VSCodeStyles>(emptyStyles);
 export const computeStyles = (): VSCodeStyles => {
@@ -1001,6 +1001,6 @@ export const computeStyles = (): VSCodeStyles => {
             .trim(),
         dropdownForeground: computedStyle.getPropertyValue('--vscode-dropdown-foreground').trim(),
         settingsCheckboxForeground: computedStyle.getPropertyValue('--vscode-settings-checkboxForeground').trim(),
-        settingsDropdownForeground: computedStyle.getPropertyValue('--vscode-settings-dropdownForeground').trim()
+        settingsDropdownForeground: computedStyle.getPropertyValue('--vscode-settings-dropdownForeground').trim(),
     };
 };

@@ -13,7 +13,7 @@ export enum Interval {
     DAY = 86400000,
     WEEK = 604800000,
     MONTH = 2592000000,
-    FOREVER = Infinity
+    FOREVER = Infinity,
 }
 
 export class CacheMap {
@@ -44,12 +44,12 @@ export class CacheMap {
     public setItem(key: string, content: any, ttl: number = Infinity) {
         let meta = {
             ttl: ttl,
-            createdAt: Date.now()
+            createdAt: Date.now(),
         };
 
         this._data.set(key, {
             content: content,
-            meta: meta
+            meta: meta,
         });
     }
 

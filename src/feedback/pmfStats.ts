@@ -16,7 +16,7 @@ type PmfStatsData = {
 const fallbackData: PmfStatsData = {
     lastSurveyed: format(subMonths(new Date(), 6), FormatYYYYMMDD),
     snoozeUntil: format(new Date(), FormatISO),
-    activityByDay: {}
+    activityByDay: {},
 };
 
 export class PmfStats {
@@ -38,7 +38,7 @@ export class PmfStats {
         }
 
         const daysActiveInLastTwoWeeks = Object.keys(currentState.activityByDay)
-            .filter(key => isAfter(addWeeks(parse(key), 2), now))
+            .filter((key) => isAfter(addWeeks(parse(key), 2), now))
             .reduce((prevSum, currKey) => prevSum + currentState.activityByDay[currKey], 0);
 
         return daysActiveInLastTwoWeeks >= 3;
@@ -81,8 +81,8 @@ export class PmfStats {
         const now = new Date();
 
         Object.keys(currentState.activityByDay)
-            .filter(key => isBefore(addWeeks(parse(key), 2), now))
-            .forEach(key => delete currentState.activityByDay[key]);
+            .filter((key) => isBefore(addWeeks(parse(key), 2), now))
+            .forEach((key) => delete currentState.activityByDay[key]);
 
         await this.extensionContext.globalState.update(PmfStatsKey, currentState);
     }

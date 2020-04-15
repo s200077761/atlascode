@@ -5,13 +5,13 @@ import { FeedbackUser } from '../lib/ipc/models/common';
 export async function getFeedbackUser(): Promise<FeedbackUser> {
     let firstAvailableUser: FeedbackUser | undefined = undefined;
 
-    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira).filter(site => site.isCloud);
+    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira).filter((site) => site.isCloud);
     if (jiraCloudSites.length > 0) {
         const jiraUser = await Container.credentialManager.getAuthInfo(jiraCloudSites[0]);
         if (jiraUser) {
             firstAvailableUser = {
                 userName: jiraUser.user.displayName,
-                emailAddress: jiraUser.user.email
+                emailAddress: jiraUser.user.email,
             };
         }
     }
@@ -19,13 +19,13 @@ export async function getFeedbackUser(): Promise<FeedbackUser> {
     if (!firstAvailableUser) {
         const bitbucketCloudSites = Container.siteManager
             .getSitesAvailable(ProductBitbucket)
-            .filter(site => site.isCloud);
+            .filter((site) => site.isCloud);
         if (bitbucketCloudSites.length > 0) {
             const bbUser = await Container.credentialManager.getAuthInfo(bitbucketCloudSites[0]);
             if (bbUser) {
                 firstAvailableUser = {
                     userName: bbUser.user.displayName,
-                    emailAddress: bbUser.user.email
+                    emailAddress: bbUser.user.email,
                 };
             }
         }

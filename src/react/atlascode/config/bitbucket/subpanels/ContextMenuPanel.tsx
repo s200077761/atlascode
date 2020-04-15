@@ -24,7 +24,7 @@ export const ContextMenuPanel: React.FunctionComponent<ContextMenuPanelProps> = 
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

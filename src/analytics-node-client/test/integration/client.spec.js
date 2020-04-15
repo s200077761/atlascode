@@ -7,22 +7,22 @@ const { buildTrackEvent, buildUIEvent, buildScreenEvent } = require('../helpers/
 describe('integration/send-event', () => {
     let httpSpy;
 
-    beforeAll(done => {
+    beforeAll((done) => {
         httpSpy = jasmineHttpServerSpy.createSpyObj('mockServer', [
             {
                 method: 'post',
                 url: '/v1/batch',
-                handlerName: 'handleEvent'
-            }
+                handlerName: 'handleEvent',
+            },
         ]);
         httpSpy.server.start(8082, done);
 
         httpSpy.handleEvent.and.returnValue({
-            statusCode: 200
+            statusCode: 200,
         });
     });
 
-    afterAll(done => {
+    afterAll((done) => {
         httpSpy.server.stop(done);
     });
 
@@ -34,7 +34,7 @@ describe('integration/send-event', () => {
         const client = analyticsClient({
             env: 'local',
             product: 'integration-test',
-            baseUrl: 'http://localhost:8082'
+            baseUrl: 'http://localhost:8082',
         });
 
         const event = {
@@ -43,7 +43,7 @@ describe('integration/send-event', () => {
             anonymousId: 'test-anonymous-id',
             tenantId: 'test-tenant-id',
             tenantIdType: 'cloudId',
-            trackEvent: buildTrackEvent()
+            trackEvent: buildTrackEvent(),
         };
 
         return client
@@ -75,18 +75,18 @@ describe('integration/send-event', () => {
                                         eventType: 'track',
                                         userIdType: 'atlassianAccount',
                                         tenantIdType: 'cloudId',
-                                        tenantId: 'test-tenant-id'
+                                        tenantId: 'test-tenant-id',
                                     },
                                     type: 'track',
                                     context: jasmine.anything(),
                                     _metadata: jasmine.anything(),
                                     timestamp: jasmine.anything(),
-                                    messageId: jasmine.anything()
-                                }
+                                    messageId: jasmine.anything(),
+                                },
                             ],
                             timestamp: jasmine.anything(),
-                            sentAt: jasmine.anything()
-                        }
+                            sentAt: jasmine.anything(),
+                        },
                     })
                 );
             });
@@ -96,7 +96,7 @@ describe('integration/send-event', () => {
         const client = analyticsClient({
             env: 'local',
             product: 'integration-test',
-            baseUrl: 'http://localhost:8082'
+            baseUrl: 'http://localhost:8082',
         });
 
         const uiEvent = {
@@ -104,7 +104,7 @@ describe('integration/send-event', () => {
             userId: 'test-user-id',
             tenantId: 'test-tenant-id',
             tenantIdType: 'cloudId',
-            uiEvent: buildUIEvent()
+            uiEvent: buildUIEvent(),
         };
 
         return client
@@ -135,18 +135,18 @@ describe('integration/send-event', () => {
                                         eventType: 'ui',
                                         userIdType: 'atlassianAccount',
                                         tenantIdType: 'cloudId',
-                                        tenantId: 'test-tenant-id'
+                                        tenantId: 'test-tenant-id',
                                     },
                                     type: 'track',
                                     context: jasmine.anything(),
                                     _metadata: jasmine.anything(),
                                     timestamp: jasmine.anything(),
-                                    messageId: jasmine.anything()
-                                }
+                                    messageId: jasmine.anything(),
+                                },
                             ],
                             timestamp: jasmine.anything(),
-                            sentAt: jasmine.anything()
-                        }
+                            sentAt: jasmine.anything(),
+                        },
                     })
                 );
             });
@@ -156,7 +156,7 @@ describe('integration/send-event', () => {
         const client = analyticsClient({
             env: 'local',
             product: 'integration-test',
-            baseUrl: 'http://localhost:8082'
+            baseUrl: 'http://localhost:8082',
         });
 
         const screenEvent = {
@@ -165,7 +165,7 @@ describe('integration/send-event', () => {
             tenantId: 'test-tenant-id',
             tenantIdType: 'cloudId',
             name: 'test-name',
-            screenEvent: buildScreenEvent()
+            screenEvent: buildScreenEvent(),
         };
 
         return client
@@ -189,18 +189,18 @@ describe('integration/send-event', () => {
                                         eventType: 'screen',
                                         userIdType: 'atlassianAccount',
                                         tenantIdType: 'cloudId',
-                                        tenantId: 'test-tenant-id'
+                                        tenantId: 'test-tenant-id',
                                     },
                                     type: 'page',
                                     context: jasmine.anything(),
                                     _metadata: jasmine.anything(),
                                     timestamp: jasmine.anything(),
-                                    messageId: jasmine.anything()
-                                }
+                                    messageId: jasmine.anything(),
+                                },
                             ],
                             timestamp: jasmine.anything(),
-                            sentAt: jasmine.anything()
-                        }
+                            sentAt: jasmine.anything(),
+                        },
                     })
                 );
             });

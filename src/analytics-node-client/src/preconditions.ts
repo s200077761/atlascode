@@ -38,7 +38,7 @@ function validateScreenEvent({
     tenantIdType,
     tenantId,
     name,
-    screenEvent
+    screenEvent,
 }: ScreenEvent) {
     try {
         requireValidUserData({ userIdType, userId, anonymousId });
@@ -71,7 +71,7 @@ function requireValidTenantData({ tenantId, tenantIdType }: { tenantId: string; 
 function requireValidUserData({
     userIdType,
     userId,
-    anonymousId
+    anonymousId,
 }: {
     userIdType: string;
     userId?: string;
@@ -110,5 +110,5 @@ export {
     validateUIEvent,
     validateScreenEvent,
     requireValidUserData,
-    requireValidTenantData
+    requireValidTenantData,
 };

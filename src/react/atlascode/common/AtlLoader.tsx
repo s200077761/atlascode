@@ -8,16 +8,16 @@ const styles = {
         height: '400px',
         animation: '$hideshow 1.5s ease-in-out',
         'animation-iteration-count': 'infinite',
-        'animation-direction': 'alternate'
+        'animation-direction': 'alternate',
     },
     ['@keyframes hideshow']: {
         '0%': {
-            opacity: 0.3
+            opacity: 0.3,
         },
         '100%': {
-            opacity: 0.1
-        }
-    }
+            opacity: 0.1,
+        },
+    },
 };
 
 const useStyles = makeStyles(styles);

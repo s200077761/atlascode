@@ -13,7 +13,7 @@ import {
     Theme,
     Toolbar,
     Tooltip,
-    Typography
+    Typography,
 } from '@material-ui/core';
 import PersonIcon from '@material-ui/icons/Person';
 import WorkIcon from '@material-ui/icons/Work';
@@ -38,21 +38,21 @@ const useStyles = makeStyles(
         ({
             title: {
                 flexGrow: 0,
-                marginRight: theme.spacing(3)
+                marginRight: theme.spacing(3),
             },
             targetSelectLabel: {
-                marginRight: theme.spacing(1)
+                marginRight: theme.spacing(1),
             },
             grow: {
-                flexGrow: 1
+                flexGrow: 1,
             },
             paper100: {
                 overflow: 'hidden',
-                height: '100%'
+                height: '100%',
             },
             paperOverflow: {
-                overflow: 'hidden'
-            }
+                overflow: 'hidden',
+            },
         } as const)
 );
 
@@ -63,7 +63,7 @@ type SectionWithSubsections = {
 const emptySubsections: SectionWithSubsections = {
     [ConfigSection.Jira]: [],
     [ConfigSection.Bitbucket]: [],
-    [ConfigSection.General]: []
+    [ConfigSection.General]: [],
 };
 
 const ConfigPage: React.FunctionComponent = () => {
@@ -83,7 +83,7 @@ const ConfigPage: React.FunctionComponent = () => {
 
     const handleSubsectionChange = useCallback(
         (subSection: ConfigSubSection, expanded: boolean) => {
-            setOpenSubsections(oldSections => {
+            setOpenSubsections((oldSections) => {
                 const newSections = { ...oldSections };
 
                 if (expanded) {
@@ -91,7 +91,7 @@ const ConfigPage: React.FunctionComponent = () => {
                     return newSections;
                 }
                 const newSubSections = [...oldSections[openSection]];
-                const idx = newSubSections.findIndex(sub => sub === subSection);
+                const idx = newSubSections.findIndex((sub) => sub === subSection);
                 if (idx > -1) {
                     newSubSections.splice(idx, 1);
                     newSections[openSection] = newSubSections;
@@ -134,7 +134,7 @@ const ConfigPage: React.FunctionComponent = () => {
     }, [internalTarget, controller]);
 
     useEffect(() => {
-        setOpenSection(oldSection => {
+        setOpenSection((oldSection) => {
             if (state.openSection !== oldSection) {
                 return state.openSection;
             }
@@ -144,7 +144,7 @@ const ConfigPage: React.FunctionComponent = () => {
     }, [state.openSection]);
 
     useEffect(() => {
-        setOpenSubsections(oldSubSections => {
+        setOpenSubsections((oldSubSections) => {
             if (!equal(state.openSubSections, oldSubSections)) {
                 return { ...emptySubsections, [state.openSection]: state.openSubSections };
             }

@@ -60,7 +60,7 @@ const getFieldValue = (field: FieldDescriptor): any => {
 
     if (isRadioInput(field.inputRef)) {
         const radioOptions = Array.isArray(field.options)
-            ? field.options.filter(opt => (opt as HTMLInputElement).checked)
+            ? field.options.filter((opt) => (opt as HTMLInputElement).checked)
             : [];
 
         return radioOptions.length > 0 ? radioOptions[0].value : '';
@@ -68,11 +68,11 @@ const getFieldValue = (field: FieldDescriptor): any => {
 
     if (isCheckBox(field.inputRef)) {
         const checkOptions = Array.isArray(field.options)
-            ? field.options.filter(opt => (opt as HTMLInputElement).checked)
+            ? field.options.filter((opt) => (opt as HTMLInputElement).checked)
             : [];
 
         return checkOptions.length > 1
-            ? checkOptions.map(opt => opt.value)
+            ? checkOptions.map((opt) => opt.value)
             : checkOptions.length > 0
             ? (checkOptions[0] as HTMLInputElement).checked
             : false;
@@ -98,12 +98,12 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                 if (typeof watches.current[field.inputRef.name] === 'boolean') {
                     watches.current = {
                         ...watches.current,
-                        [field.inputRef.name]: (field.inputRef as HTMLInputElement).checked
+                        [field.inputRef.name]: (field.inputRef as HTMLInputElement).checked,
                     };
                 } else {
                     watches.current = {
                         ...watches.current,
-                        [field.inputRef.name]: getFieldValue(field)
+                        [field.inputRef.name]: getFieldValue(field),
                     };
                 }
             }
@@ -184,7 +184,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
 
                 if (fields[ref.name] !== undefined && isOptionable) {
                     const existingField = fields[ref.name];
-                    if (!existingField.options.find(option => option.value === ref.value)) {
+                    if (!existingField.options.find((option) => option.value === ref.value)) {
                         existingField.options.push(ref);
                         return;
                     }
@@ -197,7 +197,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                         error: undefined,
                         touched: false,
                         validator: validate,
-                        options: []
+                        options: [],
                     };
                 } else {
                     fields[ref.name] = {
@@ -205,7 +205,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                         error: undefined,
                         touched: false,
                         validator: validate,
-                        options: [ref]
+                        options: [ref],
                     };
                 }
             }
@@ -231,6 +231,6 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
         watches: watches.current,
         errors: errors.current,
         handleSubmit,
-        isValid: Object.values(errors.current).length < 1
+        isValid: Object.values(errors.current).length < 1,
     };
 }

@@ -30,14 +30,14 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             root: {
-                flexGrow: 1
+                flexGrow: 1,
             },
             paper: {
                 backgroundColor:
                     theme.palette.type === 'dark'
                         ? lighten(theme.palette.background.paper, 0.05)
-                        : darken(theme.palette.background.paper, 0.05)
-            }
+                        : darken(theme.palette.background.paper, 0.05),
+            },
         } as const)
 );
 
@@ -58,7 +58,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
     );
 
     const handleJQLSave = useCallback((newEntry: JQLEntry) => {
-        setInternalList(oldList => {
+        setInternalList((oldList) => {
             const index = oldList.findIndex((entry: JQLEntry) => {
                 return entry.id === newEntry.id;
             });
@@ -76,10 +76,10 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
     }, []);
 
     const handleFilterSave = useCallback((newFilters: JQLEntry[]) => {
-        setInternalList(oldList => {
-            const currentFilterIds = oldList.map(j => j.filterId);
+        setInternalList((oldList) => {
+            const currentFilterIds = oldList.map((j) => j.filterId);
 
-            const newEntries = newFilters.filter(f => !currentFilterIds.includes(f.filterId));
+            const newEntries = newFilters.filter((f) => !currentFilterIds.includes(f.filterId));
 
             if (newEntries.length > 0) {
                 setDirtyList(true);
@@ -94,7 +94,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
     const { openFilterDialog, filterDialog } = useFilterDialog(sites, handleFilterSave);
 
     const handleReorder = useCallback((oldIndex: number, newIndex: number) => {
-        setInternalList(oldList => {
+        setInternalList((oldList) => {
             setDirtyList(true);
             return reorder(oldList, oldIndex, newIndex);
         });
@@ -102,7 +102,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
 
     const toggleEnabled = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         trace('enabled button click', performance.now(), () => {
-            setInternalList(oldList => {
+            setInternalList((oldList) => {
                 const item = oldList.find((i: JQLEntry) => i.id === event.target.id);
                 if (item) {
                     item.enabled = event.target.checked;
@@ -116,7 +116,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
 
     const toggleMonitor = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         trace('monitor button click', performance.now(), () => {
-            setInternalList(oldList => {
+            setInternalList((oldList) => {
                 const item = oldList.find((i: JQLEntry) => i.id === event.target.id);
                 if (item) {
                     setDirtyList(true);
@@ -129,7 +129,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
     }, []);
 
     const handleDelete = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-        setInternalList(oldList => {
+        setInternalList((oldList) => {
             const index = oldList.findIndex((i: JQLEntry) => i.id === event.currentTarget.id);
             if (index >= 0) {
                 setDirtyList(true);
@@ -162,7 +162,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
     }, [dirtyList, internalList, publishChanges]);
 
     useEffect(() => {
-        setInternalList(oldList => {
+        setInternalList((oldList) => {
             if (!equal(oldList, jqlList)) {
                 return jqlList;
             }
@@ -204,7 +204,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
                                     : [
                                           <Box width="100%">
                                               <Typography align="center">No entries found.</Typography>
-                                          </Box>
+                                          </Box>,
                                       ]
                             }
                         />

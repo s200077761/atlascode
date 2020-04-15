@@ -27,7 +27,7 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
         hideFiltered,
         monitorEnabled,
         refreshInterval,
-        filters
+        filters,
     }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
         const [internalFilters, setInternalFilters] = useState(filters);
@@ -41,7 +41,7 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
         );
 
         useEffect(() => {
-            setInternalFilters(oldFilters => {
+            setInternalFilters((oldFilters) => {
                 if (!equal(oldFilters, filters)) {
                     return filters;
                 }
@@ -50,7 +50,7 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
         }, [filters]);
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

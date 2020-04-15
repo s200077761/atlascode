@@ -4,7 +4,7 @@ import {
     doneButtonEvent,
     featureChangeEvent,
     logoutButtonEvent,
-    moreSettingsButtonEvent
+    moreSettingsButtonEvent,
 } from '../analytics';
 import { DetailedSiteInfo, isBasicAuthInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
@@ -64,7 +64,7 @@ export class OnboardingWebview extends AbstractReactWebview {
             bitbucketCloudSites: cloudBitbucket,
             bitbucketServerSites: serverBitbucket,
             enableJiraConfig: Container.config.jira.enabled,
-            enableBitbucketConfig: Container.config.bitbucket.enabled
+            enableBitbucketConfig: Container.config.bitbucket.enabled,
         });
     }
 
@@ -78,7 +78,7 @@ export class OnboardingWebview extends AbstractReactWebview {
             jiraCloudSites: cloudJira,
             jiraServerSites: serverJira,
             bitbucketCloudSites: cloudBitbucket,
-            bitbucketServerSites: serverBitbucket
+            bitbucketServerSites: serverBitbucket,
         });
     }
 
@@ -103,14 +103,14 @@ export class OnboardingWebview extends AbstractReactWebview {
         if (!handled) {
             switch (msg.action) {
                 case 'openSettings': {
-                    moreSettingsButtonEvent(this.id).then(e => {
+                    moreSettingsButtonEvent(this.id).then((e) => {
                         Container.analyticsClient.sendUIEvent(e);
                     });
                     commands.executeCommand(Commands.ShowConfigPage);
                     break;
                 }
                 case 'closePage': {
-                    doneButtonEvent(this.id).then(e => {
+                    doneButtonEvent(this.id).then((e) => {
                         Container.analyticsClient.sendUIEvent(e);
                     });
                     this.hide();
@@ -122,10 +122,10 @@ export class OnboardingWebview extends AbstractReactWebview {
                             const value = msg.changes[key];
                             await configuration.updateEffective(key, value, null, true);
                             this.invalidate();
-                            featureChangeEvent(key, value).then(e => {
+                            featureChangeEvent(key, value).then((e) => {
                                 Container.analyticsClient
                                     .sendTrackEvent(e)
-                                    .catch(r => Logger.debug('error sending analytics'));
+                                    .catch((r) => Logger.debug('error sending analytics'));
                             });
                         }
                     }
@@ -143,13 +143,13 @@ export class OnboardingWebview extends AbstractReactWebview {
                                 Logger.error(err);
                                 this.postMessage({
                                     type: 'error',
-                                    reason: this.formatErrorReason(e, 'Authentication error')
+                                    reason: this.formatErrorReason(e, 'Authentication error'),
                                 });
                             }
                         } else {
                             authenticateCloud(msg.siteInfo, onboardingUrl);
                         }
-                        authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then(e => {
+                        authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then((e) => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }
@@ -159,7 +159,7 @@ export class OnboardingWebview extends AbstractReactWebview {
                     handled = true;
                     if (isLogoutAuthAction(msg)) {
                         clearAuth(msg.detailedSiteInfo);
-                        logoutButtonEvent(this.id).then(e => {
+                        logoutButtonEvent(this.id).then((e) => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }

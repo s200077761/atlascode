@@ -20,7 +20,7 @@ import {
     LoginAuthAction,
     LogoutAuthAction,
     SaveSettingsAction,
-    SubmitFeedbackAction
+    SubmitFeedbackAction,
 } from '../../../ipc/configActions';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { FetchQueryAction } from '../../../ipc/issueActions';
@@ -89,7 +89,7 @@ const emptyState: ViewState = {
     target: ConfigTarget.User,
     jiraFilters: {},
     jiraFilterSearches: {},
-    targetUri: ''
+    targetUri: '',
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
@@ -137,7 +137,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                     config: this.configForTarget(e.target, e.inspect),
                     jiraFilters: e.jiraFilters,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
+                    errorDetails: undefined,
                 });
                 this.updateTabIndex();
                 this.refreshBySwitchingTabs();
@@ -148,7 +148,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                     inspect: e.inspect,
                     config: this.configForTarget(this.state.target, e.inspect),
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
+                    errorDetails: undefined,
                 });
                 break;
             }
@@ -157,7 +157,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                     jiraSites: e.jiraSites,
                     bitbucketSites: e.bitbucketSites,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
+                    errorDetails: undefined,
                 });
                 break;
             }
@@ -200,7 +200,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             changes: change,
             removes: undefined,
             target: ConfigTarget.User,
-            targetUri: ''
+            targetUri: '',
         });
     };
 
@@ -214,12 +214,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             changes: change,
             removes: removes,
             target: this.state.target,
-            targetUri: this.state.targetUri
+            targetUri: this.state.targetUri,
         });
     };
 
     handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             const nonce = uuid.v4();
             this.jqlDataMap[nonce] = undefined;
 
@@ -249,7 +249,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const nonce = uuid.v4();
         this.jqlDataMap[nonce] = undefined;
 
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             this.postMessage({ action: 'fetchSearchJiraFilterOptions', site: site, query: query, nonce: nonce });
 
             const start = Date.now();
@@ -385,7 +385,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         // } else {
         targetOptions = [
             { value: ConfigTarget.User, label: ConfigTarget.User, uri: '' },
-            { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace, uri: '' }
+            { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace, uri: '' },
         ];
         //}
 
@@ -475,7 +475,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         />
                                         <Tabs
                                             selectedIndex={this.state.tabIndex}
-                                            onSelect={tabIndex => this.setState({ tabIndex })}
+                                            onSelect={(tabIndex) => this.setState({ tabIndex })}
                                         >
                                             <TabList>
                                                 {this.state.config!.jira.enabled && <Tab>Jira</Tab>}
@@ -517,7 +517,9 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                             jqlFetcher={this.handleFetchJqlOptions}
                                                             jiraFilterFetcher={this.handleFetchFilterOptions}
                                                             jiraFilterSearcher={this.handleSearchFilterOptions}
-                                                            sites={this.state.jiraSites.map(siteAuth => siteAuth.site)}
+                                                            sites={this.state.jiraSites.map(
+                                                                (siteAuth) => siteAuth.site
+                                                            )}
                                                             filters={this.state.jiraFilters}
                                                             filterSearches={this.state.jiraFilterSearches}
                                                             onConfigChange={this.onConfigChange}

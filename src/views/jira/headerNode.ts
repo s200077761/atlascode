@@ -11,7 +11,7 @@ export class CreateJiraIssueNode extends AbstractBaseNode {
         treeItem.command = {
             command: Commands.CreateIssue,
             title: 'Create Jira issue',
-            arguments: [undefined, 'explorerNode']
+            arguments: [undefined, 'explorerNode'],
         };
 
         return treeItem;

@@ -11,7 +11,7 @@ import {
     CommentVisibility,
     IssuePickerIssue,
     JsdInternalCommentVisibility,
-    MinimalIssueOrKeyAndSite
+    MinimalIssueOrKeyAndSite,
 } from '@atlassianlabs/jira-pi-common-models';
 import {
     FieldUI,
@@ -21,7 +21,7 @@ import {
     OptionableFieldUI,
     SelectFieldUI,
     UIType,
-    ValueType
+    ValueType,
 } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { distanceInWordsToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
@@ -36,7 +36,7 @@ import {
     IssueEditError,
     IssueSuggestionsList,
     LabelList,
-    UserList
+    UserList,
 } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
@@ -83,11 +83,11 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     showPMF: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
-    commentInputValue: ''
+    commentInputValue: '',
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
-    if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
+    if (inputValue.trim().length === 0 || selectOptions.find((option) => option.name === inputValue)) {
         return false;
     }
 
@@ -129,7 +129,7 @@ export abstract class AbstractIssueEditorPage<
             typeof newValue !== 'number'
         ) {
             if (Array.isArray(newValue)) {
-                val = newValue.map(aryValue => {
+                val = newValue.map((aryValue) => {
                     if (typeof aryValue === 'object') {
                         return aryValue.value;
                     }
@@ -156,14 +156,14 @@ export abstract class AbstractIssueEditorPage<
                         loadingField: '',
                         isErrorBannerOpen: true,
                         errorDetails: e.reason,
-                        fieldValues: { ...this.state.fieldValues, ...e.fieldValues }
+                        fieldValues: { ...this.state.fieldValues, ...e.fieldValues },
                     });
                 } else {
                     this.setState({
                         isSomethingLoading: false,
                         loadingField: '',
                         isErrorBannerOpen: true,
-                        errorDetails: e.reason
+                        errorDetails: e.reason,
                     });
                 }
                 break;
@@ -173,7 +173,7 @@ export abstract class AbstractIssueEditorPage<
                 this.setState({
                     isSomethingLoading: false,
                     loadingField: '',
-                    fieldValues: { ...this.state.fieldValues, ...e.fieldValues }
+                    fieldValues: { ...this.state.fieldValues, ...e.fieldValues },
                 });
                 break;
             }
@@ -243,7 +243,7 @@ export abstract class AbstractIssueEditorPage<
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueObj,
-            nonce: nonce
+            nonce: nonce,
         });
     };
 
@@ -259,7 +259,7 @@ export abstract class AbstractIssueEditorPage<
     };
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             const nonce: string = uuid.v4();
             // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
@@ -270,7 +270,7 @@ export abstract class AbstractIssueEditorPage<
                             query: input,
                             site: this.state.siteDetails,
                             autocompleteUrl: field.autoCompleteUrl,
-                            nonce: nonce
+                            nonce: nonce,
                         },
                         'issueSuggestionsList',
                         ConnectionTimeout,
@@ -291,7 +291,7 @@ export abstract class AbstractIssueEditorPage<
 
     protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             const nonce: string = uuid.v4();
             (async () => {
                 try {
@@ -301,7 +301,7 @@ export abstract class AbstractIssueEditorPage<
                             query: input,
                             site: this.state.siteDetails,
                             autocompleteUrl: url,
-                            nonce
+                            nonce,
                         },
                         'selectOptionsList',
                         ConnectionTimeout,
@@ -336,7 +336,7 @@ export abstract class AbstractIssueEditorPage<
                             siteDetails: this.state.siteDetails,
                             createUrl: field.createUrl,
                             createData: { name: input, project: this.getProjectKey() },
-                            nonce: nonce
+                            nonce: nonce,
                         },
                         'optionCreated',
                         ConnectionTimeout,
@@ -349,8 +349,8 @@ export abstract class AbstractIssueEditorPage<
                         fieldValues: { ...this.state.fieldValues, ...createEvent.fieldValues },
                         selectFieldOptions: {
                             ...this.state.selectFieldOptions,
-                            ...createEvent.selectFieldOptions
-                        }
+                            ...createEvent.selectFieldOptions,
+                        },
                     });
                 } catch (e) {
                     this.setState({ isSomethingLoading: false });
@@ -394,12 +394,12 @@ export abstract class AbstractIssueEditorPage<
                                 text={this.state.fieldValues[`${field.key}`]}
                                 renderedText={this.state.fieldValues[`${field.key}.rendered`]}
                                 fetchUsers={async (input: string) =>
-                                    (await this.fetchUsers(input)).map(user => ({
+                                    (await this.fetchUsers(input)).map((user) => ({
                                         displayName: user.displayName,
                                         avatarUrl: user.avatarUrls?.['48x48'],
                                         mention: this.state.siteDetails.isCloud
                                             ? `[~accountid:${user.accountId}]`
-                                            : `[~${user.name}]`
+                                            : `[~${user.name}]`,
                                     }))
                                 }
                                 onSave={async (val: string) => {
@@ -461,12 +461,12 @@ export abstract class AbstractIssueEditorPage<
                                         {...fieldArgs.fieldProps}
                                         rows={5}
                                         fetchUsers={async (input: string) =>
-                                            (await this.fetchUsers(input)).map(user => ({
+                                            (await this.fetchUsers(input)).map((user) => ({
                                                 displayName: user.displayName,
                                                 avatarUrl: user.avatarUrls?.['48x48'],
                                                 mention: this.state.siteDetails.isCloud
                                                     ? `[~accountid:${user.accountId}]`
-                                                    : `[~${user.name}]`
+                                                    : `[~${user.name}]`,
                                             }))
                                         }
                                         disabled={this.state.isSomethingLoading}
@@ -532,7 +532,7 @@ export abstract class AbstractIssueEditorPage<
                                         className="ac-select-container"
                                         selectProps={{
                                             className: 'ac-select-container',
-                                            classNamePrefix: 'ac-select'
+                                            classNamePrefix: 'ac-select',
                                         }}
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                             this.handleInlineEdit(field, val);
@@ -558,11 +558,11 @@ export abstract class AbstractIssueEditorPage<
                             className="ac-select-container"
                             datePickerSelectProps={{
                                 className: 'ac-select-container',
-                                classNamePrefix: 'ac-select'
+                                classNamePrefix: 'ac-select',
                             }}
                             timePickerSelectProps={{
                                 className: 'ac-select-container',
-                                classNamePrefix: 'ac-select'
+                                classNamePrefix: 'ac-select',
                             }}
                             onChange={(val: string) => {
                                 // DatePicker re-opens when it gains focus with no way to turn that off.
@@ -597,11 +597,11 @@ export abstract class AbstractIssueEditorPage<
                                         className="ac-select-container"
                                         datePickerSelectProps={{
                                             className: 'ac-select-container',
-                                            classNamePrefix: 'ac-select'
+                                            classNamePrefix: 'ac-select',
                                         }}
                                         timePickerSelectProps={{
                                             className: 'ac-select-container',
-                                            classNamePrefix: 'ac-select'
+                                            classNamePrefix: 'ac-select',
                                         }}
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                             this.handleInlineEdit(field, val);
@@ -690,7 +690,7 @@ export abstract class AbstractIssueEditorPage<
                                                     (val: any) => {
                                                         const subField = {
                                                             ...field,
-                                                            ...{ key: `${field.key}.type` }
+                                                            ...{ key: `${field.key}.type` },
                                                         };
                                                         this.handleInlineEdit(subField, val);
                                                     }
@@ -723,14 +723,14 @@ export abstract class AbstractIssueEditorPage<
                                                 (val: any) => {
                                                     const subField = {
                                                         ...field,
-                                                        ...{ key: `${field.key}.issue` }
+                                                        ...{ key: `${field.key}.issue` },
                                                     };
                                                     this.handleInlineEdit(subField, val);
                                                 }
                                             )}
                                             components={{
                                                 Option: SelectFieldHelper.IssueSuggestionOption,
-                                                SingleValue: SelectFieldHelper.IssueSuggestionValue
+                                                SingleValue: SelectFieldHelper.IssueSuggestionValue,
                                             }}
                                         />
                                     );
@@ -752,12 +752,12 @@ export abstract class AbstractIssueEditorPage<
                         <TextAreaEditor
                             value={this.state.commentInputValue}
                             fetchUsers={async (input: string) =>
-                                (await this.fetchUsers(input)).map(user => ({
+                                (await this.fetchUsers(input)).map((user) => ({
                                     displayName: user.displayName,
                                     avatarUrl: user.avatarUrls?.['48x48'],
                                     mention: this.state.siteDetails.isCloud
                                         ? `[~accountid:${user.accountId}]`
-                                        : `[~${user.name}]`
+                                        : `[~${user.name}]`,
                                 }))
                             }
                             placeholder="Add a comment..."
@@ -815,7 +815,7 @@ export abstract class AbstractIssueEditorPage<
                     classNamePrefix: 'ac-select',
                     getOptionLabel: SelectFieldHelper.labelFuncForValueType(selectField.valueType),
                     getOptionValue: SelectFieldHelper.valueFuncForValueType(selectField.valueType),
-                    components: SelectFieldHelper.getComponentsForValueType(selectField.valueType)
+                    components: SelectFieldHelper.getComponentsForValueType(selectField.valueType),
                 };
 
                 if (editmode) {
@@ -1123,7 +1123,7 @@ export abstract class AbstractIssueEditorPage<
                         id: field.key,
                         name: field.key,
                         defaultValue: this.state.fieldValues[field.key],
-                        isClearable: true
+                        isClearable: true,
                     };
 
                     return (
@@ -1141,7 +1141,7 @@ export abstract class AbstractIssueEditorPage<
 
                 let checkboxItems: any[] = [];
                 const checkField = field as OptionableFieldUI;
-                checkField.allowedValues.forEach(value => {
+                checkField.allowedValues.forEach((value) => {
                     checkboxItems.push(
                         <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
                             {(fieldArgs: any) => {
@@ -1176,7 +1176,7 @@ export abstract class AbstractIssueEditorPage<
                         id: field.key,
                         name: field.key,
                         defaultValue: this.state.fieldValues[field.key],
-                        isClearable: !field.required
+                        isClearable: !field.required,
                     };
 
                     return (
@@ -1194,7 +1194,7 @@ export abstract class AbstractIssueEditorPage<
 
                 let radioItems: any[] = [];
                 const radioField = field as OptionableFieldUI;
-                radioField.allowedValues.forEach(value => {
+                radioField.allowedValues.forEach((value) => {
                     radioItems.push({ name: field.key, label: value.value, value: value.id });
                 });
 
@@ -1271,7 +1271,7 @@ export abstract class AbstractIssueEditorPage<
                                                 (val: any) => {
                                                     const subField = {
                                                         ...field,
-                                                        ...{ key: `${field.key}.originalEstimate` }
+                                                        ...{ key: `${field.key}.originalEstimate` },
                                                     };
                                                     this.handleInlineInputEdit(subField, val);
                                                 }
@@ -1306,7 +1306,7 @@ export abstract class AbstractIssueEditorPage<
                                                 (val: any) => {
                                                     const subField = {
                                                         ...field,
-                                                        ...{ key: `${field.key}.remainingEstimate` }
+                                                        ...{ key: `${field.key}.remainingEstimate` },
                                                     };
                                                     this.handleInlineInputEdit(subField, val);
                                                 }
@@ -1337,7 +1337,7 @@ export abstract class AbstractIssueEditorPage<
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
                                             const subField = {
                                                 ...field,
-                                                ...{ key: `${field.key}.enabled` }
+                                                ...{ key: `${field.key}.enabled` },
                                             };
                                             this.handleInlineEdit(subField, e.target.checked);
                                         })}
@@ -1370,7 +1370,7 @@ export abstract class AbstractIssueEditorPage<
                                                             (val: any) => {
                                                                 const subField = {
                                                                     ...field,
-                                                                    ...{ key: `${field.key}.timeSpent` }
+                                                                    ...{ key: `${field.key}.timeSpent` },
                                                                 };
                                                                 this.handleInlineInputEdit(subField, val);
                                                             }
@@ -1405,7 +1405,7 @@ export abstract class AbstractIssueEditorPage<
                                                             (val: any) => {
                                                                 const subField = {
                                                                     ...field,
-                                                                    ...{ key: `${field.key}.newEstimate` }
+                                                                    ...{ key: `${field.key}.newEstimate` },
                                                                 };
                                                                 this.handleInlineInputEdit(subField, val);
                                                             }
@@ -1439,18 +1439,18 @@ export abstract class AbstractIssueEditorPage<
                                                     timeIsEditable
                                                     datePickerSelectProps={{
                                                         className: 'ac-select-container',
-                                                        classNamePrefix: 'ac-select'
+                                                        classNamePrefix: 'ac-select',
                                                     }}
                                                     timePickerSelectProps={{
                                                         className: 'ac-select-container',
-                                                        classNamePrefix: 'ac-select'
+                                                        classNamePrefix: 'ac-select',
                                                     }}
                                                     onChange={FieldValidators.chain(
                                                         fieldArgs.fieldProps.onChange,
                                                         (val: any) => {
                                                             const subField = {
                                                                 ...field,
-                                                                ...{ key: `${field.key}.started` }
+                                                                ...{ key: `${field.key}.started` },
                                                             };
                                                             this.handleInlineEdit(subField, val);
                                                         }
@@ -1479,7 +1479,7 @@ export abstract class AbstractIssueEditorPage<
                                                     (val: any) => {
                                                         const subField = {
                                                             ...field,
-                                                            ...{ key: `${field.key}.comment` }
+                                                            ...{ key: `${field.key}.comment` },
                                                         };
                                                         this.handleInlineInputEdit(subField, val);
                                                     }
@@ -1644,7 +1644,7 @@ export abstract class AbstractIssueEditorPage<
             case ValueType.Component:
             case ValueType.Version: {
                 if (Array.isArray(value)) {
-                    const names = value.map(val => val.name);
+                    const names = value.map((val) => val.name);
                     return (
                         <div className="ac-vpadding">
                             <div>{names}</div>

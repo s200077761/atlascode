@@ -6,8 +6,8 @@ import { clientForSite } from './bbUtils';
 export class BitbucketMentionsCompletionProvider implements CompletionItemProvider {
     async provideCompletionItems(doc: TextDocument, pos: Position) {
         const activePullRequestUri = window.visibleTextEditors
-            .map(textEditor => textEditor.document.uri)
-            .find(uri => uri.scheme === PullRequestNodeDataProvider.SCHEME);
+            .map((textEditor) => textEditor.document.uri)
+            .find((uri) => uri.scheme === PullRequestNodeDataProvider.SCHEME);
 
         if (!activePullRequestUri) {
             return;
@@ -23,10 +23,10 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
         const users = await bbApi.pullrequests.getReviewers(site, triggerWord.slice(1));
 
         users.push(
-            ...participants.filter(participant => !users.some(user => user.accountId === participant.accountId))
+            ...participants.filter((participant) => !users.some((user) => user.accountId === participant.accountId))
         );
 
-        return users.map(user => {
+        return users.map((user) => {
             const item = new CompletionItem(user.displayName, CompletionItemKind.Constant);
             item.detail = user.mention;
             // Remove `@` as it is included in user input already

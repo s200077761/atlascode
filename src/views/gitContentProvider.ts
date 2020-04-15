@@ -50,7 +50,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                     const site = bitbucketSiteForRemote({
                         name: 'DUMMY',
                         fetchUrl: parsedSourceRepo,
-                        isReadOnly: true
+                        isReadOnly: true,
                     });
                     if (site) {
                         const bbApi = await clientForSite(site);
@@ -58,7 +58,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                         return fileContent;
                     }
                     throw new Error('error fetching file content using REST API');
-                })()
+                })(),
             ]);
         } catch (err) {
             vscode.window.showErrorMessage(

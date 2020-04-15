@@ -16,7 +16,7 @@ export class ConfigureJQLNode extends AbstractBaseNode {
         treeItem.command = {
             command: Commands.ShowJiraIssueSettings,
             title: 'Configure Filters',
-            arguments: ['ConfigureJQLNode']
+            arguments: ['ConfigureJQLNode'],
         };
 
         return treeItem;

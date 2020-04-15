@@ -3,7 +3,7 @@ import {
     CreateMetaTransformerResult,
     FieldValues,
     IssueTypeUI,
-    ValueType
+    ValueType,
 } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { format } from 'date-fns';
 import FormData from 'form-data';
@@ -20,7 +20,7 @@ import {
     isCreateIssue,
     isScreensForProjects,
     isScreensForSite,
-    isSetIssueType
+    isSetIssueType,
 } from '../ipc/issueActions';
 import { CreateIssueData } from '../ipc/issueMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
@@ -55,7 +55,7 @@ export const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo
     selectedIssueType: emptyIssueType,
     issueTypeUIs: {},
     problems: {},
-    issueTypes: []
+    issueTypes: [],
 };
 
 export class CreateIssueWebview extends AbstractIssueEditorWebview
@@ -161,7 +161,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
 
         await configuration.setLastCreateSiteAndProject({
             siteId: this._siteDetails.id,
-            projectKey: this._currentProject!.key
+            projectKey: this._currentProject!.key,
         });
     }
 
@@ -204,7 +204,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
             fieldValues: { [fieldKey]: issueTypeUI.fieldValues[fieldKey] },
             selectFieldOptions: { [fieldKey]: issueTypeUI.selectFieldOptions[fieldKey] },
             fieldKey: fieldKey,
-            nonce: nonce
+            nonce: nonce,
         };
 
         this.postMessage(optionMessage);
@@ -240,7 +240,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                 );
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
                     ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues,
-                    ...overrides
+                    ...overrides,
                 };
             }
 
@@ -265,7 +265,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
 
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
                     ...currentVals,
-                    ...partialvals
+                    ...partialvals,
                 };
             }
 
@@ -290,7 +290,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
         const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], fieldValues);
         this._screenData.issueTypeUIs[issueType.id].fieldValues = {
             ...this._screenData.issueTypeUIs[issueType.id].fieldValues,
-            ...fieldOverrides
+            ...fieldOverrides,
         };
 
         const selectOverrides = this.getValuesForExisitngKeys(
@@ -299,7 +299,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
         );
         this._screenData.issueTypeUIs[issueType.id].selectFieldOptions = {
             ...this._screenData.issueTypeUIs[issueType.id].selectFieldOptions,
-            ...selectOverrides
+            ...selectOverrides,
         };
 
         this._screenData.issueTypeUIs[issueType.id].fieldValues['issuetype'] = issueType;
@@ -314,7 +314,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
     getValuesForExisitngKeys(issueTypeUI: IssueTypeUI<DetailedSiteInfo>, values: FieldValues, keep?: string[]): any {
         const foundVals: FieldValues = {};
 
-        Object.keys(issueTypeUI.fields).forEach(key => {
+        Object.keys(issueTypeUI.fields).forEach((key) => {
             if (keep && keep.includes(key)) {
                 // we need to use the current value
                 foundVals[key] = issueTypeUI.fieldValues[key];
@@ -339,7 +339,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                 uri: this._partialIssue.uri,
                 position: this._partialIssue.position,
                 issueKey: issueKey,
-                summary: createdSummary
+                summary: createdSummary,
             });
             this.hide();
         } else if (this._relatedBBIssue && this._partialIssue && this._partialIssue.onCreated) {
@@ -354,10 +354,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
         linkdata.issue.forEach((link: any) => {
             issuelinks.push({
                 type: {
-                    id: linkdata.type.id
+                    id: linkdata.type.id,
                 },
                 inwardIssue: linkdata.type.type === 'inward' ? { key: link.key } : { key: key },
-                outwardIssue: linkdata.type.type === 'outward' ? { key: link.key } : { key: key }
+                outwardIssue: linkdata.type.type === 'outward' ? { key: link.key } : { key: key },
             });
         });
 
@@ -389,10 +389,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                             adjustEstimate: 'new',
                             started: payload['worklog'].started
                                 ? format(payload['worklog'].started, 'YYYY-MM-DDTHH:mm:ss.SSSZZ')
-                                : undefined
-                        }
-                    }
-                ]
+                                : undefined,
+                        },
+                    },
+                ],
             };
             delete payload['worklog'];
         }
@@ -445,14 +445,14 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                         try {
                             await configuration.setLastCreateSiteAndProject({
                                 siteId: this._siteDetails.id,
-                                projectKey: this._currentProject!.key
+                                projectKey: this._currentProject!.key,
                             });
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
                             let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
 
-                            issueCreatedEvent(msg.site, resp.key).then(e => {
+                            issueCreatedEvent(msg.site, resp.key).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
 
@@ -467,7 +467,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                                 attachments.forEach((file: any) => {
                                     formData.append('file', fs.createReadStream(file.path), {
                                         filename: file.name,
-                                        contentType: file.type
+                                        contentType: file.type,
                                     });
                                 });
                                 await client.addAttachments(resp.key, formData);
@@ -478,7 +478,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                             this.postMessage({
                                 type: 'issueCreated',
                                 issueData: { ...resp, siteDetails: msg.site },
-                                nonce: msg.nonce
+                                nonce: msg.nonce,
                             });
 
                             commands.executeCommand(Commands.RefreshJiraExplorer);
@@ -488,7 +488,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(e, 'Error creating issue'),
-                                nonce: msg.nonce
+                                nonce: msg.nonce,
                             });
                         }
                     }

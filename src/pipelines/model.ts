@@ -30,7 +30,7 @@ export enum Status {
     Successful,
     Error,
     Failed,
-    Unknown
+    Unknown,
 }
 
 export interface PipelineState {
@@ -56,7 +56,7 @@ export enum PipelineSelectorType {
     Bookmark = 'bookmarks',
     Custom = 'custom',
     PullRequests = 'pull-requests',
-    Default = 'default'
+    Default = 'default',
 }
 
 export interface PipelineSelector {
@@ -67,7 +67,7 @@ export interface PipelineSelector {
 export enum PipelineTargetType {
     Reference = 'pipeline_ref_target',
     Commit = 'pipeline_commit_target',
-    PullRequest = 'pipeline_pullrequest_target'
+    PullRequest = 'pipeline_pullrequest_target',
 }
 
 export enum PipelineReferenceType {
@@ -75,7 +75,7 @@ export enum PipelineReferenceType {
     NamedBranch = 'named_branch',
     Tag = 'tag',
     AnnotatedTag = 'annotated_tag',
-    Bookmark = 'bookmark'
+    Bookmark = 'bookmark',
 }
 
 export interface PipelineTarget {

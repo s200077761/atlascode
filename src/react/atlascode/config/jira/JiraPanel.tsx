@@ -23,10 +23,10 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     onSubsectionChange,
     config,
     sites,
-    isRemote
+    isRemote,
 }) => {
     const siteInfos = useMemo(() => {
-        return sites.map(swa => {
+        return sites.map((swa) => {
             return swa.site;
         });
     }, [sites]);

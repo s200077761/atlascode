@@ -35,7 +35,7 @@ export class BitbucketContext extends Disposable {
         this._currentUsers = new CacheMap();
 
         Container.context.subscriptions.push(
-            Container.siteManager.onDidSitesAvailableChange(e => {
+            Container.siteManager.onDidSitesAvailableChange((e) => {
                 if (e.product.key === ProductBitbucket.key) {
                     this.updateUsers(e.sites);
                     this.refreshRepos();
@@ -74,7 +74,7 @@ export class BitbucketContext extends Disposable {
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
             const prs = await Promise.all(
-                this.getBitbucketRepositories().map(async repo => {
+                this.getBitbucketRepositories().map(async (repo) => {
                     const bbClient = await clientForSite(repo.mainSiteRemote.site!);
                     return (await bbClient.pullrequests.getRecentAllStatus(repo)).data;
                 })
@@ -95,7 +95,7 @@ export class BitbucketContext extends Disposable {
         this._repoMap.clear();
 
         await Promise.all(
-            Container.siteManager.getSitesAvailable(ProductBitbucket).map(async site => {
+            Container.siteManager.getSitesAvailable(ProductBitbucket).map(async (site) => {
                 try {
                     const bbApi = await Container.clientManager.bbClient(site);
                     const mirrorHosts = await bbApi.repositories.getMirrorHosts();
@@ -107,7 +107,7 @@ export class BitbucketContext extends Disposable {
             })
         );
 
-        this.getAllRepositoriesRaw().forEach(repo => {
+        this.getAllRepositoriesRaw().forEach((repo) => {
             if (repo.state.remotes.length > 0) {
                 this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
             }
@@ -118,12 +118,12 @@ export class BitbucketContext extends Disposable {
 
     private updateUsers(sites: DetailedSiteInfo[]) {
         const removed: string[] = [];
-        this._currentUsers.getItems<User>().forEach(entry => {
-            if (!sites.some(s => s.host === entry.key)) {
+        this._currentUsers.getItems<User>().forEach((entry) => {
+            if (!sites.some((s) => s.host === entry.key)) {
                 removed.push(entry.key);
             }
         });
-        removed.forEach(hostname => this._currentUsers.deleteItem(hostname));
+        removed.forEach((hostname) => this._currentUsers.deleteItem(hostname));
         if (removed.length > 0) {
             this._onDidChangeBitbucketContext.fire();
         }
@@ -146,12 +146,12 @@ export class BitbucketContext extends Disposable {
     }
 
     public getBitbucketRepositories(): WorkspaceRepo[] {
-        return this.getAllRepositories().filter(wsRepo => wsRepo.mainSiteRemote.site !== undefined);
+        return this.getAllRepositories().filter((wsRepo) => wsRepo.mainSiteRemote.site !== undefined);
     }
 
     public getBitbucketCloudRepositories(): WorkspaceRepo[] {
         return this.getAllRepositories().filter(
-            wsRepo => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true
+            (wsRepo) => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true
         );
     }
 
@@ -160,7 +160,7 @@ export class BitbucketContext extends Disposable {
     }
 
     public getRepositoryScm(repoUri: string): Repository | undefined {
-        return this.getAllRepositoriesRaw().find(r => r.rootUri.toString() === repoUri);
+        return this.getAllRepositoriesRaw().find((r) => r.rootUri.toString() === repoUri);
     }
 
     public getMirrors(hostname: string): string[] {
