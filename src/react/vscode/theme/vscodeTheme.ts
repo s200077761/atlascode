@@ -60,7 +60,8 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             },
             MuiExpansionPanelSummary: {
                 root: {
-                    backgroundColor: vscStyles.sideBarSectionHeaderBackground
+                    backgroundColor: vscStyles.titleBarActiveBackground,
+                    color: vscStyles.titleBarActiveForeground
                 }
             },
             MuiFilledInput: {

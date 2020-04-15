@@ -1,3 +1,4 @@
+import orderBy from 'lodash.orderby';
 import * as vscode from 'vscode';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
@@ -170,7 +171,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
 
         const repos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];
 
-        const repoData: RepoData[] = await Promise.all(
+        const repoData: (RepoData & { hasSubmodules: boolean })[] = await Promise.all(
             repos
                 .filter(r => r.siteRemotes.length > 0)
                 .map(async wsRepo => {
@@ -198,7 +199,8 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                         remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
                         branchTypes: [],
                         developmentBranch: developmentBranch,
-                        isCloud: isCloud
+                        isCloud: isCloud,
+                        hasSubmodules: scm.state.submodules.length > 0
                     };
                 })
         );
@@ -206,7 +208,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
         const msg: StartWorkOnBitbucketIssueData = {
             type: 'startWorkOnBitbucketIssueData',
             issue: issue,
-            repoData: repoData
+            repoData: orderBy(repoData, 'hasSubmodules', 'desc')
         };
         this.postMessage(msg);
     }

@@ -67,18 +67,22 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
     async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return [
-                new SimpleJiraIssueNode('Please login to Jira', {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Jira',
-                    arguments: [ProductJira]
-                })
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira]
+                    },
+                    this
+                )
             ];
         }
         if (parent) {
             return parent.getChildren();
         }
         if (!this._jqlEntry) {
-            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
+            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand, this)];
         } else if (this._issues) {
             return this.nodesForIssues();
         } else {
@@ -195,7 +199,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
         if (this._issues && this._issues.length > 0) {
             return this._issues.map(issue => new IssueNode(issue, this));
         } else {
-            return [new SimpleJiraIssueNode(this._emptyState)];
+            return [new SimpleJiraIssueNode(this._emptyState, undefined, this)];
         }
     }
 

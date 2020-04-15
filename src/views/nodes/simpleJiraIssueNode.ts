@@ -1,13 +1,14 @@
 import { createEmptyMinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { emptySiteInfo } from '../../atlclients/authInfo';
+import { AbstractBaseNode } from './abstractBaseNode';
 import { IssueNode } from './issueNode';
 
 export class SimpleJiraIssueNode extends IssueNode {
     private command: Command | undefined;
 
-    constructor(private text: string, command?: Command) {
-        super(createEmptyMinimalIssue(emptySiteInfo), undefined);
+    constructor(private text: string, command?: Command, parent?: AbstractBaseNode | undefined) {
+        super(createEmptyMinimalIssue(emptySiteInfo), parent);
         this.command = command;
     }
 

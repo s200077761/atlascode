@@ -94,7 +94,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
     }
 
     public update(section: SectionChangeMessage) {
-        //this.postMessage({ type: ConfigMessageType.SectionChange, ...section });
+        this.postMessage({ type: ConfigMessageType.SectionChange, ...section });
     }
 
     public async onMessageReceived(msg: ConfigAction) {

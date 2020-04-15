@@ -17,6 +17,7 @@ import {
     JQLOptionsResponseMessage,
     JQLSuggestionsResponseMessage,
     SiteWithAuthInfo,
+    SectionChangeMessage,
     ValidateJqlResponseMessage
 } from '../../../lib/ipc/toUI/config';
 import { ConnectionTimeout } from '../../../util/time';
@@ -129,6 +130,7 @@ const emptyState: ConfigState = {
 
 export enum ConfigUIActionType {
     Init = 'init',
+    SectionChange = 'sectionChange',
     ConfigChange = 'configChange',
     Loading = 'loading',
     SitesUpdate = 'sitesUpdate',
@@ -138,6 +140,7 @@ export enum ConfigUIActionType {
 export type ConfigUIAction =
     | ReducerAction<ConfigUIActionType.Init, { data: ConfigInitMessage }>
     | ReducerAction<ConfigUIActionType.ConfigChange, { config: FlattenedConfig; target: ConfigTarget }>
+    | ReducerAction<ConfigUIActionType.SectionChange, { data: SectionChangeMessage }>
     | ReducerAction<ConfigUIActionType.LocalChange, { changes: { [key: string]: any } }>
     | ReducerAction<ConfigUIActionType.Loading>
     | ReducerAction<
@@ -155,6 +158,17 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                 ...action.data,
                 openSection: action.data.section ? action.data.section : ConfigSection.Jira,
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
+                isSomethingLoading: false,
+                isErrorBannerOpen: false,
+                errorDetails: undefined
+            };
+            return newstate;
+        }
+        case ConfigUIActionType.SectionChange: {
+            const newstate = {
+                ...state,
+                openSection: action.data.section ? action.data.section : state.openSection,
+                openSubSections: action.data.subSection ? [action.data.subSection] : state.openSubSections,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
                 errorDetails: undefined
@@ -204,6 +218,10 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         switch (message.type) {
             case ConfigMessageType.Init: {
                 dispatch({ type: ConfigUIActionType.Init, data: message });
+                break;
+            }
+            case ConfigMessageType.SectionChange: {
+                dispatch({ type: ConfigUIActionType.SectionChange, data: message });
                 break;
             }
             case ConfigMessageType.Update: {
