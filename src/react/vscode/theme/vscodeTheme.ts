@@ -23,6 +23,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
         },
         typography: {
             fontFamily: vscStyles.fontFamily,
+            fontSize: vscStyles.editorFontSize,
         },
         overrides: {
             MuiChip: {
