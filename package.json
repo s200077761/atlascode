@@ -1378,7 +1378,7 @@
         "@types/terser-webpack-plugin": "^2.2.0",
         "@types/turndown": "^5.0.0",
         "@types/uuid": "^3.4.7",
-        "@types/vscode": "1.44.0",
+        "@types/vscode": "1.42.0",
         "@types/webpack": "^4.41.11",
         "@types/webpack-manifest-plugin": "^2.1.0",
         "@types/websocket": "^1.0.0",
