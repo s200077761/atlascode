@@ -7,7 +7,7 @@ import { SiteWithAuthInfo } from './config';
 export enum OnboardingMessageType {
     Init = 'init',
     Update = 'configUpdate',
-    SitesUpdate = 'sitesAvailableUpdate'
+    SitesUpdate = 'sitesAvailableUpdate',
 }
 
 export type OnboardingMessage =
@@ -30,7 +30,7 @@ export const emptyOnboardingInitMessage: OnboardingInitMessage = {
     jiraSites: [],
     bitbucketSites: [],
     isRemote: false,
-    target: ConfigTarget.User
+    target: ConfigTarget.User,
 };
 
 export interface ConfigUpdateMessage {

@@ -10,7 +10,7 @@ import {
     emptyUserInfo,
     Product,
     ProductJira,
-    SiteInfo
+    SiteInfo,
 } from '../../../atlclients/authInfo';
 import { emptySiteAuthInfo, SiteAuthInfo } from '../../../ipc/configMessaging';
 import AuthForm from './AuthForm';
@@ -69,7 +69,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     handleEditSite,
     handleSaveSite,
     siteExample,
-    cloudOrServer
+    cloudOrServer,
 }) => {
     const [addingSite, setAddingSite] = useState(false);
     const [editingSite, setEditingSite] = useState(emptySiteAuthInfo);
@@ -143,14 +143,14 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
 
     const getTreeItems = () => {
         if (sites.length > 0) {
-            return sites.map(siteInfo => {
+            return sites.map((siteInfo) => {
                 return {
                     id: siteInfo.site.id,
                     content: {
                         site: siteInfo,
                         delfunc: handleDeleteSite,
-                        editfunc: handleEditSite && siteInfo.site.isCloud ? undefined : handleEdit
-                    }
+                        editfunc: handleEditSite && siteInfo.site.isCloud ? undefined : handleEdit,
+                    },
                 };
             });
         } else {

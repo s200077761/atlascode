@@ -26,7 +26,7 @@ import {
     PipelineStep,
     PipelineTargetType,
     Status,
-    statusForState
+    statusForState,
 } from '../../../pipelines/model';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
@@ -96,7 +96,7 @@ const emptyPipeline: PipelineData = {
         fullName: '',
         url: '',
         avatarUrl: '',
-        issueTrackerEnabled: false
+        issueTrackerEnabled: false,
     },
     type: '',
     triggerName: '',
@@ -107,13 +107,13 @@ const emptyPipeline: PipelineData = {
         name: '',
         type: 'pipeline_state_in_progress',
         result: { name: '', type: '' },
-        stage: { name: 'PENDING', type: 'pipeline_step_state_pending_pending' }
+        stage: { name: 'PENDING', type: 'pipeline_step_state_pending_pending' },
     },
     target: {
         type: PipelineTargetType.Commit,
         ref_name: '',
-        selector: { pattern: '', type: PipelineSelectorType.Default }
-    }
+        selector: { pattern: '', type: PipelineSelectorType.Default },
+    },
 };
 
 export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline, Properties, State> {
@@ -125,7 +125,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
             isErrorBannerOpen: false,
             isOnline: true,
             errorDetails: undefined,
-            isRerunning: false
+            isRerunning: false,
         };
     }
 
@@ -265,7 +265,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     commandSection(commands: PipelineCommand[], title: string, expanded: boolean) {
         return (
             <Panel isDefaultExpanded={expanded} header={panelHeader(title, `${commands.length} Commands`)}>
-                {commands.map(c => {
+                {commands.map((c) => {
                     return (
                         <div className="pipeline-step-panel">
                             <Panel isDefaultExpanded={false} header={<div className="pipeline-command">{c.name}</div>}>
@@ -398,7 +398,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
                                                                 this.state.pipeline.repository!.url
                                                             }/addon/pipelines/home#!/results/${
                                                                 this.state.pipeline.build_number
-                                                            }`
+                                                            }`,
                                                         })
                                                     }
                                                 />
@@ -412,7 +412,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
                             <div
                                 className="pipeline-head"
                                 style={{
-                                    backgroundColor: this.colorForState(this.state.pipeline.state)
+                                    backgroundColor: this.colorForState(this.state.pipeline.state),
                                 }}
                             >
                                 <span className="pipeline-head-item">

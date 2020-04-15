@@ -11,7 +11,7 @@ import {
     OnboardingInitMessage,
     OnboardingMessage,
     OnboardingMessageType,
-    OnboardingResponse
+    OnboardingResponse,
 } from '../../../lib/ipc/toUI/onboarding';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
@@ -29,7 +29,7 @@ export interface OnboardingControllerApi {
 }
 
 export const emptyApi: OnboardingControllerApi = {
-    postMessage: s => {
+    postMessage: (s) => {
         return;
     },
     updateConfig: (changes, removes?) => {
@@ -38,7 +38,7 @@ export const emptyApi: OnboardingControllerApi = {
     refresh: (): void => {
         return;
     },
-    openLink: linkId => {
+    openLink: (linkId) => {
         return;
     },
     login: (site: SiteInfo, auth: AuthInfo) => {
@@ -58,7 +58,7 @@ export const emptyApi: OnboardingControllerApi = {
     },
     viewJiraIssue: (): void => {
         return;
-    }
+    },
 };
 
 export const OnboardingControllerContext = React.createContext(emptyApi);
@@ -69,7 +69,7 @@ export interface OnboardingState extends OnboardingInitMessage {
 
 const emptyState: OnboardingState = {
     ...emptyOnboardingInitMessage,
-    isSomethingLoading: false
+    isSomethingLoading: false,
 };
 
 export enum OnboardingUIActionType {
@@ -77,7 +77,7 @@ export enum OnboardingUIActionType {
     ConfigChange = 'configChange',
     Loading = 'loading',
     SitesUpdate = 'sitesUpdate',
-    LocalChange = 'localChange'
+    LocalChange = 'localChange',
 }
 
 export type OnboardingUIAction =
@@ -100,7 +100,7 @@ function onboardingReducer(state: OnboardingState, action: OnboardingUIAction): 
                 ...action.data,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
-                errorDetails: undefined
+                errorDetails: undefined,
             };
             return newstate;
         }
@@ -115,8 +115,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingUIAction): 
                     target: action.target,
                     isSomethingLoading: false,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
-                }
+                    errorDetails: undefined,
+                },
             };
         }
         case OnboardingUIActionType.SitesUpdate: {
@@ -127,8 +127,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingUIAction): 
                     bitbucketSites: action.bitbucketSites,
                     isSomethingLoading: false,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
-                }
+                    errorDetails: undefined,
+                },
             };
         }
         case OnboardingUIActionType.Loading: {
@@ -157,7 +157,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
                 dispatch({
                     type: OnboardingUIActionType.SitesUpdate,
                     jiraSites: message.jiraSites,
-                    bitbucketSites: message.bitbucketSites
+                    bitbucketSites: message.bitbucketSites,
                 });
                 break;
             }
@@ -177,7 +177,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
                 type: OnboardingActionType.SaveSettings,
                 changes: changes,
                 removes: removes,
-                target: state.target
+                target: state.target,
             });
         },
         [postMessage, state.target]
@@ -240,7 +240,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             createJiraIssue: createJiraIssue,
             createPullRequest: createPullRequest,
             viewPullRequest: viewPullRequest,
-            viewJiraIssue: viewJiraIssue
+            viewJiraIssue: viewJiraIssue,
         };
     }, [handleConfigChange, login, logout, openLink, postMessage, sendRefresh]);
 

@@ -4,15 +4,15 @@ import React, { useContext } from 'react';
 import { emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { OnboardingControllerContext } from './onboardingController';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
     box: {
         textAlign: 'center',
         width: 'inherit',
-        height: 'inherit'
+        height: 'inherit',
     },
     icon: {
         fontSize: 100,
-        color: 'white'
+        color: 'white',
     },
     button: {
         padding: 0,
@@ -20,14 +20,14 @@ const useStyles = makeStyles(theme => ({
         width: '100%',
         height: '100%',
         textAlign: 'center',
-        backgroundColor: theme.palette.primary.dark
+        backgroundColor: theme.palette.primary.dark,
     },
     buttonSubtext: {
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: '#7f8082'
-    }
+        color: '#7f8082',
+    },
 }));
 
 type AltCloudAuthButtonProps = {

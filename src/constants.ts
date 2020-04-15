@@ -33,7 +33,7 @@ export enum CommandContext {
     AssignedIssuesTree = 'atlascode:assignedIssuesTreeEnabled',
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
-    IsBBAuthenticated = 'atlascode:isBBAuthenticated'
+    IsBBAuthenticated = 'atlascode:isBBAuthenticated',
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

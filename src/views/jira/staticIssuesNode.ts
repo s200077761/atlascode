@@ -29,7 +29,7 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
                     name: 'related issues',
                     query: `issuekey in (${this.issueKeys.join(',')})`,
                     siteId: issue.siteDetails.id,
-                    monitor: false
+                    monitor: false,
                 });
                 await this.executeQuery();
             } catch (e) {

@@ -40,7 +40,7 @@ export default class PopoutMentionPicker extends React.Component<
     }
 
     toggleOpen = () => {
-        this.setState(state => ({ isOpen: !state.isOpen }));
+        this.setState((state) => ({ isOpen: !state.isOpen }));
     };
 
     onSelectChange = (value: any) => {
@@ -93,7 +93,7 @@ const Menu = (props: any) => {
                 marginTop: 8,
                 position: 'absolute',
                 zIndex: 2,
-                width: '350px'
+                width: '350px',
             }}
             {...props}
         />
@@ -107,7 +107,7 @@ const Blanket = (props: any) => (
             top: 0,
             right: 0,
             position: 'fixed',
-            zIndex: 1
+            zIndex: 1,
         }}
         {...props}
     />

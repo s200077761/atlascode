@@ -5,7 +5,7 @@ import {
     openWorkbenchRepositoryButtonEvent,
     openWorkbenchWorkspaceButtonEvent,
     Registry,
-    viewScreenEvent
+    viewScreenEvent,
 } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
@@ -80,7 +80,7 @@ export enum Commands {
     DebugBitbucketSites = 'atlascode.debug.bitbucketSites',
     WorkbenchOpenRepository = 'atlascode.workbenchOpenRepository',
     WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
-    CloneRepository = 'atlascode.cloneRepository'
+    CloneRepository = 'atlascode.cloneRepository',
 }
 
 export function registerCommands(vscodeContext: ExtensionContext) {
@@ -88,43 +88,43 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.ShowConfigPage, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
-                subSection: ConfigSubSection.Auth
+                subSection: ConfigSubSection.Auth,
             })
         ),
         commands.registerCommand(Commands.ShowJiraAuth, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
-                subSection: ConfigSubSection.Auth
+                subSection: ConfigSubSection.Auth,
             })
         ),
         commands.registerCommand(Commands.ShowBitbucketAuth, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Auth
+                subSection: ConfigSubSection.Auth,
             })
         ),
         commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
-                subSection: ConfigSubSection.Issues
+                subSection: ConfigSubSection.Issues,
             })
         ),
         commands.registerCommand(Commands.ShowPullRequestSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.PR
+                subSection: ConfigSubSection.PR,
             })
         ),
         commands.registerCommand(Commands.ShowPipelineSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Pipelines
+                subSection: ConfigSubSection.Pipelines,
             })
         ),
         commands.registerCommand(Commands.ShowBitbucketIssueSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
-                subSection: ConfigSubSection.Issues
+                subSection: ConfigSubSection.Issues,
             })
         ),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebview.createOrShow()),
@@ -160,7 +160,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)
         ),
         commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
-            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then(e => {
+            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
                 Container.analyticsClient.sendScreenEvent(e);
             });
             diffArgs[0]();
@@ -180,19 +180,19 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
         commands.registerCommand(Commands.WorkbenchOpenRepository, () => {
-            openWorkbenchRepositoryButtonEvent('pullRequestsTreeView').then(event =>
+            openWorkbenchRepositoryButtonEvent('pullRequestsTreeView').then((event) =>
                 Container.analyticsClient.sendUIEvent(event)
             );
             commands.executeCommand('workbench.action.addRootFolder');
         }),
         commands.registerCommand(Commands.WorkbenchOpenWorkspace, () => {
-            openWorkbenchWorkspaceButtonEvent('pullRequestsTreeView').then(event =>
+            openWorkbenchWorkspaceButtonEvent('pullRequestsTreeView').then((event) =>
                 Container.analyticsClient.sendUIEvent(event)
             );
             commands.executeCommand('workbench.action.openWorkspace');
         }),
         commands.registerCommand(Commands.CloneRepository, () => {
-            cloneRepositoryButtonEvent('pullRequestsTreeView').then(event =>
+            cloneRepositoryButtonEvent('pullRequestsTreeView').then((event) =>
                 Container.analyticsClient.sendUIEvent(event)
             );
             commands.executeCommand('git.clone');

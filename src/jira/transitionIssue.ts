@@ -2,7 +2,7 @@ import {
     isIssueKeyAndSite,
     isMinimalIssue,
     MinimalIssueOrKeyAndSite,
-    Transition
+    Transition,
 } from '@atlassianlabs/jira-pi-common-models';
 import * as vscode from 'vscode';
 import { issueTransitionedEvent } from '../analytics';
@@ -41,7 +41,7 @@ async function performTranstion(issueKey: string, transition: Transition, site: 
 
         vscode.commands.executeCommand(Commands.RefreshJiraExplorer);
 
-        issueTransitionedEvent(site, issueKey).then(e => {
+        issueTransitionedEvent(site, issueKey).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
     } catch (err) {

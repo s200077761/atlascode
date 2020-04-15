@@ -1,4 +1,4 @@
-import { Disposable, env, ExtensionContext, Uri, UriHandler, version, window } from 'vscode';
+import { Disposable, env, ExtensionContext, UriHandler } from 'vscode';
 import { AnalyticsClient } from './analytics-node-client/src/index';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
@@ -15,6 +15,7 @@ import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
+import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -44,31 +45,6 @@ import { WelcomeWebview } from './webviews/welcomeWebview';
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
 
-const settingsUrl = version.endsWith('-insider')
-    ? 'vscode-insiders://atlassian.atlascode/openSettings'
-    : 'vscode://atlassian.atlascode/openSettings';
-
-export class AtlascodeUriHandler extends Disposable implements UriHandler {
-    private disposables: Disposable;
-
-    constructor() {
-        super(() => this.dispose());
-        this.disposables = window.registerUriHandler(this);
-    }
-
-    handleUri(uri: Uri): void {
-        if (uri.path.endsWith('openSettings')) {
-            Container.configWebview.createOrShow();
-        } else if (uri.path.endsWith('openOnboarding')) {
-            Container.onboardingWebview.createOrShow();
-        }
-    }
-
-    dispose(): void {
-        this.disposables.dispose();
-    }
-}
-
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
         let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
@@ -78,7 +54,7 @@ export class Container {
             product: 'externalProductIntegrations',
             subproduct: 'atlascode',
             version: version,
-            deviceId: env.machineId
+            deviceId: env.machineId,
         });
 
         this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient);
@@ -86,7 +62,7 @@ export class Container {
 
         this._context = context;
         this._version = version;
-        context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
+        context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler(this._analyticsApi)));
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
@@ -123,8 +99,9 @@ export class Container {
                 new VSCConfigActionApi(this._analyticsApi),
                 this._commonMessageHandler,
                 this._analyticsApi,
-                settingsUrl
-            )
+                SETTINGS_URL
+            ),
+            this._analyticsApi
         );
 
         const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
@@ -133,8 +110,9 @@ export class Container {
                 new VSCOnboardingActionApi(this._analyticsApi),
                 this._commonMessageHandler,
                 this._analyticsApi,
-                settingsUrl
-            )
+                SETTINGS_URL
+            ),
+            this._analyticsApi
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
@@ -148,7 +126,7 @@ export class Container {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
             let disposable: Disposable;
-            disposable = configuration.onDidChange(e => {
+            disposable = configuration.onDidChange((e) => {
                 if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));
@@ -179,7 +157,7 @@ export class Container {
             try {
                 const args = process.execArgv;
 
-                this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
+                this._isDebugging = args ? args.some((arg) => isDebuggingRegex.test(arg)) : false;
             } catch {}
         }
 

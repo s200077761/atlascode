@@ -12,7 +12,7 @@ import {
     UpdateAuthInfoEvent,
     RemoveAuthInfoEvent,
     oauthProviderForSite,
-    isOAuthInfo
+    isOAuthInfo,
 } from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event, version } from 'vscode';
@@ -28,7 +28,7 @@ const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders
 
 enum Priority {
     Read = 0,
-    Write
+    Write,
 }
 
 export class CredentialManager implements Disposable {
@@ -271,13 +271,13 @@ export class CredentialManager implements Disposable {
             const removeEvent: RemoveAuthInfoEvent = {
                 type: AuthChangeType.Remove,
                 product: site.product,
-                credentialId: site.credentialId
+                credentialId: site.credentialId,
             };
             this._onDidAuthChange.fire(removeEvent);
 
             window.showInformationMessage(`You have been logged out of ${site.product.name}: ${name}`);
 
-            loggedOutEvent(site).then(e => {
+            loggedOutEvent(site).then((e) => {
                 this._analyticsClient.sendTrackEvent(e);
             });
             return true;

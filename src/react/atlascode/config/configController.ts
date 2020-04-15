@@ -17,7 +17,8 @@ import {
     JQLOptionsResponseMessage,
     JQLSuggestionsResponseMessage,
     SiteWithAuthInfo,
-    ValidateJqlResponseMessage
+    SectionChangeMessage,
+    ValidateJqlResponseMessage,
 } from '../../../lib/ipc/toUI/config';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -49,7 +50,7 @@ export interface ConfigControllerApi {
 }
 
 export const emptyApi: ConfigControllerApi = {
-    postMessage: s => {
+    postMessage: (s) => {
         return;
     },
     updateConfig: (changes, removes?) => {
@@ -61,7 +62,7 @@ export const emptyApi: ConfigControllerApi = {
     refresh: (): void => {
         return;
     },
-    openLink: linkId => {
+    openLink: (linkId) => {
         return;
     },
     login: (site: SiteInfo, auth: AuthInfo) => {
@@ -101,7 +102,7 @@ export const emptyApi: ConfigControllerApi = {
         return new Promise<JQLErrors>((resolve, reject) => {
             resolve({ errors: [] });
         });
-    }
+    },
 };
 
 export const emptyFilterSearchResults: FilterSearchResults = {
@@ -109,7 +110,7 @@ export const emptyFilterSearchResults: FilterSearchResults = {
     isLast: true,
     maxResults: 25,
     offset: 0,
-    total: 0
+    total: 0,
 };
 
 export const ConfigControllerContext = React.createContext(emptyApi);
@@ -124,20 +125,22 @@ const emptyState: ConfigState = {
     ...emptyConfigInitMessage,
     isSomethingLoading: false,
     openSection: ConfigSection.Jira,
-    openSubSections: []
+    openSubSections: [],
 };
 
 export enum ConfigUIActionType {
     Init = 'init',
+    SectionChange = 'sectionChange',
     ConfigChange = 'configChange',
     Loading = 'loading',
     SitesUpdate = 'sitesUpdate',
-    LocalChange = 'localChange'
+    LocalChange = 'localChange',
 }
 
 export type ConfigUIAction =
     | ReducerAction<ConfigUIActionType.Init, { data: ConfigInitMessage }>
     | ReducerAction<ConfigUIActionType.ConfigChange, { config: FlattenedConfig; target: ConfigTarget }>
+    | ReducerAction<ConfigUIActionType.SectionChange, { data: SectionChangeMessage }>
     | ReducerAction<ConfigUIActionType.LocalChange, { changes: { [key: string]: any } }>
     | ReducerAction<ConfigUIActionType.Loading>
     | ReducerAction<
@@ -157,7 +160,18 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                 openSubSections: action.data.subSection ? [action.data.subSection] : [],
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
-                errorDetails: undefined
+                errorDetails: undefined,
+            };
+            return newstate;
+        }
+        case ConfigUIActionType.SectionChange: {
+            const newstate = {
+                ...state,
+                openSection: action.data.section ? action.data.section : state.openSection,
+                openSubSections: action.data.subSection ? [action.data.subSection] : state.openSubSections,
+                isSomethingLoading: false,
+                isErrorBannerOpen: false,
+                errorDetails: undefined,
             };
             return newstate;
         }
@@ -172,8 +186,8 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                     target: action.target,
                     isSomethingLoading: false,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
-                }
+                    errorDetails: undefined,
+                },
             };
         }
         case ConfigUIActionType.SitesUpdate: {
@@ -184,8 +198,8 @@ function configReducer(state: ConfigState, action: ConfigUIAction): ConfigState 
                     bitbucketSites: action.bitbucketSites,
                     isSomethingLoading: false,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
-                }
+                    errorDetails: undefined,
+                },
             };
         }
         case ConfigUIActionType.Loading: {
@@ -206,6 +220,10 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 dispatch({ type: ConfigUIActionType.Init, data: message });
                 break;
             }
+            case ConfigMessageType.SectionChange: {
+                dispatch({ type: ConfigUIActionType.SectionChange, data: message });
+                break;
+            }
             case ConfigMessageType.Update: {
                 dispatch({ type: ConfigUIActionType.ConfigChange, config: message.config, target: message.target });
                 break;
@@ -214,7 +232,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 dispatch({
                     type: ConfigUIActionType.SitesUpdate,
                     jiraSites: message.jiraSites,
-                    bitbucketSites: message.bitbucketSites
+                    bitbucketSites: message.bitbucketSites,
                 });
                 break;
             }
@@ -236,7 +254,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 type: ConfigActionType.SaveSettings,
                 changes: changes,
                 removes: removes,
-                target: state.target
+                target: state.target,
             });
         },
         [postMessage, state.target]
@@ -284,7 +302,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                         const response = await postMessagePromise(
                             {
                                 type: ConfigActionType.JQLOptionsRequest,
-                                site: site
+                                site: site,
                             },
                             ConfigMessageType.JQLOptionsResponse,
                             ConnectionTimeout
@@ -317,7 +335,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 fieldName: fieldName,
                                 userInput: userInput,
                                 predicateName: predicateName,
-                                abortSignal: abortSignal
+                                abortSignal: abortSignal,
                             },
                             ConfigMessageType.JQLSuggestionsResponse,
                             ConnectionTimeout
@@ -350,7 +368,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 query: query,
                                 maxResults: maxResults,
                                 startAt: startAt,
-                                abortSignal: abortSignal
+                                abortSignal: abortSignal,
                             },
                             ConfigMessageType.FilterSearchResponse,
                             ConnectionTimeout
@@ -375,7 +393,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 type: ConfigActionType.ValidateJqlRequest,
                                 site: site,
                                 jql: jql,
-                                abortSignal: abortSignal
+                                abortSignal: abortSignal,
                             },
                             ConfigMessageType.ValidateJqlResponse,
                             ConnectionTimeout
@@ -402,7 +420,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             fetchJqlSuggestions: fetchJqlSuggestions,
             fetchJqlOptions: fetchJqlOptions,
             fetchFilterSearchResults: fetchFilterSearchResults,
-            validateJql: validateJql
+            validateJql: validateJql,
         };
     }, [
         handleConfigChange,
@@ -415,7 +433,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         fetchJqlOptions,
         fetchJqlSuggestions,
         fetchFilterSearchResults,
-        validateJql
+        validateJql,
     ]);
 
     return [state, controllerApi];

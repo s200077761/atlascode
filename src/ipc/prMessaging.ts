@@ -12,7 +12,7 @@ import {
     Reviewer,
     Task,
     User,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../bitbucket/model';
 import { Branch } from '../typings/git';
 import { Message } from './messaging';

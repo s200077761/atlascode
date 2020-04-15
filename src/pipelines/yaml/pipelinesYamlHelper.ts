@@ -28,7 +28,7 @@ async function addPipelinesSchemaToConfigAtScope(
     if (valueAtScope) {
         newValue = Object.assign({}, valueAtScope);
     }
-    Object.keys(newValue).forEach(configKey => {
+    Object.keys(newValue).forEach((configKey) => {
         var configValue = newValue[configKey];
         if (value === configValue) {
             delete newValue[configKey];
@@ -47,7 +47,7 @@ export async function activateYamlExtension() {
                 "Please install 'YAML Support by Red Hat' via the Extensions pane.",
                 'install yaml extension'
             )
-            .then(sel => {
+            .then((sel) => {
                 commands.executeCommand('workbench.extensions.installExtension', VSCODE_YAML_EXTENSION_ID);
             });
         return;

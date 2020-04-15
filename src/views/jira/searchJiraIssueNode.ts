@@ -22,7 +22,7 @@ export class SearchJiraIssuesNode extends AbstractBaseNode {
 
         treeItem.command = {
             command: Commands.JiraSearchIssues,
-            title: 'Search Jira Issues'
+            title: 'Search Jira Issues',
         };
 
         return treeItem;

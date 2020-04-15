@@ -19,7 +19,7 @@ import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlC
 import {
     activateYamlExtension,
     addPipelinesSchemaToYamlConfig,
-    BB_PIPELINES_FILENAME
+    BB_PIPELINES_FILENAME,
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
@@ -77,8 +77,9 @@ export async function activate(context: ExtensionContext) {
     activateYamlFeatures(context);
 
     Logger.info(
-        `Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration[0] * 1000 +
-            Math.floor(duration[1] / 1000000)} ms`
+        `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
+            duration[0] * 1000 + Math.floor(duration[1] / 1000000)
+        } ms`
     );
 }
 
@@ -153,7 +154,7 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
     ) {
         window
             .showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes')
-            .then(userChoice => {
+            .then((userChoice) => {
                 if (userChoice === 'Release notes') {
                     commands.executeCommand(Commands.ShowWelcomePage);
                 }
@@ -166,7 +167,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
     globalState.update(GlobalStateVersionKey, version);
 
     if (previousVersion === undefined) {
-        installedEvent(version).then(e => {
+        installedEvent(version).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
         return;
@@ -174,12 +175,12 @@ async function sendAnalytics(version: string, globalState: Memento) {
 
     if (semver.gt(version, previousVersion)) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
-        upgradedEvent(version, previousVersion).then(e => {
+        upgradedEvent(version, previousVersion).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
     }
 
-    launchedEvent(env.remoteName ? env.remoteName : 'local').then(e => {
+    launchedEvent(env.remoteName ? env.remoteName : 'local').then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
 }

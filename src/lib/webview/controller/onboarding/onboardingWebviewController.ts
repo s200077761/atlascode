@@ -47,12 +47,16 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
         return 'Getting Started';
     }
 
+    public screenDetails() {
+        return { id: 'atlascodeOnboarding', site: undefined, product: undefined };
+    }
+
     public async onSitesChanged(): Promise<void> {
         const [jiraSites, bbSites] = await this._api.getSitesWithAuth();
         this.postMessage({
             type: OnboardingMessageType.SitesUpdate,
             jiraSites: jiraSites,
-            bitbucketSites: bbSites
+            bitbucketSites: bbSites,
         });
     }
 
@@ -66,7 +70,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
             jiraSites: jiraSites,
             isRemote: this._api.getIsRemote(),
             target: target,
-            config: cfg
+            config: cfg,
         });
     }
 
@@ -83,7 +87,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                     this._logger.error(new Error(`error refreshing config: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing config')
+                        reason: formatError(e, 'Error refeshing config'),
                     });
                 }
                 break;
@@ -99,7 +103,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                         this._logger.error(err);
                         this.postMessage({
                             type: CommonMessageType.Error,
-                            reason: formatError(e, 'Authentication error')
+                            reason: formatError(e, 'Authentication error'),
                         });
                     }
                 } else {

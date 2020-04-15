@@ -8,7 +8,7 @@ import {
     Reviewer,
     SiteRemote,
     Task,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../bitbucket/model';
 import { Branch } from '../typings/git';
 import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';

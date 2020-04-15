@@ -10,7 +10,7 @@ export enum OnboardingActionType {
     CreateJiraIssue = 'createJiraIssue',
     ViewJiraIssue = 'viewJiraIssue',
     CreatePullRequest = 'createPullRequest',
-    ViewPullRequest = 'viewPullRequest'
+    ViewPullRequest = 'viewPullRequest',
 }
 
 export type OnboardingAction =

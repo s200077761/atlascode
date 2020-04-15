@@ -11,9 +11,8 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             root: {
-                color: theme.palette.primary.contrastText,
-                marginRight: theme.spacing(2)
-            }
+                marginRight: theme.spacing(2),
+            },
         } as const)
 );
 
@@ -21,7 +20,7 @@ export const PanelTitle: React.FC<PanelTitleProps> = memo(({ children, className
     const classes = useStyles();
 
     return (
-        <Typography variant="h4" color="textPrimary" className={clsx(classes.root, className)} {...other}>
+        <Typography variant="h4" className={clsx(classes.root, className)} {...other}>
             {children || ''}
         </Typography>
     );

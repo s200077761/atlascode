@@ -5,7 +5,7 @@ import Comment, { CommentAction, CommentAuthor, CommentEdited, CommentTime } fro
 import {
     Comment as JiraComment,
     CommentVisibility,
-    JsdInternalCommentVisibility
+    JsdInternalCommentVisibility,
 } from '@atlassianlabs/jira-pi-common-models';
 import { distanceInWordsToNow } from 'date-fns';
 import React, { useState } from 'react';
@@ -27,7 +27,7 @@ export const CommentComponent: React.FC<Props> = ({
     isServiceDeskProject,
     fetchUsers,
     onSave,
-    onDelete
+    onDelete,
 }: Props) => {
     const [editing, setEditing] = useState(false);
     const [commentInputValue, setCommentInputValue] = useState(comment.body);
@@ -52,12 +52,12 @@ export const CommentComponent: React.FC<Props> = ({
                             <TextAreaEditor
                                 value={commentInputValue}
                                 fetchUsers={async (input: string) =>
-                                    (await fetchUsers(input)).map(user => ({
+                                    (await fetchUsers(input)).map((user) => ({
                                         displayName: user.displayName,
                                         avatarUrl: user.avatarUrls?.['48x48'],
                                         mention: siteDetails.isCloud
                                             ? `[~accountid:${user.accountId}]`
-                                            : `[~${user.name}]`
+                                            : `[~${user.name}]`,
                                     }))
                                 }
                                 disabled={isSaving}
@@ -136,7 +136,7 @@ export const CommentComponent: React.FC<Props> = ({
                               }}
                           >
                               Delete
-                          </CommentAction>
+                          </CommentAction>,
                       ]
                     : []
             }

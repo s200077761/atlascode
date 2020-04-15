@@ -18,8 +18,8 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             indent: {
-                marginLeft: theme.spacing(3)
-            }
+                marginLeft: theme.spacing(3),
+            },
         } as const)
 );
 

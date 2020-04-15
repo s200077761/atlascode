@@ -16,7 +16,7 @@ export abstract class Explorer extends Disposable {
     protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
         if (this.treeDataProvider) {
             const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.treeDataProvider });
-            treeView.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+            treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
             this.treeView = treeView;
             return treeView;
         }
@@ -25,7 +25,7 @@ export abstract class Explorer extends Disposable {
 
     private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && Container.siteManager.productHasAtLeastOneSite(this.product())) {
-            viewScreenEvent(this.viewId(), undefined, this.product()).then(e => {
+            viewScreenEvent(this.viewId(), undefined, this.product()).then((e) => {
                 Container.analyticsClient.sendScreenEvent(e);
             });
         }

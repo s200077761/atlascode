@@ -3,15 +3,15 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { ToggleButton } from '@material-ui/lab';
 import React from 'react';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
     box: {
         textAlign: 'center',
         width: 'inherit',
-        height: 'inherit'
+        height: 'inherit',
     },
     icon: {
         fontSize: 100,
-        color: 'white'
+        color: 'white',
     },
     button: {
         padding: 0,
@@ -22,14 +22,14 @@ const useStyles = makeStyles(theme => ({
         backgroundColor:
             theme.palette.type === 'dark'
                 ? lighten(theme.palette.background.paper, 0.02)
-                : darken(theme.palette.background.paper, 0.02)
+                : darken(theme.palette.background.paper, 0.02),
     },
     buttonSubtext: {
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: 'gray'
-    }
+        color: 'gray',
+    },
 }));
 
 export type AltProductEnablerProps = {
@@ -45,7 +45,7 @@ export const AltProductEnabler: React.FunctionComponent<AltProductEnablerProps> 
     enabled,
     onToggle,
     subtext,
-    ProductIcon
+    ProductIcon,
 }) => {
     const classes = useStyles();
 

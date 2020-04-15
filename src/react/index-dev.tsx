@@ -23,26 +23,26 @@ const routes = {
     ),
     atlascodeOnboardingV2: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage')
-    )
+    ),
 };
 
 const ports = {
     atlascodeSettingsV2: UIWSPort.Settings,
-    atlascodeOnboardingV2: UIWSPort.Onboarding
+    atlascodeOnboardingV2: UIWSPort.Onboarding,
 };
 
 class VsCodeApi {
     private conn: WebSocket;
     constructor(callback: () => void, wsport: number) {
         this.conn = new WebSocket(`ws://127.0.0.1:${wsport}`);
-        this.conn.onopen = function(): void {
+        this.conn.onopen = function (): void {
             callback();
         };
-        this.conn.onerror = function(error): void {
+        this.conn.onerror = function (error): void {
             console.error('websocket error', error);
         };
         // most important part - incoming messages
-        this.conn.onmessage = function(message): void {
+        this.conn.onmessage = function (message): void {
             try {
                 var json = JSON.parse(message.data);
                 window.postMessage(json.data, '*');

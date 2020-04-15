@@ -57,7 +57,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
             isLoading: false,
             inputValue: '',
             editorContainerClassname: 'ac-hidden',
-            selectedIssueType: props.subtaskTypes.length > 0 ? props.subtaskTypes[0] : emptyIssueType
+            selectedIssueType: props.subtaskTypes.length > 0 ? props.subtaskTypes[0] : emptyIssueType,
         };
     }
 
@@ -100,7 +100,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
 
         this.props.onSave({
             summary: val,
-            issuetype: { id: this.state.selectedIssueType.id }
+            issuetype: { id: this.state.selectedIssueType.id },
         });
     };
 
@@ -144,7 +144,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
                         inputProps={{
                             className: 'ac-inputField',
                             placeholder: 'What needs to be done?',
-                            style: { width: '100%' }
+                            style: { width: '100%' },
                         }}
                         mainContainerClassName="ac-inline-edit-main_container-left-margin"
                         editButtonClassName="ac-hidden"

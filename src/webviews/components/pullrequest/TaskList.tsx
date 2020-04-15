@@ -18,7 +18,7 @@ export default class TaskList extends React.Component<
     constructor(props: any) {
         super(props);
         this.state = {
-            creatingTaskMode: false
+            creatingTaskMode: false,
         };
     }
 
@@ -38,7 +38,7 @@ export default class TaskList extends React.Component<
     };
 
     render(): any {
-        let taskList = this.props.tasks.map(task => (
+        let taskList = this.props.tasks.map((task) => (
             <div style={{ marginBottom: '3px' }} key={task.id}>
                 <TaskComponent
                     task={task}

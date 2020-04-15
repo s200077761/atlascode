@@ -1,5 +1,5 @@
 // used to chain onChange function so we can provide custom functionality after internal state changes
-export const chain = (...fns: any[]) => (...args: any[]) => fns.forEach(fn => fn(...args));
+export const chain = (...fns: any[]) => (...args: any[]) => fns.forEach((fn) => fn(...args));
 
 export function validateSingleSelect(value: string, state?: any): string | undefined {
     return value !== undefined ? undefined : 'EMPTY';

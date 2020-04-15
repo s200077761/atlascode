@@ -11,7 +11,7 @@ import { CommonActionMessageHandler } from '../../lib/webview/controller/common/
 const knownLinkIdMap: Map<string, string> = new Map([
     [KnownLinkID.AtlascodeRepo, 'https://bitbucket.org/atlassianlabs/atlascode'],
     [KnownLinkID.AtlascodeIssues, 'https://bitbucket.org/atlassianlabs/atlascode/issues'],
-    [KnownLinkID.AtlascodeDocs, 'https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code']
+    [KnownLinkID.AtlascodeDocs, 'https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code'],
 ]);
 
 export class VSCCommonMessageHandler implements CommonActionMessageHandler {

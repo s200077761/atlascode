@@ -34,12 +34,12 @@ export default class Worklogs extends React.Component<{ worklogs: WorklogContain
             <TableTree
                 columns={[Author, Comment, TimeSpent, Created]}
                 columnWidths={['100%', '100%', '150px', '150px']}
-                items={this.props.worklogs.worklogs.map(worklog => {
+                items={this.props.worklogs.worklogs.map((worklog) => {
                     return {
                         id: worklog.id,
                         content: {
-                            worklog: worklog
-                        }
+                            worklog: worklog,
+                        },
                     };
                 })}
             />

@@ -32,7 +32,7 @@ import {
     CommonEditorPageAccept,
     CommonEditorPageEmit,
     CommonEditorViewState,
-    emptyCommonEditorState
+    emptyCommonEditorState,
 } from './AbstractIssueEditorPage';
 import { AttachmentList } from './AttachmentList';
 import { AttachmentsModal } from './AttachmentsModal';
@@ -59,7 +59,7 @@ const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyEditIssueData,
     showMore: false,
-    currentInlineDialog: ''
+    currentInlineDialog: '',
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -89,8 +89,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             isErrorBannerOpen: false,
                             errorDetails: undefined,
                             isSomethingLoading: false,
-                            loadingField: ''
-                        }
+                            loadingField: '',
+                        },
                     });
                     break;
                 }
@@ -122,7 +122,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.advancedMainFields = [];
         this.advancedSidebarFields = [];
 
-        orderedValues.forEach(field => {
+        orderedValues.forEach((field) => {
             if (field.advanced) {
                 if (field.uiType === UIType.Input && (field as InputFieldUI).isMultiline) {
                     this.advancedMainFields.push(field);
@@ -135,14 +135,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     handleCopyIssueLink = () => {
         this.postMessage({
-            action: 'copyJiraIssueLink'
+            action: 'copyJiraIssueLink',
         });
     };
 
     handleStartWorkOnIssue = () => {
         this.postMessage({
             action: 'openStartWorkPage',
-            issue: { key: this.state.key, siteDetails: this.state.siteDetails }
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
         });
     };
 
@@ -165,7 +165,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 this.postMessage({
                     action: 'createIssue',
                     site: this.state.siteDetails,
-                    issueData: { fields: payload }
+                    issueData: { fields: payload },
                 });
 
                 break;
@@ -178,14 +178,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     site: this.state.siteDetails,
                     issueLinkData: {
                         type: {
-                            id: newValue.type.id
+                            id: newValue.type.id,
                         },
                         inwardIssue:
                             newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
                         outwardIssue:
-                            newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+                            newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key },
                     },
-                    issueLinkType: newValue.type
+                    issueLinkType: newValue.type,
                 });
                 break;
             }
@@ -195,13 +195,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     newValObject.originalEstimate = newValue;
                 } else {
                     newValObject = {
-                        originalEstimate: newValue
+                        originalEstimate: newValue,
                     };
                 }
                 this.setState({
                     loadingField: field.key,
                     isSomethingLoading: true,
-                    fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } }
+                    fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } },
                 });
                 await this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
                 break;
@@ -212,7 +212,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     action: 'createWorklog',
                     site: this.state.siteDetails,
                     worklogData: newValue,
-                    issueKey: this.state.key
+                    issueKey: this.state.key,
                 });
                 break;
             }
@@ -226,7 +226,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
                 this.setState({
                     loadingField: field.key,
-                    fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } }
+                    fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } },
                 });
                 if (typedVal === undefined) {
                     typedVal = null;
@@ -244,9 +244,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             {
                 action: 'editIssue',
                 fields: {
-                    [fieldKey]: newValue
+                    [fieldKey]: newValue,
                 },
-                nonce: nonce
+                nonce: nonce,
             },
             'editIssueDone',
             ConnectionTimeout,
@@ -260,7 +260,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'comment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
             commentBody: commentBody,
-            restriction: restriction
+            restriction: restriction,
         };
 
         this.postMessage(commentAction);
@@ -272,7 +272,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
             commentBody: commentBody,
             commentId: commentId,
-            restriction: restriction
+            restriction: restriction,
         };
 
         this.postMessage(commentAction);
@@ -282,7 +282,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({
             action: 'deleteComment',
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
-            commentId: commentId
+            commentId: commentId,
         });
     };
 
@@ -291,7 +291,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({
             action: 'transitionIssue',
             transition: transition,
-            issue: { key: this.state.key, siteDetails: this.state.siteDetails }
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
         });
     };
 
@@ -346,7 +346,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'addWatcher',
             site: this.state.siteDetails,
             issueKey: this.state.key,
-            watcher: user
+            watcher: user,
         });
     };
 
@@ -356,7 +356,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'removeWatcher',
             site: this.state.siteDetails,
             issueKey: this.state.key,
-            watcher: user
+            watcher: user,
         });
     };
 
@@ -379,14 +379,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 name: file.name,
                 size: file.size,
                 type: file.type,
-                path: file.path
+                path: file.path,
             };
         });
         this.postMessage({
             action: 'addAttachments',
             site: this.state.siteDetails,
             issueKey: this.state.key,
-            files: serFiles
+            files: serFiles,
         });
     };
 
@@ -454,7 +454,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     onItemClick={() =>
                                         this.handleOpenIssue({
                                             siteDetails: this.state.siteDetails,
-                                            key: this.state.fieldValues['parent']
+                                            key: this.state.fieldValues['parent'],
                                         })
                                     }
                                 />
@@ -463,8 +463,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         )}
 
                         <Tooltip
-                            content={`Created on ${this.state.fieldValues['created.rendered'] ||
-                                this.state.fieldValues['created']}`}
+                            content={`Created on ${
+                                this.state.fieldValues['created.rendered'] || this.state.fieldValues['created']
+                            }`}
                         >
                             <NavItem
                                 text={`${this.state.key}`}
@@ -542,7 +543,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         />
                     </div>
                 )}
-                {this.state.fields['worklog'] && (
+                {this.state.fields['worklog'] && Array.isArray(this.state.fieldValues['worklog']?.worklogs) && (
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{this.state.fields['worklog'].name}</label>
                         <Worklogs worklogs={this.state.fieldValues['worklog']} />
@@ -785,7 +786,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     advancedSidebar(): any {
         let markups: any[] = [];
 
-        this.advancedSidebarFields.forEach(field => {
+        this.advancedSidebarFields.forEach((field) => {
             if (field.advanced && field.uiType !== UIType.NonEditable) {
                 if (field.uiType === UIType.Timetracking) {
                     field.name = 'Original estimate';
@@ -830,7 +831,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     advancedMain(): any {
         let markups: any[] = [];
 
-        this.advancedMainFields.forEach(field => {
+        this.advancedMainFields.forEach((field) => {
             if (field.advanced && field.uiType !== UIType.NonEditable) {
                 markups.push(
                     <div className="ac-vpadding">

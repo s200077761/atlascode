@@ -26,7 +26,7 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
         relatedBitbucketIssues,
         pullRequestCreated,
         nestFiles,
-        refreshInterval
+        refreshInterval,
     }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
@@ -39,7 +39,7 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

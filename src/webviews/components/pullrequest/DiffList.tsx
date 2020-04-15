@@ -45,7 +45,7 @@ export default class DiffList extends React.Component<
     };
 
     generateDiffList = () => {
-        return this.props.fileDiffs.map(fileDiff => (
+        return this.props.fileDiffs.map((fileDiff) => (
             <li className="iterable-item file-summary file-modified">
                 <div className="commit-file-diff-stats">
                     {fileDiff.linesAdded !== -1 && (

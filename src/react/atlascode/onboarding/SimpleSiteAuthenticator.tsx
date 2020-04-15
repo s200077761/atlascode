@@ -5,10 +5,10 @@ import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import { AltCloudAuthButton } from './AltCloudAuthButton';
 import { AltServerAuthButton } from './AltServerAuthButton';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
     root: {
-        flexGrow: 1
-    }
+        flexGrow: 1,
+    },
 }));
 
 type SimpleSiteAuthenticatorProps = {
@@ -24,7 +24,7 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
     enableJira,
     bitbucketSites,
     jiraSites,
-    onFinished
+    onFinished,
 }) => {
     const classes = useStyles();
 

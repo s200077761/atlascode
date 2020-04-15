@@ -33,11 +33,11 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
                 return [new SimpleNode('No issues found')];
             }
             this._children = issues.map(
-                i =>
+                (i) =>
                     new SimpleNode(`#${i.data.id} ${i.data.title!}`, {
                         command: Commands.ShowBitbucketIssue,
                         title: 'Open bitbucket issue',
-                        arguments: [i]
+                        arguments: [i],
                     })
             );
         }

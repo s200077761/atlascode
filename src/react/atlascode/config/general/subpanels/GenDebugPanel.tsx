@@ -27,7 +27,7 @@ export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

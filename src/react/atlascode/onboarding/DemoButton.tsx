@@ -4,15 +4,15 @@ import React from 'react';
 const useStyles = makeStyles((theme: Theme) => ({
     demoBox: {
         padding: theme.spacing(2),
-        paddingBottom: theme.spacing(3)
+        paddingBottom: theme.spacing(3),
     },
     button: {
         textTransform: 'none',
         backgroundColor:
             theme.palette.type === 'dark'
                 ? lighten(theme.palette.background.paper, 0.02)
-                : darken(theme.palette.background.paper, 0.02)
-    }
+                : darken(theme.palette.background.paper, 0.02),
+    },
 }));
 
 export type DemoButtonProps = {

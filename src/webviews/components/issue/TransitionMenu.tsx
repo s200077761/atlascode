@@ -49,7 +49,7 @@ export class TransitionMenu extends React.Component<Props, State> {
         const selectedTransition = this.getCurrentTransition(props.currentStatus, props.transitions);
         this.state = {
             selectedTransition: selectedTransition,
-            showTransitionName: this.shouldShowTransitionName(props.transitions)
+            showTransitionName: this.shouldShowTransitionName(props.transitions),
         };
     }
 
@@ -57,7 +57,7 @@ export class TransitionMenu extends React.Component<Props, State> {
         const selectedTransition = this.getCurrentTransition(nextProps.currentStatus, nextProps.transitions);
         this.setState({
             selectedTransition: selectedTransition,
-            showTransitionName: this.shouldShowTransitionName(nextProps.transitions)
+            showTransitionName: this.shouldShowTransitionName(nextProps.transitions),
         });
     }
 
@@ -73,7 +73,7 @@ export class TransitionMenu extends React.Component<Props, State> {
     }
 
     private shouldShowTransitionName(transitions: Transition[]) {
-        return transitions.some(t => t.name !== t.to.name);
+        return transitions.some((t) => t.name !== t.to.name);
     }
 
     handleStatusChange = (item: Transition) => {
@@ -95,7 +95,7 @@ export class TransitionMenu extends React.Component<Props, State> {
                 value={this.state.selectedTransition}
                 components={{
                     Option: this.state.showTransitionName ? StatusOptionWithTransitionName : StatusOption,
-                    SingleValue: StatusValue
+                    SingleValue: StatusValue,
                 }}
                 getOptionLabel={(option: Transition) => option.to.name}
                 getOptionValue={(option: Transition) => option.id}

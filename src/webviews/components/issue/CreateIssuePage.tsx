@@ -21,7 +21,7 @@ import {
     CommonEditorPageAccept,
     CommonEditorPageEmit,
     CommonEditorViewState,
-    emptyCommonEditorState
+    emptyCommonEditorState,
 } from './AbstractIssueEditorPage';
 
 type Emit = CommonEditorPageEmit;
@@ -35,7 +35,7 @@ const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyCreateIssueData,
     isCreateBannerOpen: false,
-    createdIssue: { key: '', siteDetails: emptySiteInfo }
+    createdIssue: { key: '', siteDetails: emptySiteInfo },
 };
 
 const IconOption = (props: any) => (
@@ -103,8 +103,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             createdIssue: e.issueData,
                             fieldValues: {
                                 ...this.state.fieldValues,
-                                ...{ description: createdFromAtlascodeFooter, summary: '' }
-                            }
+                                ...{ description: createdFromAtlascodeFooter, summary: '' },
+                            },
                         });
                     }
                     break;
@@ -120,7 +120,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.advancedFields = [];
         this.commonFields = [];
 
-        orderedValues.forEach(field => {
+        orderedValues.forEach((field) => {
             if (field.advanced) {
                 this.advancedFields.push(field);
             } else {
@@ -130,7 +130,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
-        let requiredFields = Object.values(this.state.fields).filter(field => field.required);
+        let requiredFields = Object.values(this.state.fields).filter((field) => field.required);
 
         let errs = {};
         requiredFields.forEach((field: FieldUI) => {
@@ -167,12 +167,12 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.setState({
             isSomethingLoading: true,
             loadingField: 'submitButton',
-            isCreateBannerOpen: false
+            isCreateBannerOpen: false,
         });
         this.postMessage({
             action: 'createIssue',
             site: this.state.siteDetails,
-            issueData: this.state.fieldValues
+            issueData: this.state.fieldValues,
         });
 
         return undefined;
@@ -182,7 +182,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.setState({ siteDetails: site, loadingField: 'site', isSomethingLoading: true });
         this.postMessage({
             action: 'getScreensForSite',
-            site: site
+            site: site,
         });
     };
 
@@ -219,7 +219,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                         name: file.name,
                         size: file.size,
                         type: file.type,
-                        path: file.path
+                        path: file.path,
                     };
                 });
 
@@ -234,7 +234,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             this.postMessage({
                 action: 'getScreensForProject',
                 project: newValue,
-                fieldValues: this.state.fieldValues
+                fieldValues: this.state.fieldValues,
             });
         }
 
@@ -243,7 +243,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             this.postMessage({
                 action: 'setIssueType',
                 issueType: newValue,
-                fieldValues: this.state.fieldValues
+                fieldValues: this.state.fieldValues,
             });
         }
     };
@@ -258,11 +258,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     };
 
     getCommonFieldMarkup(): any {
-        return this.commonFields.map(field => this.getInputMarkup(field));
+        return this.commonFields.map((field) => this.getInputMarkup(field));
     }
 
     getAdvancedFieldMarkup(): any {
-        return this.advancedFields.map(field => this.getInputMarkup(field));
+        return this.advancedFields.map((field) => this.getInputMarkup(field));
     }
 
     public render() {
@@ -345,7 +345,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                             options={this.state.selectFieldOptions['site']}
                                                             components={{
                                                                 Option: IconOption,
-                                                                SingleValue: IconValue
+                                                                SingleValue: IconValue,
                                                             }}
                                                             onChange={chain(
                                                                 fieldArgs.fieldProps.onChange,

@@ -15,9 +15,9 @@ module.exports = {
                     '@atlassianlabs/jira-pi-client/*',
                     '@atlassianlabs/jira-pi-common-models/*',
                     '@atlassianlabs/pi-client-common/*',
-                    '@atlaskit/*'
-                ]
-            }
-        ]
-    }
+                    '@atlaskit/*',
+                ],
+            },
+        ],
+    },
 };

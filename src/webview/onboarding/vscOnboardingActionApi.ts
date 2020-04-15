@@ -8,7 +8,7 @@ import {
     emptyBasicAuthInfo,
     ProductBitbucket,
     ProductJira,
-    SiteInfo
+    SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, IConfig } from '../../config/configuration';
 import { Container } from '../../container';
@@ -53,7 +53,7 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
                     const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite);
                     return {
                         site: jiraSite,
-                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo
+                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
                     };
                 }
             )
@@ -65,7 +65,11 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
                     const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
                     return {
                         site: bitbucketSite,
-                        auth: bitbucketAuth ? bitbucketAuth : bitbucketSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo
+                        auth: bitbucketAuth
+                            ? bitbucketAuth
+                            : bitbucketSite.isCloud
+                            ? emptyAuthInfo
+                            : emptyBasicAuthInfo,
                     };
                 }
             )

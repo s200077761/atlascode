@@ -15,7 +15,7 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
     visible,
     selectedSubSections,
     onSubsectionChange,
-    config
+    config,
 }) => {
     return (
         <>

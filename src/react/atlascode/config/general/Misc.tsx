@@ -7,7 +7,7 @@ export enum OutputLevelOption {
     SILENT = 'silent',
     ERRORS = 'errors',
     INFO = 'info',
-    DEBUG = 'debug'
+    DEBUG = 'debug',
 }
 
 type MiscProps = {

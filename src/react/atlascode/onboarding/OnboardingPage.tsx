@@ -13,15 +13,15 @@ import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
         width: '100%',
-        marginTop: theme.spacing(3)
+        marginTop: theme.spacing(3),
     },
     button: {
-        marginRight: theme.spacing(1)
+        marginRight: theme.spacing(1),
     },
     pageContent: {
         marginTop: theme.spacing(5),
-        marginBottom: theme.spacing(4)
-    }
+        marginBottom: theme.spacing(4),
+    },
 }));
 
 function getSteps() {
@@ -38,14 +38,14 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const steps = getSteps();
 
     const handleNext = () => {
-        setActiveStep(prevActiveStep => prevActiveStep + 1);
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
     };
 
     const handleBack = () => {
         if (activeStep === 2) {
-            setActiveStep(prevActiveStep => prevActiveStep - 2);
+            setActiveStep((prevActiveStep) => prevActiveStep - 2);
         } else {
-            setActiveStep(prevActiveStep => prevActiveStep - 1);
+            setActiveStep((prevActiveStep) => prevActiveStep - 1);
         }
     };
 

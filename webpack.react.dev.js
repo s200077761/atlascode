@@ -8,14 +8,14 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const smp = new SpeedMeasurePlugin();
 
 module.exports = smp.wrap({
     mode: 'development',
     entry: {
         main: resolveApp('./src/webviews/components/index.tsx'),
-        mui: resolveApp('./src/react/index.tsx')
+        mui: resolveApp('./src/react/index.tsx'),
     },
     devtool: 'cheap-module-source-map',
     output: {
@@ -23,25 +23,25 @@ module.exports = smp.wrap({
         path: path.resolve(__dirname, 'build'),
         chunkFilename: 'static/js/[name].chunk.js',
         filename: 'static/js/[name].js',
-        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
+        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
     },
     externals: ['utf-8-validate', 'bufferutil'],
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
-        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })]
+        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
     },
     plugins: [
         new MiniCssExtractPlugin(),
         new ManifestPlugin({
-            fileName: 'asset-manifest.json'
+            fileName: 'asset-manifest.json',
         }),
         new webpack.IgnorePlugin(/iconv-loader\.js/),
         new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
         new ForkTsCheckerWebpackPlugin({
             tsconfig: resolveApp('tsconfig.json'),
-            eslint: true
-        })
+            eslint: true,
+        }),
     ],
     module: {
         rules: [
@@ -49,7 +49,7 @@ module.exports = smp.wrap({
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
                 exclude: /node_modules/,
-                use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }]
+                use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
             },
             {
                 test: /\.css$/,
@@ -60,18 +60,18 @@ module.exports = smp.wrap({
                             // you can specify a publicPath here
                             // by default it uses publicPath in webpackOptions.output
                             publicPath: '../',
-                            hmr: process.env.NODE_ENV === 'development'
-                        }
+                            hmr: process.env.NODE_ENV === 'development',
+                        },
                     },
-                    'css-loader'
-                ]
+                    'css-loader',
+                ],
             },
             {
                 test: /\.js$/,
                 use: [{ loader: 'source-map-loader' }],
                 enforce: 'pre',
-                include: /node_modules/
-            }
-        ]
-    }
+                include: /node_modules/,
+            },
+        ],
+    },
 });

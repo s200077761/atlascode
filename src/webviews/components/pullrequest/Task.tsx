@@ -27,7 +27,7 @@ export class TaskComponent extends React.Component<
             editInput: this.props.task.content,
             isChecked: this.props.task.isComplete,
             beingDeleted: false,
-            isWaitingForServer: false
+            isWaitingForServer: false,
         };
     }
 

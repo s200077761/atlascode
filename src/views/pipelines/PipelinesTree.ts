@@ -8,7 +8,7 @@ import {
     EventEmitter,
     TreeItem,
     TreeItemCollapsibleState,
-    Uri
+    Uri,
 } from 'vscode';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
@@ -39,7 +39,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
 
         this._disposable = Disposable.from(
             this._onDidChangeTreeData,
-            commands.registerCommand(Commands.PipelinesNextPage, repo => {
+            commands.registerCommand(Commands.PipelinesNextPage, (repo) => {
                 this.fetchNextPage(repo);
             }),
             configuration.onDidChange(this.onConfigurationChanged, this)
@@ -77,7 +77,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
         const expand = workspaceRepos.length === 1;
 
         if (this._childrenMap.size === 0) {
-            workspaceRepos.forEach(wsRepo => {
+            workspaceRepos.forEach((wsRepo) => {
                 this._childrenMap.set(wsRepo.rootUri, new PipelinesRepoNode(wsRepo, expand));
             });
         }
@@ -131,8 +131,8 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 new SimpleNode(`Please login to ${ProductBitbucket.name}`, {
                     command: Commands.ShowConfigPage,
                     title: 'Login to Bitbucket',
-                    arguments: [ProductBitbucket]
-                })
+                    arguments: [ProductBitbucket],
+                }),
             ]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
@@ -143,7 +143,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 return [new SimpleNode('No pipelines results for this repository')];
             }
 
-            const filteredPipelines = this._pipelines.filter(pipeline => shouldDisplay(pipeline.target.ref_name));
+            const filteredPipelines = this._pipelines.filter((pipeline) => shouldDisplay(pipeline.target.ref_name));
             let nodes: AbstractBaseNode[] = [];
             if (filtersActive && filteredPipelines.length === 0 && !this._morePages) {
                 nodes = [new SimpleNode(`No pipelines matching your filters`)];
@@ -156,10 +156,10 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                             firstPipeTime,
                             'YYYY-MM-DD h:mm A'
                         )} to ${format(lastPipeTime, 'YYYY-MM-DD h:mm A')}`
-                    )
+                    ),
                 ];
             } else {
-                nodes = filteredPipelines.map(pipeline => new PipelineNode(this, pipeline));
+                nodes = filteredPipelines.map((pipeline) => new PipelineNode(this, pipeline));
             }
 
             if (this._morePages && filtersActive()) {
@@ -184,7 +184,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             const bbApi = await clientForSite(site);
             const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(site, {
                 page: `${this._page}`,
-                pagelen: defaultPageLength
+                pagelen: defaultPageLength,
             });
             pipelines = paginatedPipelines.values;
             const numPages = paginatedPipelines.size / defaultPageLength;
@@ -221,7 +221,7 @@ export class PipelineNode extends AbstractBaseNode {
         item.command = {
             command: Commands.ShowPipeline,
             title: 'Show Pipeline',
-            arguments: [this.pipeline]
+            arguments: [this.pipeline],
         };
         item.iconPath = iconUriForPipeline(this.pipeline);
         item.resourceUri = Uri.parse(
@@ -252,7 +252,7 @@ class NextPageNode extends AbstractBaseNode {
         treeItem.command = {
             command: Commands.PipelinesNextPage,
             title: 'Load more branches',
-            arguments: [this.workspaceRepo]
+            arguments: [this.workspaceRepo],
         };
         return treeItem;
     }

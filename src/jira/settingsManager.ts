@@ -22,7 +22,7 @@ export const detailedIssueFields: string[] = [
     'status',
     'priority',
     'components',
-    'fixVersions'
+    'fixVersions',
 ];
 export const minimalDefaultIssueFields: string[] = [
     'summary',
@@ -34,7 +34,7 @@ export const minimalDefaultIssueFields: string[] = [
     'updated',
     'parent',
     'subtasks',
-    'issuelinks'
+    'issuelinks',
 ];
 
 export class JiraSettingsManager extends Disposable {
@@ -108,7 +108,7 @@ export class JiraSettingsManager extends Disposable {
         const client = await Container.clientManager.jiraClient(site);
         let allFields = await client.getFields();
         if (allFields) {
-            allFields.forEach(field => {
+            allFields.forEach((field) => {
                 const key = field.key ? field.key : field.id;
                 fields[key] = readField(field);
             });

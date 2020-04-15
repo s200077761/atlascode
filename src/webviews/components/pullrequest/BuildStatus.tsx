@@ -29,8 +29,8 @@ export default class BuildStatus extends React.Component<
             return null;
         }
         const buildString = this.props.buildStatuses.length === 1 ? 'build' : 'builds';
-        const successes = this.props.buildStatuses.filter(status => status.state === 'SUCCESSFUL');
-        const inprogress = this.props.buildStatuses.filter(status => status.state === 'INPROGRESS');
+        const successes = this.props.buildStatuses.filter((status) => status.state === 'SUCCESSFUL');
+        const inprogress = this.props.buildStatuses.filter((status) => status.state === 'INPROGRESS');
 
         const resultIcon =
             inprogress.length > 0 ? (
@@ -61,7 +61,7 @@ export default class BuildStatus extends React.Component<
         return (
             <div className="ac-inline-dialog">
                 <InlineDialog
-                    content={this.props.buildStatuses.map(status => (
+                    content={this.props.buildStatuses.map((status) => (
                         <Button
                             appearance="link"
                             onClick={() => {

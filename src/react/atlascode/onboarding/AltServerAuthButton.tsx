@@ -4,30 +4,30 @@ import React, { useCallback, useContext } from 'react';
 import { Product } from '../../../atlclients/authInfo';
 import { AuthDialogControllerContext } from '../config/auth/useAuthDialog';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
     box: {
         textAlign: 'center',
         width: 'inherit',
         height: 'inherit',
-        backgroundColor: 'inherit'
+        backgroundColor: 'inherit',
     },
     icon: {
         fontSize: 100,
-        color: 'white'
+        color: 'white',
     },
     button: {
         padding: 0,
         textTransform: 'none',
         width: '100%',
         height: '100%',
-        textAlign: 'center'
+        textAlign: 'center',
     },
     buttonSubtext: {
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: '#7f8082'
-    }
+        color: '#7f8082',
+    },
 }));
 
 type AltServerAuthButtonProps = {

@@ -6,7 +6,7 @@ import {
     customJQLCreatedEvent,
     editButtonEvent,
     featureChangeEvent,
-    logoutButtonEvent
+    logoutButtonEvent,
 } from '../analytics';
 import {
     DetailedSiteInfo,
@@ -14,7 +14,7 @@ import {
     isEmptySiteInfo,
     Product,
     ProductBitbucket,
-    ProductJira
+    ProductJira,
 } from '../atlclients/authInfo';
 import { authenticateCloud, authenticateServer, clearAuth, updateServer } from '../commands/authenticate';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
@@ -31,7 +31,7 @@ import {
     isLogoutAuthAction,
     isOpenJsonAction,
     isSaveSettingsAction,
-    isSubmitFeedbackAction
+    isSubmitFeedbackAction,
 } from '../ipc/configActions';
 import { ConfigInspect, ConfigWorkspaceFolder, SiteAuthInfo } from '../ipc/configMessaging';
 import { Action } from '../ipc/messaging';
@@ -81,7 +81,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
     private async siteAuthInfoForProduct(product: Product): Promise<SiteAuthInfo[]> {
         const sites = Container.siteManager.getSitesAvailable(product);
-        const auths = await Promise.all(sites.map(site => Container.credentialManager.getAuthInfo(site)));
+        const auths = await Promise.all(sites.map((site) => Container.credentialManager.getAuthInfo(site)));
         return sites.map((s, i) => {
             return { site: s, auth: auths[i] };
         });
@@ -105,7 +105,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             let workspaceFolders: ConfigWorkspaceFolder[] = [];
 
             if (vscode.workspace.workspaceFolders) {
-                workspaceFolders = vscode.workspace.workspaceFolders.map(folder => {
+                workspaceFolders = vscode.workspace.workspaceFolders.map((folder) => {
                     return { name: folder.name, uri: folder.uri.toString() };
                 });
             }
@@ -121,7 +121,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 target: target,
                 feedbackUser: feedbackUser,
                 isRemote: isRemote,
-                showTunnelOption: this.getShowTunnelOption()
+                showTunnelOption: this.getShowTunnelOption(),
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
@@ -152,7 +152,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             default: inspect.defaultValue ? inspect.defaultValue : {},
             user: inspect.globalValue ? inspect.globalValue : {},
             workspace: inspect.workspaceValue ? inspect.workspaceValue : {},
-            workspacefolder: inspect.workspaceFolderValue ? inspect.workspaceFolderValue : {}
+            workspacefolder: inspect.workspaceFolderValue ? inspect.workspaceFolderValue : {},
         };
     }
 
@@ -160,7 +160,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         this.postMessage({
             type: 'sitesAvailableUpdate',
             jiraSites: await this.siteAuthInfoForProduct(ProductJira),
-            bitbucketSites: await this.siteAuthInfoForProduct(ProductBitbucket)
+            bitbucketSites: await this.siteAuthInfoForProduct(ProductBitbucket),
         });
     }
 
@@ -177,7 +177,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                         Logger.error(new Error(`error refreshing config: ${e}`));
                         this.postMessage({
                             type: 'error',
-                            reason: this.formatErrorReason(e, 'Error refeshing config')
+                            reason: this.formatErrorReason(e, 'Error refeshing config'),
                         });
                     }
                     break;
@@ -195,13 +195,13 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 Logger.error(err);
                                 this.postMessage({
                                     type: 'error',
-                                    reason: this.formatErrorReason(e, 'Authentication error')
+                                    reason: this.formatErrorReason(e, 'Authentication error'),
                                 });
                             }
                         } else {
                             authenticateCloud(msg.siteInfo, settingsUrl);
                         }
-                        authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then(e => {
+                        authenticateButtonEvent(this.id, msg.siteInfo, isCloud).then((e) => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }
@@ -217,10 +217,10 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                             Logger.error(err);
                             this.postMessage({
                                 type: 'error',
-                                reason: this.formatErrorReason(e, 'Authentication error')
+                                reason: this.formatErrorReason(e, 'Authentication error'),
                             });
                         }
-                        editButtonEvent(this.id).then(e => {
+                        editButtonEvent(this.id).then((e) => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }
@@ -230,7 +230,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                     handled = true;
                     if (isLogoutAuthAction(msg)) {
                         clearAuth(msg.detailedSiteInfo);
-                        logoutButtonEvent(this.id).then(e => {
+                        logoutButtonEvent(this.id).then((e) => {
                             Container.analyticsClient.sendUIEvent(e);
                         });
                     }
@@ -303,7 +303,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 type: 'filterSearchData',
                                 siteId: msg.site.id,
                                 data: data,
-                                nonce: msg.nonce
+                                nonce: msg.nonce,
                             });
                         } catch (e) {
                             let err = new Error(`Filter fetch error: ${e}`);
@@ -311,7 +311,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                             this.postMessage({
                                 type: 'filterSearchData',
                                 data: this.formatErrorReason(e),
-                                nonce: msg.nonce
+                                nonce: msg.nonce,
                             });
                         }
                     }
@@ -350,7 +350,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                         const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
                                         const newJqls = value.filter(
                                             (entry: JQLEntry) =>
-                                                currentJQLs.find(cur => cur.id === entry.id) === undefined
+                                                currentJQLs.find((cur) => cur.id === entry.id) === undefined
                                         );
                                         if (newJqls.length > 0) {
                                             jqlSiteId = newJqls[0].siteId;
@@ -361,17 +361,17 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 await configuration.update(key, value, target, targetUri);
 
                                 if (typeof value === 'boolean') {
-                                    featureChangeEvent(key, value).then(e => {
+                                    featureChangeEvent(key, value).then((e) => {
                                         Container.analyticsClient
                                             .sendTrackEvent(e)
-                                            .catch(r => Logger.debug('error sending analytics'));
+                                            .catch((r) => Logger.debug('error sending analytics'));
                                     });
                                 }
 
                                 if (key === 'jira.jqlList' && jqlSiteId) {
                                     const site = Container.siteManager.getSiteForId(ProductJira, jqlSiteId);
                                     if (site) {
-                                        customJQLCreatedEvent(site).then(e => {
+                                        customJQLCreatedEvent(site).then((e) => {
                                             Container.analyticsClient.sendTrackEvent(e);
                                         });
                                     }

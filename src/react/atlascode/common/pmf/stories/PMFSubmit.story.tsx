@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { PMFData } from '../../../../../lib/ipc/models/common';
 import { PMFDialog } from '../PMFDialog';
 export default {
-    title: 'Common/pmf/PMFSubmit'
+    title: 'Common/pmf/PMFSubmit',
 };
 
 export const ShowPMFDialog = () => {

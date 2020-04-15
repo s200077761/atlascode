@@ -317,7 +317,7 @@ export enum SelectComponentType {
     Select = 'select',
     Creatable = 'creatable',
     Async = 'async',
-    AsyncCreatable = 'asynccreatable'
+    AsyncCreatable = 'asynccreatable',
 }
 
 export function selectComponentType(field: SelectFieldUI): SelectComponentType {
@@ -405,7 +405,7 @@ export function valueFuncForValueType(vt: ValueType): OptionFunc {
 export function getComponentsForValueType(vt: ValueType): Object {
     return {
         ...{ Option: getOptionComponentForValueType(vt) },
-        ...getValueComponentForValueType(vt)
+        ...getValueComponentForValueType(vt),
     };
 }
 
@@ -442,7 +442,7 @@ function getValueComponentForValueType(vt: ValueType): Object {
         case ValueType.IssueType: {
             return {
                 SingleValue: SingleIconValue,
-                MultiValueLabel: MultiIconValue
+                MultiValueLabel: MultiIconValue,
             };
         }
 
@@ -451,26 +451,26 @@ function getValueComponentForValueType(vt: ValueType): Object {
         case ValueType.Watches: {
             return {
                 SingleValue: SingleAvatarValue,
-                MultiValueLabel: MultiAvatarValue
+                MultiValueLabel: MultiAvatarValue,
             };
         }
 
         case ValueType.Transition: {
             return {
-                SingleValue: StatusValue
+                SingleValue: StatusValue,
             };
         }
 
         case ValueType.IssueLinks: {
             return {
-                SingleValue: IssueLinkTypeValue
+                SingleValue: IssueLinkTypeValue,
             };
         }
 
         default: {
             return {
                 SingleValue: LabelValue,
-                MultiValueLabel: MultiLabelValue
+                MultiValueLabel: MultiLabelValue,
             };
         }
     }

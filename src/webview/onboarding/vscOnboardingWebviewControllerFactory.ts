@@ -8,7 +8,7 @@ import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onb
 import {
     id,
     OnboardingWebviewController,
-    title
+    title,
 } from '../../lib/webview/controller/onboarding/onboardingWebviewController';
 import { Logger } from '../../logger';
 import { getHtmlForView } from '../common/getHtmlForView';

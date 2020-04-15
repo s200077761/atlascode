@@ -38,7 +38,7 @@ export const TextAreaEditor: React.FC<Props> = ({ value, disabled, placeholder, 
                 rows={5}
                 placeholder={placeholder}
                 value={value}
-                onChange={e => onChange(e.target.value)}
+                onChange={(e) => onChange(e.target.value)}
                 ref={inputTextAreaRef}
                 disabled={disabled}
             />

@@ -24,7 +24,7 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
     onSubsectionChange,
     config,
     sites,
-    isRemote
+    isRemote,
 }) => {
     return (
         <>

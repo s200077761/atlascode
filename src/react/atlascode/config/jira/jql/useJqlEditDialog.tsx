@@ -40,6 +40,6 @@ export const useJqlEditDialog = (sites: DetailedSiteInfo[], onSave: (jqlEntry: J
     );
     return {
         openJqlDialog,
-        jqlDialog
+        jqlDialog,
     };
 };

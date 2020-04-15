@@ -55,20 +55,20 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     }
 
     createIssueQuickPick() {
-        searchIssuesEvent(ProductJira).then(e => {
+        searchIssuesEvent(ProductJira).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
-        const quickPickIssues: QuickPickIssue[] = searchJiraIssuesNode.getIssues().map(issue => {
+        const quickPickIssues: QuickPickIssue[] = searchJiraIssuesNode.getIssues().map((issue) => {
             return {
                 label: issue.key,
                 description: issue.summary,
-                issue: issue
+                issue: issue,
             };
         });
         window
             .showQuickPick<QuickPickIssue>(quickPickIssues, {
                 matchOnDescription: true,
-                placeHolder: 'Search for issue key or summary'
+                placeHolder: 'Search for issue key or summary',
             })
             .then((quickPickIssue: QuickPickIssue | undefined) => {
                 if (quickPickIssue) {
@@ -80,22 +80,34 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     async getFirstJQLResult() {
         const children = await this.getChildren(undefined);
 
-        //The 3rd child is the first one with children...
-        if (children.length >= 3) {
-            const issueNodes = await children[2].getChildren();
-            return issueNodes[0];
+        let firstJQLTree: CustomJQLTree | undefined;
+        for (let child of children) {
+            if (child instanceof CustomJQLTree) {
+                firstJQLTree = child;
+                const issueNodes = await firstJQLTree.getChildren();
+                return issueNodes[0];
+            }
         }
-        return children[0];
+        return undefined;
+    }
+
+    async getCreateIssueNode() {
+        const children = await this.getChildren(undefined);
+        return children[0] instanceof CreateJiraIssueNode ? children[0] : undefined;
     }
 
     async getChildren(element: IssueNode | undefined) {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return Promise.resolve([
-                new SimpleJiraIssueNode('Please login to Jira', {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Jira',
-                    arguments: [ProductJira]
-                })
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira],
+                    },
+                    undefined
+                ),
             ]);
         }
 
@@ -115,7 +127,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
             createJiraIssueNode,
             searchJiraIssuesNode,
             ...this._children,
-            new ConfigureJQLNode('Configure filters...')
+            new ConfigureJQLNode('Configure filters...'),
         ];
     }
 
@@ -128,7 +140,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
         this._children = await Promise.all(
             this._jqlList.map(async (jql: JQLEntry) => {
                 const childTree = new CustomJQLTree(jql);
-                const flattenedIssueList = await childTree.executeQuery().catch(e => {
+                const flattenedIssueList = await childTree.executeQuery().catch((e) => {
                     Logger.error(new Error(`Error executing JQL: ${e}`));
                     return [];
                 });
@@ -137,12 +149,12 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
                 return childTree;
             })
         );
-        allIssues = [...new Map(allIssues.map(issue => [issue.key, issue])).values()]; //dedupe
+        allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()]; //dedupe
         searchJiraIssuesNode.setIssues(allIssues);
     }
 
     refresh() {
-        this._children.forEach(child => child.dispose());
+        this._children.forEach((child) => child.dispose());
         this._children = [];
         this._jqlList = this.getCustomJqlSiteList();
 
@@ -155,6 +167,6 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
     dispose() {
         this._disposable.dispose();
-        this._children.forEach(child => child.dispose());
+        this._children.forEach((child) => child.dispose());
     }
 }

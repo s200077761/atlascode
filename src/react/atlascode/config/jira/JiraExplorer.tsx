@@ -24,8 +24,8 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             indent: {
-                marginLeft: theme.spacing(3)
-            }
+                marginLeft: theme.spacing(3),
+            },
         } as const)
 );
 
@@ -85,7 +85,7 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                         checked={nestSubtasks}
                         onChange={handleChange}
                         tooltipProps={{
-                            title: nestSubtasks ? `Disable issue grouping` : `Enable issue grouping`
+                            title: nestSubtasks ? `Disable issue grouping` : `Enable issue grouping`,
                         }}
                     />
                 </Grid>
@@ -101,7 +101,7 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                         value="explorer.fetchAllQueryResults"
                         onChange={handleChange}
                         tooltipProps={{
-                            title: fetchAllQueryResults ? `Limit to 100 results` : `Fetch all results`
+                            title: fetchAllQueryResults ? `Limit to 100 results` : `Fetch all results`,
                         }}
                     />
                 </Grid>
@@ -117,7 +117,7 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                         value="explorer.monitorEnabled"
                         onChange={handleChange}
                         tooltipProps={{
-                            title: monitorEnabled ? `Disable notification` : `Enable Notifications`
+                            title: monitorEnabled ? `Disable notification` : `Enable Notifications`,
                         }}
                     />
                 </Grid>

@@ -57,7 +57,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
     }
 
     dispose() {
-        this.disposables.forEach(d => {
+        this.disposables.forEach((d) => {
             d.dispose();
         });
 
@@ -67,18 +67,22 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
     async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return [
-                new SimpleJiraIssueNode('Please login to Jira', {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Jira',
-                    arguments: [ProductJira]
-                })
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira],
+                    },
+                    this
+                ),
             ];
         }
         if (parent) {
             return parent.getChildren();
         }
         if (!this._jqlEntry) {
-            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
+            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand, this)];
         } else if (this._issues) {
             return this.nodesForIssues();
         } else {
@@ -92,7 +96,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
 
             // We already have everything that matches the JQL. The subtasks likely include things that
             // don't match the query so we get rid of them.
-            newIssues.forEach(i => {
+            newIssues.forEach((i) => {
                 i.subtasks = [];
             });
 
@@ -132,10 +136,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
         const jqlAndParents = [...jqlIssues, ...parentIssues];
 
         const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
-        jqlAndParents.forEach(i => {
+        jqlAndParents.forEach((i) => {
             const parentKey = i.parentKey ?? i.epicLink;
             if (parentKey) {
-                const parent = jqlAndParents.find(i2 => parentKey === i2.key);
+                const parent = jqlAndParents.find((i2) => parentKey === i2.key);
                 if (parent) {
                     parent.subtasks.push(i);
                 }
@@ -171,10 +175,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
         // On NextGen projects epics are considered parents to issues and parentKey points to them. On classic projects
         // issues parentKey doesn't point to its epic, but its epicLink does. In both cases parentKey points to the
         // parent task for subtasks. Since they're disjoint we can just take both and treat them the same.
-        const parentKeys = issues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
-        const epicKeys = issues.filter(i => i.epicLink).map(i => i.epicLink) as string[];
+        const parentKeys = issues.filter((i) => i.parentKey).map((i) => i.parentKey) as string[];
+        const epicKeys = issues.filter((i) => i.epicLink).map((i) => i.epicLink) as string[];
         const uniqueParentKeys = Array.from(new Set([...parentKeys, ...epicKeys]));
-        return uniqueParentKeys.filter(k => !issues.some(i => i.key === k));
+        return uniqueParentKeys.filter((k) => !issues.some((i) => i.key === k));
     }
 
     private async fetchIssuesForKeys(
@@ -182,7 +186,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
         keys: string[]
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         return await Promise.all(
-            keys.map(async issueKey => {
+            keys.map(async (issueKey) => {
                 const parent = await fetchMinimalIssue(issueKey, site);
                 // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                 parent.subtasks = [];
@@ -193,9 +197,9 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
 
     private nodesForIssues(): IssueNode[] {
         if (this._issues && this._issues.length > 0) {
-            return this._issues.map(issue => new IssueNode(issue, this));
+            return this._issues.map((issue) => new IssueNode(issue, this));
         } else {
-            return [new SimpleJiraIssueNode(this._emptyState)];
+            return [new SimpleJiraIssueNode(this._emptyState, undefined, this)];
         }
     }
 

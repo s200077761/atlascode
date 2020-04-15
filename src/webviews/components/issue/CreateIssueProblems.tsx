@@ -23,7 +23,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
             isErrorBannerOpen: false,
             errorDetails: undefined,
             problems: {},
-            project: emptyProject
+            project: emptyProject,
         };
     }
 
@@ -38,7 +38,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                     problems: e.problems,
                     project: e.project,
                     isErrorBannerOpen: false,
-                    errorDetails: undefined
+                    errorDetails: undefined,
                 });
                 break;
             }
@@ -52,10 +52,10 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
 
     public render() {
         let issueTypeProblems: any[] = [];
-        Object.keys(this.state.problems).forEach(problemKey => {
+        Object.keys(this.state.problems).forEach((problemKey) => {
             const problem = this.state.problems[problemKey];
             let issueTypeFields: any[] = [];
-            problem.nonRenderableFields.forEach(fieldProblem => {
+            problem.nonRenderableFields.forEach((fieldProblem) => {
                 issueTypeFields.push(
                     <tr>
                         <td>{fieldProblem.name}</td>

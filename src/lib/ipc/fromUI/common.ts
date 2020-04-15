@@ -8,7 +8,7 @@ export enum CommonActionType {
     DismissPMFNever = 'pmfNever',
     Refresh = 'refresh',
     SubmitFeedback = 'submitFeedback',
-    ExternalLink = 'externalLink'
+    ExternalLink = 'externalLink',
 }
 
 export type CommonAction =

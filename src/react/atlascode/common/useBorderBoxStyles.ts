@@ -6,7 +6,7 @@ export const useBorderBoxStyles = makeStyles(
             box: {
                 borderWidth: 1,
                 borderColor: theme.palette.divider,
-                borderStyle: 'solid'
-            }
+                borderStyle: 'solid',
+            },
         } as const)
 );

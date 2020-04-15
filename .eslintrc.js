@@ -2,15 +2,15 @@ module.exports = {
     extends: ['plugin:import/typescript', 'plugin:prettier/recommended'],
     env: {
         browser: true,
-        es6: true
+        es6: true,
     },
     parser: '@typescript-eslint/parser',
     parserOptions: {
         project: './tsconfig.json',
         sourceType: 'module',
         ecmaFeatures: {
-            jsx: true // Allows for the parsing of JSX
-        }
+            jsx: true, // Allows for the parsing of JSX
+        },
     },
     plugins: [
         '@typescript-eslint',
@@ -18,7 +18,7 @@ module.exports = {
         'react',
         'react-hooks',
         'import',
-        'prettier'
+        'prettier',
     ],
     rules: {
         'prettier/prettier': 'error',
@@ -29,7 +29,7 @@ module.exports = {
         '@typescript-eslint/class-name-casing': 'error',
         'import/no-extraneous-dependencies': [
             'error',
-            { devDependencies: ['**/webpack.*', '**/test/*', '**/*.test.js', '**/*.spec.js'] }
+            { devDependencies: ['**/webpack.*', '**/test/*', '**/*.test.js', '**/*.spec.js'] },
         ],
         'no-restricted-imports': [
             'error',
@@ -42,33 +42,33 @@ module.exports = {
                     '@atlassianlabs/jira-metaui-transformer/*',
                     '@atlassianlabs/jira-pi-client/*',
                     '@atlassianlabs/jira-pi-common-models/*',
-                    '@atlassianlabs/pi-client-common/*'
-                ]
-            }
+                    '@atlassianlabs/pi-client-common/*',
+                ],
+            },
         ],
         'brace-style': 'off',
         '@typescript-eslint/brace-style': [
             'error',
             '1tbs',
             {
-                allowSingleLine: true
-            }
+                allowSingleLine: true,
+            },
         ],
         curly: 'error',
         eqeqeq: ['error', 'always'],
         semi: 'off',
         '@typescript-eslint/semi': ['error', 'always'],
-        'no-throw-literal': 'error'
+        'no-throw-literal': 'error',
     },
     settings: {
         react: {
-            version: 'detect' // Tells eslint-plugin-react to automatically detect the version of React to use
+            version: 'detect', // Tells eslint-plugin-react to automatically detect the version of React to use
         },
         'import/parsers': {
-            '@typescript-eslint/parser': ['.ts', '.tsx']
+            '@typescript-eslint/parser': ['.ts', '.tsx'],
         },
         'import/resolver': {
-            typescript: {}
-        }
-    }
+            typescript: {},
+        },
+    },
 };

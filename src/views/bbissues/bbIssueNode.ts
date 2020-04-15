@@ -21,7 +21,7 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
         if (this._children.length > 0 && this._children[this._children.length - 1] instanceof NextPageNode) {
             this._children.pop();
         }
-        this._children!.push(...issues.data.map(i => new BitbucketIssueNode(i)));
+        this._children!.push(...issues.data.map((i) => new BitbucketIssueNode(i)));
         if (issues.next) {
             this._children!.push(new NextPageNode(issues));
         }
@@ -48,7 +48,7 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
             if (issues.data.length === 0) {
                 return [new SimpleNode('No open issues for this repository')];
             }
-            this._children = issues.data.map(i => new BitbucketIssueNode(i));
+            this._children = issues.data.map((i) => new BitbucketIssueNode(i));
             if (issues.next) {
                 this._children!.push(new NextPageNode(issues));
             }
@@ -67,7 +67,7 @@ export class BitbucketIssueNode extends AbstractBaseNode {
         treeItem.command = {
             command: Commands.ShowBitbucketIssue,
             title: 'Open bitbucket issue',
-            arguments: [this.issue]
+            arguments: [this.issue],
         };
         treeItem.contextValue = 'bitbucketIssue';
         treeItem.resourceUri = vscode.Uri.parse(this.issue.data.links!.html!.href!);
@@ -91,7 +91,7 @@ class NextPageNode extends AbstractBaseNode {
         item.command = {
             command: Commands.BitbucketIssuesNextPage,
             title: 'Load issues next page',
-            arguments: [this.issues]
+            arguments: [this.issues],
         };
 
         return item;

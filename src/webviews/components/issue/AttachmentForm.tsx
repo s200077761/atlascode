@@ -105,7 +105,7 @@ const dialogEditor = (
                 </div>
             </div>
             <div className="ac-attachment-thumbs-container">
-                {files.map(file => (
+                {files.map((file) => (
                     <div className="ac-attachment-thumb" key={file.name}>
                         <div className="ac-attachment-thumb-item">
                             <div className="ac-attachment-thumb-inner">
@@ -161,13 +161,13 @@ const inlineEditor = (
             <TableTree
                 columns={[Thumbnail, Filename, Size, Delete]}
                 columnWidths={['36px', '100%', '150px', '50px']}
-                items={files.map(file => {
+                items={files.map((file) => {
                     return {
                         id: file.path,
                         content: {
                             file: file,
-                            delfunc: () => dispatch({ type: 'removeFile', payload: file })
-                        }
+                            delfunc: () => dispatch({ type: 'removeFile', payload: file }),
+                        },
                     };
                 })}
             />
@@ -180,7 +180,7 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
     const [files, dispatch] = useReducer(filesReducer, initialState);
     const { getRootProps, getInputProps } = useDropzone({
         onDrop: (acceptedFiles: File[]) => {
-            const newFiles = acceptedFiles.map(file => {
+            const newFiles = acceptedFiles.map((file) => {
                 if (previewableTypes.includes(file.type)) {
                     return Object.assign(file, { preview: URL.createObjectURL(file), isImage: true });
                 } else {
@@ -189,13 +189,13 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
             });
 
             dispatch({ type: 'addFiles', payload: newFiles });
-        }
+        },
     });
 
     useEffect(
         () => () => {
             // Make sure to revoke the data uris to avoid memory leaks
-            files.forEach(file => URL.revokeObjectURL(file.preview));
+            files.forEach((file) => URL.revokeObjectURL(file.preview));
         },
         [files]
     );

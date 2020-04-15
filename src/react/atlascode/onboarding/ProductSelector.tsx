@@ -4,10 +4,10 @@ import React from 'react';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import { AltProductEnabler } from './AltProductEnabler';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
     root: {
-        flexGrow: 1
-    }
+        flexGrow: 1,
+    },
 }));
 
 export type ProductSelectorProps = {
@@ -21,7 +21,7 @@ export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
     bitbucketToggleHandler,
     jiraToggleHandler,
     jiraEnabled,
-    bitbucketEnabled
+    bitbucketEnabled,
 }) => {
     const classes = useStyles();
 

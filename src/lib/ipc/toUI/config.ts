@@ -3,7 +3,7 @@ import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
-    JQLErrors
+    JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
 import { flatten } from 'flatten-anything';
 import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
@@ -13,17 +13,19 @@ import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '
 
 export enum ConfigMessageType {
     Init = 'init',
+    SectionChange = 'sectionChange',
     Update = 'configUpdate',
     SitesUpdate = 'sitesAvailableUpdate',
     JQLOptionsResponse = 'jqlOptionsResponse',
     JQLSuggestionsResponse = 'JQLSuggestionsResponse',
     FilterSearchResponse = 'filterSearchResponse',
-    ValidateJqlResponse = 'validateJqlResponse'
+    ValidateJqlResponse = 'validateJqlResponse',
 }
 
 export type ConfigMessage =
     | ReducerAction<ConfigMessageType.Init, ConfigInitMessage>
     | ReducerAction<ConfigMessageType.Update, ConfigUpdateMessage>
+    | ReducerAction<ConfigMessageType.SectionChange, SectionChangeMessage>
     | ReducerAction<ConfigMessageType.SitesUpdate, SitesUpdateMessage>;
 
 export type ConfigResponse =
@@ -52,7 +54,7 @@ export const emptyConfigInitMessage: ConfigInitMessage = {
     isRemote: false,
     showTunnelOption: false,
     target: ConfigTarget.User,
-    section: ConfigSection.Jira
+    section: ConfigSection.Jira,
 };
 
 export interface ConfigUpdateMessage {
@@ -67,7 +69,7 @@ export interface SiteWithAuthInfo {
 
 export const emptySiteWithAuthInfo: SiteWithAuthInfo = {
     site: emptySiteInfo,
-    auth: emptyBasicAuthInfo
+    auth: emptyBasicAuthInfo,
 };
 
 export interface SitesUpdateMessage {

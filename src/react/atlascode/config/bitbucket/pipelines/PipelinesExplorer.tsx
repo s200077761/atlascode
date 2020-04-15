@@ -21,8 +21,8 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             indent: {
-                marginLeft: theme.spacing(3)
-            }
+                marginLeft: theme.spacing(3),
+            },
         } as const)
 );
 
@@ -66,7 +66,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                 checked={enabled}
                                 onChange={handleChange}
                                 tooltipProps={{
-                                    title: enabled ? 'Disable pipelines explorer' : 'Enable pipelines Explorer'
+                                    title: enabled ? 'Disable pipelines explorer' : 'Enable pipelines Explorer',
                                 }}
                             />
                         </Grid>
@@ -83,7 +83,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                 checked={monitorEnabled}
                                 onChange={handleChange}
                                 tooltipProps={{
-                                    title: monitorEnabled ? `Disable notifications` : `Enable notifications`
+                                    title: monitorEnabled ? `Disable notifications` : `Enable notifications`,
                                 }}
                             />
                         </Grid>
@@ -100,7 +100,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                 value="pipelines.hideEmpty"
                                 onChange={handleChange}
                                 tooltipProps={{
-                                    title: hideEmpty ? `Hide empty pipelines` : `Show empty pipelines`
+                                    title: hideEmpty ? `Hide empty pipelines` : `Show empty pipelines`,
                                 }}
                             />
                         </Grid>
@@ -117,7 +117,7 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                                 value="pipelines.hideFiltered"
                                 onChange={handleChange}
                                 tooltipProps={{
-                                    title: hideFiltered ? `Disable filters` : `Enable filters`
+                                    title: hideFiltered ? `Disable filters` : `Enable filters`,
                                 }}
                             />
                         </Grid>

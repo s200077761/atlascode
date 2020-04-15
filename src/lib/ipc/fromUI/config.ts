@@ -12,7 +12,7 @@ export enum ConfigActionType {
     JQLSuggestionsRequest = 'JQLSuggestionsRequest',
     FilterSearchRequest = 'filterSearchRequest',
     ValidateJqlRequest = 'validateJqlRequest',
-    SetTarget = 'setTarget'
+    SetTarget = 'setTarget',
 }
 
 export type ConfigAction =

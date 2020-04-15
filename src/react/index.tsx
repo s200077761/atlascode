@@ -23,7 +23,7 @@ const routes = {
     ),
     atlascodeOnboardingV2: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage')
-    )
+    ),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

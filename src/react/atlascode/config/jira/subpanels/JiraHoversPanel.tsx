@@ -24,7 +24,7 @@ export const JiraHoversPanel: React.FunctionComponent<JiraHoversPanelProps> = me
         );
 
         useEffect(() => {
-            setInternalExpanded(oldExpanded => {
+            setInternalExpanded((oldExpanded) => {
                 if (oldExpanded !== expanded) {
                     return expanded;
                 }

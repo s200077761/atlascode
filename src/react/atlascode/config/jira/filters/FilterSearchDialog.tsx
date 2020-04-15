@@ -8,7 +8,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    Grid
+    Grid,
 } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
@@ -27,7 +27,7 @@ export const FilterSearchDialog: React.FunctionComponent<FilterSearchDialogProps
     open,
     sites,
     onCancel,
-    onSave
+    onSave,
 }) => {
     const [site, setSite] = useState(Array.isArray(sites) && sites.length > 0 ? sites[0] : emptySiteInfo);
     const [selectedFilters, setSelectedFilters] = useState<FilterSearchResult[]>([]);
@@ -41,7 +41,7 @@ export const FilterSearchDialog: React.FunctionComponent<FilterSearchDialogProps
     }, []);
 
     const handleSave = useCallback(() => {
-        const entries: JQLEntry[] = selectedFilters.map(f => {
+        const entries: JQLEntry[] = selectedFilters.map((f) => {
             return {
                 id: v4(),
                 siteId: site.id,
@@ -49,7 +49,7 @@ export const FilterSearchDialog: React.FunctionComponent<FilterSearchDialogProps
                 name: f.name,
                 query: f.jql,
                 enabled: true,
-                monitor: true
+                monitor: true,
             };
         });
 

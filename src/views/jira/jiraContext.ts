@@ -1,6 +1,7 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, CustomJQLTreeId, setCommandContext } from '../../constants';
@@ -28,6 +29,7 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            Container.loginManager.onLoginNotificationActionEvent(this.onboardingNotificationWasPressed, this),
             this._refreshTimer
         );
 
@@ -64,6 +66,12 @@ export class JiraContext extends Disposable {
         }
     }
 
+    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+        if (this._explorer instanceof JiraExplorer) {
+            this._explorer.onboardingNotificationWasPressed(e);
+        }
+    }
+
     dispose() {
         this._disposable.dispose();
         if (this._explorer) {
@@ -87,17 +95,13 @@ export class JiraContext extends Disposable {
     }
 
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
-        if (e.product.key === ProductJira.key && e.newSites) {
+        if (e.product.key === ProductJira.key) {
             if (e.newSites) {
                 Container.jqlManager.initializeJQL(e.newSites);
             }
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
-            if (isLoggedIn && !!this._explorer?.getDataProvider()) {
-                const firstJQLResult = await (this._explorer.getDataProvider() as CustomJQLRoot).getFirstJQLResult();
-                this._explorer.reveal(firstJQLResult!, { focus: true });
-            }
         }
     }
 

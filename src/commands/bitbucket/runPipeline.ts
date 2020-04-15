@@ -22,7 +22,7 @@ export async function runPipeline() {
         window
             .showQuickPick<QuickPickRepo>(repoQuickPicks, {
                 matchOnDescription: true,
-                placeHolder: 'Select repo'
+                placeHolder: 'Select repo',
             })
             .then((quickPickRepo: QuickPickRepo | undefined) => {
                 if (quickPickRepo) {
@@ -43,7 +43,7 @@ async function showBranchPicker(remote: Remote) {
     window
         .showQuickPick<QuickPickItem>(fetchBranches(bbApi, bbSite!), {
             matchOnDescription: true,
-            placeHolder: 'Search for branch'
+            placeHolder: 'Search for branch',
         })
         .then(async (quickPickItem: QuickPickItem | undefined) => {
             if (quickPickItem) {
@@ -51,7 +51,7 @@ async function showBranchPicker(remote: Remote) {
                 const target: PipelineReferenceTarget = {
                     type: PipelineTargetType.Reference,
                     ref_name: branchName,
-                    ref_type: PipelineReferenceType.Branch
+                    ref_type: PipelineReferenceType.Branch,
                 };
                 try {
                     await bbApi.pipelines!.triggerPipeline(bbSite!, target);
@@ -69,19 +69,19 @@ async function showBranchPicker(remote: Remote) {
 
 async function fetchBranches(bbApi: BitbucketApi, bbSite: BitbucketSite): Promise<QuickPickItem[]> {
     const branches = await bbApi.repositories.getBranches(bbSite);
-    return branches.map(branchName => {
+    return branches.map((branchName) => {
         return {
-            label: branchName
+            label: branchName,
         };
     });
 }
 
 function fetchRepos(): QuickPickRepo[] {
     const repos = Container.bitbucketContext.getBitbucketCloudRepositories();
-    return repos.map(repo => {
+    return repos.map((repo) => {
         return {
             repo: repo,
-            label: path.basename(repo.rootUri)
+            label: path.basename(repo.rootUri),
         };
     });
 }

@@ -66,13 +66,13 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                     const parentSite: BitbucketSite = {
                         ...site,
                         ownerSlug: repo.parentFullName.slice(0, repo.parentFullName.lastIndexOf('/')),
-                        repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1)
+                        repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1),
                     };
 
                     const parentRemoteName = `${repo.parentFullName} (parent repo)`;
                     parentSiteRemote = {
                         remote: { name: parentRemoteName, fetchUrl: '', isReadOnly: true },
-                        site: parentSite
+                        site: parentSite,
                     };
 
                     const parentBbApi = await clientForSite(parentSite);
@@ -87,7 +87,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                 const wsRepoClone: WorkspaceRepo = {
                     rootUri: wsRepo.rootUri,
                     mainSiteRemote: repo.issueTrackerEnabled ? wsRepo.mainSiteRemote : parentSiteRemote!,
-                    siteRemotes: []
+                    siteRemotes: [],
                 };
                 if (repo.issueTrackerEnabled) {
                     wsRepoClone.siteRemotes.push(wsRepo.mainSiteRemote);
@@ -103,7 +103,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                     localBranches: [],
                     remoteBranches: [],
                     branchTypes: [],
-                    isCloud: true
+                    isCloud: true,
                 });
             }
 
@@ -165,7 +165,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
 
-        bbIssueCreatedEvent(site.details).then(e => {
+        bbIssueCreatedEvent(site.details).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
 

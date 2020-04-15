@@ -29,7 +29,7 @@ export default class DisplayFeedback extends React.Component<
             type: formData.type.value,
             canBeContacted: formData.canBeContacted,
             userName: formData.userName,
-            emailAddress: formData.email || 'do-not-reply@atlassian.com'
+            emailAddress: formData.email || 'do-not-reply@atlassian.com',
         };
 
         if (this.props.onFeedback) {
@@ -46,7 +46,7 @@ export default class DisplayFeedback extends React.Component<
             { label: 'Ask a question', value: 'question' },
             { label: 'Leave a comment', value: 'comment' },
             { label: 'Report a bug', value: 'bug' },
-            { label: 'Suggest an improvement', value: 'suggestion' }
+            { label: 'Suggest an improvement', value: 'suggestion' },
         ];
 
         return (
@@ -89,8 +89,8 @@ export default class DisplayFeedback extends React.Component<
                                                                 styles={{
                                                                     menuPortal: (base: any) => ({
                                                                         ...base,
-                                                                        zIndex: 9999
-                                                                    })
+                                                                        zIndex: 9999,
+                                                                    }),
                                                                 }}
                                                             />
                                                             {errDiv}
@@ -123,7 +123,7 @@ export default class DisplayFeedback extends React.Component<
                                                                     fieldArgs.fieldProps.onChange,
                                                                     (item: any) => {
                                                                         this.setState({
-                                                                            description: item.target.value
+                                                                            description: item.target.value,
                                                                         });
                                                                     }
                                                                 )}
@@ -212,7 +212,7 @@ export default class DisplayFeedback extends React.Component<
                                                     style={{
                                                         display: 'inline-flex',
                                                         marginRight: '4px',
-                                                        marginLeft: '4px;'
+                                                        marginLeft: '4px;',
                                                     }}
                                                 >
                                                     <Button
@@ -227,7 +227,7 @@ export default class DisplayFeedback extends React.Component<
                                                     style={{
                                                         display: 'inline-flex',
                                                         marginRight: '4px',
-                                                        marginLeft: '4px;'
+                                                        marginLeft: '4px;',
                                                     }}
                                                 >
                                                     <Button className="ac-button" onClick={this.handleClose}>
