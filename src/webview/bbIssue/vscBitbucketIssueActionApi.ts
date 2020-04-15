@@ -1,3 +1,4 @@
+import axios, { CancelToken } from 'axios';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, Comment, User } from '../../bitbucket/model';
 import { AnalyticsApi } from '../../lib/analyticsApi';
@@ -42,8 +43,26 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         return await bbApi.issues!.postComment(issue, content);
     }
 
-    async updateStatus(issue: BitbucketIssue, status: string): Promise<[any, any]> {
+    async updateStatus(issue: BitbucketIssue, status: string): Promise<[string, Comment]> {
         const bbApi = await clientForSite(issue.site);
         return await bbApi.issues!.postChange(issue, status);
+    }
+
+    async fetchUsers(issue: BitbucketIssue, query: string, abortSignal?: AbortSignal): Promise<User[]> {
+        const bbApi = await clientForSite(issue.site);
+
+        var cancelToken: CancelToken | undefined = undefined;
+
+        if (abortSignal) {
+            const cancelSignal = axios.CancelToken.source();
+            cancelToken = cancelSignal.token;
+            abortSignal.onabort = () => cancelSignal.cancel('bitbucket issue fetch users request aborted');
+        }
+        return await bbApi.pullrequests.getReviewers(issue.site, query, cancelToken);
+    }
+
+    async assign(issue: BitbucketIssue, accountId?: string): Promise<[User, Comment]> {
+        const bbApi = await clientForSite(issue.site);
+        return await bbApi.issues!.assign(issue, accountId);
     }
 }

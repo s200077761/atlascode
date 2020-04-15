@@ -33,6 +33,7 @@ import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
 import InlinedRenderedTextEditor from './InlineRenderedTextEditor';
 import StatusMenu from './StatusMenu';
+import UserPicker from './UserPicker';
 
 const priorityIcon = {
     trivial: <RadioButtonUncheckedIcon />,
@@ -89,6 +90,28 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
         async (content: string) => {
             const comment = await controller.postComment(content);
             controller.applyChange({ comments: [comment] });
+        },
+        [controller]
+    );
+
+    const handleAssign = useCallback(
+        async (accountId?: string) => {
+            const assignee = await controller.assign(accountId);
+            controller.applyChange({
+                issue: {
+                    assignee: {
+                        display_name: assignee.displayName,
+                        uuid: '',
+                        links: {
+                            avatar: {
+                                href: assignee.avatarUrl
+                            }
+                        },
+                        type: 'user',
+                        account_id: assignee.accountId
+                    }
+                }
+            });
         },
         [controller]
     );
@@ -232,7 +255,20 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                 <strong>Assignee</strong>
                                             </Typography>
                                         </Grid>
-                                        <Grid container spacing={1} direction="row" alignItems="center">
+                                        <Grid item>
+                                            <UserPicker
+                                                user={{
+                                                    accountId: state.issue.data?.assignee?.account_id,
+                                                    avatarUrl: state.issue.data?.assignee?.links?.avatar?.href,
+                                                    displayName:
+                                                        state.issue.data?.assignee?.display_name || 'Unassigned',
+                                                    mention: '',
+                                                    url: ''
+                                                }}
+                                                onChange={handleAssign}
+                                            />
+                                        </Grid>
+                                        {/* <Grid container spacing={1} direction="row" alignItems="center">
                                             <Grid item>
                                                 <Avatar src={state.issue.data?.assignee?.links?.avatar?.href} />
                                             </Grid>
@@ -241,7 +277,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                     {state.issue.data?.assignee?.display_name || 'Unassigned'}
                                                 </Typography>
                                             </Grid>
-                                        </Grid>
+                                        </Grid> */}
                                     </Grid>
                                     <Grid item>
                                         <Grid item>

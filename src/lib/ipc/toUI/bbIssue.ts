@@ -13,7 +13,9 @@ export enum BitbucketIssueMessageType {
     InitComments = 'initComments',
     UpdateComments = 'updateComments',
     UpdateStatusResponse = 'updateStatusResponse',
-    AddCommentResponse = 'addCommentResponse'
+    AddCommentResponse = 'addCommentResponse',
+    FetchUsersResponse = 'fetchUsersResponse',
+    AssignResponse = 'assignResponse'
 }
 
 export type BitbucketIssueMessage =
@@ -23,7 +25,9 @@ export type BitbucketIssueMessage =
 
 export type BitbucketIssueResponse =
     | ReducerAction<BitbucketIssueMessageType.UpdateStatusResponse, UpdateStatusResponseMessage>
-    | ReducerAction<BitbucketIssueMessageType.AddCommentResponse, AddCommentResponseMessage>;
+    | ReducerAction<BitbucketIssueMessageType.AddCommentResponse, AddCommentResponseMessage>
+    | ReducerAction<BitbucketIssueMessageType.AssignResponse, AssignResponseMessage>
+    | ReducerAction<BitbucketIssueMessageType.FetchUsersResponse, FetchUsersResponseMessage>;
 
 export interface BitbucketIssueInitMessage {
     issue: BitbucketIssue;
@@ -54,4 +58,12 @@ export interface UpdateStatusResponseMessage {
 
 export interface AddCommentResponseMessage {
     comment: Comment;
+}
+
+export interface FetchUsersResponseMessage {
+    users: User[];
+}
+
+export interface AssignResponseMessage {
+    assignee: User;
 }

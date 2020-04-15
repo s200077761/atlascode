@@ -125,6 +125,40 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                     });
                 }
                 break;
+            case BitbucketIssueActionType.FetchUsersRequest:
+                try {
+                    const users = await this._api.fetchUsers(this._issue, msg.query);
+                    this.postMessage({
+                        type: BitbucketIssueMessageType.FetchUsersResponse,
+                        users: users
+                    });
+                } catch (e) {
+                    this._logger.error(new Error(`error fetching users: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error fetching users')
+                    });
+                }
+                break;
+            case BitbucketIssueActionType.AssignRequest:
+                try {
+                    const [assignee, comment] = await this._api.assign(this._issue, msg.accountId);
+                    this.postMessage({
+                        type: BitbucketIssueMessageType.AssignResponse,
+                        assignee: assignee
+                    });
+                    this.postMessage({
+                        type: BitbucketIssueMessageType.UpdateComments,
+                        comments: [comment]
+                    });
+                } catch (e) {
+                    this._logger.error(new Error(`error assigning issue: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error assigning issue')
+                    });
+                }
+                break;
             case CommonActionType.Refresh: {
                 try {
                     await this.invalidate();

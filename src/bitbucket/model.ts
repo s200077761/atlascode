@@ -1,3 +1,4 @@
+import { CancelToken } from 'axios';
 import { FileDiffQueryParams } from 'src/views/pullrequest/pullRequestNode';
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PipelineApiImpl } from '../pipelines/pipelines';
@@ -301,7 +302,7 @@ export interface PullRequestApi {
     postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task>;
     editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task>;
     deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void>;
-    getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
+    getReviewers(site: BitbucketSite, query?: string, cancelToken?: CancelToken): Promise<User[]>;
     create(
         site: BitbucketSite,
         workspaceRepo: WorkspaceRepo,

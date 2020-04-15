@@ -1,3 +1,4 @@
+import { CancelToken } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
@@ -566,19 +567,23 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
+    async getReviewers(site: BitbucketSite, query?: string, cancelToken?: CancelToken): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
         if (query && query.length > 0) {
-            const { data } = await this.client.get(`/rest/api/1.0/users`, {
-                markup: true,
-                avatarSize: 64,
-                'permission.1': 'REPO_READ',
-                'permission.1.projectKey': ownerSlug,
-                'permission.1.repositorySlug': repoSlug,
-                filter: query,
-                limit: 10,
-            });
+            const { data } = await this.client.get(
+                `/rest/api/1.0/users`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    'permission.1': 'REPO_READ',
+                    'permission.1.projectKey': ownerSlug,
+                    'permission.1.repositorySlug': repoSlug,
+                    filter: query,
+                    limit: 10,
+                },
+                cancelToken
+            );
 
             return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));
         }
@@ -601,7 +606,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 targetRepoId: Number(repo.id),
                 sourceRefId: repo.mainbranch!,
                 targetRefId: repo.mainbranch!,
-            }
+            },
+            cancelToken
         );
 
         const result = (Array.isArray(data) ? data : []).map((val: any) =>

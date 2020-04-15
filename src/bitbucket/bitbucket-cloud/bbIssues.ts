@@ -4,11 +4,14 @@ import {
     BitbucketSite,
     Comment,
     emptyBitbucketSite,
+    emptyUser,
     PaginatedBitbucketIssues,
     PaginatedComments,
     UnknownUser,
+    User,
     WorkspaceRepo,
 } from '../model';
+import { CloudPullRequestApi } from './pullRequests';
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -158,13 +161,13 @@ export class BitbucketIssuesApiImpl {
         };
     }
 
-    async getChanges(issue: BitbucketIssue): Promise<PaginatedComments> {
+    async getChanges(issue: BitbucketIssue, pagelen?: number): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = issue.site;
 
         const { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
             {
-                pagelen: maxItemsSupported.changes,
+                pagelen: pagelen || maxItemsSupported.changes,
                 sort: '-created_on',
             }
         );
@@ -237,7 +240,7 @@ export class BitbucketIssuesApiImpl {
         };
     }
 
-    async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<[any, any]> {
+    async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<[string, Comment]> {
         const { ownerSlug, repoSlug } = issue.site;
 
         const { data } = await this.client.post(
@@ -286,18 +289,34 @@ export class BitbucketIssuesApiImpl {
         return this.toCommentModel(data);
     }
 
-    async assign(issue: BitbucketIssue, account_id?: string): Promise<void> {
+    async assign(issue: BitbucketIssue, account_id?: string): Promise<[User, Comment]> {
         const { ownerSlug, repoSlug } = issue.site;
+
+        if (account_id) {
+            const { data } = await this.client.post(
+                `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
+                {
+                    type: 'issue_change',
+                    changes: {
+                        assignee_account_id: {
+                            new: account_id,
+                        },
+                    },
+                },
+                { fields: '+issue.assignee' }
+            );
+            return [CloudPullRequestApi.toUserModel(data.issue.assignee), this.convertChangeToComment(data)];
+        }
 
         await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`, {
             type: 'issue',
-            assignee: account_id
-                ? {
-                      type: 'user',
-                      account_id: account_id,
-                  }
-                : null,
+            assignee: null,
         });
+        // not ideal - the changes endpoint doesn't work for unassigning users,
+        // so we fetch the latest change here to update the webview comments
+        const change = await this.getChanges(issue, 1);
+
+        return [{ ...emptyUser, displayName: 'Unassigned' }, change.data[0]];
     }
 
     async create(

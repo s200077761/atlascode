@@ -1,11 +1,12 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
-import { BitbucketIssueData, Comment, emptyComment } from '../../../bitbucket/model';
+import { BitbucketIssueData, Comment, emptyComment, emptyUser, User } from '../../../bitbucket/model';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
 import {
     AddCommentResponseMessage,
+    AssignResponseMessage,
     BitbucketIssueChangesMessage,
     BitbucketIssueCommentsMessage,
     BitbucketIssueInitMessage,
@@ -13,6 +14,7 @@ import {
     BitbucketIssueMessageType,
     emptyBitbucketIssueCommentsMessage,
     emptyBitbucketIssueInitMessage,
+    FetchUsersResponseMessage,
     UpdateStatusResponseMessage
 } from '../../../lib/ipc/toUI/bbIssue';
 import { ConnectionTimeout } from '../../../util/time';
@@ -24,21 +26,19 @@ export interface BitbucketIssueControllerApi {
     openLink: (linkId: KnownLinkID) => void;
     updateStatus: (status: string) => Promise<string>;
     postComment: (content: string) => Promise<Comment>;
+    fetchUsers: (query: string, abortSignal?: AbortSignal) => Promise<User[]>;
+    assign: (accountId?: string) => Promise<User>;
     applyChange: (change: { issue?: Partial<BitbucketIssueData>; comments?: Comment[] }) => void;
 }
 
 export const emptyApi: BitbucketIssueControllerApi = {
-    postMessage: s => {
-        return;
-    },
-    refresh: (): void => {
-        return;
-    },
-    openLink: linkId => {
-        return;
-    },
+    postMessage: () => {},
+    refresh: () => {},
+    openLink: () => {},
     updateStatus: async (status: string) => status,
     postComment: async (content: string) => emptyComment,
+    fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
+    assign: async (accountId?: string) => emptyUser,
     applyChange: (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {}
 };
 
@@ -104,7 +104,7 @@ function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): Bi
                 issue: action.data.issue
                     ? {
                           ...state.issue,
-                          data: { ...state.issue.data, ...action.data }
+                          data: { ...state.issue.data, ...action.data.issue }
                       }
                     : state.issue,
                 comments: action.data.comments ? [...state.comments, ...action.data.comments] : state.comments,
@@ -186,6 +186,50 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         [postMessagePromise]
     );
 
+    const assign = useCallback(
+        (accountId?: string): Promise<User> => {
+            return new Promise<User>((resolve, reject) => {
+                (async () => {
+                    try {
+                        const response = await postMessagePromise(
+                            { type: BitbucketIssueActionType.AssignRequest, accountId: accountId },
+                            BitbucketIssueMessageType.AssignResponse,
+                            ConnectionTimeout
+                        );
+                        resolve((response as AssignResponseMessage).assignee);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
+    const fetchUsers = useCallback(
+        (query: string, abortSignal?: AbortSignal): Promise<User[]> => {
+            return new Promise<User[]>((resolve, reject) => {
+                (async () => {
+                    try {
+                        const response = await postMessagePromise(
+                            {
+                                type: BitbucketIssueActionType.FetchUsersRequest,
+                                query: query,
+                                abortSignal: abortSignal
+                            },
+                            BitbucketIssueMessageType.FetchUsersResponse,
+                            ConnectionTimeout
+                        );
+                        resolve((response as FetchUsersResponseMessage).users);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const applyChange = useCallback(
         (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {
             dispatch({
@@ -213,9 +257,11 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             openLink,
             updateStatus,
             postComment,
+            fetchUsers,
+            assign,
             applyChange
         };
-    }, [openLink, postMessage, sendRefresh, updateStatus, postComment, applyChange]);
+    }, [openLink, postMessage, sendRefresh, updateStatus, postComment, fetchUsers, assign, applyChange]);
 
     return [state, controllerApi];
 }
