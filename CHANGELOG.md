@@ -1,3 +1,9 @@
+## What's New in 2.5.1
+
+### Bugs fixed
+
+-   Settings page now loads properly
+
 ## What's New in 2.5.0
 
 ### Improvements

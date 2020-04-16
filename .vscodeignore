@@ -19,3 +19,6 @@ build/**/*.map
 .readme/**
 dataportal.yaml
 devhtml/**
+.yalc/**
+.storybook/**
+jest.config.js
