@@ -16,7 +16,10 @@ const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 module.exports = {
     bail: true,
     mode: 'production',
-    entry: resolveApp('./src/webviews/components/index.tsx'),
+    entry: {
+        main: resolveApp('./src/webviews/components/index.tsx'),
+        mui: resolveApp('./src/react/index.tsx'),
+    },
     output: {
         path: path.resolve(__dirname, 'build'),
         filename: 'static/js/[name].[chunkhash:8].js',
