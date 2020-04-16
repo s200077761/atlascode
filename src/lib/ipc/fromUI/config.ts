@@ -64,7 +64,7 @@ export interface FilterSearchRequestAction {
     query: string;
     maxResults?: number;
     startAt?: number;
-    abortSignal?: AbortSignal;
+    abortKey?: string;
 }
 
 export interface JQLSuggestionsRequestAction {
@@ -72,11 +72,11 @@ export interface JQLSuggestionsRequestAction {
     fieldName: string;
     userInput: string;
     predicateName?: string;
-    abortSignal?: AbortSignal;
+    abortKey?: string;
 }
 
 export interface ValidateJqlRequestAction {
     site: DetailedSiteInfo;
     jql: string;
-    abortSignal?: AbortSignal;
+    abortKey?: string;
 }

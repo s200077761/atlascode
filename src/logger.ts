@@ -92,6 +92,24 @@ export class Logger {
         }
     }
 
+    public static warn(message?: any, ...params: any[]): void {
+        this.Instance.debug(message, params);
+    }
+
+    public warn(message?: any, ...params: any[]): void {
+        if (this.level !== OutputLevel.Debug) {
+            return;
+        }
+
+        if (Container.isDebugging) {
+            console.warn(this.timestamp, ConsolePrefix, message, ...params);
+        }
+
+        if (this.output !== undefined) {
+            this.output.appendLine([this.timestamp, message, ...params].join(' '));
+        }
+    }
+
     static show(): void {
         if (this.Instance.output !== undefined) {
             this.Instance.output.show();

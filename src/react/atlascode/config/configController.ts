@@ -2,6 +2,7 @@ import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassian
 import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
 import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { v4 } from 'uuid';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../lib/ipc/fromUI/config';
@@ -16,8 +17,8 @@ import {
     FilterSearchResponseMessage,
     JQLOptionsResponseMessage,
     JQLSuggestionsResponseMessage,
-    SiteWithAuthInfo,
     SectionChangeMessage,
+    SiteWithAuthInfo,
     ValidateJqlResponseMessage,
 } from '../../../lib/ipc/toUI/config';
 import { ConnectionTimeout } from '../../../util/time';
@@ -328,6 +329,19 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             return new Promise<Suggestion[]>((resolve, reject) => {
                 (async () => {
                     try {
+                        var abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'fetchJqlSuggestions cancelled by client',
+                                });
+                            };
+                        }
+
                         const response = await postMessagePromise(
                             {
                                 type: ConfigActionType.JQLSuggestionsRequest,
@@ -335,7 +349,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 fieldName: fieldName,
                                 userInput: userInput,
                                 predicateName: predicateName,
-                                abortSignal: abortSignal,
+                                abortKey: abortSignal ? abortKey : undefined,
                             },
                             ConfigMessageType.JQLSuggestionsResponse,
                             ConnectionTimeout
@@ -347,7 +361,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessage, postMessagePromise]
     );
 
     const fetchFilterSearchResults = useCallback(
@@ -361,6 +375,19 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             return new Promise<FilterSearchResults>((resolve, reject) => {
                 (async () => {
                     try {
+                        var abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'fetchFilterSearchResults cancelled by client',
+                                });
+                            };
+                        }
+
                         const response = await postMessagePromise(
                             {
                                 type: ConfigActionType.FilterSearchRequest,
@@ -368,7 +395,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 query: query,
                                 maxResults: maxResults,
                                 startAt: startAt,
-                                abortSignal: abortSignal,
+                                abortKey: abortSignal ? abortKey : undefined,
                             },
                             ConfigMessageType.FilterSearchResponse,
                             ConnectionTimeout
@@ -380,7 +407,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessage, postMessagePromise]
     );
 
     const validateJql = useCallback(
@@ -388,12 +415,25 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             return new Promise<JQLErrors>((resolve, reject) => {
                 (async () => {
                     try {
+                        var abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'validateJql cancelled by client',
+                                });
+                            };
+                        }
+
                         const response = await postMessagePromise(
                             {
                                 type: ConfigActionType.ValidateJqlRequest,
                                 site: site,
                                 jql: jql,
-                                abortSignal: abortSignal,
+                                abortKey: abortSignal ? abortKey : undefined,
                             },
                             ConfigMessageType.ValidateJqlResponse,
                             ConnectionTimeout
@@ -405,7 +445,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessage, postMessagePromise]
     );
 
     const controllerApi = useMemo<ConfigControllerApi>((): ConfigControllerApi => {

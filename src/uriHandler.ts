@@ -50,7 +50,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             const site = bitbucketSiteForRemote({
                 name: '',
                 fetchUrl: prUrl.slice(0, prUrl.indexOf('/pull-requests')),
-                isReadOnly: true
+                isReadOnly: true,
             })!;
             const prUrlPath = Uri.parse(prUrl).path;
             const prId = prUrlPath.slice(prUrlPath.lastIndexOf('/') + 1);
