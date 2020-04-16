@@ -31,7 +31,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
 
     async handleUri(uri: Uri) {
         if (uri.path.endsWith('openSettings')) {
-            Container.configWebview.createOrShow();
+            Container.settingsWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openOnboarding')) {
             Container.onboardingWebview.createOrShow();
         } else if (uri.path.endsWith('openPullRequest')) {
@@ -50,7 +50,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             const site = bitbucketSiteForRemote({
                 name: '',
                 fetchUrl: prUrl.slice(0, prUrl.indexOf('/pull-requests')),
-                isReadOnly: true
+                isReadOnly: true,
             })!;
             const prUrlPath = Uri.parse(prUrl).path;
             const prId = prUrlPath.slice(prUrlPath.lastIndexOf('/') + 1);
