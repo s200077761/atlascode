@@ -11,7 +11,7 @@ export const StateRenderer = {
     invalid: <Lozenge appearance="moved">invalid</Lozenge>,
     duplicate: <Lozenge appearance="default">duplicate</Lozenge>,
     wontfix: <Lozenge appearance="removed">wontfix</Lozenge>,
-    closed: <Lozenge appearance="default">closed</Lozenge>
+    closed: <Lozenge appearance="default">closed</Lozenge>,
 };
 
 const StatusOption = (props: any) => <components.Option {...props}>{StateRenderer[props.data]}</components.Option>;

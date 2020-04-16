@@ -13,22 +13,22 @@ export class Shell {
         return new Promise<Result>((resolve, reject) => {
             const proc = child.spawn(command, args, {
                 cwd: this.workingDirectory,
-                shell: true
+                shell: true,
             });
 
             let stdout = '';
             let stderr = '';
 
-            proc.stdout.on('data', data => {
+            proc.stdout.on('data', (data) => {
                 stdout += data;
             });
 
-            proc.stderr.on('data', data => {
+            proc.stderr.on('data', (data) => {
                 stderr += data;
             });
 
-            proc.on('close', code => resolve({ code, stdout, stderr }));
-            proc.on('error', err => reject(err));
+            proc.on('close', (code) => resolve({ code, stdout, stderr }));
+            proc.on('error', (err) => reject(err));
         });
     }
 
@@ -42,6 +42,6 @@ export class Shell {
 
     public async lines(command: string, ...args: string[]): Promise<string[]> {
         const output = await this.output(command, ...args);
-        return output.split(/\r?\n/).filter(value => value.length > 0);
+        return output.split(/\r?\n/).filter((value) => value.length > 0);
     }
 }

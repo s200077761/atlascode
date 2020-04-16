@@ -1,4 +1,5 @@
 import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import orderBy from 'lodash.orderby';
 import * as vscode from 'vscode';
 import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
@@ -62,7 +63,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
             this.postMessage({
                 type: 'update',
                 issue: createEmptyMinimalIssue(emptySiteInfo),
-                repoData: []
+                repoData: [],
             });
         }
         this.updateIssue(data);
@@ -94,7 +95,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                     handled = true;
                     const linkUrl = `${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
-                    issueUrlCopiedEvent(this._state.siteDetails.id).then(e => {
+                    issueUrlCopiedEvent(this._state.siteDetails.id).then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
                     break;
@@ -127,9 +128,9 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                                     e.setupBitbucket
                                         ? `<li>Switched to <code>${e.targetBranchName}</code> branch with upstream set to <code>${e.remoteName}/${e.targetBranchName}</code></li>`
                                         : ''
-                                }</ul>`
+                                }</ul>`,
                             });
-                            issueWorkStartedEvent(issue.siteDetails).then(e => {
+                            issueWorkStartedEvent(issue.siteDetails).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
@@ -189,10 +190,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
 
             const workspaceRepos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];
 
-            const repoData: RepoData[] = await Promise.all(
+            const repoData: (RepoData & { hasSubmodules: boolean })[] = await Promise.all(
                 workspaceRepos
-                    .filter(r => r.siteRemotes.length > 0)
-                    .map(async wsRepo => {
+                    .filter((r) => r.siteRemotes.length > 0)
+                    .map(async (wsRepo) => {
                         let repo: Repo | undefined = undefined;
                         let developmentBranch = undefined;
                         let href = undefined;
@@ -209,7 +210,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                                 scm.fetch(),
                                 bbApi.repositories.get(site),
                                 bbApi.repositories.getDevelopmentBranch(site),
-                                bbApi.repositories.getBranchingModel(site)
+                                bbApi.repositories.getBranchingModel(site),
                             ]);
 
                             href = repo!.url;
@@ -228,11 +229,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                         return {
                             workspaceRepo: wsRepo,
                             href: href,
-                            localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                            remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
+                            localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
+                            remoteBranches: scm.state.refs.filter((ref) => ref.type === RefType.RemoteHead && ref.name),
                             branchTypes: branchTypes,
                             developmentBranch: developmentBranch,
-                            isCloud: isCloud
+                            isCloud: isCloud,
+                            hasSubmodules: scm.state.submodules.length > 0,
                         };
                     })
             );
@@ -241,12 +243,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
             // best effort to set issue to in-progress
             if (!issueClone.status.name.toLowerCase().includes('progress')) {
                 const inProgressTransition = issueClone.transitions.find(
-                    t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')
+                    (t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')
                 );
                 if (inProgressTransition) {
                     issueClone.status = inProgressTransition.to;
                 } else {
-                    const firstNonInitialTransition = issueClone.transitions.find(t => !t.isInitial);
+                    const firstNonInitialTransition = issueClone.transitions.find((t) => !t.isInitial);
                     issueClone.status = firstNonInitialTransition ? firstNonInitialTransition.to : issueClone.status;
                 }
             }
@@ -255,7 +257,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
             const msg: StartWorkOnIssueData = {
                 type: 'update',
                 issue: issueClone,
-                repoData: repoData
+                repoData: orderBy(repoData, 'hasSubmodules', 'desc'),
             };
             this.postMessage(msg);
         } catch (e) {

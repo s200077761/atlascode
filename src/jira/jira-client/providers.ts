@@ -1,5 +1,5 @@
 import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
-import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common/agent';
+import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common';
 import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
@@ -23,9 +23,8 @@ export function getAxiosInstance(): AxiosInstance {
         headers: {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',
-            'Accept-Encoding': 'gzip, deflate'
+            'Accept-Encoding': 'gzip, deflate',
         },
-        ...getAgent()
     });
 
     if (Container.config.enableCurlLogging) {
@@ -56,7 +55,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                 const cas = sslRootCas.create();
                 const certs = site.customSSLCertPaths.split(',');
 
-                certs.forEach(cert => {
+                certs.forEach((cert) => {
                     cas.addFile(cert.trim());
                 });
 
@@ -69,8 +68,8 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                 agent = {
                     httpsAgent: new https.Agent({
                         pfx: pfxFile,
-                        passphrase: site.pfxPassphrase
-                    })
+                        passphrase: site.pfxPassphrase,
+                    }),
                 };
             }
         }
@@ -94,10 +93,10 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                             httpsAgent: tunnel.httpsOverHttp({
                                 proxy: {
                                     host: host,
-                                    port: numPort
-                                }
+                                    port: numPort,
+                                },
                             }),
-                            proxy: false
+                            proxy: false,
                         };
                     }
                 }
@@ -119,9 +118,9 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
                                 ca: [pemFile],
                                 proxy: {
                                     host: '127.0.0.1',
-                                    port: 8888
-                                }
-                            })
+                                    port: 8888,
+                                },
+                            }),
                         };
                     }
                 }

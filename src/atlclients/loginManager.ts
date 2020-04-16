@@ -1,4 +1,4 @@
-import { window } from 'vscode';
+import { Event, EventEmitter, window } from 'vscode';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
@@ -16,14 +16,17 @@ import {
     Product,
     ProductBitbucket,
     ProductJira,
-    SiteInfo
+    SiteInfo,
 } from './authInfo';
+import { displayAuthNotification, OnboardingNotificationPressedEvent } from './authNotification';
 import { CredentialManager } from './authStore';
 import { OAuthDancer } from './oauthDancer';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
+
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
+    private _onLoginNotificationAction = new EventEmitter<OnboardingNotificationPressedEvent>();
 
     constructor(
         private _credentialManager: CredentialManager,
@@ -44,7 +47,7 @@ export class LoginManager {
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
                 refresh: resp.refresh,
-                user: resp.user
+                user: resp.user,
             };
 
             const siteDetails = await this.getOAuthSiteDetails(
@@ -54,15 +57,15 @@ export class LoginManager {
                 resp.accessibleResources
             );
 
-            siteDetails.forEach(async siteInfo => {
+            siteDetails.forEach(async (siteInfo) => {
                 await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
                 this._siteManager.addSites([siteInfo]);
-                authenticatedEvent(siteInfo).then(e => {
+                authenticatedEvent(siteInfo).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             });
 
-            window.showInformationMessage(`You are now authenticated with ${site.product.name}`);
+            displayAuthNotification(site, this._onLoginNotificationAction);
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -71,6 +74,10 @@ export class LoginManager {
                 window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
             }
         }
+    }
+
+    public get onLoginNotificationActionEvent(): Event<OnboardingNotificationPressedEvent> {
+        return this._onLoginNotificationAction.event;
     }
 
     private async getOAuthSiteDetails(
@@ -107,8 +114,8 @@ export class LoginManager {
                             product: ProductBitbucket,
                             isCloud: true,
                             userId: userId,
-                            credentialId: credentialId
-                        }
+                            credentialId: credentialId,
+                        },
                     ];
                 }
                 break;
@@ -119,7 +126,7 @@ export class LoginManager {
                 //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
                 //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
 
-                newSites = resources.map(r => {
+                newSites = resources.map((r) => {
                     const credentialId = CredentialManager.generateCredentialId(r.id, userId);
 
                     return {
@@ -132,7 +139,7 @@ export class LoginManager {
                         product: ProductJira,
                         isCloud: true,
                         userId: userId,
-                        credentialId: credentialId
+                        credentialId: credentialId,
                     };
                 });
                 break;
@@ -145,7 +152,8 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                authenticatedEvent(siteDetails).then(e => {
+                displayAuthNotification(site, this._onLoginNotificationAction);
+                authenticatedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
@@ -160,7 +168,7 @@ export class LoginManager {
         if (isBasicAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
-                editedEvent(siteDetails).then(e => {
+                editedEvent(siteDetails).then((e) => {
                     this._analyticsClient.sendTrackEvent(e);
                 });
             } catch (err) {
@@ -202,9 +210,9 @@ export class LoginManager {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: authHeader
+                Authorization: authHeader,
             },
-            ...getAgent(site)
+            ...getAgent(site),
         });
         const json = res.data;
 
@@ -226,7 +234,7 @@ export class LoginManager {
             credentialId: credentialId,
             customSSLCertPaths: site.customSSLCertPaths,
             pfxPath: site.pfxPath,
-            pfxPassphrase: site.pfxPassphrase
+            pfxPassphrase: site.pfxPassphrase,
         };
 
         if (site.product.key === ProductJira.key) {
@@ -234,14 +242,14 @@ export class LoginManager {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrls['48x48']
+                avatarUrl: json.avatarUrls['48x48'],
             };
         } else {
             credentials.user = {
                 displayName: json.displayName,
                 id: userId,
                 email: json.emailAddress,
-                avatarUrl: json.avatarUrl
+                avatarUrl: json.avatarUrl,
             };
         }
 

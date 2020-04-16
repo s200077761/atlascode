@@ -7,13 +7,13 @@ import {
     PaginatedBitbucketIssues,
     PaginatedComments,
     UnknownUser,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../model';
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
     comments: 100,
-    changes: 100
+    changes: 100,
 };
 
 export class BitbucketIssuesApiImpl {
@@ -36,7 +36,7 @@ export class BitbucketIssuesApiImpl {
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues`, {
             pagelen: defaultPageLength,
-            q: 'state="new" OR state="open" OR state="on hold"'
+            q: 'state="new" OR state="open" OR state="on hold"',
         });
 
         const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
@@ -48,7 +48,7 @@ export class BitbucketIssuesApiImpl {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/components`, {
-            pagelen: defaultPageLength
+            pagelen: defaultPageLength,
         });
 
         return data.values;
@@ -61,13 +61,13 @@ export class BitbucketIssuesApiImpl {
 
         const { ownerSlug, repoSlug } = site;
 
-        const keyNumbers = issueKeys.map(key => key.replace('#', ''));
+        const keyNumbers = issueKeys.map((key) => key.replace('#', ''));
 
         const results = await Promise.all(
-            keyNumbers.map(key => this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues/${key}`))
+            keyNumbers.map((key) => this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues/${key}`))
         );
 
-        return results.filter(result => !!result).map(result => ({ site, data: result.data }));
+        return results.filter((result) => !!result).map((result) => ({ site, data: result.data }));
     }
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedBitbucketIssues> {
@@ -85,7 +85,7 @@ export class BitbucketIssuesApiImpl {
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues`, {
             pagelen: 2,
             q: '(state="new" OR state="open" OR state="on hold")',
-            sort: '-created_on'
+            sort: '-created_on',
         });
 
         const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
@@ -122,7 +122,7 @@ export class BitbucketIssuesApiImpl {
             {
                 issue_id: issue.data.id!.toString(),
                 pagelen: maxItemsSupported.comments,
-                sort: '-created_on'
+                sort: '-created_on',
             }
         );
 
@@ -142,12 +142,12 @@ export class BitbucketIssuesApiImpl {
                           displayName: comment.user.display_name!,
                           url: comment.user.links!.html!.href!,
                           avatarUrl: comment.user.links!.avatar!.href!,
-                          mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`
+                          mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`,
                       }
                     : UnknownUser,
-                children: []
+                children: [],
             })),
-            next: data.next
+            next: data.next,
         };
     }
 
@@ -158,13 +158,13 @@ export class BitbucketIssuesApiImpl {
             `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
             {
                 pagelen: maxItemsSupported.changes,
-                sort: '-created_on'
+                sort: '-created_on',
             }
         );
 
         const changes: any[] = (data.values || []).reverse();
 
-        const updatedChanges: any[] = changes.map(change => {
+        const updatedChanges: any[] = changes.map((change) => {
             let content = '';
             if (change.changes!.state) {
                 content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${
@@ -203,7 +203,7 @@ export class BitbucketIssuesApiImpl {
             return { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
         });
 
-        const updatedChangesAsComments: Comment[] = updatedChanges.map(change => ({
+        const updatedChangesAsComments: Comment[] = updatedChanges.map((change) => ({
             id: change.id as string,
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
@@ -218,11 +218,11 @@ export class BitbucketIssuesApiImpl {
                       displayName: change.user.display_name!,
                       url: change.user.links!.html!.href!,
                       avatarUrl: change.user.links!.avatar!.href!,
-                      mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`
+                      mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`,
                   }
                 : UnknownUser,
             children: [],
-            tasks: []
+            tasks: [],
         }));
 
         return { data: updatedChangesAsComments, next: data.next };
@@ -235,12 +235,12 @@ export class BitbucketIssuesApiImpl {
             type: 'issue_change',
             changes: {
                 state: {
-                    new: newStatus
-                }
+                    new: newStatus,
+                },
             },
             content: {
-                raw: content
-            }
+                raw: content,
+            },
         });
     }
 
@@ -251,9 +251,9 @@ export class BitbucketIssuesApiImpl {
             type: 'issue_change',
             changes: {
                 component: {
-                    new: newComponent
-                }
-            }
+                    new: newComponent,
+                },
+            },
         });
     }
 
@@ -263,8 +263,8 @@ export class BitbucketIssuesApiImpl {
         await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`, {
             type: 'issue_comment',
             content: {
-                raw: content
-            }
+                raw: content,
+            },
         });
     }
 
@@ -276,9 +276,9 @@ export class BitbucketIssuesApiImpl {
             assignee: account_id
                 ? {
                       type: 'user',
-                      account_id: account_id
+                      account_id: account_id,
                   }
-                : null
+                : null,
         });
     }
 
@@ -295,11 +295,11 @@ export class BitbucketIssuesApiImpl {
             type: 'issue',
             title: title,
             content: {
-                raw: description
+                raw: description,
             },
             //@ts-ignore
             kind: kind,
-            priority: priority
+            priority: priority,
         });
 
         return { site, data };

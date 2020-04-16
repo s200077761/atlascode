@@ -12,7 +12,7 @@ import {
     emptyUserInfo,
     Product,
     ProductBitbucket,
-    SiteInfo
+    SiteInfo,
 } from '../../../atlclients/authInfo';
 import * as FieldValidators from '../fieldValidators';
 
@@ -43,13 +43,13 @@ export default class AuthForm extends PureComponent<
         {
             name: 'customSSLType',
             label: 'Use custom CA certificate(s) (e.g. a self-signed cert)',
-            value: 'customServerSSL'
+            value: 'customServerSSL',
         },
         {
             name: 'customSSLType',
             label: 'Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)',
-            value: 'customClientSSL'
-        }
+            value: 'customClientSSL',
+        },
     ];
 
     constructor(props: any) {
@@ -67,7 +67,7 @@ export default class AuthForm extends PureComponent<
             certPaths: props.site?.customSSLCertPaths ?? '',
             pfxPath: props.site?.pfxPath ?? '',
             pfxPassphrase: props.site?.pfxPassphrase ?? '',
-            contextPath: props.site?.contextPath ?? ''
+            contextPath: props.site?.contextPath ?? '',
         };
     }
 
@@ -137,7 +137,7 @@ export default class AuthForm extends PureComponent<
             customSSLCertPaths: customSSLCerts,
             pfxPath: pfxCert,
             pfxPassphrase: pfxPassphrase,
-            contextPath: contextPath
+            contextPath: contextPath,
         };
 
         if (!this.state.requiresCredentials) {
@@ -146,7 +146,7 @@ export default class AuthForm extends PureComponent<
             const authInfo: BasicAuthInfo = {
                 username: this.state.username,
                 password: this.state.password,
-                user: emptyUserInfo
+                user: emptyUserInfo,
             };
 
             this.props.onSave(siteInfo, authInfo);
@@ -491,7 +491,7 @@ export default class AuthForm extends PureComponent<
                             marginTop: '24px',
                             marginBottom: '24px',
                             display: 'flex',
-                            justifyContent: 'flex-end'
+                            justifyContent: 'flex-end',
                         }}
                     >
                         <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>

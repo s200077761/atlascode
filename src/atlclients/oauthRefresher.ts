@@ -14,8 +14,8 @@ export class OAuthRefesher implements Disposable {
             timeout: ConnectionTimeout,
             headers: {
                 'User-Agent': 'atlascode/2.x',
-                'Accept-Encoding': 'gzip, deflate'
-            }
+                'Accept-Encoding': 'gzip, deflate',
+            },
         });
         if (Container.config.enableCurlLogging) {
             addCurlLogging(this._axios);
@@ -32,16 +32,16 @@ export class OAuthRefesher implements Disposable {
             const tokenResponse = await this._axios(strategy.tokenURL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 data: JSON.stringify({
                     grant_type: 'refresh_token',
                     client_id: strategy.clientID,
                     client_secret: strategy.clientSecret,
                     refresh_token: refreshToken,
-                    redirect_uri: strategy.callbackURL
+                    redirect_uri: strategy.callbackURL,
                 }),
-                ...getAgent()
+                ...getAgent(),
             });
 
             const data = tokenResponse.data;
@@ -54,10 +54,10 @@ export class OAuthRefesher implements Disposable {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    Authorization: `Basic ${basicAuth}`
+                    Authorization: `Basic ${basicAuth}`,
                 },
                 data: `grant_type=refresh_token&refresh_token=${refreshToken}`,
-                ...getAgent()
+                ...getAgent(),
             });
 
             const data = tokenResponse.data;

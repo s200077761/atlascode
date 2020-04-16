@@ -1,6 +1,7 @@
-import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, CustomJQLTreeId, setCommandContext } from '../../constants';
@@ -28,6 +29,7 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            Container.loginManager.onLoginNotificationActionEvent(this.onboardingNotificationWasPressed, this),
             this._refreshTimer
         );
 
@@ -60,6 +62,13 @@ export class JiraContext extends Disposable {
         if (initializing) {
             const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
+            //this._newIssueMonitor.setProject(project);
+        }
+    }
+
+    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+        if (this._explorer instanceof JiraExplorer) {
+            this._explorer.onboardingNotificationWasPressed(e);
         }
     }
 

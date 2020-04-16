@@ -24,7 +24,7 @@ export default class CommentForm extends React.Component<
         super(props);
         this.state = {
             commentInput: '',
-            isThisCommentLoading: false
+            isThisCommentLoading: false,
         };
     }
 
@@ -83,7 +83,7 @@ export default class CommentForm extends React.Component<
                                 placeholder="Add a comment"
                                 value={this.state.commentInput}
                                 onChange={this.handleChange}
-                                ref={element => (this.textAreaElement = element!)}
+                                ref={(element) => (this.textAreaElement = element!)}
                             />
                             {this.props.loadUserOptions && (
                                 <div className="ac-textarea-toolbar">

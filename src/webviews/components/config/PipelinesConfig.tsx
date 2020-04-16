@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
+import * as React from 'react';
+import { IConfig } from '../../../config/model';
 import { chain } from '../fieldValidators';
 import MultiOptionList from './MultiOptionList';
-import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
@@ -70,7 +70,7 @@ export default class PipelinesConfig extends React.Component<
                     style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        paddingLeft: '24px'
+                        paddingLeft: '24px',
                     }}
                 >
                     <CheckboxField

@@ -1,17 +1,17 @@
-import React from 'react';
+import TrashIcon from '@atlaskit/icon/glyph/trash';
 import TableTree from '@atlaskit/table-tree';
 import filesize from 'filesize';
-import TrashIcon from '@atlaskit/icon/glyph/trash';
+import React from 'react';
 
 type ItemData = {
     attachment: any;
     delfunc: (attachment: any) => void;
 };
 
-interface AttachmentListProps {
+type AttachmentListProps = {
     attachments: any[];
     onDelete: (attachment: any) => void;
-}
+};
 
 const Delete = (data: ItemData) => {
     return (
@@ -33,13 +33,13 @@ export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({ a
         <TableTree
             columns={[Filename, Size, Delete]}
             columnWidths={['100%', '150px', '50px']}
-            items={attachments.map(attachment => {
+            items={attachments.map((attachment) => {
                 return {
                     id: attachment.id,
                     content: {
                         attachment: attachment,
-                        delfunc: onDelete
-                    }
+                        delfunc: onDelete,
+                    },
                 };
             })}
         />

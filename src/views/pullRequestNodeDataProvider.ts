@@ -12,6 +12,7 @@ import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 import { SimpleNode } from './nodes/simpleNode';
 import { CreatePullRequestNode, PullRequestHeaderNode } from './pullrequest/headerNode';
+import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
@@ -42,7 +43,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 const bbApi = await clientForSite(prs.site);
                 const result = await bbApi.pullrequests.nextPage(prs);
                 this.addItems(result);
-                prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
+                prPaginationEvent().then((e) => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
                 this._fetcher = async (wsRepo: WorkspaceRepo) => {
@@ -73,7 +74,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                     .showQuickPick([
                         'Show all open pull requests',
                         'Show pull requests created by me',
-                        'Show pull requests to be reviewed'
+                        'Show pull requests to be reviewed',
                     ])
                     .then((selected: string) => {
                         switch (selected) {
@@ -105,7 +106,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
         // dispose any removed repos
         this._childrenMap.forEach((val, key) => {
-            if (!workspaceRepos.find(repo => repo.rootUri === key)) {
+            if (!workspaceRepos.find((repo) => repo.rootUri === key)) {
                 val.dispose();
                 this._childrenMap!.delete(key);
             } else {
@@ -131,12 +132,45 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         if (!this._childrenMap) {
             return;
         }
-        this._childrenMap.forEach(child => {
+        this._childrenMap.forEach((child) => {
             const foundItem = child.findResource(uri);
             if (foundItem) {
                 this._onDidChangeTreeData.fire(foundItem);
             }
         });
+    }
+
+    async getFirstPullRequestNode(forceFocus: boolean): Promise<PullRequestTitlesNode | SimpleNode | undefined> {
+        const children = await this.getChildren(undefined);
+        const repoNode = children.find((node) => node instanceof RepositoriesNode);
+        if (repoNode instanceof RepositoriesNode) {
+            const prTitlesNodes = await repoNode.getChildren();
+            if (prTitlesNodes) {
+                return prTitlesNodes[0] as PullRequestTitlesNode;
+            } else if (forceFocus) {
+                return children[0] as SimpleNode;
+            }
+            return undefined;
+        } else if (forceFocus) {
+            return children[0] as SimpleNode;
+        }
+        return undefined;
+    }
+
+    async getCreatePullRequestNode(forceFocus: boolean): Promise<CreatePullRequestNode | SimpleNode | undefined> {
+        const children = await this.getChildren(undefined);
+        const createPRNode = children.find((node) => node instanceof CreatePullRequestNode);
+        if (createPRNode instanceof CreatePullRequestNode) {
+            return createPRNode;
+        } else if (forceFocus) {
+            return children[0] as SimpleNode;
+        }
+        return undefined;
+    }
+
+    async getDetailsNode(prTitlesNode: PullRequestTitlesNode): Promise<DescriptionNode> {
+        const children = await prTitlesNode.getChildren();
+        return children[0] as DescriptionNode;
     }
 
     addItems(prs: PaginatedPullRequests): void {
@@ -154,20 +188,20 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (Container.siteManager.getSitesAvailable(ProductBitbucket).length === 0) {
-            viewScreenEvent('pullRequestsTreeViewUnauthenticatedMessage', undefined, ProductBitbucket).then(event =>
+            viewScreenEvent('pullRequestsTreeViewUnauthenticatedMessage', undefined, ProductBitbucket).then((event) =>
                 Container.analyticsClient.sendScreenEvent(event)
             );
             return [
                 new SimpleNode('Authenticate with Bitbucket to view pull requests', {
                     command: Commands.ShowBitbucketAuth,
-                    title: 'Open Bitbucket Settings'
-                })
+                    title: 'Open Bitbucket Settings',
+                }),
             ];
         }
 
         const repos = this.ctx.getBitbucketRepositories();
         if (repos.length < 1) {
-            viewScreenEvent('pullRequestsTreeViewNoReposFoundMessage', undefined, ProductBitbucket).then(event =>
+            viewScreenEvent('pullRequestsTreeViewNoReposFoundMessage', undefined, ProductBitbucket).then((event) =>
                 Container.analyticsClient.sendScreenEvent(event)
             );
             return emptyBitbucketNodes;
@@ -185,7 +219,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     dispose() {
         if (this._childrenMap) {
-            this._childrenMap.forEach(node => node.dispose());
+            this._childrenMap.forEach((node) => node.dispose());
         }
         this._disposable.dispose();
         this._onDidChangeTreeData.dispose();

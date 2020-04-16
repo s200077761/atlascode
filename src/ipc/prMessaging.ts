@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import {
     BitbucketBranchingModel,
@@ -12,7 +12,7 @@ import {
     Reviewer,
     Task,
     User,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../bitbucket/model';
 import { Branch } from '../typings/git';
 import { Message } from './messaging';

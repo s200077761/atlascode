@@ -1,3 +1,4 @@
+import orderBy from 'lodash.orderby';
 import * as vscode from 'vscode';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
@@ -86,7 +87,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                     handled = true;
                     const linkUrl = this._state.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
-                    bbIssueUrlCopiedEvent().then(e => {
+                    bbIssueUrlCopiedEvent().then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
                     break;
@@ -113,10 +114,10 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                                     e.setupBitbucket
                                         ? `<li>Switched to <code>${e.targetBranchName}</code> branch with upstream set to <code>${e.remoteName}/${e.targetBranchName}</code></li>`
                                         : ''
-                                }</ul>`
+                                }</ul>`,
                             });
 
-                            bbIssueWorkStartedEvent(issue.site.details).then(e => {
+                            bbIssueWorkStartedEvent(issue.site.details).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
                         } catch (e) {
@@ -170,10 +171,10 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
 
         const repos = Container.bitbucketContext ? Container.bitbucketContext.getAllRepositories() : [];
 
-        const repoData: RepoData[] = await Promise.all(
+        const repoData: (RepoData & { hasSubmodules: boolean })[] = await Promise.all(
             repos
-                .filter(r => r.siteRemotes.length > 0)
-                .map(async wsRepo => {
+                .filter((r) => r.siteRemotes.length > 0)
+                .map(async (wsRepo) => {
                     let repo: Repo | undefined = undefined;
                     let developmentBranch = undefined;
                     let href = undefined;
@@ -185,7 +186,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                         const bbApi = await clientForSite(site);
                         [repo, developmentBranch] = await Promise.all([
                             bbApi.repositories.get(site),
-                            bbApi.repositories.getDevelopmentBranch(site)
+                            bbApi.repositories.getDevelopmentBranch(site),
                         ]);
                         href = repo.url;
                         isCloud = site.details.isCloud;
@@ -194,11 +195,12 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                     return {
                         workspaceRepo: wsRepo,
                         href: href,
-                        localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                        remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
+                        localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
+                        remoteBranches: scm.state.refs.filter((ref) => ref.type === RefType.RemoteHead && ref.name),
                         branchTypes: [],
                         developmentBranch: developmentBranch,
-                        isCloud: isCloud
+                        isCloud: isCloud,
+                        hasSubmodules: scm.state.submodules.length > 0,
                     };
                 })
         );
@@ -206,7 +208,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
         const msg: StartWorkOnBitbucketIssueData = {
             type: 'startWorkOnBitbucketIssueData',
             issue: issue,
-            repoData: repoData
+            repoData: orderBy(repoData, 'hasSubmodules', 'desc'),
         };
         this.postMessage(msg);
     }

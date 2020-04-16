@@ -38,7 +38,7 @@ const routes = {
     ),
     createBitbucketIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')
-    )
+    ),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

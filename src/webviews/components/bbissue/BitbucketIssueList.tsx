@@ -39,13 +39,13 @@ export default class BitbucketIssueList extends React.Component<
             <TableTree
                 columns={[IssueKey, Summary, Priority, StatusColumn]}
                 columnWidths={['100px', '100%', '60px', '150px']}
-                items={this.props.issues.map(issue => {
+                items={this.props.issues.map((issue) => {
                     return {
                         id: issue.data.id,
                         content: {
                             issue: issue,
-                            postMessage: this.props.postMessage
-                        }
+                            postMessage: this.props.postMessage,
+                        },
                     };
                 })}
             />

@@ -21,13 +21,13 @@ export function parseGitUrl(url: string): gup.GitUrl {
 }
 
 export function getBitbucketRemotes(repository: Repository): Remote[] {
-    return repository.state.remotes.filter(remote => {
+    return repository.state.remotes.filter((remote) => {
         return siteDetailsForRemote(remote) !== undefined;
     });
 }
 
 export function getBitbucketCloudRemotes(repository: Repository): Remote[] {
-    return repository.state.remotes.filter(remote => {
+    return repository.state.remotes.filter((remote) => {
         const details = siteDetailsForRemote(remote);
         if (details) {
             return details.isCloud;
@@ -62,7 +62,7 @@ export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefine
         return {
             details: site,
             ownerSlug: parsed.owner,
-            repoSlug: parsed.name
+            repoSlug: parsed.name,
         };
     }
 
@@ -77,7 +77,7 @@ export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefine
             return {
                 details: site,
                 ownerSlug: parsed.owner,
-                repoSlug: parsed.name
+                repoSlug: parsed.name,
             };
         }
     }
@@ -118,19 +118,19 @@ export function firstBitbucketRemote(repo: Repository): Remote {
     const remotes = getBitbucketRemotes(repo);
 
     let remote: Remote | undefined;
-    if ((remote = remotes.find(r => r.name === 'origin'))) {
+    if ((remote = remotes.find((r) => r.name === 'origin'))) {
         return remote;
     }
-    if ((remote = remotes.find(r => r.name === 'upstream'))) {
+    if ((remote = remotes.find((r) => r.name === 'upstream'))) {
         return remote;
     }
     return remotes[0];
 }
 
 export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
-    const siteRemotes = repository.state.remotes.map(r => ({
+    const siteRemotes = repository.state.remotes.map((r) => ({
         site: bitbucketSiteForRemote(r),
-        remote: r
+        remote: r,
     }));
 
     const firstRemote =
@@ -138,12 +138,12 @@ export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
 
     const mainSiteRemote = {
         site: bitbucketSiteForRemote(firstRemote),
-        remote: firstRemote
+        remote: firstRemote,
     };
 
     return {
         rootUri: repository.rootUri.toString(),
         mainSiteRemote: mainSiteRemote,
-        siteRemotes: siteRemotes
+        siteRemotes: siteRemotes,
     };
 }

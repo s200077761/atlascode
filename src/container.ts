@@ -1,20 +1,32 @@
-import { Disposable, env, ExtensionContext, Uri, UriHandler, window } from 'vscode';
+import { Disposable, env, ExtensionContext, UriHandler } from 'vscode';
 import { AnalyticsClient } from './analytics-node-client/src/index';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { configuration, IConfig } from './config/configuration';
+import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
-import { PmfStats } from './pmf/stats';
+import { CancellationManager } from './lib/cancellation';
+import { ConfigAction } from './lib/ipc/fromUI/config';
+import { ConfigTarget } from './lib/ipc/models/config';
+import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
+import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
+import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { JiraContext } from './views/jira/jiraContext';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
+import { VSCAnalyticsApi } from './vscAnalyticsApi';
+import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
+import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
+import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { SingleWebview } from './webview/singleViewFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
@@ -27,30 +39,9 @@ import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 import { WelcomeWebview } from './webviews/welcomeWebview';
-import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
-
-export class AtlascodeUriHandler extends Disposable implements UriHandler {
-    private disposables: Disposable;
-
-    constructor() {
-        super(() => this.dispose());
-        this.disposables = window.registerUriHandler(this);
-    }
-
-    handleUri(uri: Uri): void {
-        if (uri.path.endsWith('openSettings')) {
-            Container.configWebview.createOrShow();
-        } else if (uri.path.endsWith('openOnboarding')) {
-            Container.onboardingWebview.createOrShow();
-        }
-    }
-
-    dispose(): void {
-        this.disposables.dispose();
-    }
-}
+const ConfigTargetKey = 'configurationTarget';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
@@ -61,12 +52,16 @@ export class Container {
             product: 'externalProductIntegrations',
             subproduct: 'atlascode',
             version: version,
-            deviceId: env.machineId
+            deviceId: env.machineId,
         });
+
+        this._cancellationManager = new Map();
+        this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient);
+        this._commonMessageHandler = new VSCCommonMessageHandler(this._analyticsApi, this._cancellationManager);
 
         this._context = context;
         this._version = version;
-        context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
+        context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler(this._analyticsApi)));
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
@@ -97,6 +92,19 @@ export class Container {
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jqlManager = new JQLManager()));
 
+        const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
+            context.extensionPath,
+            new VSCConfigWebviewControllerFactory(
+                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                SETTINGS_URL
+            ),
+            this._analyticsApi
+        );
+
+        context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+
         this._pmfStats = new PmfStats(context);
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
@@ -105,7 +113,7 @@ export class Container {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
             let disposable: Disposable;
-            disposable = configuration.onDidChange(e => {
+            disposable = configuration.onDidChange((e) => {
                 if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));
@@ -136,11 +144,19 @@ export class Container {
             try {
                 const args = process.execArgv;
 
-                this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
+                this._isDebugging = args ? args.some((arg) => isDebuggingRegex.test(arg)) : false;
             } catch {}
         }
 
         return this._isDebugging;
+    }
+
+    public static get configTarget(): ConfigTarget {
+        return this._context.globalState.get<ConfigTarget>(ConfigTargetKey, ConfigTarget.User);
+    }
+
+    public static set configTarget(target: ConfigTarget) {
+        this._context.globalState.update(ConfigTargetKey, target);
     }
 
     private static _uriHandler: UriHandler;
@@ -176,6 +192,11 @@ export class Container {
     private static _configWebview: ConfigWebview;
     static get configWebview() {
         return this._configWebview;
+    }
+
+    private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
+    static get settingsWebviewFactory() {
+        return this._settingsWebviewFactory;
     }
 
     private static _welcomeWebview: WelcomeWebview;
@@ -291,6 +312,21 @@ export class Container {
     private static _analyticsClient: AnalyticsClient;
     static get analyticsClient() {
         return this._analyticsClient;
+    }
+
+    private static _analyticsApi: VSCAnalyticsApi;
+    static get analyticsApi() {
+        return this._analyticsApi;
+    }
+
+    private static _commonMessageHandler: CommonActionMessageHandler;
+    static get commonMessageHandler() {
+        return this._commonMessageHandler;
+    }
+
+    private static _cancellationManager: CancellationManager;
+    static get cancellationManager() {
+        return this._cancellationManager;
     }
 
     private static _pmfStats: PmfStats;

@@ -15,7 +15,7 @@ import {
     PipelineSelectorType,
     PipelineStep,
     PipelineTarget,
-    PipelineTargetType
+    PipelineTargetType,
 } from './model';
 
 export class PipelineApiImpl {
@@ -36,7 +36,7 @@ export class PipelineApiImpl {
     async triggerPipeline(site: BitbucketSite, target: any): Promise<Pipeline> {
         const { ownerSlug, repoSlug } = site;
         const { data } = await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pipelines/`, {
-            target: target
+            target: target,
         });
         return this.cleanPipelineData(site, data);
     }
@@ -69,7 +69,7 @@ export class PipelineApiImpl {
 
         const { data: responseBody } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pipelines/`, {
             ...query,
-            sort: '-created_on'
+            sort: '-created_on',
         });
 
         //Take the response and clean it up; in particular, clean up the pipelines it sends back
@@ -82,7 +82,7 @@ export class PipelineApiImpl {
             pagelen: responseBody.pagelen,
             page: responseBody.page,
             size: responseBody.size,
-            values: cleanedPipelines
+            values: cleanedPipelines,
         };
         return cleanedPaginatedPipelines;
     }
@@ -176,7 +176,7 @@ export class PipelineApiImpl {
         }
         return {
             pattern: selector.pattern,
-            type: this.readSelectorType(selector.type)
+            type: this.readSelectorType(selector.type),
         } as PipelineSelector;
     }
 
@@ -186,7 +186,7 @@ export class PipelineApiImpl {
             ref_name: target.ref_name,
             selector: this.readSelector(target.selector),
             branchName: target.branch,
-            commit: target.commit
+            commit: target.commit,
         };
         switch (partialTarget.type) {
             case PipelineTargetType.Commit:
@@ -198,16 +198,16 @@ export class PipelineApiImpl {
                         source: target.source,
                         destination: target.destination,
                         destination_revision: target.destination_revision,
-                        pull_request_id: target.pull_request_id
-                    }
+                        pull_request_id: target.pull_request_id,
+                    },
                 } as PipelinePullRequestTarget;
             case PipelineTargetType.Reference:
                 return {
                     ...partialTarget,
                     ...{
                         ref_name: target.ref_name,
-                        ref_type: this.readReferenceType(target.ref_type)
-                    }
+                        ref_type: this.readReferenceType(target.ref_type),
+                    },
                 } as PipelineReferenceTarget;
         }
         Logger.debug(`Failed to read pipeline target ${JSON.stringify(target)}`);
@@ -238,12 +238,12 @@ export class PipelineApiImpl {
                 name: pipeline.state!.name,
                 type: pipeline.state!.type,
                 result: PipelineApiImpl.resultForResult(pipeline.state!.result),
-                stage: PipelineApiImpl.resultForResult(pipeline.state!.stage)
+                stage: PipelineApiImpl.resultForResult(pipeline.state!.stage),
             },
             target: target,
             triggerName: pipeline.trigger.name,
             duration_in_seconds: pipeline.duration_in_seconds,
-            uuid: pipeline.uuid!
+            uuid: pipeline.uuid!,
         };
         return cleanedPipeline;
     }
@@ -255,7 +255,7 @@ export class PipelineApiImpl {
 
         return {
             name: result.name,
-            type: result.type
+            type: result.type,
         };
     }
 
@@ -270,11 +270,11 @@ export class PipelineApiImpl {
                 name: step.state!.name,
                 type: step.state!.type,
                 result: PipelineApiImpl.resultForResult(step.state!.result),
-                stage: PipelineApiImpl.resultForResult(step.state!.stage)
+                stage: PipelineApiImpl.resultForResult(step.state!.stage),
             },
             setup_commands: PipelineApiImpl.pipelineCommandsForPipelineCommands(step.setup_commands),
             teardown_commands: PipelineApiImpl.pipelineCommandsForPipelineCommands(step.teardown_commands),
-            script_commands: PipelineApiImpl.pipelineCommandsForPipelineCommands(step.script_commands)
+            script_commands: PipelineApiImpl.pipelineCommandsForPipelineCommands(step.script_commands),
         };
     }
 
@@ -286,7 +286,7 @@ export class PipelineApiImpl {
             return {
                 action: command.action,
                 command: command.command,
-                name: command.name
+                name: command.name,
             };
         });
     }

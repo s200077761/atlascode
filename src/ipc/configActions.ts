@@ -6,7 +6,7 @@ export enum FeedbackType {
     Comment = 'comment',
     Suggestion = 'suggestion',
     Question = 'question',
-    Empty = ''
+    Empty = '',
 }
 export interface FeedbackData {
     type: FeedbackType;
@@ -33,7 +33,7 @@ export interface EditAuthAction extends Action {
 export enum ConfigTarget {
     User = 'user',
     Workspace = 'workspace',
-    WorkspaceFolder = 'workspacefolder'
+    WorkspaceFolder = 'workspacefolder',
 }
 export interface SaveSettingsAction extends Action {
     target: ConfigTarget;

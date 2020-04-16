@@ -1,10 +1,10 @@
-import { AbstractReactWebview } from './abstractWebview';
-import { Action } from '../ipc/messaging';
-import { commands, Uri, env } from 'vscode';
+import { commands, env, Uri } from 'vscode';
+import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
-import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
-import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
+import { Action } from '../ipc/messaging';
+import { AbstractReactWebview } from './abstractWebview';
+import { getFeedbackUser, submitFeedback } from './feedbackSubmitter';
 
 export class WelcomeWebview extends AbstractReactWebview {
     constructor(extensionPath: string) {
@@ -31,7 +31,7 @@ export class WelcomeWebview extends AbstractReactWebview {
 
         this.postMessage({
             type: 'update',
-            feedbackUser: currentUser
+            feedbackUser: currentUser,
         });
     }
 

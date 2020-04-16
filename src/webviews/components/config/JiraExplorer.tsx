@@ -1,7 +1,7 @@
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
 import Tooltip from '@atlaskit/tooltip';
-import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
+import { Filter } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { IConfig } from '../../../config/model';
@@ -120,13 +120,13 @@ export default class JiraExplorer extends React.Component<
                         display: 'flex',
                         flexDirection: 'column',
                         paddingLeft: '24px',
-                        paddingTop: '10px'
+                        paddingTop: '10px',
                     }}
                 >
                     <div
                         style={{
                             display: 'flex',
-                            justifyContent: 'flex-start'
+                            justifyContent: 'flex-start',
                         }}
                     >
                         <div style={{ marginRight: '10px' }}>
@@ -154,7 +154,7 @@ export default class JiraExplorer extends React.Component<
                         display: 'flex',
                         flexDirection: 'column',
                         paddingLeft: '24px',
-                        paddingTop: '10px'
+                        paddingTop: '10px',
                     }}
                 >
                     <CheckboxField

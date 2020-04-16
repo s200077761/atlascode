@@ -3,7 +3,11 @@ import { Disposable, TreeItem } from 'vscode';
 // BaseNode is an abstract tree node which all other *nodes* must extend.
 // It also takes care of disposables if they are added to the `disposables` field.
 export abstract class AbstractBaseNode implements Disposable {
-    public readonly disposables: Disposable[] = [];
+    public disposables: Disposable[] = [];
+
+    constructor(private parent?: AbstractBaseNode) {
+        this.parent = parent;
+    }
 
     abstract getTreeItem(): Promise<TreeItem> | TreeItem;
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
@@ -12,8 +16,12 @@ export abstract class AbstractBaseNode implements Disposable {
 
     dispose() {
         if (this.disposables) {
-            this.disposables.forEach(d => d.dispose());
+            this.disposables.forEach((d) => d.dispose());
         }
-        this.getChildren().then((children: AbstractBaseNode[]) => children.forEach(child => child.dispose()));
+        this.getChildren().then((children: AbstractBaseNode[]) => children.forEach((child) => child.dispose()));
+    }
+
+    getParent(): AbstractBaseNode | undefined {
+        return this.parent;
     }
 }

@@ -11,7 +11,7 @@ import {
     PaginatedComments,
     PaginatedPullRequests,
     PullRequest,
-    User
+    User,
 } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
@@ -54,9 +54,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     constructor(
         private pr: PullRequest,
         private commentController: PullRequestCommentController,
-        shouldPreload: boolean
+        shouldPreload: boolean,
+        parent: AbstractBaseNode | undefined
     ) {
-        super();
+        super(parent);
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
 
@@ -74,8 +75,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     private createTreeItem(): vscode.TreeItem {
         const approvalText = this.pr.data.participants
-            .filter(p => p.status === 'APPROVED')
-            .map(approver => `Approved-by: ${approver.displayName}`)
+            .filter((p) => p.status === 'APPROVED')
+            .map((approver) => `Approved-by: ${approver.displayName}`)
             .join('\n');
 
         let item = new vscode.TreeItem(
@@ -89,7 +90,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
         item.description = `updated ${distanceInWordsToNow(this.pr.data.updatedTs, {
-            addSuffix: true
+            addSuffix: true,
         })}`;
 
         return item;
@@ -114,20 +115,20 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         let promises = Promise.all([
             bbApi.pullrequests.getChangedFiles(this.pr),
             bbApi.pullrequests.getCommits(this.pr),
-            bbApi.pullrequests.getComments(this.pr)
+            bbApi.pullrequests.getComments(this.pr),
         ]);
 
         return promises.then(
-            async result => {
+            async (result) => {
                 let [fileChanges, commits, allComments] = result;
 
-                const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
+                const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
                 children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
                 children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
                 children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
                 return children;
             },
-            reason => {
+            (reason) => {
                 Logger.debug('error fetching pull request details', reason);
                 return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
             }
@@ -193,7 +194,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                     currentDirectory.members.set(splitFileName[i], {
                         name: splitFileName[i],
                         diffViewArgs: [],
-                        members: new Map<string, PRDirectory>()
+                        members: new Map<string, PRDirectory>(),
                     });
                     currentDirectory = currentDirectory.members.get(splitFileName[i])!;
                 }
@@ -221,7 +222,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         fileChanges: FileChange[]
     ): Promise<AbstractBaseNode[]> {
         const allDiffData = await Promise.all(
-            fileChanges.map(async fileChange => {
+            fileChanges.map(async (fileChange) => {
                 return await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
             })
         );
@@ -231,9 +232,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             let directoryStructure: PRDirectory = {
                 name: '',
                 diffViewArgs: [],
-                members: new Map<string, PRDirectory>()
+                members: new Map<string, PRDirectory>(),
             };
-            allDiffData.forEach(diffData => this.createdNestedFileStructure(diffData, directoryStructure));
+            allDiffData.forEach((diffData) => this.createdNestedFileStructure(diffData, directoryStructure));
             this.flattenFileStructure(directoryStructure);
 
             //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
@@ -241,15 +242,15 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             for (let [, value] of directoryStructure.members) {
                 nestedDirectories.push(value);
             }
-            let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
+            let directoryNodes: DirectoryNode[] = nestedDirectories.map((directory) => new DirectoryNode(directory));
             let childNodes: AbstractBaseNode[] = directoryStructure.diffViewArgs.map(
-                diffViewArg => new PullRequestFilesNode(diffViewArg)
+                (diffViewArg) => new PullRequestFilesNode(diffViewArg)
             );
             return childNodes.concat(directoryNodes);
         }
 
         const result: AbstractBaseNode[] = [];
-        result.push(...allDiffData.map(diffData => new PullRequestFilesNode(diffData)));
+        result.push(...allDiffData.map((diffData) => new PullRequestFilesNode(diffData)));
         if (allComments.next) {
             result.push(
                 new SimpleNode(
@@ -284,9 +285,9 @@ class DirectoryNode extends AbstractBaseNode {
         for (let [, value] of this.directoryData.members) {
             nestedDirectories.push(value);
         }
-        let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
+        let directoryNodes: DirectoryNode[] = nestedDirectories.map((directory) => new DirectoryNode(directory));
         let childNodes: AbstractBaseNode[] = this.directoryData.diffViewArgs.map(
-            diffViewArg => new PullRequestFilesNode(diffViewArg)
+            (diffViewArg) => new PullRequestFilesNode(diffViewArg)
         );
         return childNodes.concat(directoryNodes);
     }
@@ -311,7 +312,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         item.command = {
             command: Commands.ViewDiff,
             title: 'Diff file',
-            arguments: this.diffViewData.diffArgs
+            arguments: this.diffViewData.diffArgs,
         };
 
         item.contextValue = PullRequestContextValue;
@@ -340,9 +341,9 @@ class PullRequestFilesNode extends AbstractBaseNode {
     }
 }
 
-class DescriptionNode extends AbstractBaseNode {
-    constructor(private pr: PullRequest) {
-        super();
+export class DescriptionNode extends AbstractBaseNode {
+    constructor(private pr: PullRequest, parent?: AbstractBaseNode | undefined) {
+        super(parent);
     }
 
     getTreeItem(): vscode.TreeItem {
@@ -353,7 +354,7 @@ class DescriptionNode extends AbstractBaseNode {
         item.command = {
             command: Commands.BitbucketShowPullRequestDetails,
             title: 'Open pull request details',
-            arguments: [this.pr]
+            arguments: [this.pr],
         };
 
         item.contextValue = PullRequestContextValue;
@@ -379,7 +380,7 @@ export class NextPageNode extends AbstractBaseNode {
         item.command = {
             command: Commands.BitbucketPullRequestsNextPage,
             title: 'Load pull requests next page',
-            arguments: [this.prs]
+            arguments: [this.prs],
         };
 
         return item;

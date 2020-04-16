@@ -1,20 +1,23 @@
-import { Project } from '@atlassianlabs/jira-pi-common-models/entities';
+import { Project } from '@atlassianlabs/jira-pi-common-models';
 import { Disposable, TreeDataProvider, TreeItem, TreeView, TreeViewVisibilityChangeEvent, window } from 'vscode';
 import { viewScreenEvent } from '../analytics';
 import { Product } from '../atlclients/authInfo';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 
 export abstract class Explorer extends Disposable {
-    protected treeDataProvder: BaseTreeDataProvider | undefined;
+    protected treeDataProvider: BaseTreeDataProvider | undefined;
+    protected treeView: TreeView<AbstractBaseNode> | undefined;
 
     abstract viewId(): string;
     abstract product(): Product;
 
     protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
-        if (this.treeDataProvder) {
-            const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.treeDataProvder });
-            treeView.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+        if (this.treeDataProvider) {
+            const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.treeDataProvider });
+            treeView.onDidChangeVisibility((e) => this.onDidChangeVisibility(e));
+            this.treeView = treeView;
             return treeView;
         }
         return undefined;
@@ -22,16 +25,39 @@ export abstract class Explorer extends Disposable {
 
     private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && Container.siteManager.productHasAtLeastOneSite(this.product())) {
-            viewScreenEvent(this.viewId(), undefined, this.product()).then(e => {
+            viewScreenEvent(this.viewId(), undefined, this.product()).then((e) => {
                 Container.analyticsClient.sendScreenEvent(e);
             });
         }
     }
 
+    getDataProvider(): BaseTreeDataProvider | undefined {
+        return this.treeDataProvider;
+    }
+
+    async reveal(
+        node: AbstractBaseNode,
+        options?: {
+            select?: boolean;
+            focus?: boolean;
+            expand?: boolean | number;
+        }
+    ) {
+        if (this.treeView === undefined) {
+            return;
+        }
+
+        try {
+            await this.treeView.reveal(node, options);
+        } catch (e) {
+            Logger.error(e);
+        }
+    }
+
     dispose() {
         console.log('explorer disposed');
-        if (this.treeDataProvder) {
-            this.treeDataProvder.dispose();
+        if (this.treeDataProvider) {
+            this.treeDataProvider.dispose();
         }
     }
 }
@@ -46,4 +72,7 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
 
     refresh() {}
     dispose() {}
+    getParent(node: AbstractBaseNode): AbstractBaseNode | undefined {
+        return node.getParent();
+    }
 }

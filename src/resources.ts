@@ -35,7 +35,7 @@ export enum iconSet {
     PIPELINESUCCESSFUL = 'success',
     PIPELINEFAILED = 'failed',
     PIPELINESTOPPED = 'stopped',
-    PIPELINEPAUSED = 'paused'
+    PIPELINEPAUSED = 'paused',
 }
 
 export function registerResources(vscodeContext: ExtensionContext) {
@@ -73,19 +73,19 @@ export function registerResources(vscodeContext: ExtensionContext) {
     );
     Resources.icons.set(iconSet.PULLREQUEST, {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'pullrequests.svg'))),
-        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'pullrequests.svg')))
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'pullrequests.svg'))),
     });
     Resources.icons.set(iconSet.PREFERENCES, {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'preferences.svg'))),
-        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'preferences.svg')))
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'preferences.svg'))),
     });
     Resources.icons.set(iconSet.SEARCH, {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'search.svg'))),
-        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'search.svg')))
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'search.svg'))),
     });
     Resources.icons.set(iconSet.ADD, {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'add.svg'))),
-        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg')))
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg'))),
     });
     Resources.icons.set(iconSet.ISSUES, Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
@@ -120,6 +120,14 @@ export function registerResources(vscodeContext: ExtensionContext) {
         'reactHtml',
         Handlebars.compile(
             fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()
+        )
+    );
+    Resources.html.set(
+        'reactWebviewHtml',
+        Handlebars.compile(
+            fs
+                .readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactWebview.html')))
+                .toString()
         )
     );
     Resources.html.set(

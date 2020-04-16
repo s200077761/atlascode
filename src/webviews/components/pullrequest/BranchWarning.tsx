@@ -1,6 +1,6 @@
+import SectionMessage from '@atlaskit/section-message';
 import React from 'react';
 import { Branch } from '../../../typings/git';
-import SectionMessage from '@atlaskit/section-message';
 
 type BranchWarningProps = {
     sourceBranch: Branch | undefined;
@@ -20,7 +20,9 @@ export const BranchWarning: React.FunctionComponent<BranchWarningProps> = (props
         </SectionMessage>
     ) : null;
 
-    const remoteBranch = props.remoteBranches.find(remoteBranch => props.sourceRemoteBranchName === remoteBranch.name);
+    const remoteBranch = props.remoteBranches.find(
+        (remoteBranch) => props.sourceRemoteBranchName === remoteBranch.name
+    );
     const upstreamBranchWarning = !remoteBranch ? (
         <SectionMessage appearance="warning" title={`Upstream branch (${props.sourceRemoteBranchName}) not found`}>
             <p>

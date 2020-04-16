@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import './reset.css';
 import './App.css';
 import { ResourceContext } from './context';
+import './reset.css';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -38,29 +38,26 @@ const routes = {
     ),
     createBitbucketIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')
-    )
+    ),
 };
 
 class VsCodeApi {
     private conn: WebSocket;
     constructor(callback: () => void) {
         this.conn = new WebSocket('ws://127.0.0.1:13988');
-        this.conn.onopen = function() {
+        this.conn.onopen = function () {
             callback();
-            console.log('opened dev connection');
         };
-        this.conn.onerror = function(error) {
+        this.conn.onerror = function (error) {
             // just in there were some problems with connection...
-            console.log('websocket error', error);
+            console.error('websocket error', error);
         };
         // most important part - incoming messages
-        this.conn.onmessage = function(message) {
+        this.conn.onmessage = function (message) {
             try {
                 var json = JSON.parse(message.data);
-                console.log('posting message', json.data);
                 window.postMessage(json.data, '*');
             } catch (e) {
-                console.log('Invalid JSON: ', message.data);
                 return;
             }
         };

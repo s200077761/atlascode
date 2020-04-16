@@ -11,7 +11,7 @@ import {
     TrackEvent,
     TrackEventData,
     UIEvent,
-    UIEventData
+    UIEventData,
 } from './types';
 
 const ANALYTICS_WRITE_KEY = 'BLANK';
@@ -50,7 +50,7 @@ class AnalyticsClient {
         product,
         env,
         datacenter,
-        version
+        version,
     }: {
         userIdType: string;
         tenantIdType: string;
@@ -71,7 +71,7 @@ class AnalyticsClient {
             subproduct,
             userIdType,
             tenantIdType,
-            tenantId
+            tenantId,
         });
     }
 
@@ -84,7 +84,7 @@ class AnalyticsClient {
         product,
         env,
         datacenter,
-        version
+        version,
     }: {
         userIdType: string;
         tenantIdType: string;
@@ -105,7 +105,7 @@ class AnalyticsClient {
             subproduct,
             userIdType,
             tenantIdType,
-            tenantId
+            tenantId,
         });
     }
 
@@ -118,7 +118,7 @@ class AnalyticsClient {
         product,
         env,
         datacenter,
-        version
+        version,
     }: {
         userIdType: string;
         tenantIdType: string;
@@ -139,7 +139,7 @@ class AnalyticsClient {
             subproduct,
             userIdType,
             tenantIdType,
-            tenantId
+            tenantId,
         });
     }
 
@@ -153,7 +153,7 @@ class AnalyticsClient {
         flushAt,
         flushInterval,
         baseUrl,
-        deviceId
+        deviceId,
     }: AnalyticsClientInit) {
         requireValue(env, 'env');
         requireValue(product, 'product');
@@ -163,8 +163,9 @@ class AnalyticsClient {
             product,
             subproduct,
             datacenter,
+            // eslint-disable-next-line react-hooks/rules-of-hooks
             origin: useDefault(origin, EVENT_ORIGIN),
-            version
+            version,
         };
 
         const agent: any | undefined = Container.isDebugging ? getAgent() : undefined;
@@ -172,7 +173,7 @@ class AnalyticsClient {
             flushAt: flushAt || DEFAULT_QUEUE_FLUSH_SIZE,
             flushInterval: flushInterval || DEFAULT_QUEUE_FLUSH_INTERVAL,
             host: baseUrl || getUrlFromEnvironment(env),
-            agent: agent
+            agent: agent,
         });
 
         this.deviceId = deviceId;
@@ -186,7 +187,7 @@ class AnalyticsClient {
         tenantId,
         trackEvent,
         subproduct,
-        product
+        product,
     }: TrackEvent) {
         return validateTrackEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, trackEvent }).then(
             () =>
@@ -205,13 +206,13 @@ class AnalyticsClient {
                                 product: useDefault(product, this.config.product),
                                 env: this.config.env,
                                 datacenter: this.config.datacenter,
-                                version: this.config.version
+                                version: this.config.version,
                             }),
                             context: {
                                 device: {
-                                    id: this.deviceId
-                                }
-                            }
+                                    id: this.deviceId,
+                                },
+                            },
                         },
                         (error: any, data: any) => {
                             if (error) {
@@ -243,13 +244,13 @@ class AnalyticsClient {
                                 product: useDefault(product, this.config.product),
                                 env: this.config.env,
                                 datacenter: this.config.datacenter,
-                                version: this.config.version
+                                version: this.config.version,
                             }),
                             context: {
                                 device: {
-                                    id: this.deviceId
-                                }
-                            }
+                                    id: this.deviceId,
+                                },
+                            },
                         },
                         (error: any, data: any) => {
                             if (error) {
@@ -272,7 +273,7 @@ class AnalyticsClient {
         name,
         screenEvent,
         subproduct,
-        product
+        product,
     }: ScreenEvent) {
         return validateScreenEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, name, screenEvent }).then(
             () =>
@@ -291,13 +292,13 @@ class AnalyticsClient {
                                 product: useDefault(product, this.config.product),
                                 env: this.config.env,
                                 datacenter: this.config.datacenter,
-                                version: this.config.version
+                                version: this.config.version,
                             }),
                             context: {
                                 device: {
-                                    id: this.deviceId
-                                }
-                            }
+                                    id: this.deviceId,
+                                },
+                            },
                         },
                         (error: any, data: any) => {
                             if (error) {

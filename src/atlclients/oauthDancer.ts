@@ -1,4 +1,4 @@
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 import axios, { AxiosInstance } from 'axios';
 import EventEmitter from 'eventemitter3';
 import * as express from 'express';
@@ -15,6 +15,7 @@ import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { Resources } from '../resources';
 import { ConnectionTimeout, Time } from '../util/time';
+import { settingsUrl } from '../webviews/configWebview';
 import {
     AccessibleResource,
     emptyUserInfo,
@@ -23,11 +24,10 @@ import {
     ProductBitbucket,
     ProductJira,
     SiteInfo,
-    UserInfo
+    UserInfo,
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-import { settingsUrl } from '../webviews/configWebview';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
@@ -60,8 +60,8 @@ export class OAuthDancer implements Disposable {
         this._axios = axios.create({
             timeout: ConnectionTimeout,
             headers: {
-                'Accept-Encoding': 'gzip, deflate'
-            }
+                'Accept-Encoding': 'gzip, deflate',
+            },
         });
 
         if (Container.config.enableCurlLogging) {
@@ -138,7 +138,7 @@ export class OAuthDancer implements Disposable {
                 provider: OAuthProvider.BitbucketCloud,
                 strategy: BitbucketProdStrategy,
                 req: req,
-                res: res
+                res: res,
             });
         });
 
@@ -147,7 +147,7 @@ export class OAuthDancer implements Disposable {
                 provider: OAuthProvider.BitbucketCloudStaging,
                 strategy: BitbucketStagingStrategy,
                 req: req,
-                res: res
+                res: res,
             });
         });
 
@@ -156,7 +156,7 @@ export class OAuthDancer implements Disposable {
                 provider: OAuthProvider.JiraCloud,
                 strategy: JiraProdStrategy,
                 req: req,
-                res: res
+                res: res,
             });
         });
 
@@ -165,7 +165,7 @@ export class OAuthDancer implements Disposable {
                 provider: OAuthProvider.JiraCloudStaging,
                 strategy: JiraStagingStrategy,
                 req: req,
-                res: res
+                res: res,
             });
         });
 
@@ -177,7 +177,7 @@ export class OAuthDancer implements Disposable {
                 Resources.html.get('authFailureHtml')!({
                     errMessage: 'Authorization did not complete in the time alotted.',
                     actionMessage: 'Please try again.',
-                    vscodeurl: settingsUrl
+                    vscodeurl: settingsUrl,
                 })
             );
         });
@@ -234,7 +234,7 @@ export class OAuthDancer implements Disposable {
                                     name: ProductBitbucket.name,
                                     scopes: [],
                                     avatarUrl: '',
-                                    url: 'https://bitbucket.org'
+                                    url: 'https://bitbucket.org',
                                 });
                             } else {
                                 accessibleResources.push({
@@ -242,7 +242,7 @@ export class OAuthDancer implements Disposable {
                                     name: ProductBitbucket.name,
                                     scopes: [],
                                     avatarUrl: '',
-                                    url: 'https://staging.bb-inf.net'
+                                    url: 'https://staging.bb-inf.net',
                                 });
                             }
 
@@ -255,7 +255,7 @@ export class OAuthDancer implements Disposable {
                         respEvent.res.send(
                             Resources.html.get('authSuccessHtml')!({
                                 product: product,
-                                vscodeurl: callback
+                                vscodeurl: callback,
                             })
                         );
 
@@ -263,7 +263,7 @@ export class OAuthDancer implements Disposable {
                             access: tokens.accessToken,
                             refresh: tokens.refreshToken,
                             user: user,
-                            accessibleResources: accessibleResources
+                            accessibleResources: accessibleResources,
                         };
                         this.maybeShutdown();
                         resolve(oauthResponse);
@@ -274,7 +274,7 @@ export class OAuthDancer implements Disposable {
                             Resources.html.get('authFailureHtml')!({
                                 errMessage: `Error authenticating with ${provider}: ${err}`,
                                 actionMessage: 'Give it a moment and try again.',
-                                vscodeurl: settingsUrl
+                                vscodeurl: settingsUrl,
                             })
                         );
 
@@ -331,16 +331,16 @@ export class OAuthDancer implements Disposable {
             const tokenResponse = await this._axios(strategy.tokenURL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 data: JSON.stringify({
                     grant_type: 'authorization_code',
                     client_id: strategy.clientID,
                     client_secret: strategy.clientSecret,
                     code: code,
-                    redirect_uri: strategy.callbackURL
+                    redirect_uri: strategy.callbackURL,
                 }),
-                ...agent
+                ...agent,
             });
 
             const data = tokenResponse.data;
@@ -360,10 +360,10 @@ export class OAuthDancer implements Disposable {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    Authorization: `Basic ${basicAuth}`
+                    Authorization: `Basic ${basicAuth}`,
                 },
                 data: `grant_type=authorization_code&code=${code}`,
-                ...agent
+                ...agent,
             });
 
             const data = tokenResponse.data;
@@ -388,9 +388,9 @@ export class OAuthDancer implements Disposable {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
                 },
-                ...agent
+                ...agent,
             });
 
             resourcesResponse.data.forEach((resource: AccessibleResource) => {
@@ -420,9 +420,9 @@ export class OAuthDancer implements Disposable {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
                 },
-                ...agent
+                ...agent,
             });
 
             const data = userResponse.data;
@@ -431,7 +431,7 @@ export class OAuthDancer implements Disposable {
                 id: data.accountId,
                 displayName: data.displayName,
                 email: data.emailAddress,
-                avatarUrl: data.avatarUrls['48x48']
+                avatarUrl: data.avatarUrls['48x48'],
             };
         } catch (err) {
             const newErr = new Error(`Error fetching Jira user: ${err}`);
@@ -447,9 +447,9 @@ export class OAuthDancer implements Disposable {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
                 },
-                ...agent
+                ...agent,
             });
 
             let email = 'do-not-reply@atlassian.com';
@@ -459,9 +459,9 @@ export class OAuthDancer implements Disposable {
                     headers: {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
-                        Authorization: `Bearer ${accessToken}`
+                        Authorization: `Bearer ${accessToken}`,
                     },
-                    ...agent
+                    ...agent,
                 });
 
                 if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
@@ -480,7 +480,7 @@ export class OAuthDancer implements Disposable {
                 id: userData.account_id,
                 displayName: userData.display_name,
                 email: email,
-                avatarUrl: userData.links.avatar.href
+                avatarUrl: userData.links.avatar.href,
             };
         } catch (err) {
             const newErr = new Error(`Error fetching Bitbucket user: ${err}`);
@@ -504,7 +504,7 @@ export class OAuthDancer implements Disposable {
     }
 
     private forceShutdownAll() {
-        this._authsInFlight.forEach(promise => {
+        this._authsInFlight.forEach((promise) => {
             promise.cancel();
         });
 

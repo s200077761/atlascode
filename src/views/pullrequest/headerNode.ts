@@ -16,7 +16,7 @@ export class PullRequestHeaderNode extends AbstractBaseNode {
 
         treeItem.command = {
             command: Commands.BitbucketPullRequestFilters,
-            title: 'Show Bitbucket explorer filters'
+            title: 'Show Bitbucket explorer filters',
         };
 
         return treeItem;
@@ -30,7 +30,7 @@ export class CreatePullRequestNode extends AbstractBaseNode {
 
         treeItem.command = {
             command: Commands.CreatePullRequest,
-            title: 'Create pull request'
+            title: 'Create pull request',
         };
 
         return treeItem;

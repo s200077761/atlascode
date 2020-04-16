@@ -21,14 +21,14 @@ export class RepositoriesNode extends AbstractBaseNode {
         this.disposables.push({
             dispose: () => {
                 if (this.children) {
-                    this.children.forEach(child => {
+                    this.children.forEach((child) => {
                         if (child instanceof PullRequestTitlesNode) {
                             Container.bitbucketContext.prCommentController.disposePR(child.prHref);
                         }
                         child.dispose();
                     });
                 }
-            }
+            },
         });
     }
 
@@ -57,8 +57,8 @@ export class RepositoriesNode extends AbstractBaseNode {
 
     private async refresh() {
         const previousChildrenHrefs = (this.children || [])
-            .filter(child => child instanceof PullRequestTitlesNode)
-            .map(child => (child as PullRequestTitlesNode).prHref);
+            .filter((child) => child instanceof PullRequestTitlesNode)
+            .map((child) => (child as PullRequestTitlesNode).prHref);
 
         let prs = await this.fetcher(this.workspaceRepo);
         this.children = this.createChildNodes(prs.data, this.children);
@@ -67,8 +67,8 @@ export class RepositoriesNode extends AbstractBaseNode {
         }
 
         // dispose comments for any PRs that might have been closed during refresh
-        previousChildrenHrefs.forEach(prHref => {
-            if (!this.children!.find(child => child instanceof PullRequestTitlesNode && child.prHref === prHref)) {
+        previousChildrenHrefs.forEach((prHref) => {
+            if (!this.children!.find((child) => child instanceof PullRequestTitlesNode && child.prHref === prHref)) {
                 Container.bitbucketContext.prCommentController.disposePR(prHref);
             }
         });
@@ -109,22 +109,27 @@ export class RepositoriesNode extends AbstractBaseNode {
         let numPRs = pullRequests.length;
         if (currentChildren) {
             const prNodes = currentChildren.filter(
-                child => child instanceof PullRequestTitlesNode
+                (child) => child instanceof PullRequestTitlesNode
             ) as PullRequestTitlesNode[];
-            prNodes.forEach(child => {
+            prNodes.forEach((child) => {
                 const pr = child.getPR();
                 numPRs++; //There were calls made for each of these PRs at some point, so to avoid rate-limit issues, we track these too
                 prMap.set(pr.data.id, { pr: pr, node: child });
             });
         }
 
-        return pullRequests.map(pr => {
+        return pullRequests.map((pr) => {
             //Don't cache BBServer prs; we have no way of knowing they're up to date because the updated time property does
             //not include PR actions like comments, tasks, etc.
             if (!pr.site.details.isCloud) {
                 //We can preload server PRs even without caching if there are less than 10 of them. Otherwise, probably not a good idea because of
                 //varying bbserver rate limits
-                return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController, numPRs <= 10);
+                return new PullRequestTitlesNode(
+                    pr,
+                    Container.bitbucketContext.prCommentController,
+                    numPRs <= 10,
+                    this
+                );
             }
 
             const prAndTreeNode = prMap.get(pr.data.id);
@@ -132,7 +137,12 @@ export class RepositoriesNode extends AbstractBaseNode {
                 return prAndTreeNode.node;
             } else {
                 //If there are more than 25 open pull requests, stop preloading them. We don't want to run into rate limit issues for bbcloud
-                return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController, numPRs <= 25);
+                return new PullRequestTitlesNode(
+                    pr,
+                    Container.bitbucketContext.prCommentController,
+                    numPRs <= 25,
+                    this
+                );
             }
         });
     }

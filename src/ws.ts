@@ -1,6 +1,6 @@
-import { server, IMessage } from 'websocket';
 import * as http from 'http';
 import { Disposable } from 'vscode';
+import { IMessage, server } from 'websocket';
 
 export class UIWebsocket implements Disposable {
     private _port: number;
@@ -15,17 +15,17 @@ export class UIWebsocket implements Disposable {
     public start(messageHandler: (e: any) => any): void {
         const port = this._port;
         const clients = this._clients;
-        this._srv = http.createServer(function(request, response) {
+        this._srv = http.createServer(function (request, response) {
             // process HTTP request. Since we're writing just WebSockets
             // server we don't have to implement anything.
         });
-        this._srv.listen(this._port, function() {
+        this._srv.listen(this._port, function () {
             console.log(new Date() + ` UI Websocket listening on port ${port}`);
         });
 
         this._ws = new server({ httpServer: this._srv });
 
-        this._ws.on('request', function(request) {
+        this._ws.on('request', function (request) {
             console.log(new Date() + ` Connection from origin ${request.origin}.`);
             var connection = request.accept(undefined, request.origin);
             // we need to know client index to remove them on 'close' event
@@ -55,7 +55,7 @@ export class UIWebsocket implements Disposable {
 
     public send(message: any) {
         var json = JSON.stringify({ type: 'message', data: message });
-        this._clients.forEach(client => {
+        this._clients.forEach((client) => {
             client.sendUTF(json);
         });
     }

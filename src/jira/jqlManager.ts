@@ -38,17 +38,17 @@ export class JQLManager extends Disposable {
                 return;
             }
 
-            const filterList = allList.filter(item => item.filterId);
+            const filterList = allList.filter((item) => item.filterId);
 
             await Promise.all(
-                filterList.map(async f => {
+                filterList.map(async (f) => {
                     const site = Container.siteManager.getSiteForId(ProductJira, f.siteId);
                     if (site) {
                         try {
                             const client = await Container.clientManager.jiraClient(site);
                             const updatedFilter = await client.getFilter(f.filterId!);
                             if (updatedFilter) {
-                                const originalFilter = allList.find(of => of.id === f.id);
+                                const originalFilter = allList.find((of) => of.id === f.id);
                                 if (originalFilter) {
                                     originalFilter.name = updatedFilter.name;
                                     originalFilter.query = updatedFilter.jql;
@@ -66,11 +66,11 @@ export class JQLManager extends Disposable {
     }
 
     public notifiableJQLEntries(): JQLEntry[] {
-        return Container.config.jira.jqlList.filter(entry => entry.enabled && entry.monitor);
+        return Container.config.jira.jqlList.filter((entry) => entry.enabled && entry.monitor);
     }
 
     public enabledJQLEntries(): JQLEntry[] {
-        return Container.config.jira.jqlList.filter(entry => entry.enabled);
+        return Container.config.jira.jqlList.filter((entry) => entry.enabled);
     }
 
     public async initializeJQL(sites: DetailedSiteInfo[]) {
@@ -78,7 +78,7 @@ export class JQLManager extends Disposable {
             const allList = Container.config.jira.jqlList;
 
             for (const site of sites) {
-                if (!allList.some(j => j.siteId === site.id)) {
+                if (!allList.some((j) => j.siteId === site.id)) {
                     // only initialize if there are no jql entries for this site
                     const newEntry = await this.defaultJQLForSite(site);
                     allList.push(newEntry);
@@ -93,7 +93,7 @@ export class JQLManager extends Disposable {
         const client = await Container.clientManager.jiraClient(site);
 
         const fields = await client.getFields();
-        const resolutionEnabled = fields.some(f => f.id === 'resolution');
+        const resolutionEnabled = fields.some((f) => f.id === 'resolution');
         const resolutionClause = resolutionEnabled ? 'AND resolution = Unresolved ' : '';
 
         const query = `assignee = currentUser() ${resolutionClause}ORDER BY lastViewed DESC`;
@@ -104,7 +104,7 @@ export class JQLManager extends Disposable {
             name: `My ${site.name} Issues`,
             query: query,
             siteId: site.id,
-            monitor: true
+            monitor: true,
         };
     }
 
@@ -112,7 +112,7 @@ export class JQLManager extends Disposable {
         this._queue.add(async () => {
             let allList = Container.config.jira.jqlList;
 
-            allList = allList.filter(j => j.siteId !== siteId);
+            allList = allList.filter((j) => j.siteId !== siteId);
 
             await configuration.updateEffective('jira.jqlList', allList);
         });

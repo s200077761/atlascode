@@ -1,4 +1,4 @@
-import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models/entities';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import {
     ApprovalStatus,
@@ -8,7 +8,7 @@ import {
     Reviewer,
     SiteRemote,
     Task,
-    WorkspaceRepo
+    WorkspaceRepo,
 } from '../bitbucket/model';
 import { Branch } from '../typings/git';
 import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';

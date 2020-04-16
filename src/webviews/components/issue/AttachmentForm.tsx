@@ -2,11 +2,12 @@ import FileIcon from '@atlaskit/icon/glyph/file';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import filesize from 'filesize';
 import React, { useContext, useEffect, useReducer } from 'react';
 import { FileWithPath, useDropzone } from 'react-dropzone';
 import { ResourceContext } from '../context';
+
 type ItemData = {
     file: FileWithPreview;
     delfunc: (file: any) => void;
@@ -54,12 +55,12 @@ type ActionType = {
     payload?: any;
 };
 
-interface AttachmentFormProps {
+type AttachmentFormProps = {
     isInline?: boolean;
     // TODO: remove field param when we clean up ui
     field?: FieldUI;
     onFilesChanged(files: FileWithPath[], field?: FieldUI): void;
-}
+};
 
 const initialState: FileWithPreview[] = [];
 
@@ -104,7 +105,7 @@ const dialogEditor = (
                 </div>
             </div>
             <div className="ac-attachment-thumbs-container">
-                {files.map(file => (
+                {files.map((file) => (
                     <div className="ac-attachment-thumb" key={file.name}>
                         <div className="ac-attachment-thumb-item">
                             <div className="ac-attachment-thumb-inner">
@@ -160,13 +161,13 @@ const inlineEditor = (
             <TableTree
                 columns={[Thumbnail, Filename, Size, Delete]}
                 columnWidths={['36px', '100%', '150px', '50px']}
-                items={files.map(file => {
+                items={files.map((file) => {
                     return {
                         id: file.path,
                         content: {
                             file: file,
-                            delfunc: () => dispatch({ type: 'removeFile', payload: file })
-                        }
+                            delfunc: () => dispatch({ type: 'removeFile', payload: file }),
+                        },
                     };
                 })}
             />
@@ -179,7 +180,7 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
     const [files, dispatch] = useReducer(filesReducer, initialState);
     const { getRootProps, getInputProps } = useDropzone({
         onDrop: (acceptedFiles: File[]) => {
-            const newFiles = acceptedFiles.map(file => {
+            const newFiles = acceptedFiles.map((file) => {
                 if (previewableTypes.includes(file.type)) {
                     return Object.assign(file, { preview: URL.createObjectURL(file), isImage: true });
                 } else {
@@ -188,13 +189,13 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
             });
 
             dispatch({ type: 'addFiles', payload: newFiles });
-        }
+        },
     });
 
     useEffect(
         () => () => {
             // Make sure to revoke the data uris to avoid memory leaks
-            files.forEach(file => URL.revokeObjectURL(file.preview));
+            files.forEach((file) => URL.revokeObjectURL(file.preview));
         },
         [files]
     );

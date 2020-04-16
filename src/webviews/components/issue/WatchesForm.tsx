@@ -23,14 +23,14 @@ type MyProps = {
 };
 
 const emptyForm = {
-    isLoading: false
+    isLoading: false,
 };
 
 export default class WatchesForm extends React.Component<MyProps, MyState> {
     constructor(props: any) {
         super(props);
         this.state = {
-            ...emptyForm
+            ...emptyForm,
         };
     }
 
@@ -55,7 +55,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             <Avatar size="large" />,
             <Avatar size="large" />,
             <Avatar size="large" />,
-            <Avatar size="large" />
+            <Avatar size="large" />,
         ];
 
         return (
@@ -97,7 +97,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             return this.getEmptyWatchers();
         }
 
-        let watcherList = this.props.watches.watchers.map(watcher => {
+        let watcherList = this.props.watches.watchers.map((watcher) => {
             let avatar = watcher.avatarUrls && watcher.avatarUrls['24x24'] ? watcher.avatarUrls['24x24'] : '';
             return (
                 <div className="ac-inline-watcher ac-inline-watcher-hover">
@@ -123,7 +123,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             getOptionLabel: SelectFieldHelper.labelFuncForValueType(ValueType.User),
             getOptionValue: SelectFieldHelper.valueFuncForValueType(ValueType.User),
             components: SelectFieldHelper.getComponentsForValueType(ValueType.User),
-            placeholder: 'Add watchers'
+            placeholder: 'Add watchers',
         };
 
         return (

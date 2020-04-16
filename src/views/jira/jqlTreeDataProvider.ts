@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models/entities';
+import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -11,8 +11,8 @@ import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 
-export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
-    protected _disposables: Disposable[] = [];
+export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implements AbstractBaseNode {
+    public disposables: Disposable[] = [];
 
     protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
     private _jqlEntry: JQLEntry | undefined;
@@ -57,28 +57,32 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     dispose() {
-        this._disposables.forEach(d => {
+        this.disposables.forEach((d) => {
             d.dispose();
         });
 
-        this._disposables = [];
+        this.disposables = [];
     }
 
     async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
         if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return [
-                new SimpleJiraIssueNode('Please login to Jira', {
-                    command: Commands.ShowConfigPage,
-                    title: 'Login to Jira',
-                    arguments: [ProductJira]
-                })
+                new SimpleJiraIssueNode(
+                    'Please login to Jira',
+                    {
+                        command: Commands.ShowConfigPage,
+                        title: 'Login to Jira',
+                        arguments: [ProductJira],
+                    },
+                    this
+                ),
             ];
         }
         if (parent) {
             return parent.getChildren();
         }
         if (!this._jqlEntry) {
-            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
+            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand, this)];
         } else if (this._issues) {
             return this.nodesForIssues();
         } else {
@@ -92,7 +96,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
             // We already have everything that matches the JQL. The subtasks likely include things that
             // don't match the query so we get rid of them.
-            newIssues.forEach(i => {
+            newIssues.forEach((i) => {
                 i.subtasks = [];
             });
 
@@ -123,9 +127,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }, []);
     }
 
-    getTreeItem(node: IssueNode): TreeItem {
-        return node.getTreeItem();
-    }
+    abstract getTreeItem(): TreeItem;
 
     private async constructIssueTree(
         jqlIssues: MinimalIssue<DetailedSiteInfo>[]
@@ -134,10 +136,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const jqlAndParents = [...jqlIssues, ...parentIssues];
 
         const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
-        jqlAndParents.forEach(i => {
+        jqlAndParents.forEach((i) => {
             const parentKey = i.parentKey ?? i.epicLink;
             if (parentKey) {
-                const parent = jqlAndParents.find(i2 => parentKey === i2.key);
+                const parent = jqlAndParents.find((i2) => parentKey === i2.key);
                 if (parent) {
                     parent.subtasks.push(i);
                 }
@@ -173,10 +175,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         // On NextGen projects epics are considered parents to issues and parentKey points to them. On classic projects
         // issues parentKey doesn't point to its epic, but its epicLink does. In both cases parentKey points to the
         // parent task for subtasks. Since they're disjoint we can just take both and treat them the same.
-        const parentKeys = issues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
-        const epicKeys = issues.filter(i => i.epicLink).map(i => i.epicLink) as string[];
+        const parentKeys = issues.filter((i) => i.parentKey).map((i) => i.parentKey) as string[];
+        const epicKeys = issues.filter((i) => i.epicLink).map((i) => i.epicLink) as string[];
         const uniqueParentKeys = Array.from(new Set([...parentKeys, ...epicKeys]));
-        return uniqueParentKeys.filter(k => !issues.some(i => i.key === k));
+        return uniqueParentKeys.filter((k) => !issues.some((i) => i.key === k));
     }
 
     private async fetchIssuesForKeys(
@@ -184,7 +186,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         keys: string[]
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         return await Promise.all(
-            keys.map(async issueKey => {
+            keys.map(async (issueKey) => {
                 const parent = await fetchMinimalIssue(issueKey, site);
                 // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                 parent.subtasks = [];
@@ -195,9 +197,13 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
     private nodesForIssues(): IssueNode[] {
         if (this._issues && this._issues.length > 0) {
-            return this._issues.map(issue => new IssueNode(issue));
+            return this._issues.map((issue) => new IssueNode(issue, this));
         } else {
-            return [new SimpleJiraIssueNode(this._emptyState)];
+            return [new SimpleJiraIssueNode(this._emptyState, undefined, this)];
         }
+    }
+
+    getParent() {
+        return undefined;
     }
 }

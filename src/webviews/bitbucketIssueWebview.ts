@@ -10,7 +10,7 @@ import {
     isCreateJiraIssueAction,
     isOpenStartWorkPageAction,
     isPostChange,
-    isPostComment
+    isPostComment,
 } from '../ipc/bitbucketIssueActions';
 import { BitbucketIssueMessageData } from '../ipc/bitbucketIssueMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
@@ -90,16 +90,16 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                 Container.bitbucketContext.currentUser(issue.site),
                 bbApi.issues!.refetch(issue),
                 bbApi.issues!.getComments(issue),
-                bbApi.issues!.getChanges(issue)
+                bbApi.issues!.getChanges(issue),
             ]);
 
             this._participants.clear();
-            comments.data.forEach(c => this._participants.set(c.user.accountId, c.user));
+            comments.data.forEach((c) => this._participants.set(c.user.accountId, c.user));
 
             //@ts-ignore
             // replace comment with change data which contains additional details
             const updatedComments = comments.data.map(
-                comment => changes.data.find(change => change.id! === comment.id!) || comment
+                (comment) => changes.data.find((change) => change.id! === comment.id!) || comment
             );
             const msg: BitbucketIssueMessageData = {
                 type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
@@ -107,7 +107,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                 currentUser: currentUser,
                 comments: updatedComments,
                 hasMore: !!comments.next || !!changes.next,
-                showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
+                showJiraButton: Container.config.bitbucket.issues.createJiraEnabled,
             };
 
             this.postMessage(msg);
@@ -134,7 +134,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                     handled = true;
                     const linkUrl = this._issue!.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
-                    bbIssueUrlCopiedEvent().then(e => {
+                    bbIssueUrlCopiedEvent().then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
                     break;
@@ -160,7 +160,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             const bbApi = await clientForSite(this._issue!.site);
                             await bbApi.issues!.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
-                            bbIssueCommentEvent(this._issue!.site.details).then(e =>
+                            bbIssueCommentEvent(this._issue!.site.details).then((e) =>
                                 Container.analyticsClient.sendTrackEvent(e)
                             );
                         } catch (e) {
@@ -178,7 +178,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             await bbApi.issues!.postChange(this._issue!, e.newStatus, e.content);
                             this._issue = await bbApi.issues!.refetch(this._issue!);
                             await this.update(this._issue!);
-                            bbIssueTransitionedEvent(this._issue!.site.details).then(e =>
+                            bbIssueTransitionedEvent(this._issue!.site.details).then((e) =>
                                 Container.analyticsClient.sendTrackEvent(e)
                             );
                         } catch (e) {

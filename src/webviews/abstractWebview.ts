@@ -8,13 +8,13 @@ import {
     ViewColumn,
     WebviewPanel,
     WebviewPanelOnDidChangeViewStateEvent,
-    window
+    window,
 } from 'vscode';
 import { pmfClosed, pmfSnoozed, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 import { Container } from '../container';
+import { submitLegacyJSDPMF } from '../feedback/pmfJSDSubmitter';
 import { isAction, isAlertable, isPMFSubmitAction } from '../ipc/messaging';
-import { submitPMF } from '../pmf/pmfSubmitter';
 import { iconSet, Resources } from '../resources';
 import { OnlineInfoEvent } from '../util/online';
 import { UIWebsocket } from '../ws';
@@ -105,8 +105,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     enableScripts: true,
                     localResourceRoots: [
                         Uri.file(path.join(this._extensionPath, 'build')),
-                        Uri.file(path.join(this._extensionPath, 'images'))
-                    ]
+                        Uri.file(path.join(this._extensionPath, 'images')),
+                    ],
                 }
             );
 
@@ -140,7 +140,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.postMessage({ type: 'pmfStatus', showPMF: shouldShowSurvey });
 
             if (shouldShowSurvey) {
-                viewScreenEvent('atlascodePmfBanner', this.siteOrUndefined).then(e => {
+                viewScreenEvent('atlascodePmfBanner', this.siteOrUndefined).then((e) => {
                     Container.analyticsClient.sendScreenEvent(e);
                 });
             }
@@ -148,7 +148,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.invalidate().then(() => {
                 if (!this._viewEventSent) {
                     this._viewEventSent = true;
-                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then(e => {
+                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then((e) => {
                         Container.analyticsClient.sendScreenEvent(e);
                     });
                 }
@@ -166,28 +166,28 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     return true;
                 }
                 case 'pmfOpen': {
-                    viewScreenEvent('atlascodePmf', this.siteOrUndefined).then(e => {
+                    viewScreenEvent('atlascodePmf', this.siteOrUndefined).then((e) => {
                         Container.analyticsClient.sendScreenEvent(e);
                     });
                     return true;
                 }
                 case 'pmfLater': {
                     Container.pmfStats.snoozeSurvey();
-                    pmfSnoozed().then(e => {
+                    pmfSnoozed().then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
                     return true;
                 }
                 case 'pmfNever': {
                     Container.pmfStats.touchSurveyed();
-                    pmfClosed().then(e => {
+                    pmfClosed().then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
                     return true;
                 }
                 case 'pmfSubmit': {
                     if (isPMFSubmitAction(a)) {
-                        submitPMF(a.pmfData);
+                        submitLegacyJSDPMF(a.pmfData);
                     }
                     Container.pmfStats.touchSurveyed();
                     return true;
@@ -252,10 +252,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         const mainStyle = manifest['main.css'];
 
         const scriptUri = Uri.file(path.join(this._extensionPath, 'build', mainScript)).with({
-            scheme: 'vscode-resource'
+            scheme: 'vscode-resource',
         });
         const styleUri = Uri.file(path.join(this._extensionPath, 'build', mainStyle)).with({
-            scheme: 'vscode-resource'
+            scheme: 'vscode-resource',
         });
         const tmpl = Resources.html.get('reactHtml');
 
@@ -264,7 +264,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
-                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' })
+                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' }),
             });
         } else {
             return Resources.htmlNotFound({ resource: 'reactHtml' });

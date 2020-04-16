@@ -1,17 +1,17 @@
-import * as React from 'react';
-import SectionMessage from '@atlaskit/section-message';
-import { PMFData } from '../../ipc/messaging';
 import Button, { ButtonGroup } from '@atlaskit/button';
+import Form, { Field, FormFooter } from '@atlaskit/form';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
-import Form, { FormFooter, Field } from '@atlaskit/form';
 import { RadioGroup } from '@atlaskit/radio';
+import SectionMessage from '@atlaskit/section-message';
+import * as React from 'react';
+import { LegacyPMFData } from '../../ipc/messaging';
 import * as FieldValidators from './fieldValidators';
 
 const q1 = { id: 'q1', question: 'How would you feel if you could no longer use this extension?' };
 const q2 = { id: 'q2', question: '(optional) How can we improve this extension for you?' };
 const q3 = {
     id: 'q3',
-    question: '(optional) What would you use as an alternative if this extension were no longer available?'
+    question: '(optional) What would you use as an alternative if this extension were no longer available?',
 };
 const q4 = { id: 'q4', question: '(optional) What is the main benefit you receive from this extension?' };
 
@@ -21,7 +21,7 @@ export default class PMFBBanner extends React.Component<
         onPMFOpen: () => void;
         onPMFLater: () => void;
         onPMFNever: () => void;
-        onPMFSubmit: (data: PMFData) => void;
+        onPMFSubmit: (data: LegacyPMFData) => void;
     },
     { isOpen: boolean; q1Value: string | undefined }
 > {
@@ -45,7 +45,7 @@ export default class PMFBBanner extends React.Component<
         this.setState({ isOpen: false });
     };
 
-    handleFeedback = (formData: PMFData) => {
+    handleFeedback = (formData: LegacyPMFData) => {
         this.props.onPMFSubmit(formData);
         this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
@@ -63,7 +63,7 @@ export default class PMFBBanner extends React.Component<
         const radioItems = [
             { name: '0', label: 'Very disappointed', value: '0' },
             { name: '1', label: 'Somewhat disappointed', value: '1' },
-            { name: '2', label: 'Not disappointed', value: '2' }
+            { name: '2', label: 'Not disappointed', value: '2' },
         ];
 
         return (
@@ -163,7 +163,7 @@ export default class PMFBBanner extends React.Component<
                                                     style={{
                                                         display: 'inline-flex',
                                                         marginRight: '4px',
-                                                        marginLeft: '4px;'
+                                                        marginLeft: '4px;',
                                                     }}
                                                 >
                                                     <Button
@@ -178,7 +178,7 @@ export default class PMFBBanner extends React.Component<
                                                     style={{
                                                         display: 'inline-flex',
                                                         marginRight: '4px',
-                                                        marginLeft: '4px;'
+                                                        marginLeft: '4px;',
                                                     }}
                                                 >
                                                     <Button className="ac-button" onClick={this.handleLater}>

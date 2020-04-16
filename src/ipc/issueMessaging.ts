@@ -1,11 +1,11 @@
-import { createEmptyEditIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
+import { createEmptyEditIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client';
 import { emptyUser, isMinimalIssue, MinimalIssue, Project, User } from '@atlassianlabs/jira-pi-common-models';
 import {
     createEmptyIssueTypeUI,
     CreateMetaTransformerProblems,
     FieldValues,
     IssueTypeUI,
-    SelectFieldOptions
+    SelectFieldOptions,
 } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PullRequestData } from '../bitbucket/model';
@@ -26,7 +26,7 @@ export const emptyEditIssueData: EditIssueData = {
     ...createEmptyEditIssueUI(emptySiteInfo),
     currentUser: emptyUser,
     workInProgress: false,
-    recentPullRequests: []
+    recentPullRequests: [],
 };
 
 export interface IssueProblemsData extends Message {
@@ -44,7 +44,7 @@ export const emptyCreateIssueData: CreateIssueData = {
     type: '',
     ...createEmptyIssueTypeUI(emptySiteInfo),
     currentUser: emptyUser,
-    transformerProblems: {}
+    transformerProblems: {},
 };
 
 export interface IssueEditError extends HostErrorMessage {

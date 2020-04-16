@@ -49,7 +49,7 @@ export default class EditJQL extends PureComponent<
     constructor(props: any) {
         super(props);
 
-        let defaultSite = this.props.sites.find(site => site.id === this.props.jqlEntry.siteId);
+        let defaultSite = this.props.sites.find((site) => site.id === this.props.jqlEntry.siteId);
         if (!defaultSite && this.props.sites.length > 0) {
             defaultSite = this.props.sites[0];
         } else if (!defaultSite) {
@@ -62,7 +62,7 @@ export default class EditJQL extends PureComponent<
             inputValue: this.props.jqlEntry.query,
             openComplete: false,
             jqlError: null,
-            isEditing: false
+            isEditing: false,
         };
     }
 
@@ -84,7 +84,7 @@ export default class EditJQL extends PureComponent<
         ).then((res: any) => {
             if (res.errorMessages && res.errorMessages.length > 0) {
                 this.setState({
-                    jqlError: JSON.stringify(res.errorMessages[0])
+                    jqlError: JSON.stringify(res.errorMessages[0]),
                 });
             } else {
                 this.setState({ jqlError: null });
@@ -98,25 +98,25 @@ export default class EditJQL extends PureComponent<
 
     handleSiteChange = (e: DetailedSiteInfo) => {
         this.setState({
-            selectedSite: e
+            selectedSite: e,
         });
     };
 
     onJQLChange = (e: any) => {
         this.setState({
-            inputValue: e.target.value
+            inputValue: e.target.value,
         });
     };
 
     onJQLOpenChange = (isOpen: boolean) => {
         this.setState({
-            isEditing: isOpen
+            isEditing: isOpen,
         });
     };
 
     onNameChange = (e: any) => {
         this.setState({
-            nameValue: e.target.value
+            nameValue: e.target.value,
         });
     };
 
@@ -127,7 +127,7 @@ export default class EditJQL extends PureComponent<
             Object.assign({}, entry, {
                 siteId: this.state.selectedSite.id,
                 name: this.state.nameValue,
-                query: this.state.inputValue
+                query: this.state.inputValue,
             })
         );
     };
@@ -242,7 +242,7 @@ export default class EditJQL extends PureComponent<
                             marginTop: '24px',
                             marginBottom: '10px',
                             display: 'flex',
-                            justifyContent: 'flex-end'
+                            justifyContent: 'flex-end',
                         }}
                     >
                         <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>

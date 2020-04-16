@@ -2,7 +2,7 @@ import Button from '@atlaskit/button';
 import { Field } from '@atlaskit/form';
 import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
+import { Filter } from '@atlassianlabs/jira-pi-common-models';
 import debounce from 'lodash.debounce';
 import React, { PureComponent } from 'react';
 import { v4 } from 'uuid';
@@ -50,7 +50,7 @@ export default class ImportFilter extends PureComponent<
 
         this.state = {
             selectedSite: undefined,
-            selectedFilter: undefined
+            selectedFilter: undefined,
         };
     }
 
@@ -64,7 +64,7 @@ export default class ImportFilter extends PureComponent<
             query: this.state.selectedFilter!.jql,
             enabled: true,
             monitor: true,
-            filterId: this.state.selectedFilter!.id
+            filterId: this.state.selectedFilter!.id,
         };
         this.props.onSave(entry);
     };
@@ -99,12 +99,12 @@ export default class ImportFilter extends PureComponent<
                 return;
             }
 
-            this.props.jiraFilterSearcher(this.state.selectedSite, input).then(filters => {
-                const fav = filters.filter(f => f.favorite);
-                const norm = filters.filter(f => !f.favorite);
+            this.props.jiraFilterSearcher(this.state.selectedSite, input).then((filters) => {
+                const fav = filters.filter((f) => f.favorite);
+                const norm = filters.filter((f) => !f.favorite);
                 callback([
                     { label: 'Favorites', options: fav },
-                    { label: 'Filters', options: norm }
+                    { label: 'Filters', options: norm },
                 ]);
             });
         }
@@ -178,7 +178,7 @@ export default class ImportFilter extends PureComponent<
                             marginTop: '24px',
                             marginBottom: '10px',
                             display: 'flex',
-                            justifyContent: 'flex-end'
+                            justifyContent: 'flex-end',
                         }}
                     >
                         <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>

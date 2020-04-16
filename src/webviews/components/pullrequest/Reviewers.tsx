@@ -16,7 +16,7 @@ const avatarStatus = {
             ></path>
         </svg>
     ),
-    UNAPPROVED: undefined
+    UNAPPROVED: undefined,
 };
 
 interface Props extends PRData {
@@ -37,13 +37,13 @@ export default class Reviewers extends React.Component<Props, {}> {
         } else {
             const participants = this.props
                 .pr!.data.participants! // always show reviewers & show non-reviewers if they have approved or marked needs work
-                .filter(p => p.status !== 'UNAPPROVED' || p.role === 'REVIEWER')
+                .filter((p) => p.status !== 'UNAPPROVED' || p.role === 'REVIEWER')
                 .sort((a, b) => (a.status < b.status ? 0 : 1))
-                .map(p => {
+                .map((p) => {
                     return {
                         name: p.displayName,
                         src: p.avatarUrl,
-                        status: avatarStatus[p.status]
+                        status: avatarStatus[p.status],
                     };
                 });
             reviewers = <AvatarGroup appearance="stack" data={participants} maxCount={5} size="medium" />;

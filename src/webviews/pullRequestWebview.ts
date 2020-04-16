@@ -16,7 +16,7 @@ import {
     isBitbucketIssue,
     PaginatedComments,
     PullRequest,
-    Task
+    Task,
 } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
@@ -41,7 +41,7 @@ import {
     isUpdateSummary,
     isUpdateTitle,
     Merge,
-    UpdateSummary
+    UpdateSummary,
 } from '../ipc/prActions';
 import { PRData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
@@ -354,7 +354,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async fetchChangedFiles(bbApi: BitbucketApi, pr: PullRequest) {
         const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
-        return fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
+        return fileChanges.map((fileChange) => this.convertFileChangeToFileDiff(fileChange));
     }
 
     /* 
@@ -376,23 +376,23 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         //The results of some of these promises are needed for future API calls, so we store them
         const prPromise = bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
-        const commentsPromise = bbApi.pullrequests.getComments(this._pr).then(async paginatedComments => {
+        const commentsPromise = bbApi.pullrequests.getComments(this._pr).then(async (paginatedComments) => {
             await readyForDataPromise;
             this.postMessage({ type: 'updateComments', comments: paginatedComments.data });
             return paginatedComments;
         });
-        const commitsPromise = bbApi.pullrequests.getCommits(this._pr).then(async commits => {
+        const commitsPromise = bbApi.pullrequests.getCommits(this._pr).then(async (commits) => {
             await readyForDataPromise;
             this.postMessage({ type: 'updateCommits', commits: commits });
             return commits;
         });
 
         //Other promises are not needed for later so we don't need to store them
-        bbApi.pullrequests.getTasks(this._pr).then(async tasks => {
+        bbApi.pullrequests.getTasks(this._pr).then(async (tasks) => {
             await readyForDataPromise;
             this.postMessage({ type: 'updateTasks', tasks: tasks });
         });
-        this.fetchChangedFiles(bbApi, this._pr).then(async fileDiffs => {
+        this.fetchChangedFiles(bbApi, this._pr).then(async (fileDiffs) => {
             await readyForDataPromise;
             this.postMessage({ type: 'updateDiffs', fileDiffs: fileDiffs });
         });
@@ -418,17 +418,17 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             type: 'update',
             mainIssue: await mainIssuePromise,
             buildStatuses: await buildStatusPromise,
-            mergeStrategies: await mergeStrategiesPromise
+            mergeStrategies: await mergeStrategiesPromise,
         };
         await readyForDataPromise; //We can't send data until this promise is resolved
         this.postMessage(basicPRData);
 
         //We need to wait for comments and commits to resolve before getting the related issues (the pr promise already resolved by this point)
         const [paginatedComments, commits] = await Promise.all([commentsPromise, commitsPromise]);
-        this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then(issues =>
+        this.fetchRelatedJiraIssues(this._pr, commits, paginatedComments).then((issues) =>
             this.postMessage({ type: 'updateRelatedJiraIssues', relatedJiraIssues: issues })
         );
-        this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then(issues =>
+        this.fetchRelatedBitbucketIssues(this._pr, commits, paginatedComments).then((issues) =>
             this.postMessage({ type: 'updateRelatedBitbucketIssues', relatedBitbucketIssues: issues })
         );
     }
@@ -439,7 +439,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             if (this.readyForData) {
                 resolve();
             } else {
-                setTimeout(_ => checker(resolve), 100);
+                setTimeout(() => checker(resolve), 100);
             }
         };
 
@@ -489,7 +489,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 const issueKeys = await extractIssueKeys(pr, commits, comments.data);
 
                 const jqlPromises: Promise<MinimalIssue<DetailedSiteInfo>>[] = [];
-                issueKeys.forEach(key => {
+                issueKeys.forEach((key) => {
                     jqlPromises.push(
                         (async () => {
                             return await issueForKey(key);
@@ -499,7 +499,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
                 let issueResults = await pSettle<MinimalIssue<DetailedSiteInfo>>(jqlPromises);
 
-                issueResults.forEach(result => {
+                issueResults.forEach((result) => {
                     if (result.isFulfilled) {
                         foundIssues.push(result.value);
                     }
@@ -537,7 +537,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             pr,
             text,
             pr.data.rawSummary,
-            pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId)
+            pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
         );
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
@@ -549,13 +549,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             pr,
             pr.data.title,
             msg.summary,
-            pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId)
+            pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
         );
 
         await this.postMessage({
             type: 'updatePullRequestSummary',
             nonce: msg.nonce,
-            pr: this._pr
+            pr: this._pr,
         });
     }
 
@@ -563,7 +563,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.updateApproval(pr, status);
 
-        prApproveEvent(pr.site.details).then(e => {
+        prApproveEvent(pr.site.details).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
         await this.updatePullRequest();
@@ -572,8 +572,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async addReviewer(pr: PullRequest, accountId: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.update(pr, pr.data.title, pr.data.rawSummary, [
-            ...pr.data.participants.filter(p => p.role === 'REVIEWER').map(p => p.accountId),
-            accountId
+            ...pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId),
+            accountId,
         ]);
         await this.updatePullRequest();
     }
@@ -582,7 +582,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.merge(pr, m.closeSourceBranch, m.mergeStrategy, m.commitMessage);
 
-        prMergeEvent(pr.site.details).then(e => {
+        prMergeEvent(pr.site.details).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
         await this.updateIssue(m.issue);
@@ -596,7 +596,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return;
         }
         if (isMinimalIssue(issue)) {
-            const transition = issue.transitions.find(t => t.to.id === issue.status.id);
+            const transition = issue.transitions.find((t) => t.to.id === issue.status.id);
             if (transition) {
                 await transitionIssue(issue, transition);
             }
@@ -611,7 +611,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             Logger.error(new Error('error checking out the pull request branch: no workspace repo'));
             this.postMessage({
                 type: 'error',
-                reason: this.formatErrorReason('error checking out the pull request branch: no workspace repo')
+                reason: this.formatErrorReason('error checking out the pull request branch: no workspace repo'),
             });
             return;
         }
@@ -624,17 +624,17 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             const sourceRemote = {
                 fetchUrl: parseGitUrl(pr.data.source.repo.url).toString(parsed.protocol),
                 name: pr.data.source.repo.fullName,
-                isReadOnly: true
+                isReadOnly: true,
             };
 
             await scm
                 .getConfig(`remote.${sourceRemote.name}.url`)
-                .then(async url => {
+                .then(async (url) => {
                     if (!url) {
                         await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
                     }
                 })
-                .catch(async _ => {
+                .catch(async (_) => {
                     await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
                 });
 
@@ -649,9 +649,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
         this.postMessage({
             type: 'checkout',
-            currentBranch: currentBranch
+            currentBranch: currentBranch,
         });
-        prCheckoutEvent(pr.site.details).then(e => {
+        prCheckoutEvent(pr.site.details).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
     }
@@ -659,7 +659,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async postComment(pr: PullRequest, text: string, parentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postComment(pr.site, pr.data.id, text, parentId);
-        prCommentEvent(pr.site.details).then(e => {
+        prCommentEvent(pr.site.details).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
         this.updatePullRequest();
@@ -722,7 +722,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             status: fileChange.status,
             linesAdded: fileChange.linesAdded,
             linesRemoved: fileChange.linesRemoved,
-            fileChange: fileChange
+            fileChange: fileChange,
         };
     }
 

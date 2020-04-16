@@ -14,7 +14,7 @@ function buildTrackEvent(mergeEvent) {
             objectType: 'my-object-type',
             objectId: 'my-object-id',
             attributes: {},
-            origin: 'my-origin'
+            origin: 'my-origin',
         },
         mergeEvent
     );
@@ -34,7 +34,7 @@ function buildUIEvent(mergeEvent) {
             objectType: 'my-object-type',
             objectId: 'my-object-id',
             attributes: {},
-            origin: 'my-origin'
+            origin: 'my-origin',
         },
         mergeEvent
     );
@@ -47,7 +47,7 @@ function buildScreenEvent(mergeEvent) {
             tags: ['my-tag'],
             attributes: {},
             origin: 'my-origin',
-            platform: 'my-platform'
+            platform: 'my-platform',
         },
         mergeEvent
     );
@@ -56,5 +56,5 @@ function buildScreenEvent(mergeEvent) {
 module.exports = {
     buildTrackEvent,
     buildUIEvent,
-    buildScreenEvent
+    buildScreenEvent,
 };

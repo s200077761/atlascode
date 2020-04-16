@@ -4,9 +4,9 @@ import {
     CompletionItemProvider,
     Position,
     SnippetString,
-    TextDocument
+    TextDocument,
 } from 'vscode';
-import { getAxiosInstance } from '../../jira/jira-client/providers';
+import { getAgent, getAxiosInstance } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
 
 const BB_PIPES_URL =
@@ -107,15 +107,16 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
         transport(BB_PIPES_URL, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+            },
+            ...getAgent(),
         })
-            .then(res => res.data)
+            .then((res) => res.data)
             .then((res: PipeMeta[]) => {
                 if (res) {
                     this.knownPipes = res;
 
-                    res.forEach(pipemeta => {
+                    res.forEach((pipemeta) => {
                         const item = new CompletionItem(pipemeta.name, CompletionItemKind.Snippet);
                         item.insertText = new SnippetString(pipemeta.yml);
                         item.documentation = pipemeta.description;

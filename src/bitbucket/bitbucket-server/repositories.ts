@@ -51,7 +51,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`, {
-            limit: 100
+            limit: 100,
         });
 
         return data.values.map((val: any) => val.displayId);
@@ -75,15 +75,15 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             type: 'branching_model',
             branch_types: (data.types || []).map((type: any) => ({
                 kind: type.displayName,
-                prefix: type.prefix
+                prefix: type.prefix,
             })),
             development: data.development
                 ? {
                       branch: {
-                          name: data.development.displayId
-                      }
+                          name: data.development.displayId,
+                      },
                   }
-                : undefined
+                : undefined,
         };
 
         this.branchingModelCache.setItem(cacheKey, result);
@@ -95,19 +95,19 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
         const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits`, {
             until: includeRef,
-            since: excludeRef
+            since: excludeRef,
         });
 
         const commits: any[] = data.values || [];
 
-        return commits.map(commit => ({
+        return commits.map((commit) => ({
             hash: commit.id,
             message: commit.message!,
             ts: commit.authorTimestamp,
             url: undefined!,
             htmlSummary: commit.summary ? commit.summary.html! : undefined,
             rawSummary: commit.summary ? commit.summary.raw! : undefined,
-            author: ServerPullRequestApi.toUser(site.details, commit.author)
+            author: ServerPullRequestApi.toUser(site.details, commit.author),
         }));
     }
 
@@ -146,7 +146,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
                 url: '',
                 avatarUrl: '',
                 mainbranch: undefined,
-                issueTrackerEnabled: false
+                issueTrackerEnabled: false,
             };
         }
 
@@ -162,7 +162,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             url: url,
             avatarUrl: ServerRepositoriesApi.patchAvatarUrl(site.details.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
-            issueTrackerEnabled: false
+            issueTrackerEnabled: false,
         };
     }
 }

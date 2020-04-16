@@ -15,12 +15,12 @@ export function provideCodeLenses(document: TextDocument, token: CancellationTok
     }
 
     const matches = findTodos(document);
-    return matches.map(match => {
+    return matches.map((match) => {
         const insertionPoint = new Position(match.range.end.line, match.range.end.character + 1);
         return new CodeLens(match.range, {
             title: 'Create Jira Issue',
             command: Commands.CreateIssue,
-            arguments: [{ fromCodeLens: true, summary: match.text, uri: document.uri, insertionPoint: insertionPoint }]
+            arguments: [{ fromCodeLens: true, summary: match.text, uri: document.uri, insertionPoint: insertionPoint }],
         });
     });
 }
@@ -41,7 +41,7 @@ function findTodos(document: TextDocument) {
 
         Regex string will have form: (^|\W)((trigger1)|(trigger2)|...|(triggerN))
     */
-    let regexTrigger: string = triggers.map(t => `(${t.replace(/(\W)/g, '\\$1')})`).join('|'); //Creates string of form (trigger1)|(trigger2)|...|(triggerN)
+    let regexTrigger: string = triggers.map((t) => `(${t.replace(/(\W)/g, '\\$1')})`).join('|'); //Creates string of form (trigger1)|(trigger2)|...|(triggerN)
     let regexString: string = `(^|\\W)(${regexTrigger})`;
     const masterRegex = new RegExp(regexString);
 

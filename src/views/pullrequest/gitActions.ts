@@ -19,17 +19,17 @@ export async function checkout(pr: PullRequest, branch: string): Promise<boolean
         const sourceRemote = {
             fetchUrl: parseGitUrl(pr.data.source.repo.url).toString(parsed.protocol),
             name: pr.data.source.repo.fullName,
-            isReadOnly: true
+            isReadOnly: true,
         };
 
         await scm
             .getConfig(`remote.${sourceRemote.name}.url`)
-            .then(async url => {
+            .then(async (url) => {
                 if (!url) {
                     await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
                 }
             })
-            .catch(async _ => {
+            .catch(async (_) => {
                 await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
             });
         await scm.fetch(sourceRemote.name, pr.data.source.branchName);
@@ -38,7 +38,7 @@ export async function checkout(pr: PullRequest, branch: string): Promise<boolean
     return await scm
         .checkout(branch || pr.data.source.branchName)
         .then(() => {
-            fileCheckoutEvent(pr.site.details).then(e => {
+            fileCheckoutEvent(pr.site.details).then((e) => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
             return true;
@@ -51,7 +51,7 @@ export async function checkout(pr: PullRequest, branch: string): Promise<boolean
                         'Stash changes and try again',
                         'Dismiss'
                     )
-                    .then(async userChoice => {
+                    .then(async (userChoice) => {
                         if (userChoice === 'Stash changes and try again') {
                             await commands.executeCommand('git.stash');
                             return await checkout(pr, branch);
