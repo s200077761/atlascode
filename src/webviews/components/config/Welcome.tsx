@@ -102,6 +102,13 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 </p>
                             </div>
                         </section>
+                        <h3>🎉 What's New in 2.5.1 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Settings page now loads properly</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.5.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
