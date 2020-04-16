@@ -5,7 +5,7 @@ import {
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
-import axios, { CancelToken } from 'axios';
+import axios, { CancelToken, CancelTokenSource } from 'axios';
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
 import { join as pathJoin } from 'path';
@@ -23,6 +23,7 @@ import { configuration, IConfig, JQLEntry } from '../../config/configuration';
 import { Container } from '../../container';
 import { getFeedbackUser } from '../../feedback/feedbackUser';
 import { AnalyticsApi } from '../../lib/analyticsApi';
+import { CancellationManager } from '../../lib/cancellation';
 import { FeedbackUser } from '../../lib/ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
@@ -30,9 +31,11 @@ import { ConfigActionApi } from '../../lib/webview/controller/config/configActio
 
 export class VSCConfigActionApi implements ConfigActionApi {
     private _analyticsApi: AnalyticsApi;
+    private _cancelMan: CancellationManager;
 
-    constructor(analyticsApi: AnalyticsApi) {
+    constructor(analyticsApi: AnalyticsApi, cancelMan: CancellationManager) {
         this._analyticsApi = analyticsApi;
+        this._cancelMan = cancelMan;
     }
     public async authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
         return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
@@ -57,16 +60,16 @@ export class VSCConfigActionApi implements ConfigActionApi {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortSignal?: AbortSignal
+        abortKey?: string
     ): Promise<AutocompleteSuggestion[]> {
         const client = await Container.clientManager.jiraClient(site);
 
         var cancelToken: CancelToken | undefined = undefined;
 
-        if (abortSignal) {
-            const cancelSignal = axios.CancelToken.source();
-            cancelToken = cancelSignal.token;
-            abortSignal.onabort = () => cancelSignal.cancel('suggestion fetch aborted');
+        if (abortKey) {
+            const signal: CancelTokenSource = axios.CancelToken.source();
+            cancelToken = signal.token;
+            this._cancelMan.set(abortKey, signal);
         }
 
         return await client.getFieldAutoCompleteSuggestions(fieldName, userInput, predicateName, cancelToken);
@@ -77,30 +80,30 @@ export class VSCConfigActionApi implements ConfigActionApi {
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortSignal?: AbortSignal
+        abortKey?: string
     ): Promise<FilterSearchResults> {
         const client = await Container.clientManager.jiraClient(site);
 
         var cancelToken: CancelToken | undefined = undefined;
 
-        if (abortSignal) {
-            const cancelSignal = axios.CancelToken.source();
-            cancelToken = cancelSignal.token;
-            abortSignal.onabort = () => cancelSignal.cancel('filter fetch aborted');
+        if (abortKey) {
+            const signal: CancelTokenSource = axios.CancelToken.source();
+            cancelToken = signal.token;
+            this._cancelMan.set(abortKey, signal);
         }
 
         return await client.searchFilters(query, maxResults, startAt, cancelToken);
     }
 
-    public async validateJql(site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal): Promise<JQLErrors> {
+    public async validateJql(site: DetailedSiteInfo, jql: string, abortKey?: string): Promise<JQLErrors> {
         const client = await Container.clientManager.jiraClient(site);
 
         var cancelToken: CancelToken | undefined = undefined;
 
-        if (abortSignal) {
-            const cancelSignal = axios.CancelToken.source();
-            cancelToken = cancelSignal.token;
-            abortSignal.onabort = () => cancelSignal.cancel('jql validation aborted');
+        if (abortKey) {
+            const signal: CancelTokenSource = axios.CancelToken.source();
+            cancelToken = signal.token;
+            this._cancelMan.set(abortKey, signal);
         }
 
         return await client.validateJql(jql, cancelToken);

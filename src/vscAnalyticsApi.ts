@@ -228,7 +228,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
     }
 
     public async fireExternalUriEvent(source: string, target: string): Promise<void> {
-        return externalUriEvent(source, target).then(e => {
+        return externalUriEvent(source, target).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

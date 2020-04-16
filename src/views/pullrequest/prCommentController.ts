@@ -22,12 +22,12 @@ turndownService.addRule('mention', {
     },
 });
 turndownService.addRule('emoji', {
-    filter: function(node) {
+    filter: function (node) {
         return node.nodeName === 'IMG' && node.classList.contains('emoji') && node.getAttribute('alt') !== null;
     },
-    replacement: function(_, node: HTMLElement) {
+    replacement: function (_, node: HTMLElement) {
         return node.getAttribute('alt')!;
-    }
+    },
 });
 turndownService.addRule('highlightedCodeBlock', {
     filter: function (node) {

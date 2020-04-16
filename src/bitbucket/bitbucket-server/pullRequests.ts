@@ -131,7 +131,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}`,
             {
                 markup: true,
-                avatarSize: 64
+                avatarSize: 64,
             }
         );
 
