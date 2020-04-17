@@ -4,7 +4,7 @@ import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authIn
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
 import { KnownLinkID } from '../../../lib/ipc/models/common';
-import { ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import {
     emptyOnboardingInitMessage,
@@ -26,6 +26,8 @@ export interface OnboardingControllerApi {
     viewPullRequest: () => void;
     createJiraIssue: () => void;
     viewJiraIssue: () => void;
+    closePage: () => void;
+    openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
 }
 
 export const emptyApi: OnboardingControllerApi = {
@@ -57,6 +59,12 @@ export const emptyApi: OnboardingControllerApi = {
         return;
     },
     viewJiraIssue: (): void => {
+        return;
+    },
+    closePage: (): void => {
+        return;
+    },
+    openSettings: (section, subsection): void => {
         return;
     },
 };
@@ -229,6 +237,19 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
         postMessage({ type: OnboardingActionType.ViewJiraIssue });
     }, [postMessage]);
 
+    const closePage = useCallback((): void => {
+        dispatch({ type: OnboardingUIActionType.Loading });
+        postMessage({ type: OnboardingActionType.ClosePage });
+    }, [postMessage]);
+
+    const openSettings = useCallback(
+        (section?: ConfigSection, subsection?: ConfigSubSection): void => {
+            dispatch({ type: OnboardingUIActionType.Loading });
+            postMessage({ type: OnboardingActionType.OpenSettings, section: section, subsection: subsection });
+        },
+        [postMessage]
+    );
+
     const controllerApi = useMemo<OnboardingControllerApi>((): OnboardingControllerApi => {
         return {
             postMessage: postMessage,
@@ -241,6 +262,8 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             createPullRequest: createPullRequest,
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
+            closePage: closePage,
+            openSettings: openSettings,
         };
     }, [
         handleConfigChange,
@@ -253,6 +276,8 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
         createPullRequest,
         viewPullRequest,
         viewJiraIssue,
+        closePage,
+        openSettings,
     ]);
 
     return [state, controllerApi];

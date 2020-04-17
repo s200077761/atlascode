@@ -143,6 +143,14 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 this._api.viewPullRequest();
                 break;
             }
+            case OnboardingActionType.ClosePage: {
+                this._api.closePage();
+                break;
+            }
+            case OnboardingActionType.OpenSettings: {
+                this._api.openSettings(msg.section, msg.subsection);
+                break;
+            }
 
             case CommonActionType.SubmitFeedback:
             case CommonActionType.ExternalLink:

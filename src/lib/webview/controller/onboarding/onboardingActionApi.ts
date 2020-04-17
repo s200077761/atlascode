@@ -1,5 +1,5 @@
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
-import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
 import { SiteWithAuthInfo } from '../../../ipc/toUI/config';
 
 export interface OnboardingActionApi {
@@ -16,4 +16,6 @@ export interface OnboardingActionApi {
     viewJiraIssue(): void;
     createPullRequest(): void;
     viewPullRequest(): void;
+    closePage(): void;
+    openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void;
 }

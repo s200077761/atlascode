@@ -28,21 +28,23 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
 }) => {
     const classes = useStyles();
 
-    if ((!enableJira || jiraSites.length > 0) && (!enableBitbucket || bitbucketSites.length > 0)) {
+    const bitbucketAuthComplete = !enableBitbucket || bitbucketSites.length > 0;
+    const jiraAuthComplete = !enableJira || jiraSites.length > 0;
+
+    if (bitbucketAuthComplete && jiraAuthComplete) {
         onFinished();
     }
 
     return (
         <div className={classes.root}>
             <Grid container spacing={3}>
-                {enableBitbucket && bitbucketSites.length === 0 && (
+                {!bitbucketAuthComplete && (
                     <React.Fragment>
                         <Grid item xs={12}>
                             <Typography variant="h1" align="center">
                                 Authenticate with {ProductBitbucket.name}
                             </Typography>
                         </Grid>
-
                         <Grid item xs={6} alignItems={'flex-end'}>
                             <AltCloudAuthButton product={ProductBitbucket} />
                         </Grid>
@@ -51,14 +53,13 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
                         </Grid>
                     </React.Fragment>
                 )}
-                {enableJira && (bitbucketSites.length > 0 || !enableBitbucket) && jiraSites.length === 0 && (
+                {bitbucketAuthComplete && !jiraAuthComplete && (
                     <React.Fragment>
                         <Grid item xs={12}>
                             <Typography variant="h1" align="center">
                                 Authenticate with {ProductJira.name}
                             </Typography>
                         </Grid>
-
                         <Grid item xs={6} alignItems={'flex-end'}>
                             <AltCloudAuthButton product={ProductJira} />
                         </Grid>

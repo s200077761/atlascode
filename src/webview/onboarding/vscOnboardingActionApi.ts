@@ -13,7 +13,7 @@ import {
 import { configuration, IConfig } from '../../config/configuration';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
-import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
+import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onboardingActionApi';
 import { FocusEventActions } from '../ExplorerFocusManager';
@@ -167,13 +167,26 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
     public createJiraIssue(): void {
         Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEISSUE, true);
     }
+
     public viewJiraIssue(): void {
         Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWISSUE, true);
     }
+
     public createPullRequest(): void {
         Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEPULLREQUEST, true);
     }
+
     public viewPullRequest(): void {
         Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWPULLREQUEST, true);
+    }
+
+    public closePage(): void {
+        Container.onboardingWebviewFactory.hide();
+    }
+
+    public openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
+        Container.settingsWebviewFactory.createOrShow(
+            section ? { section: section, subSection: subsection } : undefined
+        );
     }
 }

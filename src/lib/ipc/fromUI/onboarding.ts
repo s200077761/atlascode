@@ -1,6 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
-import { ConfigTarget } from '../models/config';
+import { ConfigSection, ConfigSubSection, ConfigTarget } from '../models/config';
 import { CommonAction } from './common';
 
 export enum OnboardingActionType {
@@ -11,6 +11,8 @@ export enum OnboardingActionType {
     ViewJiraIssue = 'viewJiraIssue',
     CreatePullRequest = 'createPullRequest',
     ViewPullRequest = 'viewPullRequest',
+    ClosePage = 'closePage',
+    OpenSettings = 'openSettings',
 }
 
 export type OnboardingAction =
@@ -21,6 +23,8 @@ export type OnboardingAction =
     | ReducerAction<OnboardingActionType.ViewJiraIssue>
     | ReducerAction<OnboardingActionType.CreatePullRequest>
     | ReducerAction<OnboardingActionType.ViewPullRequest>
+    | ReducerAction<OnboardingActionType.ClosePage>
+    | ReducerAction<OnboardingActionType.OpenSettings, OpenSettingsAction>
     | CommonAction;
 
 export interface AuthAction {
@@ -33,6 +37,11 @@ export interface LoginAuthAction extends AuthAction {
 
 export interface LogoutAuthAction extends AuthAction {
     siteInfo: DetailedSiteInfo;
+}
+
+export interface OpenSettingsAction {
+    section?: ConfigSection;
+    subsection?: ConfigSubSection;
 }
 
 export interface SaveSettingsAction {
