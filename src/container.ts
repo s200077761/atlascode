@@ -15,7 +15,7 @@ import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -26,6 +26,7 @@ import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
@@ -93,6 +94,8 @@ export class Container {
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jqlManager = new JQLManager()));
 
+        context.subscriptions.push((this._explorerFocusManager = new ExplorerFocusManager()));
+
         const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
             context.extensionPath,
             new VSCConfigWebviewControllerFactory(
@@ -110,7 +113,7 @@ export class Container {
                 new VSCOnboardingActionApi(this._analyticsApi),
                 this._commonMessageHandler,
                 this._analyticsApi,
-                SETTINGS_URL
+                ONBOARDING_URL
             ),
             this._analyticsApi
         );
@@ -205,6 +208,11 @@ export class Container {
     private static _configWebview: ConfigWebview;
     static get configWebview() {
         return this._configWebview;
+    }
+
+    private static _explorerFocusManager: ExplorerFocusManager;
+    static get explorerFocusManager() {
+        return this._explorerFocusManager;
     }
 
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;

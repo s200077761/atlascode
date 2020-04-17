@@ -20,7 +20,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
     private _api: OnboardingActionApi;
     private _logger: Logger;
     private _analytics: AnalyticsApi;
-    private _settingsUrl: string;
+    private _onboardingUrl: string;
     private _commonHandler: CommonActionMessageHandler;
 
     constructor(
@@ -29,13 +29,13 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
         commonHandler: CommonActionMessageHandler,
         logger: Logger,
         analytics: AnalyticsApi,
-        settingsUrl: string
+        onboardingUrl: string
     ) {
         this._messagePoster = messagePoster;
         this._api = api;
         this._logger = logger;
         this._analytics = analytics;
-        this._settingsUrl = settingsUrl;
+        this._onboardingUrl = onboardingUrl;
         this._commonHandler = commonHandler;
     }
 
@@ -107,7 +107,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                         });
                     }
                 } else {
-                    this._api.authenticateCloud(msg.siteInfo, this._settingsUrl);
+                    this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
                 }
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 break;
@@ -133,17 +133,14 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
             }
             case OnboardingActionType.ViewJiraIssue: {
                 this._api.viewJiraIssue();
-                this._analytics.fireLogoutButtonEvent(id);
                 break;
             }
             case OnboardingActionType.CreatePullRequest: {
                 this._api.createPullRequest();
-                this._analytics.fireLogoutButtonEvent(id);
                 break;
             }
             case OnboardingActionType.ViewPullRequest: {
                 this._api.viewPullRequest();
-                this._analytics.fireLogoutButtonEvent(id);
                 break;
             }
 

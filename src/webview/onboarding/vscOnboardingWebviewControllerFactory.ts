@@ -18,7 +18,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
     private _api: OnboardingActionApi;
     private _commonHandler: CommonActionMessageHandler;
     private _analytics: AnalyticsApi;
-    private _settingsUrl: string;
+    private _onboardingUrl: string;
 
     constructor(
         api: OnboardingActionApi,
@@ -29,7 +29,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
         this._api = api;
         this._commonHandler = commonHandler;
         this._analytics = analytics;
-        this._settingsUrl = settingsUrl;
+        this._onboardingUrl = settingsUrl;
     }
 
     public title(): string {
@@ -57,7 +57,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
             this._commonHandler,
             Logger.Instance,
             this._analytics,
-            this._settingsUrl
+            this._onboardingUrl
         );
 
         const disposables = Disposable.from(

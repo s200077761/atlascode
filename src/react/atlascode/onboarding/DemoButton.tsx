@@ -19,13 +19,19 @@ export type DemoButtonProps = {
     gifLink: string;
     description: string;
     productIcon: React.ReactNode;
+    onClick: () => void;
 };
 
-export const DemoButton: React.FunctionComponent<DemoButtonProps> = ({ gifLink, description, productIcon }) => {
+export const DemoButton: React.FunctionComponent<DemoButtonProps> = ({
+    gifLink,
+    description,
+    productIcon,
+    onClick,
+}) => {
     const classes = useStyles();
 
     return (
-        <Button className={classes.button}>
+        <Button className={classes.button} onClick={onClick}>
             <Box className={classes.demoBox}>
                 <img style={{ maxWidth: '100%', maxHeight: 'auto' }} src={gifLink} />
                 <Typography variant="h3" align="left" style={{ marginTop: '20px' }}>

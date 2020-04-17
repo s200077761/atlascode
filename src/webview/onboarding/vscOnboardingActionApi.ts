@@ -1,6 +1,6 @@
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
-import { ConfigurationTarget, env } from 'vscode';
+import vscode, { ConfigurationTarget, env } from 'vscode';
 import {
     AuthInfo,
     DetailedSiteInfo,
@@ -16,6 +16,7 @@ import { AnalyticsApi } from '../../lib/analyticsApi';
 import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onboardingActionApi';
+import { FocusEventActions } from '../ExplorerFocusManager';
 
 export class VSCOnboardingActionApi implements OnboardingActionApi {
     private _analyticsApi: AnalyticsApi;
@@ -23,11 +24,22 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
     constructor(analyticsApi: AnalyticsApi) {
         this._analyticsApi = analyticsApi;
     }
+
+    private focusExplorerOnAuth(site: SiteInfo) {
+        if (site.product.key === ProductJira.key) {
+            vscode.commands.executeCommand('atlascode.views.jira.customJql.focus');
+        } else if (site.product.key === ProductBitbucket.key) {
+            vscode.commands.executeCommand('atlascode.views.bb.pullrequestsTreeView.focus');
+        }
+    }
+
     public async authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
+        this.focusExplorerOnAuth(site);
         return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     public async authenticateCloud(site: SiteInfo, callback: string): Promise<void> {
+        this.focusExplorerOnAuth(site);
         return Container.loginManager.userInitiatedOAuthLogin(site, callback);
     }
 
@@ -152,8 +164,16 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
         }
     }
 
-    public createJiraIssue(): void {}
-    public viewJiraIssue(): void {}
-    public createPullRequest(): void {}
-    public viewPullRequest(): void {}
+    public createJiraIssue(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEISSUE, true);
+    }
+    public viewJiraIssue(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWISSUE, true);
+    }
+    public createPullRequest(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEPULLREQUEST, true);
+    }
+    public viewPullRequest(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWPULLREQUEST, true);
+    }
 }

@@ -242,7 +242,18 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             viewPullRequest: viewPullRequest,
             viewJiraIssue: viewJiraIssue,
         };
-    }, [handleConfigChange, login, logout, openLink, postMessage, sendRefresh]);
+    }, [
+        handleConfigChange,
+        login,
+        logout,
+        openLink,
+        postMessage,
+        sendRefresh,
+        createJiraIssue,
+        createPullRequest,
+        viewPullRequest,
+        viewJiraIssue,
+    ]);
 
     return [state, controllerApi];
 }

@@ -125,6 +125,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                 style={{ float: 'right', color: '#0052CC' }}
                                             />
                                         }
+                                        onClick={controller.createPullRequest}
                                     />
                                 </Grid>
                                 <Grid item xs={3}>
@@ -137,6 +138,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                 style={{ float: 'right', color: '#0052CC' }}
                                             />
                                         }
+                                        onClick={controller.viewPullRequest}
                                     />
                                 </Grid>
                             </React.Fragment>
@@ -148,6 +150,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                         gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreateJiraIssue.gif"
                                         description="Create a Jira issue"
                                         productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
+                                        onClick={controller.createJiraIssue}
                                     />
                                 </Grid>
                                 <Grid item xs={3}>
@@ -155,6 +158,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                         gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewJiraIssue.gif"
                                         description="View a Jira issue"
                                         productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
+                                        onClick={controller.viewJiraIssue}
                                     />
                                 </Grid>
                             </React.Fragment>

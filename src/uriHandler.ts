@@ -33,7 +33,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         if (uri.path.endsWith('openSettings')) {
             Container.configWebview.createOrShow();
         } else if (uri.path.endsWith('openOnboarding')) {
-            Container.onboardingWebview.createOrShow();
+            Container.onboardingWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openPullRequest')) {
             await this.handlePullRequestUri(uri);
         }
