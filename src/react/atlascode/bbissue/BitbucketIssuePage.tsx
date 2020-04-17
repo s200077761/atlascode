@@ -127,7 +127,12 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                         </Typography>
                         <Box className={classes.grow} />
                         <Tooltip title="Create a branch and assign issue to me">
-                            <Button variant="contained" color="primary" startIcon={<PlayArrowIcon />}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                startIcon={<PlayArrowIcon />}
+                                onClick={controller.startWork}
+                            >
                                 Start work
                             </Button>
                         </Tooltip>

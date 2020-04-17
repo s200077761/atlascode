@@ -1,16 +1,13 @@
-import axios, { CancelToken } from 'axios';
+import axios, { CancelToken, CancelTokenSource } from 'axios';
+import { commands } from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, Comment, User } from '../../bitbucket/model';
-import { AnalyticsApi } from '../../lib/analyticsApi';
+import { Commands } from '../../commands';
+import { CancellationManager } from '../../lib/cancellation';
 import { BitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/bitbucketIssueActionApi';
 
 export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
-    private _analyticsApi: AnalyticsApi;
-
-    constructor(analyticsApi: AnalyticsApi) {
-        this._analyticsApi = analyticsApi;
-        console.log(this._analyticsApi);
-    }
+    constructor(private cancellationManager: CancellationManager) {}
 
     async currentUser(issue: BitbucketIssue): Promise<User> {
         const bbApi = await clientForSite(issue.site);
@@ -48,21 +45,26 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         return await bbApi.issues!.postChange(issue, status);
     }
 
-    async fetchUsers(issue: BitbucketIssue, query: string, abortSignal?: AbortSignal): Promise<User[]> {
+    async fetchUsers(issue: BitbucketIssue, query: string, abortKey?: string): Promise<User[]> {
         const bbApi = await clientForSite(issue.site);
 
         var cancelToken: CancelToken | undefined = undefined;
 
-        if (abortSignal) {
-            const cancelSignal = axios.CancelToken.source();
-            cancelToken = cancelSignal.token;
-            abortSignal.onabort = () => cancelSignal.cancel('bitbucket issue fetch users request aborted');
+        if (abortKey) {
+            const signal: CancelTokenSource = axios.CancelToken.source();
+            cancelToken = signal.token;
+            this.cancellationManager.set(abortKey, signal);
         }
+
         return await bbApi.pullrequests.getReviewers(issue.site, query, cancelToken);
     }
 
     async assign(issue: BitbucketIssue, accountId?: string): Promise<[User, Comment]> {
         const bbApi = await clientForSite(issue.site);
         return await bbApi.issues!.assign(issue, accountId);
+    }
+
+    async openStartWorkPage(issue: BitbucketIssue): Promise<void> {
+        await commands.executeCommand(Commands.StartWorkOnBitbucketIssue, issue);
     }
 }

@@ -6,6 +6,7 @@ export enum BitbucketIssueActionType {
     AddCommentRequest = 'addCommentRequest',
     FetchUsersRequest = 'fetchUsersRequest',
     AssignRequest = 'assignRequest',
+    StartWork = 'startWork',
 }
 
 export type BitbucketIssueAction =
@@ -13,6 +14,7 @@ export type BitbucketIssueAction =
     | ReducerAction<BitbucketIssueActionType.AddCommentRequest, AddCommentRequestAction>
     | ReducerAction<BitbucketIssueActionType.FetchUsersRequest, FetchUsersRequestAction>
     | ReducerAction<BitbucketIssueActionType.AssignRequest, AssignRequestAction>
+    | ReducerAction<BitbucketIssueActionType.StartWork>
     | CommonAction;
 
 export interface UpdateStatusRequestAction {
@@ -25,7 +27,7 @@ export interface AddCommentRequestAction {
 
 export interface FetchUsersRequestAction {
     query: string;
-    abortSignal?: AbortSignal;
+    abortKey?: string;
 }
 
 export interface AssignRequestAction {

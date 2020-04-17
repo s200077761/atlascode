@@ -1,5 +1,6 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { v4 } from 'uuid';
 import { BitbucketIssueData, Comment, emptyComment, emptyUser, User } from '../../../bitbucket/model';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
@@ -29,6 +30,7 @@ export interface BitbucketIssueControllerApi {
     fetchUsers: (query: string, abortSignal?: AbortSignal) => Promise<User[]>;
     assign: (accountId?: string) => Promise<User>;
     applyChange: (change: { issue?: Partial<BitbucketIssueData>; comments?: Comment[] }) => void;
+    startWork: () => void;
 }
 
 export const emptyApi: BitbucketIssueControllerApi = {
@@ -40,6 +42,7 @@ export const emptyApi: BitbucketIssueControllerApi = {
     fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
     assign: async (accountId?: string) => emptyUser,
     applyChange: (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {},
+    startWork: () => {},
 };
 
 export const BitbucketIssueControllerContext = React.createContext(emptyApi);
@@ -211,11 +214,25 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             return new Promise<User[]>((resolve, reject) => {
                 (async () => {
                     try {
+                        var abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'bitbucket issue fetchUsers cancelled by client',
+                                });
+                            };
+                        }
+
                         const response = await postMessagePromise(
                             {
                                 type: BitbucketIssueActionType.FetchUsersRequest,
                                 query: query,
-                                abortSignal: abortSignal,
+                                abortKey: abortSignal ? abortKey : undefined,
                             },
                             BitbucketIssueMessageType.FetchUsersResponse,
                             ConnectionTimeout
@@ -227,7 +244,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessage, postMessagePromise]
     );
 
     const applyChange = useCallback(
@@ -239,6 +256,10 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         },
         [dispatch]
     );
+
+    const startWork = useCallback(() => {
+        postMessage({ type: BitbucketIssueActionType.StartWork });
+    }, [postMessage]);
 
     const sendRefresh = useCallback((): void => {
         dispatch({ type: BitbucketIssueUIActionType.Loading });
@@ -260,8 +281,9 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             fetchUsers,
             assign,
             applyChange,
+            startWork,
         };
-    }, [openLink, postMessage, sendRefresh, updateStatus, postComment, fetchUsers, assign, applyChange]);
+    }, [openLink, postMessage, sendRefresh, updateStatus, postComment, fetchUsers, assign, applyChange, startWork]);
 
     return [state, controllerApi];
 }

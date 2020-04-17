@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import Axios from 'axios';
 import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketIssue, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
@@ -132,17 +133,21 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                 break;
             case BitbucketIssueActionType.FetchUsersRequest:
                 try {
-                    const users = await this._api.fetchUsers(this._issue, msg.query);
+                    const users = await this._api.fetchUsers(this._issue, msg.query, msg.abortKey);
                     this.postMessage({
                         type: BitbucketIssueMessageType.FetchUsersResponse,
                         users: users,
                     });
                 } catch (e) {
-                    this._logger.error(new Error(`error fetching users: ${e}`));
-                    this.postMessage({
-                        type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error fetching users'),
-                    });
+                    if (Axios.isCancel(e)) {
+                        this._logger.warn(formatError(e));
+                    } else {
+                        this._logger.error(new Error(`error fetching users: ${e}`));
+                        this.postMessage({
+                            type: CommonMessageType.Error,
+                            reason: formatError(e, 'Error fetching users'),
+                        });
+                    }
                 }
                 break;
             case BitbucketIssueActionType.AssignRequest:
@@ -163,6 +168,9 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                         reason: formatError(e, 'Error assigning issue'),
                     });
                 }
+                break;
+            case BitbucketIssueActionType.StartWork:
+                this._api.openStartWorkPage(this._issue);
                 break;
             case CommonActionType.Refresh: {
                 try {

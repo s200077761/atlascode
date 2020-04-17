@@ -111,7 +111,7 @@ export class Container {
         const bitbucketIssuePageV2ViewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
             context.extensionPath,
             new VSCBitbucketIssueWebviewControllerFactory(
-                new VSCBitbucketIssueActionApi(this._analyticsApi),
+                new VSCBitbucketIssueActionApi(this._cancellationManager),
                 this._commonMessageHandler,
                 this._analyticsApi
             ),
