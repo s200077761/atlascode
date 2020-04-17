@@ -5,7 +5,7 @@ export enum BitbucketIssueActionType {
     UpdateStatusRequest = 'updateStatusRequest',
     AddCommentRequest = 'addCommentRequest',
     FetchUsersRequest = 'fetchUsersRequest',
-    AssignRequest = 'assignRequest'
+    AssignRequest = 'assignRequest',
 }
 
 export type BitbucketIssueAction =

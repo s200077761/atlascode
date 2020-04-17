@@ -52,7 +52,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
     );
 
     const fetchUsers = useAsyncAbortable(
-        async abortSignal => {
+        async (abortSignal) => {
             const results = await debouncedUserFetcher(inputText, abortSignal);
             return results;
         },
@@ -65,12 +65,12 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             onOpen={() => setOpen(true)}
             onClose={() => setOpen(false)}
             options={fetchUsers.result || []}
-            getOptionLabel={option => option?.displayName || ''}
+            getOptionLabel={(option) => option?.displayName || ''}
             value={optionChangeLoading ? loadingUser : props.user}
             onInputChange={handleInputChange}
             onChange={handleChange}
             loading={fetchUsers.loading || optionChangeLoading}
-            renderInput={params => (
+            renderInput={(params) => (
                 <TextField
                     {...params}
                     InputProps={{
@@ -85,11 +85,11 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
                                 {fetchUsers.loading || optionChangeLoading ? <CircularProgress size={20} /> : null}
                                 {params.InputProps.endAdornment}
                             </React.Fragment>
-                        )
+                        ),
                     }}
                 />
             )}
-            renderOption={option => (
+            renderOption={(option) => (
                 <Grid container spacing={1} direction="row" alignItems="center">
                     <Grid item>
                         <Avatar src={option?.avatarUrl} />

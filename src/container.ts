@@ -114,7 +114,8 @@ export class Container {
                 new VSCBitbucketIssueActionApi(this._analyticsApi),
                 this._commonMessageHandler,
                 this._analyticsApi
-            )
+            ),
+            this._analyticsApi
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));

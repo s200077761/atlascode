@@ -15,7 +15,7 @@ import {
     emptyBitbucketIssueCommentsMessage,
     emptyBitbucketIssueInitMessage,
     FetchUsersResponseMessage,
-    UpdateStatusResponseMessage
+    UpdateStatusResponseMessage,
 } from '../../../lib/ipc/toUI/bbIssue';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -39,7 +39,7 @@ export const emptyApi: BitbucketIssueControllerApi = {
     postComment: async (content: string) => emptyComment,
     fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
     assign: async (accountId?: string) => emptyUser,
-    applyChange: (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {}
+    applyChange: (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {},
 };
 
 export const BitbucketIssueControllerContext = React.createContext(emptyApi);
@@ -52,7 +52,7 @@ export interface BitbucketIssueState extends BitbucketIssueInitMessage {
 const emptyState: BitbucketIssueState = {
     ...emptyBitbucketIssueInitMessage,
     ...emptyBitbucketIssueCommentsMessage,
-    isSomethingLoading: false
+    isSomethingLoading: false,
 };
 
 export enum BitbucketIssueUIActionType {
@@ -60,7 +60,7 @@ export enum BitbucketIssueUIActionType {
     InitComments = 'initComments',
     UpdateComments = 'updateComments',
     LocalChange = 'localChange',
-    Loading = 'loading'
+    Loading = 'loading',
 }
 
 export type BitbucketIssueUIAction =
@@ -80,7 +80,7 @@ function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): Bi
                 ...action.data,
                 isSomethingLoading: false,
                 isErrorBannerOpen: false,
-                errorDetails: undefined
+                errorDetails: undefined,
             };
             return newstate;
         }
@@ -88,14 +88,14 @@ function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): Bi
             return {
                 ...state,
                 comments: action.data.comments,
-                isSomethingLoading: false
+                isSomethingLoading: false,
             };
         }
         case BitbucketIssueUIActionType.UpdateComments: {
             return {
                 ...state,
                 comments: [...state.comments, ...action.data.comments],
-                isSomethingLoading: false
+                isSomethingLoading: false,
             };
         }
         case BitbucketIssueUIActionType.LocalChange: {
@@ -104,11 +104,11 @@ function reducer(state: BitbucketIssueState, action: BitbucketIssueUIAction): Bi
                 issue: action.data.issue
                     ? {
                           ...state.issue,
-                          data: { ...state.issue.data, ...action.data.issue }
+                          data: { ...state.issue.data, ...action.data.issue },
                       }
                     : state.issue,
                 comments: action.data.comments ? [...state.comments, ...action.data.comments] : state.comments,
-                isSomethingLoading: false
+                isSomethingLoading: false,
             };
         }
         case BitbucketIssueUIActionType.Loading: {
@@ -215,7 +215,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                             {
                                 type: BitbucketIssueActionType.FetchUsersRequest,
                                 query: query,
-                                abortSignal: abortSignal
+                                abortSignal: abortSignal,
                             },
                             BitbucketIssueMessageType.FetchUsersResponse,
                             ConnectionTimeout
@@ -234,7 +234,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {
             dispatch({
                 type: BitbucketIssueUIActionType.LocalChange,
-                data: change
+                data: change,
             });
         },
         [dispatch]
@@ -259,7 +259,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             postComment,
             fetchUsers,
             assign,
-            applyChange
+            applyChange,
         };
     }, [openLink, postMessage, sendRefresh, updateStatus, postComment, fetchUsers, assign, applyChange]);
 

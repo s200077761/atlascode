@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketIssue, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../ipc/fromUI/bbIssue';
@@ -44,6 +45,10 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
         return `Bitbucket issue #${this._issue.data.id}`;
     }
 
+    public screenDetails() {
+        return { id: 'bitbucketIssueScreen', site: this._issue.site.details, product: ProductBitbucket };
+    }
+
     private postMessage(message: BitbucketIssueMessage | BitbucketIssueResponse | CommonMessage) {
         this._messagePoster(message);
     }
@@ -63,16 +68,16 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
             this.postMessage({
                 type: BitbucketIssueMessageType.Init,
                 issue: this._issue,
-                currentUser: await this.currentUser()
+                currentUser: await this.currentUser(),
             });
 
             const comments = await this._api.getComments(this._issue);
             this._participants.clear();
-            comments.forEach(c => this._participants.set(c.user.accountId, c.user));
+            comments.forEach((c) => this._participants.set(c.user.accountId, c.user));
 
             this.postMessage({
                 type: BitbucketIssueMessageType.InitComments,
-                comments: comments
+                comments: comments,
             });
         } catch (e) {
             let err = new Error(`error updating bitbucket issue: ${e}`);
@@ -94,18 +99,18 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                     const [status, comment] = await this._api.updateStatus(this._issue, msg.status);
                     this.postMessage({
                         type: BitbucketIssueMessageType.UpdateStatusResponse,
-                        status: status
+                        status: status,
                     });
                     this.postMessage({
                         type: BitbucketIssueMessageType.UpdateComments,
-                        comments: [comment]
+                        comments: [comment],
                     });
                     this._analytics.fireBBIssueTransitionedEvent(this._issue.site.details);
                 } catch (e) {
                     this._logger.error(new Error(`error updating status: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error updating status')
+                        reason: formatError(e, 'Error updating status'),
                     });
                 }
                 break;
@@ -114,14 +119,14 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                     const comment = await this._api.postComment(this._issue, msg.content);
                     this.postMessage({
                         type: BitbucketIssueMessageType.AddCommentResponse,
-                        comment: comment
+                        comment: comment,
                     });
                     this._analytics.fireBBIssueCommentEvent(this._issue.site.details);
                 } catch (e) {
                     this._logger.error(new Error(`error adding comment: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error adding comment')
+                        reason: formatError(e, 'Error adding comment'),
                     });
                 }
                 break;
@@ -130,13 +135,13 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                     const users = await this._api.fetchUsers(this._issue, msg.query);
                     this.postMessage({
                         type: BitbucketIssueMessageType.FetchUsersResponse,
-                        users: users
+                        users: users,
                     });
                 } catch (e) {
                     this._logger.error(new Error(`error fetching users: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error fetching users')
+                        reason: formatError(e, 'Error fetching users'),
                     });
                 }
                 break;
@@ -145,17 +150,17 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                     const [assignee, comment] = await this._api.assign(this._issue, msg.accountId);
                     this.postMessage({
                         type: BitbucketIssueMessageType.AssignResponse,
-                        assignee: assignee
+                        assignee: assignee,
                     });
                     this.postMessage({
                         type: BitbucketIssueMessageType.UpdateComments,
-                        comments: [comment]
+                        comments: [comment],
                     });
                 } catch (e) {
                     this._logger.error(new Error(`error assigning issue: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error assigning issue')
+                        reason: formatError(e, 'Error assigning issue'),
                     });
                 }
                 break;
@@ -166,11 +171,12 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                     this._logger.error(new Error(`error refreshing config: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
-                        reason: formatError(e, 'Error refeshing config')
+                        reason: formatError(e, 'Error refeshing config'),
                     });
                 }
                 break;
             }
+            case CommonActionType.Cancel:
             case CommonActionType.SubmitFeedback:
             case CommonActionType.ExternalLink:
             case CommonActionType.DismissPMFLater:

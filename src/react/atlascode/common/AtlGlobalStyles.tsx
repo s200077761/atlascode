@@ -6,7 +6,7 @@ const useStyles = makeStyles(
         ({
             '@global': {
                 p: {
-                    margin: 0
+                    margin: 0,
                 },
                 '.ap-mention': {
                     'background-color':

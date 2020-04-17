@@ -15,7 +15,7 @@ const StatusRenderer = {
     invalid: <Lozenge appearance="moved" label="invalid" />,
     duplicate: <Lozenge appearance="default" label="duplicate" />,
     wontfix: <Lozenge appearance="removed" label="wontfix" />,
-    closed: <Lozenge appearance="default" label="closed" />
+    closed: <Lozenge appearance="default" label="closed" />,
 };
 
 const StatusMenu: React.FC<StatusMenuProps> = (props: StatusMenuProps) => {
@@ -49,7 +49,7 @@ const StatusMenu: React.FC<StatusMenuProps> = (props: StatusMenuProps) => {
             value={loading ? loadingStatus : props.status}
             onChange={handleChange}
         >
-            {Object.keys(StatusRenderer).map(status => (
+            {Object.keys(StatusRenderer).map((status) => (
                 <MenuItem key={status} value={status}>
                     <Grid container spacing={1} alignItems="center">
                         <Grid item>{StatusRenderer[status]}</Grid>

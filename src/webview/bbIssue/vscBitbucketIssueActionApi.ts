@@ -27,12 +27,12 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
         const bbApi = await clientForSite(issue.site);
         const [comments, changes] = await Promise.all([
             bbApi.issues!.getComments(issue),
-            bbApi.issues!.getChanges(issue)
+            bbApi.issues!.getChanges(issue),
         ]);
 
         // replace comment with change data which contains additional details
         const updatedComments = comments.data.map(
-            comment => changes.data.find(change => change.id! === comment.id!) || comment
+            (comment) => changes.data.find((change) => change.id! === comment.id!) || comment
         );
 
         return updatedComments;

@@ -11,7 +11,7 @@ import {
     Theme,
     Toolbar,
     Tooltip,
-    Typography
+    Typography,
 } from '@material-ui/core';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
@@ -40,14 +40,14 @@ const priorityIcon = {
     minor: <ArrowDownwardIcon />,
     major: <KeyboardArrowUpIcon />,
     critical: <ArrowUpwardIcon />,
-    blocker: <BlockIcon />
+    blocker: <BlockIcon />,
 };
 
 const typeIcon = {
     bug: <BugReportIcon />,
     enhancement: <ArrowUpwardIcon />,
     proposal: <EmojiObjectsIcon />,
-    task: <CheckBoxOutlinedIcon />
+    task: <CheckBoxOutlinedIcon />,
 };
 
 const useStyles = makeStyles(
@@ -56,21 +56,21 @@ const useStyles = makeStyles(
             title: {
                 flexGrow: 0,
                 marginRight: theme.spacing(3),
-                marginLeft: theme.spacing(1)
+                marginLeft: theme.spacing(1),
             },
             targetSelectLabel: {
-                marginRight: theme.spacing(1)
+                marginRight: theme.spacing(1),
             },
             grow: {
-                flexGrow: 1
+                flexGrow: 1,
             },
             paper100: {
                 overflow: 'hidden',
-                height: '100%'
+                height: '100%',
             },
             paperOverflow: {
-                overflow: 'hidden'
-            }
+                overflow: 'hidden',
+            },
         } as const)
 );
 
@@ -104,13 +104,13 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                         uuid: '',
                         links: {
                             avatar: {
-                                href: assignee.avatarUrl
-                            }
+                                href: assignee.avatarUrl,
+                            },
                         },
                         type: 'user',
-                        account_id: assignee.accountId
-                    }
-                }
+                        account_id: assignee.accountId,
+                    },
+                },
             });
         },
         [controller]
@@ -164,7 +164,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                     </Grid>
                                     <Grid item>
                                         <Grid container spacing={2} direction="column">
-                                            {state.comments.map(c => (
+                                            {state.comments.map((c) => (
                                                 <Grid item key={c.id}>
                                                     <Grid container spacing={1} alignItems="flex-start">
                                                         <Grid item>
@@ -263,7 +263,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                     displayName:
                                                         state.issue.data?.assignee?.display_name || 'Unassigned',
                                                     mention: '',
-                                                    url: ''
+                                                    url: '',
                                                 }}
                                                 onChange={handleAssign}
                                             />

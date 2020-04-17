@@ -6,7 +6,7 @@ import { UIWSPort } from '../../lib/ipc/models/ports';
 import { BitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/bitbucketIssueActionApi';
 import {
     BitbucketIssueWebviewController,
-    id
+    id,
 } from '../../lib/webview/controller/bbIssue/bitbucketIssueWebviewController';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from '../../logger';

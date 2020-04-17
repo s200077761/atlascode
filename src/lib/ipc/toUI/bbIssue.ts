@@ -5,7 +5,7 @@ import {
     Comment,
     emptyBitbucketSite,
     emptyUser,
-    User
+    User,
 } from '../../../bitbucket/model';
 
 export enum BitbucketIssueMessageType {
@@ -15,7 +15,7 @@ export enum BitbucketIssueMessageType {
     UpdateStatusResponse = 'updateStatusResponse',
     AddCommentResponse = 'addCommentResponse',
     FetchUsersResponse = 'fetchUsersResponse',
-    AssignResponse = 'assignResponse'
+    AssignResponse = 'assignResponse',
 }
 
 export type BitbucketIssueMessage =
@@ -36,7 +36,7 @@ export interface BitbucketIssueInitMessage {
 
 export const emptyBitbucketIssueInitMessage: BitbucketIssueInitMessage = {
     issue: { site: emptyBitbucketSite, data: { id: '', state: '', content: { html: '' } } },
-    currentUser: emptyUser
+    currentUser: emptyUser,
 };
 
 export interface BitbucketIssueCommentsMessage {
@@ -44,7 +44,7 @@ export interface BitbucketIssueCommentsMessage {
 }
 
 export const emptyBitbucketIssueCommentsMessage: BitbucketIssueCommentsMessage = {
-    comments: []
+    comments: [],
 };
 
 export interface BitbucketIssueChangesMessage {
