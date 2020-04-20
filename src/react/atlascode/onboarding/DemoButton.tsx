@@ -5,6 +5,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     demoBox: {
         padding: theme.spacing(2),
         paddingBottom: theme.spacing(3),
+        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
     },
     button: {
         textTransform: 'none',

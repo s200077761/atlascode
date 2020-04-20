@@ -20,13 +20,13 @@ const useStyles = makeStyles((theme) => ({
         width: '100%',
         height: '100%',
         textAlign: 'center',
-        backgroundColor: theme.palette.primary.dark,
+        backgroundColor: theme.palette.type === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light,
     },
     buttonSubtext: {
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: '#7f8082',
+        color: theme.palette.type === 'dark' ? '#7f8082' : '#b4c5cf',
     },
 }));
 

@@ -13,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
     },
     icon: {
         fontSize: 100,
-        color: 'white',
+        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
     },
     button: {
         padding: 0,

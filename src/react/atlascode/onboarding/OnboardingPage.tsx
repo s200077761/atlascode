@@ -1,25 +1,8 @@
-import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import {
-    Box,
-    Button,
-    Container,
-    darken,
-    Grid,
-    lighten,
-    makeStyles,
-    Step,
-    StepLabel,
-    Stepper,
-    Theme,
-    Typography,
-} from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import { Button, Container, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { AuthDialog } from '../config/auth/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
-import BitbucketIcon from '../icons/BitbucketIcon';
-import DemoButton from './DemoButton';
+import LandingPage from './LandingPage';
 import { OnboardingControllerContext, useOnboardingController } from './onboardingController';
 import ProductSelector from './ProductSelector';
 import { SimpleSiteAuthenticator } from './SimpleSiteAuthenticator';
@@ -32,25 +15,13 @@ const useStyles = makeStyles((theme: Theme) => ({
     button: {
         marginRight: theme.spacing(1),
     },
+    backButton: {
+        marginRight: theme.spacing(1),
+        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
+    },
     pageContent: {
         marginTop: theme.spacing(5),
         marginBottom: theme.spacing(4),
-    },
-    addSitesButton: {
-        width: '100%',
-        height: '100%',
-        textTransform: 'none',
-        backgroundColor:
-            theme.palette.type === 'dark'
-                ? lighten(theme.palette.background.paper, 0.02)
-                : darken(theme.palette.background.paper, 0.02),
-    },
-    addSitesIcon: {
-        fontSize: 50,
-        color: 'white',
-        textAlign: 'center',
-        width: 'inherit',
-        height: 'inherit',
     },
 }));
 
@@ -125,144 +96,12 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 );
             case 2:
                 return (
-                    <Grid container spacing={3} direction="row" alignItems="center" justify="center">
-                        <Grid item xs={12}>
-                            <Typography variant="h1" align="center">
-                                You're ready to get started!{' '}
-                                {<CheckCircleIcon fontSize={'large'} htmlColor={'#07b82b'} />}
-                            </Typography>
-                        </Grid>
-
-                        <Grid item xs={12}>
-                            <Typography variant="h3" align="center">
-                                With Atlassian for VS Code, you can create and view issues, start work on issues, create
-                                pull requests, do code reviews, start builds, get build statuses and more!{' '}
-                            </Typography>
-                            <Typography variant="h3" align="center" style={{ marginBottom: '25px' }}>
-                                <b>Press the buttons below to try out a common action!</b>
-                            </Typography>
-                        </Grid>
-                        <Grid container xs={12} direction="row" alignItems="center" justify="center" spacing={3}>
-                            {state.config['bitbucket.enabled'] && state.bitbucketSites.length > 0 && (
-                                <React.Fragment>
-                                    <Grid item xs={3}>
-                                        <DemoButton
-                                            gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreatePullRequest.gif"
-                                            description="Create a pull request"
-                                            productIcon={
-                                                <BitbucketIcon
-                                                    color={'primary'}
-                                                    style={{ float: 'right', color: '#0052CC' }}
-                                                />
-                                            }
-                                            onClick={controller.createPullRequest}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={3}>
-                                        <DemoButton
-                                            gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewAndApprovePullRequest.gif"
-                                            description="Review a pull request"
-                                            productIcon={
-                                                <BitbucketIcon
-                                                    color={'primary'}
-                                                    style={{ float: 'right', color: '#0052CC' }}
-                                                />
-                                            }
-                                            onClick={controller.viewPullRequest}
-                                        />
-                                    </Grid>
-                                </React.Fragment>
-                            )}
-                            {state.config['jira.enabled'] && state.jiraSites.length > 0 && (
-                                <React.Fragment>
-                                    <Grid item xs={3}>
-                                        <DemoButton
-                                            gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreateJiraIssue.gif"
-                                            description="Create a Jira issue"
-                                            productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
-                                            onClick={controller.createJiraIssue}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={3}>
-                                        <DemoButton
-                                            gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewJiraIssue.gif"
-                                            description="View a Jira issue"
-                                            productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
-                                            onClick={controller.viewJiraIssue}
-                                        />
-                                    </Grid>
-                                </React.Fragment>
-                            )}
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Typography variant="h1" align="center" style={{ marginTop: '50px' }}>
-                                Need to add more sites?
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Typography variant="h3" align="center" style={{ marginBottom: '25px' }}>
-                                Need to authenticate with multiple sites? We've got you covered.
-                            </Typography>
-                        </Grid>
-                        <Grid container xs={12} direction="row" alignItems="center" justify="center" spacing={2}>
-                            {state.config['jira.enabled'] && (
-                                <Grid item xs={5} alignItems={'flex-end'}>
-                                    <Button
-                                        className={classes.addSitesButton}
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={() =>
-                                            controller.openSettings(ConfigSection.Jira, ConfigSubSection.Auth)
-                                        }
-                                    >
-                                        <Box className={classes.addSitesIcon}>
-                                            Add Jira Sites{' '}
-                                            {<JiraIcon fontSize={'inherit'} style={{ color: '#0052CC' }} />}
-                                        </Box>
-                                    </Button>
-                                </Grid>
-                            )}
-                            {state.config['bitbucket.enabled'] && (
-                                <Grid item xs={5} alignItems={'flex-end'}>
-                                    <Button
-                                        className={classes.addSitesButton}
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={() =>
-                                            controller.openSettings(ConfigSection.Bitbucket, ConfigSubSection.Auth)
-                                        }
-                                    >
-                                        <Box className={classes.addSitesIcon}>
-                                            Add Bitbucket Sites{' '}
-                                            {
-                                                <BitbucketIcon
-                                                    color={'primary'}
-                                                    fontSize={'inherit'}
-                                                    style={{ color: '#0052CC' }}
-                                                />
-                                            }
-                                        </Box>
-                                    </Button>
-                                </Grid>
-                            )}
-                            <Grid item xs={12}>
-                                <Typography variant="h1" align="center" style={{ marginTop: '50px' }}>
-                                    Supercharge your workflow!
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Typography variant="h3" align="center" style={{ marginBottom: '15px' }}>
-                                    Do you use Slack, Google Sheets, Excel, Teams, or Outlook? Check out our other{' '}
-                                    {
-                                        <a href="https://integrations.atlassian.com" style={{ color: '#292cd6' }}>
-                                            integrations
-                                        </a>
-                                    }
-                                    !
-                                </Typography>
-                            </Grid>
-                        </Grid>
-                    </Grid>
+                    <LandingPage
+                        bitbucketEnabled={state.config['bitbucket.enabled']}
+                        jiraEnabled={state.config['jira.enabled']}
+                        bitbucketSites={state.bitbucketSites}
+                        jiraSites={state.jiraSites}
+                    />
                 );
             default:
                 return 'Unknown step';
@@ -275,7 +114,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 <Container maxWidth="xl">
                     <div className={classes.root}>
                         <Stepper activeStep={activeStep}>
-                            {steps.map((label, index) => {
+                            {steps.map((label) => {
                                 const stepProps = {};
                                 const labelProps = {};
                                 return (
@@ -302,7 +141,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                         <Button
                                             disabled={activeStep === 0}
                                             onClick={handleBack}
-                                            className={classes.button}
+                                            className={classes.backButton}
                                         >
                                             Back
                                         </Button>

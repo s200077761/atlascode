@@ -11,7 +11,7 @@ const useStyles = makeStyles((theme) => ({
     },
     icon: {
         fontSize: 100,
-        color: 'white',
+        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
     },
     button: {
         padding: 0,
@@ -22,13 +22,13 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor:
             theme.palette.type === 'dark'
                 ? lighten(theme.palette.background.paper, 0.02)
-                : darken(theme.palette.background.paper, 0.02),
+                : darken(theme.palette.background.paper, 0.05),
     },
     buttonSubtext: {
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: 'gray',
+        color: theme.palette.type === 'dark' ? 'gray' : '#5b6469',
     },
 }));
 

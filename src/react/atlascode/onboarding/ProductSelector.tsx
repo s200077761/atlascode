@@ -8,6 +8,9 @@ const useStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
     },
+    selectionTitleText: {
+        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
+    },
 }));
 
 export type ProductSelectorProps = {
@@ -29,7 +32,7 @@ export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
         <div className={classes.root}>
             <Grid container spacing={3}>
                 <Grid item xs={12}>
-                    <Typography variant="h1" align="center">
+                    <Typography variant="h1" align="center" className={classes.selectionTitleText}>
                         Select the products you want to enable
                     </Typography>
                 </Grid>
