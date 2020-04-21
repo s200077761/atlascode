@@ -44,7 +44,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
     }
 
     public title(): string {
-        return 'Getting Started';
+        return title;
     }
 
     public screenDetails() {
@@ -74,8 +74,8 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
         });
     }
 
-    public update(section: SectionChangeMessage) {
-        //this.postMessage({ type: ConfigMessageType.SectionChange, ...section });
+    public update() {
+        //No initial data to send!
     }
 
     public async onMessageReceived(msg: OnboardingAction | CommonAction) {

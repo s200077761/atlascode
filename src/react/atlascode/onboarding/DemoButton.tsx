@@ -14,6 +14,10 @@ const useStyles = makeStyles((theme: Theme) => ({
                 ? lighten(theme.palette.background.paper, 0.02)
                 : darken(theme.palette.background.paper, 0.02),
     },
+    gifBox: {
+        maxWidth: '100%',
+        maxHeight: 'auto',
+    },
 }));
 
 export type DemoButtonProps = {
@@ -34,7 +38,7 @@ export const DemoButton: React.FunctionComponent<DemoButtonProps> = ({
     return (
         <Button className={classes.button} onClick={onClick}>
             <Box className={classes.demoBox}>
-                <img style={{ maxWidth: '100%', maxHeight: 'auto' }} src={gifLink} />
+                <img className={classes.gifBox} src={gifLink} />
                 <Typography variant="h3" align="left" style={{ marginTop: '20px' }}>
                     {description} {productIcon}
                 </Typography>

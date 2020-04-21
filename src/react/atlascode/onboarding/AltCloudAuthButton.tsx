@@ -47,7 +47,7 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
 
     return (
         <Tooltip title={'Opens a browser window to log in via OAuth'}>
-            <Button variant="contained" color="primary" className={classes.button} onClick={() => handleCloudProd()}>
+            <Button variant="contained" color="primary" className={classes.button} onClick={handleCloudProd}>
                 <Box className={classes.box}>
                     <div className={classes.icon}>
                         {loginText} {<CloudIcon fontSize={'inherit'} />}

@@ -120,35 +120,31 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                 </Typography>
             </Grid>
             <Grid container xs={12} direction="row" alignItems="center" justify="center" spacing={2}>
-                {jiraEnabled && (
-                    <Grid item xs={5} alignItems={'flex-end'}>
-                        <Button
-                            className={classes.addSitesButton}
-                            variant="contained"
-                            color="primary"
-                            onClick={() => controller.openSettings(ConfigSection.Jira, ConfigSubSection.Auth)}
-                        >
-                            <Box className={classes.addSitesIcon}>
-                                Add Jira Sites {<JiraIcon fontSize={'inherit'} style={{ color: '#0052CC' }} />}
-                            </Box>
-                        </Button>
-                    </Grid>
-                )}
-                {bitbucketEnabled && (
-                    <Grid item xs={5} alignItems={'flex-end'}>
-                        <Button
-                            className={classes.addSitesButton}
-                            variant="contained"
-                            color="primary"
-                            onClick={() => controller.openSettings(ConfigSection.Bitbucket, ConfigSubSection.Auth)}
-                        >
-                            <Box className={classes.addSitesIcon}>
-                                Add Bitbucket Sites{' '}
-                                {<BitbucketIcon color={'primary'} fontSize={'inherit'} style={{ color: '#0052CC' }} />}
-                            </Box>
-                        </Button>
-                    </Grid>
-                )}
+                <Grid item hidden={!jiraEnabled} xs={5} alignItems={'flex-end'}>
+                    <Button
+                        className={classes.addSitesButton}
+                        variant="contained"
+                        color="primary"
+                        onClick={() => controller.openSettings(ConfigSection.Jira, ConfigSubSection.Auth)}
+                    >
+                        <Box className={classes.addSitesIcon}>
+                            Add Jira Sites {<JiraIcon fontSize={'inherit'} style={{ color: '#0052CC' }} />}
+                        </Box>
+                    </Button>
+                </Grid>
+                <Grid item hidden={!bitbucketEnabled} xs={5} alignItems={'flex-end'}>
+                    <Button
+                        className={classes.addSitesButton}
+                        variant="contained"
+                        color="primary"
+                        onClick={() => controller.openSettings(ConfigSection.Bitbucket, ConfigSubSection.Auth)}
+                    >
+                        <Box className={classes.addSitesIcon}>
+                            Add Bitbucket Sites{' '}
+                            {<BitbucketIcon color={'primary'} fontSize={'inherit'} style={{ color: '#0052CC' }} />}
+                        </Box>
+                    </Button>
+                </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h1" align="center" style={{ marginTop: '50px' }}>
                         Supercharge your workflow!
