@@ -292,6 +292,67 @@ export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> 
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function focusCreateIssueEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusCreateIssue',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function focusIssueEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusIssue',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+export async function focusCreatePullRequestEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusCreatePullRequest',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusPullRequest',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
 export async function doneButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,

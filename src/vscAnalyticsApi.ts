@@ -11,6 +11,10 @@ import {
     doneButtonEvent,
     externalUriEvent,
     featureChangeEvent,
+    focusCreateIssueEvent,
+    focusCreatePullRequestEvent,
+    focusIssueEvent,
+    focusPullRequestEvent,
     installedEvent,
     issueCommentEvent,
     issueCreatedEvent,
@@ -259,6 +263,30 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireDoneButtonEvent(source: string): Promise<void> {
         return doneButtonEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusCreateIssueEvent(source: string): Promise<void> {
+        return focusCreateIssueEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusIssueEvent(source: string): Promise<void> {
+        return focusIssueEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusCreatePullRequestEvent(source: string): Promise<void> {
+        return focusCreatePullRequestEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusPullRequestEvent(source: string): Promise<void> {
+        return focusPullRequestEvent(source).then((e) => {
             this._analyticsClient.sendUIEvent(e);
         });
     }

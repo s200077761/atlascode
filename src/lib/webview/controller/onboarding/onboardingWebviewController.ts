@@ -129,26 +129,32 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
             }
             case OnboardingActionType.CreateJiraIssue: {
                 this._api.createJiraIssue();
+                this._analytics.fireFocusCreateIssueEvent(id);
                 break;
             }
             case OnboardingActionType.ViewJiraIssue: {
                 this._api.viewJiraIssue();
+                this._analytics.fireFocusIssueEvent(id);
                 break;
             }
             case OnboardingActionType.CreatePullRequest: {
                 this._api.createPullRequest();
+                this._analytics.fireFocusCreatePullRequestEvent(id);
                 break;
             }
             case OnboardingActionType.ViewPullRequest: {
                 this._api.viewPullRequest();
+                this._analytics.fireFocusPullRequestEvent(id);
                 break;
             }
             case OnboardingActionType.ClosePage: {
                 this._api.closePage();
+                this._analytics.fireDoneButtonEvent(id);
                 break;
             }
             case OnboardingActionType.OpenSettings: {
                 this._api.openSettings(msg.section, msg.subsection);
+                this._analytics.fireMoreSettingsButtonEvent(id);
                 break;
             }
 

@@ -617,7 +617,32 @@ ui:
       subjectId: moreSettingsButton
       description: |
           Event when a user clicks on the more settings button on the Onboarding page
+
+    - action: clicked
+      subject: button
+      subjectId: focusCreateIssue
+      description: |
+          Event when the create issue node is focused
       attributes:
+    - action: clicked
+      subject: button
+      subjectId: focusIssue
+      description: |
+          Event when an issue node is focused
+      attributes:
+    - action: clicked
+      subject: button
+      subjectId: focusCreatePullRequest
+      description: |
+          Event when the create pull request node is focused
+      attributes:
+    - action: clicked
+      subject: button
+      subjectId: focusPullRequest
+      description: |
+          Event when a pull request node is focused
+      attributes:
+
     - id: 20000
       action: clicked
       subject: button
