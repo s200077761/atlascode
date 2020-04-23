@@ -37,37 +37,46 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
 
     return (
         <div className={classes.root}>
-            <Grid container spacing={3}>
-                {!bitbucketAuthComplete && (
-                    <React.Fragment>
-                        <Grid item xs={12}>
-                            <Typography variant="h1" align="center">
-                                Authenticate with {ProductBitbucket.name}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={6} alignItems={'flex-end'}>
-                            <AltCloudAuthButton product={ProductBitbucket} />
-                        </Grid>
-                        <Grid item xs={6} alignItems={'flex-end'}>
-                            <AltServerAuthButton product={ProductBitbucket} />
-                        </Grid>
-                    </React.Fragment>
-                )}
-                {bitbucketAuthComplete && !jiraAuthComplete && (
-                    <React.Fragment>
-                        <Grid item xs={12}>
-                            <Typography variant="h1" align="center">
-                                Authenticate with {ProductJira.name}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={6} alignItems={'flex-end'}>
-                            <AltCloudAuthButton product={ProductJira} />
-                        </Grid>
-                        <Grid item xs={6} alignItems={'flex-end'}>
-                            <AltServerAuthButton product={ProductJira} />
-                        </Grid>
-                    </React.Fragment>
-                )}
+            <Grid container justify="center" spacing={3}>
+                <Grid hidden={jiraAuthComplete} item xs={12}>
+                    <Typography variant="h1" align="center">
+                        Authenticate with {ProductJira.name}
+                    </Typography>
+                </Grid>
+                <Grid hidden={jiraAuthComplete} item lg={6} md={12} sm={12} xs={12} alignItems={'flex-end'}>
+                    <AltCloudAuthButton product={ProductJira} />
+                </Grid>
+                <Grid hidden={jiraAuthComplete} item lg={6} md={12} sm={12} xs={12} alignItems={'flex-end'}>
+                    <AltServerAuthButton product={ProductJira} />
+                </Grid>
+                <Grid hidden={!jiraAuthComplete || bitbucketAuthComplete} item xs={12}>
+                    <Typography variant="h1" align="center">
+                        Authenticate with {ProductBitbucket.name}
+                    </Typography>
+                </Grid>
+                <Grid
+                    hidden={!jiraAuthComplete || bitbucketAuthComplete}
+                    item
+                    lg={6}
+                    md={12}
+                    sm={12}
+                    xs={12}
+                    alignItems={'flex-end'}
+                >
+                    <AltCloudAuthButton product={ProductBitbucket} />
+                </Grid>
+                <Grid
+                    hidden={!jiraAuthComplete || bitbucketAuthComplete}
+                    item
+                    lg={6}
+                    md={12}
+                    sm={12}
+                    xs={12}
+                    alignItems={'flex-end'}
+                >
+                    <AltServerAuthButton product={ProductBitbucket} />
+                </Grid>
+
                 <Grid item xs={12}>
                     <Typography variant="h3" align="center">
                         Additional sites can be added later

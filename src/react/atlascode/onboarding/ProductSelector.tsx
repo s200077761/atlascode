@@ -30,13 +30,13 @@ export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
 
     return (
         <div className={classes.root}>
-            <Grid container spacing={3}>
+            <Grid container spacing={3} justify="center">
                 <Grid item xs={12}>
                     <Typography variant="h1" align="center" className={classes.selectionTitleText}>
                         Select the products you want to enable
                     </Typography>
                 </Grid>
-                <Grid item xs={6} alignItems={'flex-end'}>
+                <Grid item lg={6} md={10} sm={12} xs={12} alignItems={'flex-end'}>
                     <AltProductEnabler
                         label="Jira"
                         enabled={jiraEnabled}
@@ -45,7 +45,7 @@ export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
                         ProductIcon={<JiraIcon fontSize={'inherit'} />}
                     />
                 </Grid>
-                <Grid item xs={6} alignItems={'flex-end'}>
+                <Grid item lg={6} md={10} sm={12} xs={12} alignItems={'flex-end'}>
                     <AltProductEnabler
                         label="Bitbucket"
                         enabled={bitbucketEnabled}

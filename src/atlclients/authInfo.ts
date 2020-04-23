@@ -102,6 +102,15 @@ export interface DetailedSiteInfo extends SiteInfo {
     credentialId: string;
 }
 
+// You MUST send source
+// You SHOULD send both AAID and Anonymous ID when available (if only one is available, send that)
+// Anonymous ID should match the ID sent to amplitude for analytics events
+export interface IntegrationsLinkParams {
+    aaid?: string; // Atlassian Account ID
+    aid?: string; // Anonymous ID
+    s?: string; // source
+}
+
 export interface AccessibleResourceV1 {
     id: string;
     name: string;

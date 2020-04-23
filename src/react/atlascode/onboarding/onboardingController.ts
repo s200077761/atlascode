@@ -64,7 +64,7 @@ export const emptyApi: OnboardingControllerApi = {
     closePage: (): void => {
         return;
     },
-    openSettings: (section, subsection): void => {
+    openSettings: (section?, subsection?): void => {
         return;
     },
 };

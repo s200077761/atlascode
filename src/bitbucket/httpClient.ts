@@ -3,6 +3,19 @@ import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
 
+export function queryObjectToString(queryParams?: any): string {
+    let result = '';
+    if (queryParams) {
+        const sp = new URLSearchParams();
+        for (const [k, v] of Object.entries(queryParams)) {
+            sp.append(k, `${v}`);
+        }
+        result = `${result}?${sp.toString()}`;
+    }
+
+    return result;
+}
+
 export class HTTPClient {
     private transport: AxiosInstance;
 
@@ -125,16 +138,7 @@ export class HTTPClient {
     }
 
     private addQueryParams(url: string, queryParams?: any): string {
-        let result = url;
-        if (queryParams) {
-            const sp = new URLSearchParams();
-            for (const [k, v] of Object.entries(queryParams)) {
-                sp.append(k, `${v}`);
-            }
-            result = `${result}?${sp.toString()}`;
-        }
-
-        return result;
+        return `${url}${queryObjectToString(queryParams)}`;
     }
 }
 
