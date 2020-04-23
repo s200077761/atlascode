@@ -1,6 +1,6 @@
 import { Box, Button, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
-import React, { useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 import { emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { OnboardingControllerContext } from './onboardingController';
 
@@ -40,10 +40,10 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
     const controller = useContext(OnboardingControllerContext);
     const subtext = 'For most of our users';
 
-    const handleCloudProd = () => {
+    const handleCloudProd = useCallback(() => {
         const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
         controller.login({ host: hostname, product: product }, { user: emptyUserInfo });
-    };
+    }, [controller, product]);
 
     return (
         <Tooltip title={'Opens a browser window to log in via OAuth'}>

@@ -201,8 +201,8 @@ export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
 }
 
-export async function externalUriEvent(source: string, target: string): Promise<TrackEvent> {
-    return trackEvent('opened', 'externalUri', { attributes: { source: source, target: target } });
+export async function deepLinkEvent(source: string, target: string): Promise<TrackEvent> {
+    return trackEvent('opened', 'deepLink', { attributes: { source: source, target: target } });
 }
 
 // Screen Events

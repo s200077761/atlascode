@@ -1,5 +1,5 @@
 import { Box, Button, darken, lighten, makeStyles, Theme, Typography } from '@material-ui/core';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 const useStyles = makeStyles((theme: Theme) => ({
     demoBox: {
@@ -35,8 +35,12 @@ export const DemoButton: React.FunctionComponent<DemoButtonProps> = ({
 }) => {
     const classes = useStyles();
 
+    const handleClick = useCallback((): void => {
+        onClick();
+    }, [onClick]);
+
     return (
-        <Button className={classes.button} onClick={onClick}>
+        <Button className={classes.button} onClick={handleClick}>
             <Box className={classes.demoBox}>
                 <img className={classes.gifBox} src={gifLink} />
                 <Typography variant="h3" align="left" style={{ marginTop: '20px' }}>

@@ -41,5 +41,5 @@ export interface AnalyticsApi {
     fireFocusPullRequestEvent(source: string): Promise<void>;
     fireAuthenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<void>;
     fireLogoutButtonEvent(source: string): Promise<void>;
-    fireExternalUriEvent(source: string, target: string): Promise<void>;
+    fireDeepLinkEvent(source: string, target: string): Promise<void>;
 }

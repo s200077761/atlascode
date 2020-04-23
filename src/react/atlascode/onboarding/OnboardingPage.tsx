@@ -1,5 +1,6 @@
 import { Button, Container, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
+import { AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { AuthDialog } from '../config/auth/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from '../config/auth/useAuthDialog';
 import LandingPage from './LandingPage';
@@ -38,21 +39,21 @@ export const OnboardingPage: React.FunctionComponent = () => {
     const [activeStep, setActiveStep] = React.useState(0);
     const steps = getSteps();
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    };
+    }, []);
 
-    const handleBack = () => {
+    const handleBack = useCallback(() => {
         if (activeStep === 2) {
             setActiveStep((prevActiveStep) => prevActiveStep - 2);
         } else {
             setActiveStep((prevActiveStep) => prevActiveStep - 1);
         }
-    };
+    }, []);
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setActiveStep(0);
-    };
+    }, []);
 
     const handleJiraToggle = useCallback((enabled: boolean): void => {
         const changes = Object.create(null);
@@ -65,6 +66,29 @@ export const OnboardingPage: React.FunctionComponent = () => {
         changes['bitbucket.enabled'] = enabled;
         setChanges(changes);
     }, []);
+
+    const handleOpenSettings = useCallback((): void => {
+        controller.openSettings();
+    }, [controller]);
+
+    const handleClosePage = useCallback((): void => {
+        controller.closePage();
+    }, [controller]);
+
+    const handleLogin = useCallback(
+        (site: SiteInfo, auth: AuthInfo): void => {
+            controller.login(site, auth);
+        },
+        [controller]
+    );
+
+    const handleExit = useCallback((): void => {
+        authDialogController.onExited();
+    }, [authDialogController]);
+
+    const handleCloseDialog = useCallback((): void => {
+        authDialogController.close();
+    }, [authDialogController]);
 
     useEffect(() => {
         if (Object.keys(changes).length > 0) {
@@ -163,7 +187,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                 <Button
                                                     variant="contained"
                                                     color="primary"
-                                                    onClick={() => controller.openSettings()}
+                                                    onClick={handleOpenSettings}
                                                     className={classes.button}
                                                 >
                                                     Open Extension Settings
@@ -171,7 +195,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                                                 <Button
                                                     variant="contained"
                                                     color="primary"
-                                                    onClick={controller.closePage}
+                                                    onClick={handleClosePage}
                                                     className={classes.button}
                                                 >
                                                     Finish
@@ -186,11 +210,11 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 </Container>
                 <AuthDialog
                     product={authDialogProduct}
-                    doClose={authDialogController.close}
+                    doClose={handleCloseDialog}
                     authEntry={authDialogEntry}
                     open={authDialogOpen}
-                    save={controller.login}
-                    onExited={authDialogController.onExited}
+                    save={handleLogin}
+                    onExited={handleExit}
                 />
             </AuthDialogControllerContext.Provider>
         </OnboardingControllerContext.Provider>

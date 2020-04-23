@@ -8,8 +8,8 @@ import {
     bbIssueUrlCopiedEvent,
     bbIssueWorkStartedEvent,
     customJQLCreatedEvent,
+    deepLinkEvent,
     doneButtonEvent,
-    externalUriEvent,
     featureChangeEvent,
     focusCreateIssueEvent,
     focusCreatePullRequestEvent,
@@ -231,8 +231,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireExternalUriEvent(source: string, target: string): Promise<void> {
-        return externalUriEvent(source, target).then((e) => {
+    public async fireDeepLinkEvent(source: string, target: string): Promise<void> {
+        return deepLinkEvent(source, target).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

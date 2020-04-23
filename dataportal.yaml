@@ -343,7 +343,7 @@ track:
       attributes:
     - id: 23429
       action: opened
-      subject: externalUri
+      subject: deepLink
       library: server
       description: |
           when the user opens an extension screen from external URI

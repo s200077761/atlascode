@@ -1,7 +1,7 @@
 import { Box, darken, lighten, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { ToggleButton } from '@material-ui/lab';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 const useStyles = makeStyles((theme) => ({
     box: {
@@ -49,9 +49,13 @@ export const AltProductEnabler: React.FunctionComponent<AltProductEnablerProps> 
 }) => {
     const classes = useStyles();
 
+    const handleToggle = useCallback(() => {
+        onToggle(!enabled);
+    }, [enabled, onToggle]);
+
     return (
         <Tooltip title={enabled ? `Disable ${label} features` : `Enable ${label} features`}>
-            <ToggleButton className={classes.button} onClick={() => onToggle(!enabled)} selected={enabled}>
+            <ToggleButton className={classes.button} onClick={handleToggle} selected={enabled}>
                 <Box className={classes.box}>
                     <div className={classes.icon}>
                         {label} {ProductIcon}
