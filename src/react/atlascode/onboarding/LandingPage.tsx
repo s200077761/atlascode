@@ -86,7 +86,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     alignItems={'flex-end'}
                 >
                     <DemoButton
-                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreateJiraIssue.gif"
+                        gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateJiraIssue.gif"
                         description="Create a Jira issue"
                         productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                         onClick={controller.createJiraIssue}
@@ -102,7 +102,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     alignItems={'flex-end'}
                 >
                     <DemoButton
-                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewJiraIssue.gif"
+                        gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewJiraIssue.gif"
                         description="View a Jira issue"
                         productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                         onClick={controller.viewJiraIssue}
@@ -118,7 +118,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     alignItems={'flex-end'}
                 >
                     <DemoButton
-                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/CreatePullRequest.gif"
+                        gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreatePullRequest.gif"
                         description="Create a pull request"
                         productIcon={<BitbucketIcon color={'primary'} style={{ float: 'right', color: '#0052CC' }} />}
                         onClick={controller.createPullRequest}
@@ -134,7 +134,7 @@ export const LandingPage: React.FunctionComponent<LandingPageProps> = ({
                     alignItems={'flex-end'}
                 >
                     <DemoButton
-                        gifLink="https://bitbucket.org/atlassianlabs/atlascode/raw/d0723f3d36d6ca07bcf711268fc5daa5add9a6f5/resources/tutorialGifs/ReviewAndApprovePullRequest.gif"
+                        gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewAndApprovePullRequest.gif"
                         description="Review a pull request"
                         productIcon={<BitbucketIcon color={'primary'} style={{ float: 'right', color: '#0052CC' }} />}
                         onClick={controller.viewPullRequest}
