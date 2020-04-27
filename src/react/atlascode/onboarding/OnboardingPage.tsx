@@ -49,7 +49,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
         } else {
             setActiveStep((prevActiveStep) => prevActiveStep - 1);
         }
-    }, []);
+    }, [activeStep]);
 
     const handleReset = useCallback(() => {
         setActiveStep(0);
