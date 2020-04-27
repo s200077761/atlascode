@@ -1,3 +1,27 @@
+## What's New in 2.5.1
+
+### Bugs fixed
+
+-   Settings page now loads properly
+
+## What's New in 2.5.0
+
+### Improvements
+
+-   Refactored settings page to use new material-ui GUI
+-   Rewrote JQL Editor
+-   Updated Jira Filter Search
+-   Authentication notification now contains buttons that perform common actions
+-   When a repo has submodules, "start work" now creates branches from the parent repo by default
+-   Matching criteria for mapping Bitbucket repos to sites has been relaxed
+
+### Bugs fixed
+
+-   Hid the Approve/Needs work buttons on Bitbucket Server PRs if current user is the PR author
+-   Reply button in diff view comments now shows up for all comments
+-   Fixed bug where Jira Issue were showing up blank
+-   Emoji size in PR diff view comments has been fixed
+
 ## What's New in 2.4.11
 
 ### Bugs fixed

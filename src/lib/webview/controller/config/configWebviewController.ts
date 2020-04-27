@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import Axios from 'axios';
 import { isBasicAuthInfo, isEmptySiteInfo } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -10,7 +11,6 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { ConfigActionApi } from './configActionApi';
-
 export const id: string = 'atlascodeSettingsV2';
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
@@ -161,16 +161,20 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                             msg.fieldName,
                             msg.userInput,
                             msg.predicateName,
-                            msg.abortSignal
+                            msg.abortKey
                         );
                         this.postMessage({
                             type: ConfigMessageType.JQLSuggestionsResponse,
                             data: data,
                         });
                     } catch (e) {
-                        let err = new Error(`JQL fetch error: ${e}`);
-                        this._logger.error(err);
-                        this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+                        if (Axios.isCancel(e)) {
+                            this._logger.warn(formatError(e));
+                        } else {
+                            let err = new Error(`JQL fetch error: ${e}`);
+                            this._logger.error(err);
+                            this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+                        }
                     }
                 }
                 break;
@@ -199,16 +203,20 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                             msg.query,
                             msg.maxResults,
                             msg.startAt,
-                            msg.abortSignal
+                            msg.abortKey
                         );
                         this.postMessage({
                             type: ConfigMessageType.FilterSearchResponse,
                             data: data,
                         });
                     } catch (e) {
-                        let err = new Error(`Filter fetch error: ${e}`);
-                        this._logger.error(err);
-                        this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+                        if (Axios.isCancel(e)) {
+                            this._logger.warn(formatError(e));
+                        } else {
+                            let err = new Error(`Filter fetch error: ${e}`);
+                            this._logger.error(err);
+                            this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+                        }
                     }
                 }
                 break;
@@ -216,15 +224,19 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             case ConfigActionType.ValidateJqlRequest: {
                 if (!isEmptySiteInfo(msg.site)) {
                     try {
-                        const data = await this._api.validateJql(msg.site, msg.jql, msg.abortSignal);
+                        const data = await this._api.validateJql(msg.site, msg.jql, msg.abortKey);
                         this.postMessage({
                             type: ConfigMessageType.ValidateJqlResponse,
                             data: data,
                         });
                     } catch (e) {
-                        let err = new Error(`JQL Validate network error: ${e}`);
-                        this._logger.error(err);
-                        this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+                        if (Axios.isCancel(e)) {
+                            this._logger.warn(formatError(e));
+                        } else {
+                            let err = new Error(`JQL Validate network error: ${e}`);
+                            this._logger.error(err);
+                            this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+                        }
                     }
                 }
                 break;
@@ -241,6 +253,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             }
 
             case CommonActionType.ExternalLink:
+            case CommonActionType.Cancel:
             case CommonActionType.DismissPMFLater:
             case CommonActionType.DismissPMFNever:
             case CommonActionType.OpenPMFSurvey:

@@ -102,6 +102,38 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 </p>
                             </div>
                         </section>
+                        <h3>🎉 What's New in 2.5.1 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Settings page now loads properly</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.5.0 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Refactored settings page to use new material-ui GUI</li>
+                                <li>Rewrote JQL Editor</li>
+                                <li>Updated Jira Filter Search</li>
+                                <li>Authentication notification now contains buttons that perform common actions</li>
+                                <li>
+                                    When a repo has submodules, "start work" now creates branches from the parent repo
+                                    by default
+                                </li>
+                                <li>Matching criteria for mapping Bitbucket repos to sites has been relaxed</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>
+                                    Hid the Approve/Needs work buttons on Bitbucket Server PRs if current user is the PR
+                                    author
+                                </li>
+                                <li>Reply button in diff view comments now shows up for all comments</li>
+                                <li>Fixed bug where Jira Issue were showing up blank</li>
+                                <li>Emoji size in PR diff view comments has been fixed</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.4.11 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>

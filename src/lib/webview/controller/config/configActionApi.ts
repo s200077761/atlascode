@@ -20,16 +20,16 @@ export interface ConfigActionApi {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortSignal?: AbortSignal
+        abortKey?: string
     ) => Promise<AutocompleteSuggestion[]>;
     fetchFilterSearchResults: (
         site: DetailedSiteInfo,
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortSignal?: AbortSignal
+        abortKey?: string
     ) => Promise<FilterSearchResults>;
-    validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal) => Promise<JQLErrors>;
+    validateJql: (site: DetailedSiteInfo, jql: string, abortKey?: string) => Promise<JQLErrors>;
     updateSettings(target: ConfigTarget, changes: { [key: string]: any }, removes?: string[]): Promise<void>;
     getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]];
 

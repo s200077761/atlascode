@@ -9,6 +9,7 @@ export enum CommonActionType {
     Refresh = 'refresh',
     SubmitFeedback = 'submitFeedback',
     ExternalLink = 'externalLink',
+    Cancel = 'cancelInFlight',
 }
 
 export type CommonAction =
@@ -18,7 +19,8 @@ export type CommonAction =
     | ReducerAction<CommonActionType.DismissPMFNever>
     | ReducerAction<CommonActionType.Refresh>
     | ReducerAction<CommonActionType.SubmitFeedback, SubmitFeedbackAction>
-    | ReducerAction<CommonActionType.ExternalLink, ExternalLinkAction>;
+    | ReducerAction<CommonActionType.ExternalLink, ExternalLinkAction>
+    | ReducerAction<CommonActionType.Cancel, CancelAction>;
 
 export interface PMFSubmitAction {
     pmfData: PMFData;
@@ -31,4 +33,9 @@ export interface SubmitFeedbackAction {
 export interface ExternalLinkAction {
     linkId: string;
     url?: string;
+}
+
+export interface CancelAction {
+    abortKey: string;
+    reason: string;
 }

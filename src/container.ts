@@ -9,6 +9,7 @@ import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
+import { CancellationManager } from './lib/cancellation';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { ConfigTarget } from './lib/ipc/models/config';
@@ -58,8 +59,9 @@ export class Container {
             deviceId: env.machineId,
         });
 
+        this._cancellationManager = new Map();
         this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient);
-        this._commonMessageHandler = new VSCCommonMessageHandler(this._analyticsApi);
+        this._commonMessageHandler = new VSCCommonMessageHandler(this._analyticsApi, this._cancellationManager);
 
         this._context = context;
         this._version = version;
@@ -99,7 +101,7 @@ export class Container {
         const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
             context.extensionPath,
             new VSCConfigWebviewControllerFactory(
-                new VSCConfigActionApi(this._analyticsApi),
+                new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
                 this._commonMessageHandler,
                 this._analyticsApi,
                 SETTINGS_URL
@@ -348,6 +350,11 @@ export class Container {
     private static _commonMessageHandler: CommonActionMessageHandler;
     static get commonMessageHandler() {
         return this._commonMessageHandler;
+    }
+
+    private static _cancellationManager: CancellationManager;
+    static get cancellationManager() {
+        return this._cancellationManager;
     }
 
     private static _pmfStats: PmfStats;

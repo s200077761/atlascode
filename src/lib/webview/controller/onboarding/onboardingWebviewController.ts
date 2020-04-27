@@ -163,6 +163,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
             case CommonActionType.DismissPMFLater:
             case CommonActionType.DismissPMFNever:
             case CommonActionType.OpenPMFSurvey:
+            case CommonActionType.Cancel:
             case CommonActionType.SubmitPMF: {
                 this._commonHandler.onMessageReceived(msg);
                 break;
