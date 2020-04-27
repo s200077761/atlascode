@@ -2,6 +2,7 @@ import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { env, Uri } from 'vscode';
 import { IntegrationsLinkParams } from '../../atlclients/authInfo';
 import { HTTPClient } from '../../bitbucket/httpClient';
+import { showIssue } from '../../commands/jira/showIssue';
 import { Container } from '../../container';
 import { submitFeedback } from '../../feedback/feedbackSubmitter';
 import { submitJSDPMF } from '../../feedback/pmfJSDSubmitter';
@@ -84,6 +85,10 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
             }
             case CommonActionType.SubmitFeedback: {
                 submitFeedback(msg.feedback);
+                break;
+            }
+            case CommonActionType.OpenJiraIssue: {
+                showIssue(msg.issueOrKey);
                 break;
             }
             case CommonActionType.Refresh: {

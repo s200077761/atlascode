@@ -7,7 +7,9 @@ function adjustLight(color: number, amount: number): number {
     return Math.round(c);
 }
 
-export const colorToLozengeAppearanceMap: { [key: string]: string } = {
+export const colorToLozengeAppearanceMap: {
+    [key: string]: 'default' | 'inprogress' | 'moved' | 'new' | 'removed' | 'success';
+} = {
     neutral: 'default',
     'blue-gray': 'default',
     'medium-gray': 'default',

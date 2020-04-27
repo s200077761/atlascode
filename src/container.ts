@@ -14,9 +14,11 @@ import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
+import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
@@ -38,6 +40,8 @@ import { MultiWebview } from './webview/multiViewFactory';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
+import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
+import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
@@ -139,10 +143,21 @@ export class Container {
             this._analyticsApi
         );
 
+        const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
+            context.extensionPath,
+            new VSCStartWorkWebviewControllerFactory(
+                new VSCStartWorkActionApi(),
+                this._commonMessageHandler,
+                this._analyticsApi
+            ),
+            this._analyticsApi
+        );
+
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._bitbucketIssueWebviewFactory = bitbucketIssuePageV2ViewFactory));
+        context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
 
@@ -245,6 +260,11 @@ export class Container {
     private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
     static get welcomeWebviewFactory() {
         return this._welcomeWebviewFactory;
+    }
+
+    private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
+    static get startWorkWebviewFactory() {
+        return this._startWorkWebviewFactory;
     }
 
     private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;

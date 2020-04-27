@@ -1,4 +1,4 @@
-import { Disposable, env, Uri, UriHandler, window } from 'vscode';
+import { commands, Disposable, env, Uri, UriHandler, window } from 'vscode';
 import { bitbucketSiteForRemote, clientForHostname } from './bitbucket/bbUtils';
 import { Container } from './container';
 import { AnalyticsApi } from './lib/analyticsApi';
@@ -21,6 +21,10 @@ export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`
  *      -- q: pull request URL (use encodeURIComponent to encode the URL)
  *      -- source: source from which the URI e.g. browser
  *      e.g. vscode://atlassian.atlascode/openPullRequest?q=https%3A%2F%2Fbitbucket.org%2Fatlassianlabs%2Fatlascode%2Fpull-requests%2F804&source=browser
+ * - cloneRepository: opens pull request based on the following query params (only supports Bitbucket Cloud)
+ *      -- q: repository URL (use encodeURIComponent to encode the URL)
+ *      -- source: source from which the URI e.g. browser
+ *      e.g. vscode://atlassian.atlascode/cloneRepository?q=https%3A%2F%2Fbitbucket.org%2Fatlassianlabs%2Fatlascode&source=browser
  */
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
@@ -36,6 +40,8 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             Container.onboardingWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openPullRequest')) {
             await this.handlePullRequestUri(uri);
+        } else if (uri.path.endsWith('cloneRepository')) {
+            await this.handleCloneRepository(uri);
         }
     }
 
@@ -60,6 +66,24 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         } catch (e) {
             Logger.debug('error opening pull request:', e);
             window.showErrorMessage('Error opening pull request (check log for details)');
+        }
+    }
+
+    private async handleCloneRepository(uri: Uri) {
+        try {
+            const query = new URLSearchParams(uri.query);
+            const repoUrl = decodeURIComponent(query.get('q') || '');
+            if (!repoUrl) {
+                throw new Error(`Cannot parse clone URL from: ${query}`);
+            }
+            commands.executeCommand('git.clone', repoUrl);
+            this.analyticsApi.fireExternalUriEvent(
+                decodeURIComponent(query.get('source') || 'unknown'),
+                'cloneRepository'
+            );
+        } catch (e) {
+            Logger.debug('error cloning repository:', e);
+            window.showErrorMessage('Error cloning repository (check log for details)');
         }
     }
 
