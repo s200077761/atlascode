@@ -130,6 +130,8 @@ export class BitbucketIssuesApiImpl {
         );
 
         return {
+            // we fetch the data sorted by `-created_on` to get the latest comments
+            // reverse them again to return the data in chronological order
             data: (data.values || []).reverse().map(this.toCommentModel),
             next: data.next,
         };
@@ -172,6 +174,8 @@ export class BitbucketIssuesApiImpl {
             }
         );
 
+        // we fetch the data sorted by `-created_on` to get the latest changes
+        // reverse them again to return the data in chronological order
         const changes: any[] = (data.values || []).reverse();
         const comments: Comment[] = changes.map(this.convertChangeToComment);
 

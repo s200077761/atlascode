@@ -31,7 +31,7 @@ import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
-import InlinedRenderedTextEditor from './InlineRenderedTextEditor';
+import InlineRenderedTextEditor from './InlineRenderedTextEditor';
 import StatusMenu from './StatusMenu';
 import UserPicker from './UserPicker';
 
@@ -155,7 +155,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                         </Typography>
                                     </Grid>
                                     <Grid item>
-                                        <InlinedRenderedTextEditor
+                                        <InlineRenderedTextEditor
                                             fullWidth
                                             defaultValue={state.issue.data.content.raw}
                                             renderedHtml={state.issue.data.content.html}

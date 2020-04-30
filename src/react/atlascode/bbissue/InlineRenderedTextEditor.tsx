@@ -10,7 +10,7 @@ type InlineTextEditorProps = {
     renderedHtml: string;
 };
 
-const InlinedRenderedTextEditor: React.FC<TextFieldProps & InlineTextEditorProps> = (
+const InlineRenderedTextEditor: React.FC<TextFieldProps & InlineTextEditorProps> = (
     props: TextFieldProps & InlineTextEditorProps
 ) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -41,4 +41,4 @@ const InlinedRenderedTextEditor: React.FC<TextFieldProps & InlineTextEditorProps
     );
 };
 
-export default InlinedRenderedTextEditor;
+export default InlineRenderedTextEditor;
