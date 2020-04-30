@@ -1,3 +1,4 @@
+import { CancelToken } from 'axios';
 import PQueue from 'p-queue/dist';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Logger } from '../../logger';
@@ -498,7 +499,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }));
     }
 
-    async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
+    async getReviewers(site: BitbucketSite, query?: string, cancelToken?: CancelToken): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
         const cacheKey = `${ownerSlug}::${repoSlug}`;
@@ -511,11 +512,15 @@ export class CloudPullRequestApi implements PullRequestApi {
                 return;
             }
 
-            let { data } = await this.client.get(`/teams/${ownerSlug}/members`, {
-                pagelen: 100,
-                fields:
-                    'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href',
-            });
+            let { data } = await this.client.get(
+                `/teams/${ownerSlug}/members`,
+                {
+                    pagelen: 100,
+                    fields:
+                        'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href',
+                },
+                cancelToken
+            );
             const teamMembers = data.values || [];
 
             // DO NOT cache data for very large teams
@@ -525,7 +530,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
 
             while (data.next) {
-                const nextPage = await this.client.get(data.next);
+                const nextPage = await this.client.get(data.next, undefined, cancelToken);
                 data = nextPage.data;
                 teamMembers.push(...(data.values || []));
             }
@@ -545,7 +550,11 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
 
             // fall back to calling API using nickname query param if the cache is not populated
-            const { data } = await this.client.get(`/teams/${ownerSlug}/members?q=nickname="${query}"`);
+            const { data } = await this.client.get(
+                `/teams/${ownerSlug}/members?q=nickname="${query}"`,
+                undefined,
+                cancelToken
+            );
 
             return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         }
@@ -555,9 +564,13 @@ export class CloudPullRequestApi implements PullRequestApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/default-reviewers`, {
-            pagelen: maxItemsSupported.reviewers,
-        });
+        const { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
+            {
+                pagelen: maxItemsSupported.reviewers,
+            },
+            cancelToken
+        );
 
         const result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         this.defaultReviewersCache.setItem(cacheKey, result);

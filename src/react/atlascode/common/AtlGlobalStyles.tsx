@@ -5,6 +5,9 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             '@global': {
+                p: {
+                    margin: 0,
+                },
                 '.ap-mention': {
                     'background-color':
                         theme.palette.type === 'dark'
