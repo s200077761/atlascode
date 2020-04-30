@@ -3,6 +3,7 @@ import { commands } from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, Comment, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
 import { BitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/bitbucketIssueActionApi';
 
@@ -66,5 +67,13 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
 
     async openStartWorkPage(issue: BitbucketIssue): Promise<void> {
         await commands.executeCommand(Commands.StartWorkOnBitbucketIssue, issue);
+    }
+
+    async createJiraIssue(issue: BitbucketIssue): Promise<void> {
+        await commands.executeCommand(Commands.CreateIssue, issue);
+    }
+
+    getShowJiraButtonConfig(): boolean {
+        return Container.config.bitbucket.issues.createJiraEnabled;
     }
 }

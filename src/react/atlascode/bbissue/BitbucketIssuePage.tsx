@@ -126,6 +126,11 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                             {state.issue.data.title}
                         </Typography>
                         <Box className={classes.grow} />
+                        <Box marginRight={1} hidden={!state.showJiraButton}>
+                            <Button variant="contained" color="primary" onClick={controller.createJiraIssue}>
+                                Create Jira issue
+                            </Button>
+                        </Box>
                         <Tooltip title="Create a branch and assign issue to me">
                             <Button
                                 variant="contained"

@@ -31,6 +31,7 @@ export interface BitbucketIssueControllerApi {
     assign: (accountId?: string) => Promise<User>;
     applyChange: (change: { issue?: Partial<BitbucketIssueData>; comments?: Comment[] }) => void;
     startWork: () => void;
+    createJiraIssue: () => void;
 }
 
 export const emptyApi: BitbucketIssueControllerApi = {
@@ -43,6 +44,7 @@ export const emptyApi: BitbucketIssueControllerApi = {
     assign: async (accountId?: string) => emptyUser,
     applyChange: (change: { issue: Partial<BitbucketIssueData>; comments: Comment[] }) => {},
     startWork: () => {},
+    createJiraIssue: () => {},
 };
 
 export const BitbucketIssueControllerContext = React.createContext(emptyApi);
@@ -261,6 +263,10 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         postMessage({ type: BitbucketIssueActionType.StartWork });
     }, [postMessage]);
 
+    const createJiraIssue = useCallback(() => {
+        postMessage({ type: BitbucketIssueActionType.CreateJiraIssue });
+    }, [postMessage]);
+
     const sendRefresh = useCallback((): void => {
         dispatch({ type: BitbucketIssueUIActionType.Loading });
         postMessage({ type: CommonActionType.Refresh });
@@ -282,8 +288,20 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             assign,
             applyChange,
             startWork,
+            createJiraIssue,
         };
-    }, [openLink, postMessage, sendRefresh, updateStatus, postComment, fetchUsers, assign, applyChange, startWork]);
+    }, [
+        openLink,
+        postMessage,
+        sendRefresh,
+        updateStatus,
+        postComment,
+        fetchUsers,
+        assign,
+        applyChange,
+        startWork,
+        createJiraIssue,
+    ]);
 
     return [state, controllerApi];
 }

@@ -9,4 +9,6 @@ export interface BitbucketIssueActionApi {
     fetchUsers(issue: BitbucketIssue, query: string, abortKey?: string): Promise<User[]>;
     assign(issue: BitbucketIssue, accountId?: string): Promise<[User, Comment]>;
     openStartWorkPage(issue: BitbucketIssue): Promise<void>;
+    createJiraIssue(issue: BitbucketIssue): Promise<void>;
+    getShowJiraButtonConfig(): boolean;
 }
