@@ -14,8 +14,10 @@ import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
+import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
@@ -36,6 +38,8 @@ import { MultiWebview } from './webview/multiViewFactory';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
+import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
+import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
@@ -125,6 +129,12 @@ export class Container {
             this.analyticsApi
         );
 
+        const welcomeV2ViewFactory = new SingleWebview<WelcomeInitMessage, WelcomeAction>(
+            context.extensionPath,
+            new VSCWelcomeWebviewControllerFactory(new VSCWelcomeActionApi(), this._commonMessageHandler),
+            this._analyticsApi
+        );
+
         const bitbucketIssuePageV2ViewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
             context.extensionPath,
             new VSCBitbucketIssueWebviewControllerFactory(
@@ -137,6 +147,7 @@ export class Container {
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
+        context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._bitbucketIssueWebviewFactory = bitbucketIssuePageV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
@@ -241,6 +252,11 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
+    }
+
+    private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
+    static get welcomeWebviewFactory() {
+        return this._welcomeWebviewFactory;
     }
 
     private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
