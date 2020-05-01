@@ -51,7 +51,6 @@ import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview'
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
-import { WelcomeWebview } from './webviews/welcomeWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -82,7 +81,6 @@ export class Container {
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push((this._onboardingWebview = new OnboardingWebview(context.extensionPath)));
         context.subscriptions.push(
             (this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath))
@@ -262,11 +260,6 @@ export class Container {
     private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
     static get bitbucketIssueWebviewFactory() {
         return this._bitbucketIssueWebviewFactory;
-    }
-
-    private static _welcomeWebview: WelcomeWebview;
-    static get welcomeWebview() {
-        return this._welcomeWebview;
     }
 
     private static _onboardingWebview: OnboardingWebview;

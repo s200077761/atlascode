@@ -11,9 +11,6 @@ __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
     atlascodeSettings: React.lazy(() => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage')),
-    atlascodeWelcomeScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeWelcomeScreen" */ './config/Welcome')
-    ),
     atlascodeOnboardingScreen: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeNewUserOnboardingScreen" */ './config/Onboarding')
     ),
