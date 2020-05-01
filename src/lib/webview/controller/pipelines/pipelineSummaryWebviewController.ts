@@ -6,6 +6,7 @@ import {
     PipelineLogStage,
     PipelineStep,
 } from '../../../../pipelines/model';
+import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { PipelineSummaryAction, PipelineSummaryActionType } from '../../../ipc/fromUI/pipelineSummary';
 import { CommonMessage } from '../../../ipc/toUI/common';
@@ -28,6 +29,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
         private messagePoster: MessagePoster,
         private api: PipelinesSummaryActionApi,
         private logger: Logger,
+        private analytics: AnalyticsApi,
         private pipeline?: Pipeline
     ) {
         this.steps = [];
@@ -84,6 +86,8 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
                     this.logger.error(new Error(`Missing a pipeline. no idea`));
                     return;
                 }
+
+                this.analytics.firePipelineRerunEvent(this.pipeline.site.details, 'summaryWebview');
 
                 this.api.rerunPipeline(this.pipeline);
             }

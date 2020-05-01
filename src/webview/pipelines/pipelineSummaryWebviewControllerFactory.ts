@@ -1,5 +1,6 @@
 import { Disposable } from 'vscode';
 import { Container } from '../../container';
+import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { PipelinesSummaryActionApi } from '../../lib/webview/controller/pipelines/pipelinesSummaryActionApi';
 import {
@@ -13,7 +14,7 @@ import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
 export class PipelineSummaryWebviewControllerFactory implements VSCWebviewControllerFactory<Pipeline> {
-    constructor(private api: PipelinesSummaryActionApi) {}
+    constructor(private api: PipelinesSummaryActionApi, private analytics: AnalyticsApi) {}
 
     public tabIconPath(): string {
         return Container.context.asAbsolutePath('resources/BitbucketFavicon.png');
@@ -38,7 +39,13 @@ export class PipelineSummaryWebviewControllerFactory implements VSCWebviewContro
         postMessage: PostMessageFunc,
         factoryData?: Pipeline
     ): PipelineSummaryWebviewController | [PipelineSummaryWebviewController, Disposable | undefined] {
-        const controller = new PipelineSummaryWebviewController(postMessage, this.api, Logger.Instance, factoryData);
+        const controller = new PipelineSummaryWebviewController(
+            postMessage,
+            this.api,
+            Logger.Instance,
+            this.analytics,
+            factoryData
+        );
 
         const disposables = Disposable.from();
 

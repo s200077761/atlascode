@@ -185,8 +185,11 @@ export async function customJQLCreatedEvent(site: DetailedSiteInfo): Promise<Tra
 }
 
 export async function pipelineStartEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
-    // apprently never called
     return instanceTrackEvent(site, 'start', 'pipeline');
+}
+
+export async function pipelineRerunEvent(site: DetailedSiteInfo, source: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'rerun', 'pipeline', { attributes: { source: source } });
 }
 
 export async function pmfSubmitted(level: string): Promise<TrackEvent> {

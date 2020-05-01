@@ -154,7 +154,7 @@ export class Container {
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,
-            new PipelineSummaryWebviewControllerFactory(new PipelineSummaryActionImplementation()),
+            new PipelineSummaryWebviewControllerFactory(new PipelineSummaryActionImplementation(), this._analyticsApi),
             this._analyticsApi
         );
 
