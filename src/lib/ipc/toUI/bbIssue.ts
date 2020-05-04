@@ -32,11 +32,13 @@ export type BitbucketIssueResponse =
 export interface BitbucketIssueInitMessage {
     issue: BitbucketIssue;
     currentUser: User;
+    showJiraButton: boolean;
 }
 
 export const emptyBitbucketIssueInitMessage: BitbucketIssueInitMessage = {
     issue: { site: emptyBitbucketSite, data: { id: '', state: '', content: { html: '' } } },
     currentUser: emptyUser,
+    showJiraButton: false,
 };
 
 export interface BitbucketIssueCommentsMessage {

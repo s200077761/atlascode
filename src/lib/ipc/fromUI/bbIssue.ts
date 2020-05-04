@@ -7,6 +7,7 @@ export enum BitbucketIssueActionType {
     FetchUsersRequest = 'fetchUsersRequest',
     AssignRequest = 'assignRequest',
     StartWork = 'startWork',
+    CreateJiraIssue = 'createJiraIssue',
 }
 
 export type BitbucketIssueAction =
@@ -15,6 +16,7 @@ export type BitbucketIssueAction =
     | ReducerAction<BitbucketIssueActionType.FetchUsersRequest, FetchUsersRequestAction>
     | ReducerAction<BitbucketIssueActionType.AssignRequest, AssignRequestAction>
     | ReducerAction<BitbucketIssueActionType.StartWork>
+    | ReducerAction<BitbucketIssueActionType.CreateJiraIssue>
     | CommonAction;
 
 export interface UpdateStatusRequestAction {

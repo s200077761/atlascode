@@ -70,6 +70,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                 type: BitbucketIssueMessageType.Init,
                 issue: this._issue,
                 currentUser: await this.currentUser(),
+                showJiraButton: this._api.getShowJiraButtonConfig(),
             });
 
             const comments = await this._api.getComments(this._issue);
@@ -90,7 +91,12 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
     }
 
     public async update(issue: BitbucketIssue) {
-        this.postMessage({ type: BitbucketIssueMessageType.Init, issue: issue, currentUser: await this.currentUser() });
+        this.postMessage({
+            type: BitbucketIssueMessageType.Init,
+            issue: issue,
+            currentUser: await this.currentUser(),
+            showJiraButton: this._api.getShowJiraButtonConfig(),
+        });
     }
 
     public async onMessageReceived(msg: BitbucketIssueAction) {
@@ -171,6 +177,9 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
                 break;
             case BitbucketIssueActionType.StartWork:
                 this._api.openStartWorkPage(this._issue);
+                break;
+            case BitbucketIssueActionType.CreateJiraIssue:
+                this._api.createJiraIssue(this._issue);
                 break;
             case CommonActionType.Refresh: {
                 try {
