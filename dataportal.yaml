@@ -343,6 +343,18 @@ track:
       attributes:
     - id: 23429
       action: opened
+      subject: externalUri
+      library: server
+      description: |
+          when the user opens an extension screen from external URI
+      attributes:
+          - name: source
+            type: string
+            description: 'Source from which the URI was opened e.g. browser'
+          - name: target
+            type: string
+            description: 'Target view to be opened in VS Code e.g. pullRequest'
+    - action: opened
       subject: deepLink
       library: server
       description: |
