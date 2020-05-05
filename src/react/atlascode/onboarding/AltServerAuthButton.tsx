@@ -1,4 +1,4 @@
-import { Box, Button, makeStyles, Tooltip, Typography } from '@material-ui/core';
+import { Button, Grid, lighten, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import StorageIcon from '@material-ui/icons/Storage';
 import React, { useCallback, useContext } from 'react';
 import { Product } from '../../../atlclients/authInfo';
@@ -11,22 +11,28 @@ const useStyles = makeStyles((theme) => ({
         height: 'inherit',
         backgroundColor: 'inherit',
     },
-    icon: {
+    label: {
         fontSize: 100,
-        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
+    },
+    productIcon: {
+        marginTop: 16, //Icon is in a 24 x 24 box, but needs to be pushed down 16px to look centered
+        fontSize: 100,
     },
     button: {
-        padding: 0,
         textTransform: 'none',
         width: '100%',
         height: '100%',
-        textAlign: 'center',
+        background: theme.palette.action.disabled,
+        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
+        '&:hover': {
+            color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
+        },
     },
     buttonSubtext: {
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: '#7f8082',
+        color: theme.palette.text.disabled,
     },
 }));
 
@@ -36,7 +42,6 @@ type AltServerAuthButtonProps = {
 
 export const AltServerAuthButton: React.FunctionComponent<AltServerAuthButtonProps> = ({ product }) => {
     const classes = useStyles();
-    const loginText = `Custom ${product.name}`;
     const subtext = 'For users with custom servers';
     const authDialogController = useContext(AuthDialogControllerContext);
     const openProductAuth = useCallback(() => {
@@ -45,15 +50,21 @@ export const AltServerAuthButton: React.FunctionComponent<AltServerAuthButtonPro
 
     return (
         <Tooltip title={'Opens a dialog window to log in with custom instance'}>
-            <Button variant="contained" color="inherit" className={classes.button} onClick={openProductAuth}>
-                <Box className={classes.box}>
-                    <div className={classes.icon}>
-                        {loginText} {<StorageIcon fontSize={'inherit'} />}
-                    </div>
+            <Button variant="contained" className={classes.button} onClick={openProductAuth}>
+                <Grid container direction="column">
+                    <Grid container direction="row" alignItems="center" justify="center" spacing={3}>
+                        <Grid item>
+                            <Typography className={classes.label}>Custom</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Typography className={classes.label}>{product.name}</Typography>
+                        </Grid>
+                        <Grid item>{<StorageIcon className={classes.productIcon} />}</Grid>
+                    </Grid>
                     <Typography variant="h2" className={classes.buttonSubtext}>
                         {subtext}
                     </Typography>
-                </Box>
+                </Grid>
             </Button>
         </Tooltip>
     );

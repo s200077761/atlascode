@@ -29,7 +29,7 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
-            Container.explorerFocusManager.onFocusEvent(this.focusEvent, this),
+            Container.explorerFocusManager.onFocusEvent(this.handleFocusEvent, this),
             this._refreshTimer
         );
 
@@ -66,7 +66,7 @@ export class JiraContext extends Disposable {
         }
     }
 
-    async focusEvent(e: FocusEvent) {
+    async handleFocusEvent(e: FocusEvent) {
         if (this._explorer instanceof JiraExplorer) {
             this._explorer.focusEvent(e);
         }

@@ -1,4 +1,4 @@
-import { Button, Container, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
+import { Button, Container, lighten, makeStyles, Step, StepLabel, Stepper, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { AuthDialog } from '../config/auth/AuthDialog';
@@ -18,7 +18,10 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
     backButton: {
         marginRight: theme.spacing(1),
-        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
+        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
+        '&:hover': {
+            color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
+        },
     },
     pageContent: {
         marginTop: theme.spacing(5),

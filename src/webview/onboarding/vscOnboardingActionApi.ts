@@ -11,6 +11,7 @@ import {
     SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, IConfig } from '../../config/configuration';
+import { CustomJQLTreeId, PullRequestTreeViewId } from '../../constants';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
@@ -27,9 +28,9 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
 
     private focusExplorerOnAuth(site: SiteInfo) {
         if (site.product.key === ProductJira.key) {
-            vscode.commands.executeCommand('atlascode.views.jira.customJql.focus');
+            vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
         } else if (site.product.key === ProductBitbucket.key) {
-            vscode.commands.executeCommand('atlascode.views.bb.pullrequestsTreeView.focus');
+            vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
         }
     }
 
@@ -74,14 +75,17 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
         const bitbucketSites = await Promise.all(
             bitbucketSitesAvailable.map(
                 async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                    const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
+                    let authInfo = await Container.credentialManager.getAuthInfo(bitbucketSite);
+                    if (!authInfo) {
+                        if (bitbucketSite.isCloud) {
+                            authInfo = emptyAuthInfo;
+                        } else {
+                            authInfo = emptyBasicAuthInfo;
+                        }
+                    }
                     return {
                         site: bitbucketSite,
-                        auth: bitbucketAuth
-                            ? bitbucketAuth
-                            : bitbucketSite.isCloud
-                            ? emptyAuthInfo
-                            : emptyBasicAuthInfo,
+                        auth: authInfo,
                     };
                 }
             )

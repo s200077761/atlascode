@@ -1,4 +1,4 @@
-import { Box, Button, makeStyles, Tooltip, Typography } from '@material-ui/core';
+import { Button, Grid, lighten, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
 import React, { useCallback, useContext } from 'react';
 import { emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
@@ -10,9 +10,15 @@ const useStyles = makeStyles((theme) => ({
         width: 'inherit',
         height: 'inherit',
     },
-    icon: {
+    label: {
         fontSize: 100,
-        color: 'white',
+        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
+        // White is chosen for light mode because it creates a nice "sky" effect when paired with a white cloud and blue (primary) background
+    },
+    productIcon: {
+        marginTop: 16, //Needs to be pushed down 16px to look centered
+        fontSize: 100,
+        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
     },
     button: {
         padding: 0,
@@ -26,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
-        color: theme.palette.type === 'dark' ? '#7f8082' : '#b4c5cf',
+        color: theme.palette.text.disabled,
     },
 }));
 
@@ -36,7 +42,6 @@ type AltCloudAuthButtonProps = {
 
 export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps> = ({ product }) => {
     const classes = useStyles();
-    const loginText = `${product.name} Cloud`;
     const controller = useContext(OnboardingControllerContext);
     const subtext = 'For most of our users';
 
@@ -48,14 +53,20 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
     return (
         <Tooltip title={'Opens a browser window to log in via OAuth'}>
             <Button variant="contained" color="primary" className={classes.button} onClick={handleCloudProd}>
-                <Box className={classes.box}>
-                    <div className={classes.icon}>
-                        {loginText} {<CloudIcon fontSize={'inherit'} />}
-                    </div>
+                <Grid container direction="column">
+                    <Grid container direction="row" alignItems="center" justify="center" spacing={3}>
+                        <Grid item>
+                            <Typography className={classes.label}>{product.name}</Typography>
+                        </Grid>
+                        <Grid item>
+                            <Typography className={classes.label}>Cloud</Typography>
+                        </Grid>
+                        <Grid item>{<CloudIcon className={classes.productIcon} />}</Grid>
+                    </Grid>
                     <Typography variant="h2" className={classes.buttonSubtext}>
                         {subtext}
                     </Typography>
-                </Box>
+                </Grid>
             </Button>
         </Tooltip>
     );

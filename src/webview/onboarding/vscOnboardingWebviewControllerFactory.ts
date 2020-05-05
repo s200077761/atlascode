@@ -5,11 +5,7 @@ import { UIWSPort } from '../../lib/ipc/models/ports';
 import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onboardingActionApi';
-import {
-    id,
-    OnboardingWebviewController,
-    title,
-} from '../../lib/webview/controller/onboarding/onboardingWebviewController';
+import { id, OnboardingWebviewController } from '../../lib/webview/controller/onboarding/onboardingWebviewController';
 import { Logger } from '../../logger';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
@@ -30,10 +26,6 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
         this._commonHandler = commonHandler;
         this._analytics = analytics;
         this._onboardingUrl = settingsUrl;
-    }
-
-    public title(): string {
-        return title;
     }
 
     public tabIconPath(): string {
