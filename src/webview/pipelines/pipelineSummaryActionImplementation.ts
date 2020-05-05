@@ -61,7 +61,7 @@ export class PipelineSummaryActionImplementation implements PipelinesSummaryActi
             const newPipeline = await bbApi.pipelines!.triggerPipeline(pipeline.site, pipeline.target);
             commands.executeCommand(Commands.ShowPipeline, newPipeline);
         } catch (e) {
-            // logger.error(e);
+            Logger.error(e);
         }
     }
 }
