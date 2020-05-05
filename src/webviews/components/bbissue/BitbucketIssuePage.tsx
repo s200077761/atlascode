@@ -85,7 +85,7 @@ type MyState = {
 
 const emptyIssueData: BitbucketIssueMessageData = {
     type: 'updateBitbucketIssue',
-    issue: { site: emptyBitbucketSite, data: {} },
+    issue: { site: emptyBitbucketSite, data: { state: '' } },
     currentUser: UnknownUser,
     comments: [],
     hasMore: false,

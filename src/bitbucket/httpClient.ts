@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
@@ -47,11 +47,12 @@ export class HTTPClient {
         );
     }
 
-    async get(urlSlug: string, queryParams?: any) {
+    async get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken) {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
         const res = await this.transport(url, {
             method: 'GET',
+            cancelToken: cancelToken,
         });
         return { data: res.data, headers: res.headers };
     }
