@@ -15,7 +15,6 @@ import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { Resources } from '../resources';
 import { ConnectionTimeout, Time } from '../util/time';
-import { settingsUrl } from '../webviews/configWebview';
 import {
     AccessibleResource,
     emptyUserInfo,
@@ -34,6 +33,7 @@ declare interface ResponseEvent {
     strategy: any;
     req: express.Request;
     res: express.Response;
+    timeout?: boolean;
 }
 
 declare interface Tokens {
@@ -47,7 +47,6 @@ export class OAuthDancer implements Disposable {
     private _srv: http.Server | undefined;
     private _app: any;
     private _axios: AxiosInstance;
-    private _authErrors: Map<OAuthProvider, string> = new Map();
     private _authsInFlight: Map<OAuthProvider, PCancelable<OAuthResponse>> = new Map();
     private _oauthResponseEventEmitter: EventEmitter = new EventEmitter();
     private _shutdownCheck: any;
@@ -170,16 +169,13 @@ export class OAuthDancer implements Disposable {
         });
 
         app.get('/timeout', (req, res) => {
-            let provider = req.query.provider;
-            this._authErrors.set(provider, `'Authorization did not complete in the time alotted for '${provider}'`);
-            Logger.debug('oauth timed out', req.query);
-            res.send(
-                Resources.html.get('authFailureHtml')!({
-                    errMessage: 'Authorization did not complete in the time alotted.',
-                    actionMessage: 'Please try again.',
-                    vscodeurl: settingsUrl,
-                })
-            );
+            this._oauthResponseEventEmitter.emit('response', {
+                provider: req.query.provider,
+                strategy: JiraProdStrategy,
+                req: req,
+                res: res,
+                timeout: true,
+            });
         });
 
         return app;
@@ -196,6 +192,21 @@ export class OAuthDancer implements Disposable {
         const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
             const myState = state;
             const responseListener = async (respEvent: ResponseEvent) => {
+                if (respEvent.timeout) {
+                    this._authsInFlight.delete(respEvent.provider);
+
+                    Logger.debug('oauth timed out', respEvent.req.query);
+                    respEvent.res.send(
+                        Resources.html.get('authFailureHtml')!({
+                            errMessage: 'Authorization did not complete in the time alotted.',
+                            actionMessage: 'Please try again.',
+                            vscodeurl: callback,
+                        })
+                    );
+                    reject(`'Authorization did not complete in the time alotted for '${respEvent.provider}'`);
+                    return;
+                }
+
                 const product = respEvent.provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
                 if (
@@ -274,7 +285,7 @@ export class OAuthDancer implements Disposable {
                             Resources.html.get('authFailureHtml')!({
                                 errMessage: `Error authenticating with ${provider}: ${err}`,
                                 actionMessage: 'Give it a moment and try again.',
-                                vscodeurl: settingsUrl,
+                                vscodeurl: callback,
                             })
                         );
 
