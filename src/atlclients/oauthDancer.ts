@@ -203,7 +203,7 @@ export class OAuthDancer implements Disposable {
                             vscodeurl: callback,
                         })
                     );
-                    reject(`'Authorization did not complete in the time alotted for '${respEvent.provider}'`);
+                    reject(`Authorization did not complete in the time alotted for '${respEvent.provider}'`);
                     return;
                 }
 
