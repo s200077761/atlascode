@@ -171,6 +171,7 @@ export class OAuthDancer implements Disposable {
         app.get('/timeout', (req, res) => {
             this._oauthResponseEventEmitter.emit('response', {
                 provider: req.query.provider,
+                //NOTE: this is a dummy strategy that is never read in case of timeouts
                 strategy: JiraProdStrategy,
                 req: req,
                 res: res,
