@@ -1097,6 +1097,18 @@
                     "description": "Enables Bitbucket Functionality",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.preferredRemotes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "upstream",
+                        "origin"
+                    ],
+                    "description": "The first remote that matches the list will be used to fetch pull requests, issues, and pipelines. A random remote is chosen if a match is not found.",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.explorer.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -1267,9 +1279,9 @@
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
         "@atlaskit/width-detector": "^2.0.10",
-        "@atlassianlabs/guipi-core-components": "0.0.10",
-        "@atlassianlabs/guipi-core-controller": "0.0.10",
-        "@atlassianlabs/guipi-jira-components": "0.0.10",
+        "@atlassianlabs/guipi-core-components": "^0.0.12",
+        "@atlassianlabs/guipi-core-controller": "^0.0.12",
+        "@atlassianlabs/guipi-jira-components": "^0.0.12",
         "@atlassianlabs/jira-metaui-client": "0.1.17",
         "@atlassianlabs/jira-metaui-transformer": "0.1.17",
         "@atlassianlabs/jira-pi-client": "0.1.16",

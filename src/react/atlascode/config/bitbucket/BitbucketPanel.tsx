@@ -9,6 +9,7 @@ import { AuthPanel } from '../auth/AuthPanel';
 import { BitbucketIssuesPanel } from './subpanels/BitbucketIssuesPanel';
 import { ContextMenuPanel } from './subpanels/ContextMenuPanel';
 import { PipelinesPanel } from './subpanels/PipelinesPanel';
+import { PreferredRemotesPanel } from './subpanels/PreferredRemotesPanel';
 import { PRExplorerPanel } from './subpanels/PRExplorerPanel';
 
 type BitbucketPanelProps = CommonPanelProps & {
@@ -87,6 +88,14 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 notifications={config[`${ConfigSection.Bitbucket}.issues.monitorEnabled`]}
                                 jiraButton={config[`${ConfigSection.Bitbucket}.issues.createJiraEnabled`]}
                                 refreshInterval={config[`${ConfigSection.Bitbucket}.issues.refreshInterval`]}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <PreferredRemotesPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.PreferredRemotes)}
+                                onSubsectionChange={onSubsectionChange}
+                                preferredRemotes={config[`${ConfigSection.Bitbucket}.preferredRemotes`]}
                             />
                         </Grid>
                         <Grid item>

@@ -26,6 +26,7 @@ export enum ConfigSubSection {
     PR = 'pullRequests',
     Pipelines = 'pipelines',
     ContextMenus = 'contextMenus',
+    PreferredRemotes = 'preferredRemotes',
     Misc = 'misc',
     Connectivity = 'connect',
     Debug = 'debug',
