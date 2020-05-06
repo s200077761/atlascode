@@ -1,5 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { env, Uri } from 'vscode';
+import { IntegrationsLinkParams } from '../../atlclients/authInfo';
+import { HTTPClient } from '../../bitbucket/httpClient';
 import { Container } from '../../container';
 import { submitFeedback } from '../../feedback/feedbackSubmitter';
 import { submitJSDPMF } from '../../feedback/pmfJSDSubmitter';
@@ -13,6 +15,7 @@ const knownLinkIdMap: Map<string, string> = new Map([
     [KnownLinkID.AtlascodeRepo, 'https://bitbucket.org/atlassianlabs/atlascode'],
     [KnownLinkID.AtlascodeIssues, 'https://bitbucket.org/atlassianlabs/atlascode/issues'],
     [KnownLinkID.AtlascodeDocs, 'https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code'],
+    [KnownLinkID.Integrations, 'https://integrations.atlassian.com'],
 ]);
 
 export class VSCCommonMessageHandler implements CommonActionMessageHandler {
@@ -54,6 +57,22 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                 }
 
                 if (foundUrl) {
+                    //Integrations link carries query params to help track where the click came from
+                    if (msg.linkId === KnownLinkID.Integrations) {
+                        const aaid = Container.siteManager.getFirstAAID();
+                        const queryParams: IntegrationsLinkParams = aaid
+                            ? {
+                                  aaid: aaid,
+                                  aid: Container.machineId,
+                                  s: 'atlascode.onboarding',
+                              }
+                            : {
+                                  aid: Container.machineId,
+                                  s: 'atlascode.onboarding',
+                              };
+                        foundUrl = `${foundUrl}${HTTPClient.queryObjectToString(queryParams)}`;
+                    }
+
                     env.openExternal(Uri.parse(foundUrl));
 
                     /* TODO: In most cases no params are sent, but for the Integrations link (Onboarding PR) we are asked to include them

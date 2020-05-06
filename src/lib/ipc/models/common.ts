@@ -10,6 +10,7 @@ export enum KnownLinkID {
     AtlascodeRepo = 'atlascodeRepoLink',
     AtlascodeIssues = 'atlascodeIssuesLink',
     AtlascodeDocs = 'atlascodeDocsLink',
+    Integrations = 'integrationsLink',
 }
 
 export interface FeedbackData {

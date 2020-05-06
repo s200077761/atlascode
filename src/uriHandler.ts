@@ -33,7 +33,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         if (uri.path.endsWith('openSettings')) {
             Container.settingsWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openOnboarding')) {
-            Container.onboardingWebview.createOrShow();
+            Container.onboardingWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openPullRequest')) {
             await this.handlePullRequestUri(uri);
         }
@@ -56,7 +56,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             const prId = prUrlPath.slice(prUrlPath.lastIndexOf('/') + 1);
             const pr = await client.pullrequests.getById(site, parseInt(prId));
             Container.pullRequestViewManager.createOrShow(pr);
-            this.analyticsApi.fireExternalUriEvent(decodeURIComponent(query.get('source') || 'unknown'), 'pullRequest');
+            this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'pullRequest');
         } catch (e) {
             Logger.debug('error opening pull request:', e);
             window.showErrorMessage('Error opening pull request (check log for details)');

@@ -354,6 +354,19 @@ track:
           - name: target
             type: string
             description: 'Target view to be opened in VS Code e.g. pullRequest'
+    - id: 24348
+      action: opened
+      subject: deepLink
+      library: server
+      description: |
+          when the user opens an extension screen from external URI
+      attributes:
+          - name: source
+            type: string
+            description: 'Source from which the URI was opened e.g. browser'
+          - name: target
+            type: string
+            description: 'Target view to be opened in VS Code e.g. pullRequest'
     - id: 18466
       action: createFromSource
       subject: issue
@@ -625,7 +638,35 @@ ui:
       subjectId: moreSettingsButton
       description: |
           Event when a user clicks on the more settings button on the Onboarding page
+    - id: 24344
+      action: clicked
+      subject: button
+      subjectId: focusCreateIssue
+      description: |
+          Event when the create issue node is focused
       attributes:
+    - id: 24345
+      action: clicked
+      subject: button
+      subjectId: focusIssue
+      description: |
+          Event when an issue node is focused
+      attributes:
+    - id: 24346
+      action: clicked
+      subject: button
+      subjectId: focusCreatePullRequest
+      description: |
+          Event when the create pull request node is focused
+      attributes:
+    - id: 24347
+      action: clicked
+      subject: button
+      subjectId: focusPullRequest
+      description: |
+          Event when a pull request node is focused
+      attributes:
+
     - id: 20000
       action: clicked
       subject: button
