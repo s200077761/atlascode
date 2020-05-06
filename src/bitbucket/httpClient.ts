@@ -3,19 +3,6 @@ import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
 
-export function queryObjectToString(queryParams?: any): string {
-    let result = '';
-    if (queryParams) {
-        const sp = new URLSearchParams();
-        for (const [k, v] of Object.entries(queryParams)) {
-            sp.append(k, `${v}`);
-        }
-        result = `${result}?${sp.toString()}`;
-    }
-
-    return result;
-}
-
 export class HTTPClient {
     private transport: AxiosInstance;
 
@@ -49,7 +36,7 @@ export class HTTPClient {
 
     async get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken) {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
         const res = await this.transport(url, {
             method: 'GET',
             cancelToken: cancelToken,
@@ -59,7 +46,7 @@ export class HTTPClient {
 
     async getRaw(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
             method: 'GET',
@@ -72,7 +59,7 @@ export class HTTPClient {
 
     async getOctetStream(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
             method: 'GET',
@@ -85,7 +72,7 @@ export class HTTPClient {
 
     async post(urlSlug: string, body: any, queryParams?: any): Promise<any> {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
         try {
             const res = await this.transport(url, {
                 method: 'POST',
@@ -109,7 +96,7 @@ export class HTTPClient {
 
     async put(urlSlug: string, body: any, queryParams?: any): Promise<any> {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
             method: 'PUT',
@@ -121,7 +108,7 @@ export class HTTPClient {
 
     async delete(urlSlug: string, body: any, queryParams?: any): Promise<any> {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
             method: 'DELETE',
@@ -133,13 +120,26 @@ export class HTTPClient {
 
     generateUrl(urlSlug: string, queryParams?: any): string {
         let url = `${this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
 
         return url;
     }
 
-    private addQueryParams(url: string, queryParams?: any): string {
-        return `${url}${queryObjectToString(queryParams)}`;
+    public static queryObjectToString(queryParams?: any): string {
+        let result = '';
+        if (queryParams) {
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            result = `${result}?${sp.toString()}`;
+        }
+
+        return result;
+    }
+
+    public static addQueryParams(url: string, queryParams?: any): string {
+        return `${url}${HTTPClient.queryObjectToString(queryParams)}`;
     }
 }
 

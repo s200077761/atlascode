@@ -1,4 +1,4 @@
-import { Grid, makeStyles, Typography } from '@material-ui/core';
+import { Container, Grid, makeStyles, Typography } from '@material-ui/core';
 import React from 'react';
 import { ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
@@ -63,7 +63,9 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
                     xs={12}
                     alignItems={'flex-end'}
                 >
-                    <AltCloudAuthButton product={ProductBitbucket} />
+                    <Container maxWidth="lg" disableGutters style={{ height: '100%' }}>
+                        <AltCloudAuthButton product={ProductBitbucket} />
+                    </Container>
                 </Grid>
                 <Grid
                     hidden={!jiraAuthComplete || bitbucketAuthComplete}
@@ -74,7 +76,9 @@ export const SimpleSiteAuthenticator: React.FunctionComponent<SimpleSiteAuthenti
                     xs={12}
                     alignItems={'flex-end'}
                 >
-                    <AltServerAuthButton product={ProductBitbucket} />
+                    <Container maxWidth="lg" disableGutters style={{ height: '100%' }}>
+                        <AltServerAuthButton product={ProductBitbucket} />
+                    </Container>
                 </Grid>
 
                 <Grid item xs={12}>

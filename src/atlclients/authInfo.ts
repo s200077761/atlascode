@@ -107,8 +107,8 @@ export interface DetailedSiteInfo extends SiteInfo {
 // Anonymous ID should match the ID sent to amplitude for analytics events
 export interface IntegrationsLinkParams {
     aaid?: string; // Atlassian Account ID
-    aid?: string; // Anonymous ID
-    s?: string; // source
+    aid: string; // Anonymous ID
+    s: string; // source
 }
 
 export interface AccessibleResourceV1 {

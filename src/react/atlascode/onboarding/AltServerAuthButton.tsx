@@ -12,11 +12,11 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: 'inherit',
     },
     label: {
-        fontSize: 100,
+        fontSize: 70,
     },
     productIcon: {
         marginTop: 16, //Icon is in a 24 x 24 box, but needs to be pushed down 16px to look centered
-        fontSize: 100,
+        fontSize: 70,
     },
     button: {
         textTransform: 'none',
@@ -29,7 +29,8 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     buttonSubtext: {
-        marginBottom: 30,
+        fontSize: 30,
+        marginBottom: 32,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
         color: theme.palette.text.disabled,

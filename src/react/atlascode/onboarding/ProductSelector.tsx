@@ -1,5 +1,5 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import { Container, Grid, makeStyles, Typography } from '@material-ui/core';
+import { Container, Grid, lighten, makeStyles, Typography } from '@material-ui/core';
 import React from 'react';
 import BitbucketIcon from '../icons/BitbucketIcon';
 import { AltProductEnabler } from './AltProductEnabler';
@@ -9,7 +9,7 @@ const useStyles = makeStyles((theme) => ({
         flexGrow: 1,
     },
     selectionTitleText: {
-        color: theme.palette.type === 'dark' ? 'white' : '#47525c',
+        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
     },
 }));
 
@@ -60,7 +60,7 @@ export const ProductSelector: React.FunctionComponent<ProductSelectorProps> = ({
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h3" align="center">
-                        This can be changed later
+                        Products can be enabled/disabled later in the extension settings
                     </Typography>
                 </Grid>
             </Grid>

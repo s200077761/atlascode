@@ -11,13 +11,13 @@ const useStyles = makeStyles((theme) => ({
         height: 'inherit',
     },
     label: {
-        fontSize: 100,
+        fontSize: 70,
         color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
         // White is chosen for light mode because it creates a nice "sky" effect when paired with a white cloud and blue (primary) background
     },
     productIcon: {
         marginTop: 16, //Needs to be pushed down 16px to look centered
-        fontSize: 100,
+        fontSize: 70,
         color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
     },
     button: {
@@ -29,6 +29,7 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: theme.palette.type === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light,
     },
     buttonSubtext: {
+        fontSize: 30,
         marginBottom: 30,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),

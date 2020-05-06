@@ -10,7 +10,7 @@ const useStyles = makeStyles((theme) => ({
         height: 'inherit',
     },
     label: {
-        fontSize: 100,
+        fontSize: 70,
         color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
         //'Primary' in dark mode is not white, which creates too low of a contrast
     },
@@ -21,14 +21,15 @@ const useStyles = makeStyles((theme) => ({
         background: theme.palette.background.paper,
     },
     buttonSubtext: {
-        marginBottom: 30,
+        fontSize: 30,
+        marginBottom: 32,
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
         color: theme.palette.text.disabled,
     },
     productIcon: {
-        marginTop: 32, //Icon is in a 32 x 32 box so adjust its origin before expanding it (this centers the icon inline)
-        fontSize: 100,
+        marginTop: 24, //Icon is in a 32 x 32 box so adjust its origin before expanding it (this centers the icon inline)
+        fontSize: 70,
     },
     circleCheckIcon: {
         top: '0px',

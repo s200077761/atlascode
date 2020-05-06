@@ -1,7 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { env, Uri } from 'vscode';
 import { IntegrationsLinkParams } from '../../atlclients/authInfo';
-import { queryObjectToString } from '../../bitbucket/httpClient';
+import { HTTPClient } from '../../bitbucket/httpClient';
 import { Container } from '../../container';
 import { submitFeedback } from '../../feedback/feedbackSubmitter';
 import { submitJSDPMF } from '../../feedback/pmfJSDSubmitter';
@@ -70,7 +70,7 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                                   aid: Container.machineId,
                                   s: 'atlascode.onboarding',
                               };
-                        foundUrl = `${foundUrl}${queryObjectToString(queryParams)}`;
+                        foundUrl = `${foundUrl}${HTTPClient.queryObjectToString(queryParams)}`;
                     }
 
                     env.openExternal(Uri.parse(foundUrl));
