@@ -41,11 +41,9 @@ import { SingleWebview } from './webview/singleViewFactory';
 import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
-import { ConfigWebview } from './webviews/configWebview';
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { OnboardingWebview } from './webviews/Onboarding';
 import { PipelineViewManager } from './webviews/pipelineViewManager';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
@@ -80,8 +78,6 @@ export class Container {
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
-        context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._onboardingWebview = new OnboardingWebview(context.extensionPath)));
         context.subscriptions.push(
             (this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath))
         );
@@ -231,12 +227,6 @@ export class Container {
     static get bitbucketContext() {
         return this._bitbucketContext;
     }
-
-    private static _configWebview: ConfigWebview;
-    static get configWebview() {
-        return this._configWebview;
-    }
-
     private static _explorerFocusManager: ExplorerFocusManager;
     static get explorerFocusManager() {
         return this._explorerFocusManager;
@@ -260,11 +250,6 @@ export class Container {
     private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
     static get bitbucketIssueWebviewFactory() {
         return this._bitbucketIssueWebviewFactory;
-    }
-
-    private static _onboardingWebview: OnboardingWebview;
-    static get onboardingWebview() {
-        return this._onboardingWebview;
     }
 
     private static _createIssueWebview: CreateIssueWebview;

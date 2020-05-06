@@ -10,10 +10,6 @@ declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
-    atlascodeSettings: React.lazy(() => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage')),
-    atlascodeOnboardingScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeNewUserOnboardingScreen" */ './config/Onboarding')
-    ),
     pullRequestDetailsScreen: React.lazy(() =>
         import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage')
     ),
