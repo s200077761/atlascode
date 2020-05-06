@@ -1,6 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { WelcomeAction, WelcomeActionType } from '../../../ipc/fromUI/welcome';
+import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { WelcomeInitMessage, WelcomeMessage, WelcomeMessageType } from '../../../ipc/toUI/welcome';
 import { Logger } from '../../../logger';
@@ -8,7 +9,6 @@ import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { WelcomeActionApi } from './welcomeActionApi';
-export const id: string = 'atlascodeSettingsV2';
 
 export class WelcomeWebviewController implements WebviewController<WelcomeInitMessage> {
     private _isRefreshing: boolean;
@@ -26,7 +26,7 @@ export class WelcomeWebviewController implements WebviewController<WelcomeInitMe
     }
 
     public screenDetails() {
-        return { id: 'atlascodeWelcomeScreen', site: undefined, product: undefined };
+        return { id: WebViewID.WelcomeWebview, site: undefined, product: undefined };
     }
 
     private postMessage(message: WelcomeMessage | CommonMessage) {

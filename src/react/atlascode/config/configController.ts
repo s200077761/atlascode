@@ -6,7 +6,7 @@ import { v4 } from 'uuid';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../lib/ipc/fromUI/config';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
 import {
     ConfigInitMessage,
@@ -276,7 +276,11 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
 
     const openLink = useCallback(
         (linkId: KnownLinkID) =>
-            postMessage({ type: CommonActionType.ExternalLink, source: 'atlascodeSettings', linkId: linkId }),
+            postMessage({
+                type: CommonActionType.ExternalLink,
+                source: WebViewID.ConfigWebview,
+                linkId: linkId,
+            }),
         [postMessage]
     );
 

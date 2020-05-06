@@ -3,7 +3,7 @@ import React, { useCallback, useMemo, useReducer } from 'react';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../lib/ipc/fromUI/onboarding';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../../lib/ipc/toUI/config';
 import {
@@ -197,7 +197,8 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
     }, [postMessage]);
 
     const openLink = useCallback(
-        (linkId: KnownLinkID) => postMessage({ type: CommonActionType.ExternalLink, linkId: linkId }),
+        (linkId: KnownLinkID) =>
+            postMessage({ type: CommonActionType.ExternalLink, source: WebViewID.OnboardingWebview, linkId: linkId }),
         [postMessage]
     );
 

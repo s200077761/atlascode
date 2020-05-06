@@ -3,6 +3,7 @@ import { isBasicAuthInfo } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { OnboardingAction, OnboardingActionType } from '../../../ipc/fromUI/onboarding';
+import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { SectionChangeMessage } from '../../../ipc/toUI/config';
 import { OnboardingMessage, OnboardingMessageType } from '../../../ipc/toUI/onboarding';
@@ -48,7 +49,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
     }
 
     public screenDetails() {
-        return { id: 'atlascodeOnboarding', site: undefined, product: undefined };
+        return { id: WebViewID.OnboardingWebview, site: undefined, product: undefined };
     }
 
     public async onSitesChanged(): Promise<void> {
