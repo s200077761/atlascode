@@ -21,6 +21,9 @@ const routes = {
     atlascodeSettingsV2: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage')
     ),
+    atlascodeOnboardingV2: React.lazy(() =>
+        import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage')
+    ),
     bitbucketIssuePageV2: React.lazy(() =>
         import(/* webpackChunkName: "bitbucketIssuePageV2" */ './atlascode/bbissue/BitbucketIssuePage')
     ),

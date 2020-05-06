@@ -1,7 +1,7 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { FocusEvent } from 'src/webview/ExplorerFocusManager';
 import { commands, ConfigurationChangeEvent, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, CustomJQLTreeId, setCommandContext } from '../../constants';
@@ -29,7 +29,7 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
-            Container.loginManager.onLoginNotificationActionEvent(this.onboardingNotificationWasPressed, this),
+            Container.explorerFocusManager.onFocusEvent(this.handleFocusEvent, this),
             this._refreshTimer
         );
 
@@ -66,9 +66,9 @@ export class JiraContext extends Disposable {
         }
     }
 
-    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+    async handleFocusEvent(e: FocusEvent) {
         if (this._explorer instanceof JiraExplorer) {
-            this._explorer.onboardingNotificationWasPressed(e);
+            this._explorer.focusEvent(e);
         }
     }
 

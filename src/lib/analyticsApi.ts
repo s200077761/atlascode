@@ -35,7 +35,11 @@ export interface AnalyticsApi {
     firePrPaginationEvent(): Promise<void>;
     fireMoreSettingsButtonEvent(source: string): Promise<void>;
     fireDoneButtonEvent(source: string): Promise<void>;
+    fireFocusCreateIssueEvent(source: string): Promise<void>;
+    fireFocusIssueEvent(source: string): Promise<void>;
+    fireFocusCreatePullRequestEvent(source: string): Promise<void>;
+    fireFocusPullRequestEvent(source: string): Promise<void>;
     fireAuthenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<void>;
     fireLogoutButtonEvent(source: string): Promise<void>;
-    fireExternalUriEvent(source: string, target: string): Promise<void>;
+    fireDeepLinkEvent(source: string, target: string): Promise<void>;
 }

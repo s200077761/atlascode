@@ -13,11 +13,12 @@ import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
+import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -30,7 +31,10 @@ import { VSCBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vsc
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
 import { MultiWebview } from './webview/multiViewFactory';
+import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
+import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
@@ -97,6 +101,8 @@ export class Container {
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jqlManager = new JQLManager()));
 
+        context.subscriptions.push((this._explorerFocusManager = new ExplorerFocusManager()));
+
         const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
             context.extensionPath,
             new VSCConfigWebviewControllerFactory(
@@ -106,6 +112,17 @@ export class Container {
                 SETTINGS_URL
             ),
             this._analyticsApi
+        );
+
+        const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
+            context.extensionPath,
+            new VSCOnboardingWebviewControllerFactory(
+                new VSCOnboardingActionApi(this._analyticsApi),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                ONBOARDING_URL
+            ),
+            this.analyticsApi
         );
 
         const bitbucketIssuePageV2ViewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
@@ -119,6 +136,7 @@ export class Container {
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._bitbucketIssueWebviewFactory = bitbucketIssuePageV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
@@ -210,9 +228,19 @@ export class Container {
         return this._configWebview;
     }
 
+    private static _explorerFocusManager: ExplorerFocusManager;
+    static get explorerFocusManager() {
+        return this._explorerFocusManager;
+    }
+
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
     static get settingsWebviewFactory() {
         return this._settingsWebviewFactory;
+    }
+
+    private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
+    static get onboardingWebviewFactory() {
+        return this._onboardingWebviewFactory;
     }
 
     private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
