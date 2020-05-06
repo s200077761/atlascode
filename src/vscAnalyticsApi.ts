@@ -9,6 +9,7 @@ import {
     bbIssueWorkStartedEvent,
     customJQLCreatedEvent,
     doneButtonEvent,
+    externalLinkEvent,
     externalUriEvent,
     featureChangeEvent,
     installedEvent,
@@ -229,6 +230,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireExternalUriEvent(source: string, target: string): Promise<void> {
         return externalUriEvent(source, target).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireExternalLinkEvent(source: string, linkId: string): Promise<void> {
+        return externalLinkEvent(source, linkId).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

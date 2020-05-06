@@ -370,6 +370,14 @@ track:
       library: server
       description: |
           when a user clicks to search for issues
+    - action: opened
+      subject: externalLink
+      library: server
+      description: |
+          When an external link is opened from within VS Code
+      attributes:
+          - name: source
+          - name: linkId
 screen:
     - id: 14476
       name: atlascode.views.jira.assignedIssues

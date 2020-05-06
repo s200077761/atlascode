@@ -55,7 +55,13 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
 
                 if (foundUrl) {
                     env.openExternal(Uri.parse(foundUrl));
-                    // TODO: add new analytics event for clicking links using the linkID
+
+                    /* TODO: In most cases no params are sent, but for the Integrations link (Onboarding PR) we are asked to include them
+                    After that PR is merged I'll pull devel and data will be sent. */
+                    //We're only interested in tracking external URIs that are 'known'
+                    if (knownLinkIdMap.has(msg.linkId)) {
+                        this._analytics.fireExternalLinkEvent(msg.source, msg.linkId);
+                    }
                 }
                 break;
             }

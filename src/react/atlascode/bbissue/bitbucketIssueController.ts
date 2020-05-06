@@ -273,7 +273,8 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
     }, [postMessage]);
 
     const openLink = useCallback(
-        (linkId: KnownLinkID) => postMessage({ type: CommonActionType.ExternalLink, linkId: linkId }),
+        (linkId: KnownLinkID) =>
+            postMessage({ type: CommonActionType.ExternalLink, source: 'bitbucketIssueScreen', linkId: linkId }),
         [postMessage]
     );
 

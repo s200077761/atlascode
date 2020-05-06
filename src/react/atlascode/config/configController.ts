@@ -275,7 +275,8 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
     }, [postMessage]);
 
     const openLink = useCallback(
-        (linkId: KnownLinkID) => postMessage({ type: CommonActionType.ExternalLink, linkId: linkId }),
+        (linkId: KnownLinkID) =>
+            postMessage({ type: CommonActionType.ExternalLink, source: 'atlascodeSettings', linkId: linkId }),
         [postMessage]
     );
 

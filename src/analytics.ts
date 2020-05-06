@@ -205,6 +205,10 @@ export async function externalUriEvent(source: string, target: string): Promise<
     return trackEvent('opened', 'externalUri', { attributes: { source: source, target: target } });
 }
 
+export async function externalLinkEvent(source: string, linkId: string): Promise<TrackEvent> {
+    return trackEvent('opened', 'externalLink', { attributes: { source: source, linkId: linkId } });
+}
+
 // Screen Events
 
 export async function viewScreenEvent(
