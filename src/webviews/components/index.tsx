@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import './reset.css';
 import './App.css';
 import { ResourceContext } from './context';
+import './reset.css';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -11,9 +11,6 @@ __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
     atlascodeSettings: React.lazy(() => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage')),
-    atlascodeWelcomeScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeWelcomeScreen" */ './config/Welcome')
-    ),
     atlascodeOnboardingScreen: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeNewUserOnboardingScreen" */ './config/Onboarding')
     ),

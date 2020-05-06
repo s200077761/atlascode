@@ -14,8 +14,10 @@ import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
+import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
@@ -36,6 +38,8 @@ import { MultiWebview } from './webview/multiViewFactory';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
+import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
+import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
 import { ConfigWebview } from './webviews/configWebview';
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
@@ -47,7 +51,6 @@ import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview'
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
-import { WelcomeWebview } from './webviews/welcomeWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -78,7 +81,6 @@ export class Container {
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push((this._onboardingWebview = new OnboardingWebview(context.extensionPath)));
         context.subscriptions.push(
             (this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath))
@@ -125,6 +127,12 @@ export class Container {
             this.analyticsApi
         );
 
+        const welcomeV2ViewFactory = new SingleWebview<WelcomeInitMessage, WelcomeAction>(
+            context.extensionPath,
+            new VSCWelcomeWebviewControllerFactory(new VSCWelcomeActionApi(), this._commonMessageHandler),
+            this._analyticsApi
+        );
+
         const bitbucketIssuePageV2ViewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
             context.extensionPath,
             new VSCBitbucketIssueWebviewControllerFactory(
@@ -137,6 +145,7 @@ export class Container {
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
+        context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._bitbucketIssueWebviewFactory = bitbucketIssuePageV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
@@ -243,14 +252,14 @@ export class Container {
         return this._onboardingWebviewFactory;
     }
 
+    private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
+    static get welcomeWebviewFactory() {
+        return this._welcomeWebviewFactory;
+    }
+
     private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
     static get bitbucketIssueWebviewFactory() {
         return this._bitbucketIssueWebviewFactory;
-    }
-
-    private static _welcomeWebview: WelcomeWebview;
-    static get welcomeWebview() {
-        return this._welcomeWebview;
     }
 
     private static _onboardingWebview: OnboardingWebview;

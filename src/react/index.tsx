@@ -27,6 +27,7 @@ const routes = {
     bitbucketIssuePageV2: React.lazy(() =>
         import(/* webpackChunkName: "bitbucketIssuePageV2" */ './atlascode/bbissue/BitbucketIssuePage')
     ),
+    welcomePageV2: React.lazy(() => import(/* webpackChunkName: "welcomePageV2" */ './atlascode/welcome/Welcome')),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;
