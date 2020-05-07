@@ -60,6 +60,8 @@ export type Repo = {
     url: string;
     avatarUrl: string;
     mainbranch?: string;
+    developmentBranch?: string;
+    branchingModel?: BitbucketBranchingModel;
     issueTrackerEnabled: boolean;
 };
 
@@ -101,6 +103,21 @@ export const emptyUser = {
     url: '',
     avatarUrl: '',
     mention: '',
+};
+
+export const emptyRepo: Repo = {
+    id: '',
+    scm: undefined,
+    name: '',
+    displayName: '',
+    fullName: '',
+    parentFullName: undefined,
+    url: '',
+    avatarUrl: '',
+    mainbranch: undefined,
+    developmentBranch: undefined,
+    branchingModel: undefined,
+    issueTrackerEnabled: false,
 };
 
 export const emptyTask = {

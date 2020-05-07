@@ -23,9 +23,13 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}`);
+        const [repoData, branchingModel] = await Promise.all([
+            this.client.get(`/repositories/${ownerSlug}/${repoSlug}`),
+            this.getBranchingModel(site),
+        ]);
 
-        const repo = CloudRepositoriesApi.toRepo(data);
+        const repo: Repo = CloudRepositoriesApi.toRepo(repoData.data, branchingModel);
+
         this.repoCache.setItem(cacheKey, repo);
         return repo;
     }
@@ -95,7 +99,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         return data.values!.map((pr: any) => pr.id) || [];
     }
 
-    static toRepo(bbRepo: any): Repo {
+    static toRepo(bbRepo: any, branchingModel?: BitbucketBranchingModel): Repo {
         if (!bbRepo) {
             return {
                 id: 'REPO_NOT_FOUND',
@@ -109,6 +113,9 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             };
         }
 
+        const mainbranch = bbRepo.mainbranch?.name;
+        const developmentBranch = branchingModel?.development?.branch?.name || mainbranch;
+
         return {
             id: bbRepo.uuid!,
             name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
@@ -117,7 +124,9 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             parentFullName: bbRepo.parent?.full_name,
             url: bbRepo.links!.html!.href!,
             avatarUrl: bbRepo.links!.avatar!.href!,
-            mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
+            mainbranch: mainbranch,
+            developmentBranch: developmentBranch,
+            branchingModel: branchingModel,
             issueTrackerEnabled: !!bbRepo.has_issues,
         };
     }

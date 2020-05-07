@@ -28,6 +28,9 @@ const routes = {
         import(/* webpackChunkName: "bitbucketIssuePageV2" */ './atlascode/bbissue/BitbucketIssuePage')
     ),
     welcomePageV2: React.lazy(() => import(/* webpackChunkName: "welcomePageV2" */ './atlascode/welcome/Welcome')),
+    startWorkPageV2: React.lazy(() =>
+        import(/* webpackChunkName: "startWorkPageV2" */ './atlascode/startwork/StartWorkPage')
+    ),
 };
 
 const ports = {
@@ -35,6 +38,7 @@ const ports = {
     atlascodeOnboardingV2: UIWSPort.Onboarding,
     bitbucketIssuePageV2: UIWSPort.BitbucketIssuePage,
     welcomePageV2: UIWSPort.WelcomePage,
+    startWorkPageV2: UIWSPort.StartWork,
 };
 
 class VsCodeApi {

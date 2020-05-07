@@ -12,6 +12,7 @@ export enum WebViewID {
     ConfigWebview = 'atlascodeSettings',
     OnboardingWebview = 'atlascodeOnboarding',
     WelcomeWebview = 'atlascodeWelcomeScreen',
+    StartWork = 'startWork',
 }
 
 export enum KnownLinkID {
