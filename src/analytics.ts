@@ -206,7 +206,7 @@ export async function deepLinkEvent(source: string, target: string): Promise<Tra
 }
 
 export async function externalLinkEvent(source: string, linkId: string): Promise<TrackEvent> {
-    return trackEvent('opened', 'externalLink', { attributes: { source: source, linkId: linkId } });
+    return trackEvent('opened', 'externalLink', { attributes: { source: source, linkType: linkId } });
 }
 
 // Screen Events
