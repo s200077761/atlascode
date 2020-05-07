@@ -120,6 +120,7 @@ export interface BitbucketConfig {
     contextMenus: BitbucketContextMenus;
     pipelines: BitbucketPipelinesConfig;
     issues: BitbucketIssuesConfig;
+    preferredRemotes: string[];
 }
 
 export interface BitbucketPipelinesConfig {
@@ -300,6 +301,7 @@ export const emptyBitbucketConfig: BitbucketConfig = {
     contextMenus: emptyBitbucketContextMenus,
     pipelines: emptyPipelinesConfig,
     issues: emptyIssuesConfig,
+    preferredRemotes: ['upstream', 'origin'],
 };
 
 export const emptyConfig: IConfig = {

@@ -114,15 +114,14 @@ export async function clientForSite(site: BitbucketSite): Promise<BitbucketApi> 
 }
 
 // Use only for bitbucket repositories
-export function firstBitbucketRemote(repo: Repository): Remote {
+function firstBitbucketRemote(repo: Repository, preferredRemotes: string[]): Remote {
     const remotes = getBitbucketRemotes(repo);
 
-    let remote: Remote | undefined;
-    if ((remote = remotes.find((r) => r.name === 'origin'))) {
-        return remote;
-    }
-    if ((remote = remotes.find((r) => r.name === 'upstream'))) {
-        return remote;
+    for (const preferredRemote of preferredRemotes) {
+        const foundRemote = remotes.find((r) => r.name === preferredRemote.trim());
+        if (foundRemote) {
+            return foundRemote;
+        }
     }
     return remotes[0];
 }
@@ -134,7 +133,9 @@ export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
     }));
 
     const firstRemote =
-        getBitbucketRemotes(repository).length > 0 ? firstBitbucketRemote(repository) : repository.state.remotes[0];
+        getBitbucketRemotes(repository).length > 0
+            ? firstBitbucketRemote(repository, Container.config.bitbucket.preferredRemotes)
+            : repository.state.remotes[0];
 
     const mainSiteRemote = {
         site: bitbucketSiteForRemote(firstRemote),

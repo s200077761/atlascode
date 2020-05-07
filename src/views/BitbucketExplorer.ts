@@ -99,6 +99,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             this.updateMonitor();
         }
 
+        if (configuration.changed(e, 'bitbucket.preferredRemotes')) {
+            this.treeDataProvider?.refresh();
+        }
+
         this.onConfigurationChanged(e);
     }
 
