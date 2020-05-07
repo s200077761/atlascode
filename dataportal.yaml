@@ -383,7 +383,8 @@ track:
       library: server
       description: |
           when a user clicks to search for issues
-    - action: opened
+    - id: 24448
+      action: opened
       subject: externalLink
       library: server
       description: |
