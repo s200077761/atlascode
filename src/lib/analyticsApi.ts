@@ -42,4 +42,5 @@ export interface AnalyticsApi {
     fireAuthenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<void>;
     fireLogoutButtonEvent(source: string): Promise<void>;
     fireDeepLinkEvent(source: string, target: string): Promise<void>;
+    fireOpenSettingsButtonEvent(source: string): Promise<void>;
 }
