@@ -243,6 +243,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.extensionContext.showConfigPage",
+                "title": "Extension Settings (UI)",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.showJiraAuth",
                 "title": "Open Jira Auth Settings",
                 "category": "Atlassian"
@@ -413,6 +418,13 @@
             ]
         },
         "menus": {
+            "extension/context": [
+                {
+                    "command": "atlascode.extensionContext.showConfigPage",
+                    "group": "2_configure",
+                    "when": "extensionStatus==installed"
+                }
+            ],
             "editor/title": [
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
@@ -626,6 +638,10 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "atlascode.extensionContext.showConfigPage",
+                    "when": "false"
+                },
                 {
                     "command": "atlascode.jira.showJiraIssueSettings",
                     "when": "false"

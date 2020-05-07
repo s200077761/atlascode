@@ -57,6 +57,7 @@ export enum Commands {
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
     ShowConfigPage = 'atlascode.showConfigPage',
+    ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',
     ShowJiraAuth = 'atlascode.showJiraAuth',
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowWelcomePage = 'atlascode.showWelcomePage',
@@ -91,6 +92,13 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Auth,
             })
         ),
+        commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
+            Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            });
+        }),
         commands.registerCommand(Commands.ShowJiraAuth, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,

@@ -43,4 +43,5 @@ export interface AnalyticsApi {
     fireLogoutButtonEvent(source: string): Promise<void>;
     fireExternalLinkEvent(source: string, linkId: string): Promise<void>;
     fireDeepLinkEvent(source: string, target: string): Promise<void>;
+    fireOpenSettingsButtonEvent(source: string): Promise<void>;
 }
