@@ -34,7 +34,7 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
     ({ interval, enabled, max, label, units, onChange, className }) => {
         const classes = useStyles();
         const [value, setValue] = React.useState(interval);
-        const [newInterval, setNewInterval] = React.useState(interval);
+        const [newInterval, setNewInterval] = React.useState<number | undefined>(undefined);
         const unit = useMemo(() => (units !== undefined ? units : 'seconds'), [units]);
 
         const setValueAndInterval = useCallback(
@@ -46,10 +46,14 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
         );
 
         useEffect(() => {
-            if (onChange && interval !== newInterval) {
+            setValue(interval);
+        }, [interval]);
+
+        useEffect(() => {
+            if (onChange && newInterval !== undefined) {
                 onChange(newInterval);
             }
-        }, [onChange, newInterval, interval]);
+        }, [onChange, newInterval]);
 
         return (
             <Grid className={className} container spacing={4} alignItems="center">
