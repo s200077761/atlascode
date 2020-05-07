@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useReducer } from 'react';
 import { WorkspaceRepo } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import {
     emptyStartWorkInitMessage,
     StartWorkInitMessage,
@@ -150,7 +150,8 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
     }, [postMessage]);
 
     const openLink = useCallback(
-        (linkId: KnownLinkID) => postMessage({ type: CommonActionType.ExternalLink, linkId: linkId }),
+        (linkId: KnownLinkID) =>
+            postMessage({ type: CommonActionType.ExternalLink, source: WebViewID.StartWork, linkId: linkId }),
         [postMessage]
     );
 

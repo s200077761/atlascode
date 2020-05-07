@@ -77,7 +77,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
                 throw new Error(`Cannot parse clone URL from: ${query}`);
             }
             commands.executeCommand('git.clone', repoUrl);
-            this.analyticsApi.fireExternalUriEvent(
+            this.analyticsApi.fireDeepLinkEvent(
                 decodeURIComponent(query.get('source') || 'unknown'),
                 'cloneRepository'
             );

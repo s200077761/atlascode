@@ -4,6 +4,7 @@ import { BitbucketBranchingModel } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../ipc/fromUI/startWork';
+import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import {
     BranchType,
@@ -44,7 +45,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
     }
 
     public screenDetails() {
-        return { id: 'startWork', site: this.initData.issue.siteDetails, product: ProductBitbucket };
+        return { id: WebViewID.StartWork, site: this.initData.issue.siteDetails, product: ProductBitbucket };
     }
 
     private postMessage(message: StartWorkMessage | StartWorkResponse | CommonMessage) {
