@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 import { BitbucketIssueData, Comment, emptyComment, emptyUser, User } from '../../../bitbucket/model';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../lib/ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import {
     AddCommentResponseMessage,
     AssignResponseMessage,
@@ -273,7 +273,12 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
     }, [postMessage]);
 
     const openLink = useCallback(
-        (linkId: KnownLinkID) => postMessage({ type: CommonActionType.ExternalLink, linkId: linkId }),
+        (linkId: KnownLinkID) =>
+            postMessage({
+                type: CommonActionType.ExternalLink,
+                source: WebViewID.BitbucketIssueWebview,
+                linkId: linkId,
+            }),
         [postMessage]
     );
 

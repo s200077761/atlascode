@@ -2,7 +2,7 @@ import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { WelcomeAction, WelcomeActionType } from '../../../lib/ipc/fromUI/welcome';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import {
     emptyWelcomeInitMessage,
     WelcomeInitMessage,
@@ -76,7 +76,12 @@ export function useWelcomeController(): [WelcomeState, WelcomeControllerApi] {
     const openSettings = useCallback(() => postMessage({ type: WelcomeActionType.OpenSettings }), [postMessage]);
 
     const openLink = useCallback(
-        (linkId: KnownLinkID) => postMessage({ type: CommonActionType.ExternalLink, linkId: linkId }),
+        (linkId: KnownLinkID) =>
+            postMessage({
+                type: CommonActionType.ExternalLink,
+                source: WebViewID.WelcomeWebview,
+                linkId: linkId,
+            }),
         [postMessage]
     );
 

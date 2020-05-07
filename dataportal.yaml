@@ -383,6 +383,19 @@ track:
       library: server
       description: |
           when a user clicks to search for issues
+    - id: 24448
+      action: opened
+      subject: externalLink
+      library: server
+      description: |
+          When an external link is opened from within VS Code
+      attributes:
+          - name: source
+            type: string
+            description: Source from which the link was opened e.g. bitbucketIssueScreen
+          - name: linkType
+            type: string
+            description: The type of link being opened e.g. atlascodeRepoLink
 screen:
     - id: 14476
       name: atlascode.views.jira.assignedIssues

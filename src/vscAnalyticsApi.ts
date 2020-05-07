@@ -10,6 +10,7 @@ import {
     customJQLCreatedEvent,
     deepLinkEvent,
     doneButtonEvent,
+    externalLinkEvent,
     featureChangeEvent,
     focusCreateIssueEvent,
     focusCreatePullRequestEvent,
@@ -233,6 +234,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireDeepLinkEvent(source: string, target: string): Promise<void> {
         return deepLinkEvent(source, target).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireExternalLinkEvent(source: string, linkId: string): Promise<void> {
+        return externalLinkEvent(source, linkId).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

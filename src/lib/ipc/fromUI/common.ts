@@ -31,6 +31,7 @@ export interface SubmitFeedbackAction {
 }
 
 export interface ExternalLinkAction {
+    source: string;
     linkId: string;
     url?: string;
 }

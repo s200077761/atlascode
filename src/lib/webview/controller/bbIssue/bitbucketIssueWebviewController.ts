@@ -5,6 +5,7 @@ import { BitbucketIssue, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { BitbucketIssueAction, BitbucketIssueActionType } from '../../../ipc/fromUI/bbIssue';
 import { CommonActionType } from '../../../ipc/fromUI/common';
+import { WebViewID } from '../../../ipc/models/common';
 import { BitbucketIssueMessage, BitbucketIssueMessageType, BitbucketIssueResponse } from '../../../ipc/toUI/bbIssue';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { Logger } from '../../../logger';
@@ -47,7 +48,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
     }
 
     public screenDetails() {
-        return { id: 'bitbucketIssueScreen', site: this._issue.site.details, product: ProductBitbucket };
+        return { id: WebViewID.BitbucketIssueWebview, site: this._issue.site.details, product: ProductBitbucket };
     }
 
     private postMessage(message: BitbucketIssueMessage | BitbucketIssueResponse | CommonMessage) {
