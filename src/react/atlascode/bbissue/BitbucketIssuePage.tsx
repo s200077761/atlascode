@@ -1,11 +1,14 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
+import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
 import {
     AppBar,
     Avatar,
     Box,
     Button,
     Container,
+    Divider,
     Grid,
+    IconButton,
     Link,
     Paper,
     Theme,
@@ -31,7 +34,6 @@ import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
-import InlineRenderedTextEditor from './InlineRenderedTextEditor';
 import StatusMenu from './StatusMenu';
 import UserPicker from './UserPicker';
 
@@ -127,9 +129,11 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                         </Typography>
                         <Box className={classes.grow} />
                         <Box marginRight={1} hidden={!state.showJiraButton}>
-                            <Button variant="contained" color="primary" onClick={controller.createJiraIssue}>
-                                Create Jira issue
-                            </Button>
+                            <Tooltip title="Create Jira issue">
+                                <IconButton aria-label="create Jira issue" onClick={controller.createJiraIssue}>
+                                    <JiraIcon />
+                                </IconButton>
+                            </Tooltip>
                         </Box>
                         <Tooltip title="Create a branch and assign issue to me">
                             <Button
@@ -145,7 +149,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                     </Toolbar>
                 </AppBar>
                 <Grid container spacing={1}>
-                    <Grid item xs={12} md={9} lg={10} xl={10}>
+                    <Grid item xs={12} md={9} lg={9} xl={9} zeroMinWidth>
                         <Paper className={classes.paper100}>
                             <Box margin={2}>
                                 <ErrorDisplay />
@@ -154,33 +158,34 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                     <Grid item>
                                         <Box />
                                     </Grid>
-                                    <Grid item>
+                                    <Grid item zeroMinWidth>
                                         <Typography variant="h4">
                                             <Box fontWeight="fontWeightBold">Summary</Box>
                                         </Typography>
                                     </Grid>
-                                    <Grid item>
-                                        <InlineRenderedTextEditor
-                                            fullWidth
-                                            defaultValue={state.issue.data.content.raw}
-                                            renderedHtml={state.issue.data.content.html}
-                                            onSave={() => {}}
+                                    <Grid item xs zeroMinWidth>
+                                        <Typography
+                                            variant="body1"
+                                            dangerouslySetInnerHTML={{ __html: state.issue.data.content.html }}
                                         />
                                     </Grid>
                                     <Grid item>
+                                        <Divider />
+                                    </Grid>
+                                    <Grid item zeroMinWidth>
                                         <Typography variant="h4">
                                             <Box fontWeight="fontWeightBold">Comments</Box>
                                         </Typography>
                                     </Grid>
-                                    <Grid item>
+                                    <Grid item xs zeroMinWidth>
                                         <Grid container spacing={2} direction="column">
                                             {state.comments.map((c) => (
-                                                <Grid item key={c.id}>
-                                                    <Grid container spacing={1} alignItems="flex-start">
-                                                        <Grid item>
+                                                <Grid item key={c.id} xs zeroMinWidth>
+                                                    <Grid container spacing={1} direction="row" alignItems="flex-start">
+                                                        <Grid item zeroMinWidth>
                                                             <Avatar src={c.user.avatarUrl} alt={c.user.displayName} />
                                                         </Grid>
-                                                        <Grid item>
+                                                        <Grid item xs zeroMinWidth>
                                                             <Typography variant="subtitle2">
                                                                 {c.user.displayName}
                                                                 {'  '}
@@ -202,7 +207,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                             </Box>
                         </Paper>
                     </Grid>
-                    <Grid item xs={12} md={3} lg={2} xl={2}>
+                    <Grid item xs={12} md={3} lg={3} xl={3}>
                         <Paper className={classes.paperOverflow}>
                             <Box margin={2}>
                                 <Grid container spacing={1} direction="column">
@@ -278,16 +283,6 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                 onChange={handleAssign}
                                             />
                                         </Grid>
-                                        {/* <Grid container spacing={1} direction="row" alignItems="center">
-                                            <Grid item>
-                                                <Avatar src={state.issue.data?.assignee?.links?.avatar?.href} />
-                                            </Grid>
-                                            <Grid item>
-                                                <Typography>
-                                                    {state.issue.data?.assignee?.display_name || 'Unassigned'}
-                                                </Typography>
-                                            </Grid>
-                                        </Grid> */}
                                     </Grid>
                                     <Grid item>
                                         <Grid item>
