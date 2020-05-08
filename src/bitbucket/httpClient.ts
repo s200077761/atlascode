@@ -56,7 +56,7 @@ export class HTTPClient {
 
     async get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken) {
         let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
-        url = this.addQueryParams(url, queryParams);
+        url = HTTPClient.addQueryParams(url, queryParams);
         return this.getUrl(url, cancelToken);
     }
 
