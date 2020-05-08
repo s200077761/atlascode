@@ -1,5 +1,7 @@
-import { commands, Disposable, env, Uri, UriHandler, window } from 'vscode';
+import { commands, Disposable, env, QuickPickItem, Uri, UriHandler, window } from 'vscode';
 import { bitbucketSiteForRemote, clientForHostname } from './bitbucket/bbUtils';
+import { WorkspaceRepo } from './bitbucket/model';
+import { Commands } from './commands';
 import { Container } from './container';
 import { AnalyticsApi } from './lib/analyticsApi';
 import { Logger } from './logger';
@@ -76,7 +78,26 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             if (!repoUrl) {
                 throw new Error(`Cannot parse clone URL from: ${query}`);
             }
-            commands.executeCommand('git.clone', repoUrl);
+            for (const wsRepo of Container.bitbucketContext.getBitbucketCloudRepositories()) {
+                const site = wsRepo.mainSiteRemote.site!;
+                const fullName = `${site.ownerSlug}/${site.repoSlug}`;
+                if (repoUrl.includes(fullName)) {
+                    window.showInformationMessage(
+                        `Skipped cloning. Repository is open in this workspace already: ${wsRepo.rootUri}`
+                    );
+                    return;
+                }
+            }
+
+            const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
+            if (wsRepo !== undefined) {
+                window.showInformationMessage(
+                    `Skipped cloning. Repository is open in this workspace already: ${wsRepo.rootUri}`
+                );
+            } else {
+                this.showCloneOptions(repoUrl);
+            }
+
             this.analyticsApi.fireDeepLinkEvent(
                 decodeURIComponent(query.get('source') || 'unknown'),
                 'cloneRepository'
@@ -85,6 +106,33 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             Logger.debug('error cloning repository:', e);
             window.showErrorMessage('Error cloning repository (check log for details)');
         }
+    }
+
+    private findRepoInCurrentWorkspace(repoUrl: string): WorkspaceRepo | undefined {
+        return Container.bitbucketContext.getBitbucketCloudRepositories().find((wsRepo) => {
+            const site = wsRepo.mainSiteRemote.site!;
+            const fullName = `${site.ownerSlug}/${site.repoSlug}`;
+            return repoUrl.includes(fullName);
+        });
+    }
+
+    private showCloneOptions(repoUrl: string) {
+        const options: (QuickPickItem & { action: () => void })[] = [
+            {
+                label: 'Clone a new copy',
+                action: () => commands.executeCommand(Commands.CloneRepository, 'uriHandler', repoUrl),
+            },
+            {
+                label: 'Add an existing folder to this workspace',
+                action: () => commands.executeCommand(Commands.WorkbenchOpenRepository, 'uriHandler'),
+            },
+            {
+                label: 'Open repository in an different workspace',
+                action: () => commands.executeCommand(Commands.WorkbenchOpenWorkspace, 'uriHandler'),
+            },
+        ];
+
+        window.showQuickPick(options).then((selection) => selection?.action());
     }
 
     dispose(): void {
