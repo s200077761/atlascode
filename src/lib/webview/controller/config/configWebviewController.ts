@@ -251,6 +251,26 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 }
                 break;
             }
+            case ConfigActionType.CreateJiraIssue: {
+                this._api.createJiraIssue();
+                this._analytics.fireFocusCreateIssueEvent(id);
+                break;
+            }
+            case ConfigActionType.ViewJiraIssue: {
+                this._api.viewJiraIssue();
+                this._analytics.fireFocusIssueEvent(id);
+                break;
+            }
+            case ConfigActionType.CreatePullRequest: {
+                this._api.createPullRequest();
+                this._analytics.fireFocusCreatePullRequestEvent(id);
+                break;
+            }
+            case ConfigActionType.ViewPullRequest: {
+                this._api.viewPullRequest();
+                this._analytics.fireFocusPullRequestEvent(id);
+                break;
+            }
 
             case CommonActionType.ExternalLink:
             case CommonActionType.Cancel:

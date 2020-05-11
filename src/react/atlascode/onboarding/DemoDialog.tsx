@@ -4,9 +4,11 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
+    DialogContentText,
     DialogTitle,
     lighten,
     makeStyles,
+    Tooltip,
     Typography,
 } from '@material-ui/core';
 import Skeleton from '@material-ui/lab/Skeleton';
@@ -31,17 +33,21 @@ const useStyles = makeStyles((theme) => ({
 export type DemoDialogProps = {
     modalTitle: string;
     modalGifLink: string;
+    modalDescription?: React.ReactNode;
     modalVisibility: boolean;
     onClose: () => void;
     action: () => void;
+    actionNotAvailable?: boolean; //Sometimes meaningful actions are not available so the 'Try it!' button should be disabled
 };
 
 export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
     modalTitle,
     modalGifLink,
+    modalDescription,
     modalVisibility,
     onClose,
     action,
+    actionNotAvailable,
 }) => {
     const classes = useStyles();
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -65,6 +71,11 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                 <Typography variant="h1">{modalTitle}</Typography>
             </DialogTitle>
             <DialogContent>
+                <Box hidden={!modalDescription}>
+                    <DialogContentText>
+                        <Typography variant="h4">{modalDescription}</Typography>
+                    </DialogContentText>
+                </Box>
                 <Box hidden={imageLoaded}>
                     <Skeleton variant="rect" width="100%" height="400px" />
                 </Box>
@@ -78,9 +89,24 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleModalAction} variant="contained" color="primary">
-                    Try it!
-                </Button>
+                <Tooltip
+                    title={
+                        actionNotAvailable
+                            ? `Automatic action not available for '${modalTitle}'`
+                            : 'Click to perform this action automatically'
+                    }
+                >
+                    <span>
+                        <Button
+                            disabled={actionNotAvailable}
+                            onClick={handleModalAction}
+                            variant="contained"
+                            color="primary"
+                        >
+                            Try it!
+                        </Button>
+                    </span>
+                </Tooltip>
                 <Button onClick={handleModalClose}>
                     <Box className={classes.cancelButton}>Cancel</Box>
                 </Button>

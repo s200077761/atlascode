@@ -40,4 +40,8 @@ export interface ConfigActionApi {
     setConfigTarget(target: ConfigTarget): void;
     shouldShowTunnelOption(): boolean;
     flattenedConfigForTarget(target: ConfigTarget): FlattenedConfig;
+    createJiraIssue(): void;
+    viewJiraIssue(): void;
+    createPullRequest(): void;
+    viewPullRequest(): void;
 }

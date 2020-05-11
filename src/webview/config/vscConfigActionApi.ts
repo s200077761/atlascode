@@ -28,6 +28,7 @@ import { FeedbackUser } from '../../lib/ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
+import { FocusEventActions } from '../ExplorerFocusManager';
 
 export class VSCConfigActionApi implements ConfigActionApi {
     private _analyticsApi: AnalyticsApi;
@@ -279,6 +280,22 @@ export class VSCConfigActionApi implements ConfigActionApi {
                 break;
             }
         }
+    }
+
+    public createJiraIssue(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEISSUE, true);
+    }
+
+    public viewJiraIssue(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWISSUE, true);
+    }
+
+    public createPullRequest(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.CREATEPULLREQUEST, true);
+    }
+
+    public viewPullRequest(): void {
+        Container.explorerFocusManager.fireEvent(FocusEventActions.VIEWPULLREQUEST, true);
     }
 
     private openWorkspaceSettingsJson(rootPath: string) {
