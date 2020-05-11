@@ -1,3 +1,20 @@
+## What's New in 2.6.0
+
+### Improvements
+
+-   Onboarding screen has been redesigned and reskinned with Material UI
+-   Bitbucket issue screen has been redesigned and reskinned with Material UI
+-   Start Work page has been reskinned with Material UI
+-   Welcome page has been reskinned with Material UI
+-   The settings page can now be opened from a context menu in the Extensions view
+-   Support configuring preferred remotes to view pull requests
+
+### Bugs fixed
+
+-   A few styling issues were fixed on the settings page for light mode
+-   JQL can now be edited for Jira server instances
+-   Changing refresh intervals now works properly
+
 ## What's New in 2.5.1
 
 ### Bugs fixed

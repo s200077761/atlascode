@@ -83,6 +83,34 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.0 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Onboarding screen has been redesigned and reskinned with Material UI
+                                                </li>
+                                                <li>
+                                                    Bitbucket issue screen has been redesigned and reskinned with
+                                                    Material UI
+                                                </li>
+                                                <li>Start Work page has been reskinned with Material UI</li>
+                                                <li>Welcome page has been reskinned with Material UI</li>
+                                                <li>
+                                                    The settings page can now be opened from a context menu in the
+                                                    Extensions view
+                                                </li>
+                                                <li>Support configuring preferred remotes to view pull requests</li>
+                                            </ul>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    A few styling issues were fixed on the settings page for light mode
+                                                </li>
+                                                <li>JQL can now be edited for Jira server instances</li>
+                                                <li>Changing refresh intervals now works properly</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.5.1 🎉</h3>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
