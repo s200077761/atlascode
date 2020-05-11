@@ -187,23 +187,17 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue)
         ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
-        commands.registerCommand(Commands.WorkbenchOpenRepository, () => {
-            openWorkbenchRepositoryButtonEvent('pullRequestsTreeView').then((event) =>
-                Container.analyticsClient.sendUIEvent(event)
-            );
+        commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
+            openWorkbenchRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
             commands.executeCommand('workbench.action.addRootFolder');
         }),
-        commands.registerCommand(Commands.WorkbenchOpenWorkspace, () => {
-            openWorkbenchWorkspaceButtonEvent('pullRequestsTreeView').then((event) =>
-                Container.analyticsClient.sendUIEvent(event)
-            );
+        commands.registerCommand(Commands.WorkbenchOpenWorkspace, (source: string) => {
+            openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
             commands.executeCommand('workbench.action.openWorkspace');
         }),
-        commands.registerCommand(Commands.CloneRepository, () => {
-            cloneRepositoryButtonEvent('pullRequestsTreeView').then((event) =>
-                Container.analyticsClient.sendUIEvent(event)
-            );
-            commands.executeCommand('git.clone');
+        commands.registerCommand(Commands.CloneRepository, (source: string, repoUrl?: string) => {
+            cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            commands.executeCommand('git.clone', repoUrl);
         })
     );
 }
