@@ -81,7 +81,9 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
                                 </Box>
                             }
                         >
-                            <Button onClick={handleRestore}>Restore Defaults</Button>
+                            <Button onClick={handleRestore} variant="text" color="primary">
+                                Restore Defaults
+                            </Button>
                         </InlineTextEditorList>
                     </Box>
                 </Grid>

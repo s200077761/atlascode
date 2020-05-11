@@ -44,15 +44,15 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 },
             },
             MuiButton: {
-                root: {
-                    color: vscStyles.buttonForeground,
-                },
+                root: {},
                 contained: {
                     '&:hover': {
+                        color: vscStyles.buttonForeground,
                         backgroundColor: vscStyles.buttonHoverBackground,
                     },
                 },
                 text: {
+                    color: vscStyles.buttonBackground,
                     '&:hover': {
                         backgroundColor: vscStyles.buttonHoverBackground,
                     },
