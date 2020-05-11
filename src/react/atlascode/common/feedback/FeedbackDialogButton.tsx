@@ -1,4 +1,4 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import {
     Box,
     Button,
@@ -8,6 +8,7 @@ import {
     DialogContentText,
     Grid,
     MenuItem,
+    Switch,
     TextField,
 } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
@@ -124,15 +125,21 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
                             />
                         </Grid>
                         <Grid item>
-                            <SwitchWithLabel
-                                name="canBeContacted"
-                                defaultChecked={true}
-                                size="small"
-                                color="primary"
-                                id="canBeContacted"
-                                value="canBeContacted"
+                            <ToggleWithLabel
+                                control={
+                                    <Switch
+                                        name="canBeContacted"
+                                        defaultChecked={true}
+                                        size="small"
+                                        color="primary"
+                                        id="canBeContacted"
+                                        value="canBeContacted"
+                                        inputRef={register}
+                                    />
+                                }
                                 label="Atlassian can contact me about this feedback"
-                                inputRef={register}
+                                variant="body1"
+                                spacing={1}
                             />
                         </Grid>
                         <Grid item>

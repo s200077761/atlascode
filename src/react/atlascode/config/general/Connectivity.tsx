@@ -1,5 +1,5 @@
-import { InlineTextEditorList, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Button, Grid, Typography } from '@material-ui/core';
+import { InlineTextEditorList, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Button, Grid, Switch, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
@@ -45,14 +45,20 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
         return (
             <Grid container direction="column" spacing={3}>
                 <Grid item>
-                    <SwitchWithLabel
-                        size="small"
-                        color="primary"
-                        id="enableHttpsTunnel"
-                        value="enableHttpsTunnel"
-                        checked={enableHttpsTunnel}
-                        onChange={handleCheckedChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                size="small"
+                                color="primary"
+                                id="enableHttpsTunnel"
+                                value="enableHttpsTunnel"
+                                checked={enableHttpsTunnel}
+                                onChange={handleCheckedChange}
+                            />
+                        }
                         label="Enable https tunneling for proxies that only have an http endpoint"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>

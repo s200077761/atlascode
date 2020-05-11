@@ -7,6 +7,7 @@ import {
     Container,
     Grid,
     Link,
+    makeStyles,
     Paper,
     Theme,
     Toolbar,
@@ -24,7 +25,6 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import RemoveRedEyeOutlinedIcon from '@material-ui/icons/RemoveRedEyeOutlined';
 import StarBorder from '@material-ui/icons/StarBorder';
-import { makeStyles } from '@material-ui/styles';
 import { format } from 'date-fns';
 import React, { useCallback } from 'react';
 import CommentForm from '../common/CommentForm';
