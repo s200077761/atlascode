@@ -1,5 +1,4 @@
-import { CssBaseline } from '@material-ui/core';
-import { default as MuiThemeProvider } from '@material-ui/styles/ThemeProvider';
+import { CssBaseline, ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 import useConstant from 'use-constant';
@@ -64,7 +63,7 @@ const App = () => {
         <ResourceContext.Provider value="vscode-resource:">
             <React.Suspense fallback={<AtlLoader />}>
                 <VSCodeStylesContext.Provider value={vscStyles}>
-                    <MuiThemeProvider theme={currentTheme}>
+                    <ThemeProvider theme={currentTheme}>
                         <ErrorControllerContext.Provider value={errorController}>
                             <ErrorStateContext.Provider value={errorState}>
                                 <CssBaseline />
@@ -72,7 +71,7 @@ const App = () => {
                                 <Page />
                             </ErrorStateContext.Provider>
                         </ErrorControllerContext.Provider>
-                    </MuiThemeProvider>
+                    </ThemeProvider>
                 </VSCodeStylesContext.Provider>
             </React.Suspense>
         </ResourceContext.Provider>

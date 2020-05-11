@@ -22,10 +22,19 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             },
         },
         typography: {
+            htmlFontSize: 14,
+            fontSize: 11,
             fontFamily: vscStyles.fontFamily,
-            fontSize: vscStyles.editorFontSize,
         },
         overrides: {
+            MuiIconButton: {
+                sizeSmall: {
+                    // Adjust spacing to reach minimal touch target hitbox
+                    marginLeft: 4,
+                    marginRight: 4,
+                    padding: 12,
+                },
+            },
             MuiChip: {
                 root: {
                     backgroundColor: isDark
@@ -35,34 +44,37 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 },
             },
             MuiButton: {
-                root: {
-                    color: vscStyles.buttonForeground,
-                },
+                root: {},
                 contained: {
                     '&:hover': {
+                        color: vscStyles.buttonForeground,
                         backgroundColor: vscStyles.buttonHoverBackground,
                     },
                 },
                 text: {
+                    color: vscStyles.buttonBackground,
                     '&:hover': {
                         backgroundColor: vscStyles.buttonHoverBackground,
                     },
                 },
             },
             MuiAppBar: {
+                root: {
+                    marginTop: 4,
+                },
                 colorDefault: {
-                    backgroundColor: vscStyles.activityBarBackground,
-                    color: vscStyles.activityBarForeground,
+                    backgroundColor: vscStyles.sideBarBackground,
+                    color: vscStyles.sideBarTitleForeground,
                 },
                 colorPrimary: {
-                    backgroundColor: vscStyles.activityBarBackground,
-                    color: vscStyles.activityBarForeground,
+                    backgroundColor: vscStyles.sideBarBackground,
+                    color: vscStyles.sideBarTitleForeground,
                 },
             },
             MuiExpansionPanelSummary: {
                 root: {
-                    backgroundColor: vscStyles.titleBarActiveBackground,
-                    color: vscStyles.titleBarActiveForeground,
+                    backgroundColor: vscStyles.sideBarSectionHeaderBackground,
+                    color: vscStyles.sideBarTitleForeground,
                 },
             },
             MuiFilledInput: {

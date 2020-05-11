@@ -1,4 +1,4 @@
-import { InlineTextEditor, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
+import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import {
     Divider,
     Fade,
@@ -9,6 +9,7 @@ import {
     ListItem,
     ListItemText,
     makeStyles,
+    Switch,
     Theme,
     Tooltip,
     Typography,
@@ -115,25 +116,37 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
         return (
             <Grid container direction="column" spacing={3}>
                 <Grid item>
-                    <SwitchWithLabel
-                        size="small"
-                        color="primary"
-                        id="enableCurlLogging"
-                        value="enableCurlLogging"
-                        checked={enableCurl}
-                        onChange={handleCheckedChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                size="small"
+                                color="primary"
+                                id="enableCurlLogging"
+                                value="enableCurlLogging"
+                                checked={enableCurl}
+                                onChange={handleCheckedChange}
+                            />
+                        }
                         label="Output curl commands for every API call"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        size="small"
-                        color="primary"
-                        id="enableCharles"
-                        value="enableCharles"
-                        checked={enableCharles}
-                        onChange={handleCheckedChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                size="small"
+                                color="primary"
+                                id="enableCharles"
+                                value="enableCharles"
+                                checked={enableCharles}
+                                onChange={handleCheckedChange}
+                            />
+                        }
                         label="Enable Charles Web Debug Proxy"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
@@ -194,14 +207,20 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                                     </List>
                                 </Grid>
                                 <Grid item>
-                                    <SwitchWithLabel
-                                        size="small"
-                                        color="primary"
-                                        id="charelsDebugOnly"
-                                        value="charlesDebugOnly"
-                                        checked={charlesDebugOnly}
-                                        onChange={handleCheckedChange}
+                                    <ToggleWithLabel
+                                        control={
+                                            <Switch
+                                                size="small"
+                                                color="primary"
+                                                id="charelsDebugOnly"
+                                                value="charlesDebugOnly"
+                                                checked={charlesDebugOnly}
+                                                onChange={handleCheckedChange}
+                                            />
+                                        }
                                         label="Only enable Charles when debugging this extension (internal use)"
+                                        spacing={1}
+                                        variant="body1"
                                     />
                                 </Grid>
                             </Grid>

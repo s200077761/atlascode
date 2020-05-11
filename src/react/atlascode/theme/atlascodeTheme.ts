@@ -7,6 +7,7 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
 
     return createMuiTheme({
         ...baseTheme,
+        spacing: 6,
         typography: {
             ...baseTheme.typography,
             h1: {
@@ -53,6 +54,43 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
             ...baseTheme.props,
             MuiTextField: {
                 variant: 'outlined',
+                margin: 'dense',
+            },
+            MuiButton: {
+                size: 'small',
+            },
+            MuiFilledInput: {
+                margin: 'dense',
+            },
+            MuiFormControl: {
+                margin: 'dense',
+            },
+            MuiFormHelperText: {
+                margin: 'dense',
+            },
+            MuiIconButton: {
+                size: 'small',
+            },
+            MuiInputBase: {
+                margin: 'dense',
+            },
+            MuiInputLabel: {
+                margin: 'dense',
+            },
+            MuiListItem: {
+                dense: true,
+            },
+            MuiOutlinedInput: {
+                margin: 'dense',
+            },
+            MuiFab: {
+                size: 'small',
+            },
+            MuiTable: {
+                size: 'small',
+            },
+            MuiToolbar: {
+                variant: 'dense',
             },
         },
         zIndex: {

@@ -1,5 +1,5 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, Link, makeStyles, Theme, Typography } from '@material-ui/core';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Grid, Link, makeStyles, Switch, Theme, Tooltip, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { JQLEntry } from '../../../../config/model';
@@ -63,62 +63,84 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                 </Grid>
 
                 <Grid item>
-                    <SwitchWithLabel
-                        label={enabled ? 'Disable Jira explorer' : 'Enable Jira Explorer'}
-                        color="primary"
-                        size="small"
-                        value="explorer.enabled"
-                        checked={enabled}
-                        onChange={handleChange}
-                        tooltipProps={{ title: enabled ? 'Disable Jira explorer' : 'Enable Jira Explorer' }}
-                    />
+                    <Grid container direction="row" spacing={1}>
+                        <Grid item>
+                            <Tooltip title="Enable Jira Explorer">
+                                <Switch
+                                    size="small"
+                                    color="primary"
+                                    value="explorer.enabled"
+                                    checked={enabled}
+                                    onChange={handleChange}
+                                />
+                            </Tooltip>
+                        </Grid>
+                        <Grid item>
+                            <Typography variant="body1">Enable Jira Explorer</Typography>
+                        </Grid>
+                    </Grid>
                 </Grid>
 
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        disabled={!enabled}
+                    <ToggleWithLabel
+                        control={
+                            <Tooltip title="Enable issue grouping">
+                                <Switch
+                                    className={classes.indent}
+                                    disabled={!enabled}
+                                    color="primary"
+                                    size="small"
+                                    value="explorer.nestSubtasks"
+                                    checked={nestSubtasks}
+                                    onChange={handleChange}
+                                />
+                            </Tooltip>
+                        }
                         label="Group issues by epic"
-                        color="primary"
-                        size="small"
-                        value="explorer.nestSubtasks"
-                        checked={nestSubtasks}
-                        onChange={handleChange}
-                        tooltipProps={{
-                            title: nestSubtasks ? `Disable issue grouping` : `Enable issue grouping`,
-                        }}
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
 
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        disabled={!enabled}
+                    <ToggleWithLabel
+                        control={
+                            <Tooltip title="Fetch all Results">
+                                <Switch
+                                    className={classes.indent}
+                                    disabled={!enabled}
+                                    color="primary"
+                                    size="small"
+                                    checked={fetchAllQueryResults}
+                                    value="explorer.fetchAllQueryResults"
+                                    onChange={handleChange}
+                                />
+                            </Tooltip>
+                        }
                         label="Fetch all JQL query results (default is 100, enabling this could cause performance issues)"
-                        color="primary"
-                        size="small"
-                        checked={fetchAllQueryResults}
-                        value="explorer.fetchAllQueryResults"
-                        onChange={handleChange}
-                        tooltipProps={{
-                            title: fetchAllQueryResults ? `Limit to 100 results` : `Fetch all results`,
-                        }}
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
 
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        disabled={!enabled}
+                    <ToggleWithLabel
+                        control={
+                            <Tooltip title="Enable Notifications">
+                                <Switch
+                                    className={classes.indent}
+                                    disabled={!enabled}
+                                    color="primary"
+                                    size="small"
+                                    checked={monitorEnabled}
+                                    value="explorer.monitorEnabled"
+                                    onChange={handleChange}
+                                />
+                            </Tooltip>
+                        }
                         label="Show notifications when new issues are created matching  the JQLs/Filters below"
-                        color="primary"
-                        size="small"
-                        checked={monitorEnabled}
-                        value="explorer.monitorEnabled"
-                        onChange={handleChange}
-                        tooltipProps={{
-                            title: monitorEnabled ? `Disable notification` : `Enable Notifications`,
-                        }}
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
 

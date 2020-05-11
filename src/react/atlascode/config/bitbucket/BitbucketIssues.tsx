@@ -1,5 +1,5 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Grid, makeStyles, Theme } from '@material-ui/core';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Grid, makeStyles, Switch, Theme } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
@@ -50,40 +50,58 @@ export const BitbucketIssues: React.FunctionComponent<BitbucketIssuesProps> = me
         return (
             <Grid container direction="column" spacing={2}>
                 <Grid item>
-                    <SwitchWithLabel
-                        size="small"
-                        color="primary"
-                        id="bbIssuesExplorerEnabled"
-                        value="issues.explorerEnabled"
-                        checked={enabled}
-                        onChange={handleChange}
-                        label={enabled ? `Disable Bitbucket issues explorer` : `Enable Bitbucket issues explorer`}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                size="small"
+                                color="primary"
+                                id="bbIssuesExplorerEnabled"
+                                value="issues.explorerEnabled"
+                                checked={enabled}
+                                onChange={handleChange}
+                            />
+                        }
+                        label="Enable Bitbucket issues explorer"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        size="small"
-                        color="primary"
-                        id="bbIssuesMonitor"
-                        value="issues.monitorEnabled"
-                        checked={notifications}
-                        disabled={!enabled}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbIssuesMonitor"
+                                value="issues.monitorEnabled"
+                                checked={notifications}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
                         label="Show notifications when new Bitbucket issues are created"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        size="small"
-                        color="primary"
-                        id="bbCreateJiraIssues"
-                        value="issues.createJiraEnabled"
-                        checked={jiraButton}
-                        disabled={!enabled}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbCreateJiraIssues"
+                                value="issues.createJiraEnabled"
+                                checked={jiraButton}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
                         label="Show Create Jira Issue button on Bitbucket issue screens"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
