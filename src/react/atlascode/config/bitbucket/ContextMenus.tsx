@@ -1,4 +1,5 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Switch } from '@material-ui/core';
 import React, { memo, useContext } from 'react';
 import { ConfigControllerContext } from '../configController';
 
@@ -16,13 +17,19 @@ export const ContextMenus: React.FunctionComponent<ContextMenuProps> = memo(({ e
     };
 
     return (
-        <SwitchWithLabel
-            size="small"
-            color="primary"
-            id="bitbucketContextMenusEnabled"
-            checked={enabled}
-            onChange={handleChange}
-            label={enabled ? `Disable Bitbucket context menus in editor` : `Enable Bitbucket context menus in editor`}
+        <ToggleWithLabel
+            control={
+                <Switch
+                    size="small"
+                    color="primary"
+                    id="bitbucketContextMenusEnabled"
+                    checked={enabled}
+                    onChange={handleChange}
+                />
+            }
+            label="Enable Bitbucket context menus in editor"
+            spacing={1}
+            variant="body1"
         />
     );
 });

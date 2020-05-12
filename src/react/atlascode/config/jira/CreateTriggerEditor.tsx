@@ -1,5 +1,5 @@
-import { InlineTextEditorList, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, Typography } from '@material-ui/core';
+import { InlineTextEditorList, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Grid, Switch, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
@@ -35,13 +35,19 @@ export const CreateTriggerEditor: React.FunctionComponent<CreateTriggerEditorPro
     return (
         <Grid container direction="column" spacing={2}>
             <Grid item>
-                <SwitchWithLabel
+                <ToggleWithLabel
+                    control={
+                        <Switch
+                            size="small"
+                            color="primary"
+                            id="jiraHoverEnabled"
+                            checked={!disabled}
+                            onChange={handleEnableToggle}
+                        />
+                    }
                     label="Show code action to 'Create Jira issue' for comment triggers"
-                    size="small"
-                    color="primary"
-                    id="jiraHoverEnabled"
-                    checked={!disabled}
-                    onChange={handleEnableToggle}
+                    spacing={1}
+                    variant="body1"
                 />
             </Grid>
             <Grid item>

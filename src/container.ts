@@ -4,18 +4,25 @@ import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
+import { BitbucketIssue } from './bitbucket/model';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
+import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
+import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
+import { StartWorkAction } from './lib/ipc/fromUI/startWork';
+import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
+import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
+import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -23,22 +30,28 @@ import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManage
 import { JiraContext } from './views/jira/jiraContext';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
+import { VSCBitbucketIssueActionApi } from './webview/bbIssue/vscBitbucketIssueActionApi';
+import { VSCBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscBitbucketIssueWebviewControllerFactory';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
+import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
+import { MultiWebview } from './webview/multiViewFactory';
+import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
+import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
-import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
-import { ConfigWebview } from './webviews/configWebview';
+import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
+import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
+import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
+import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { OnboardingWebview } from './webviews/Onboarding';
 import { PipelineViewManager } from './webviews/pipelineViewManager';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
-import { WelcomeWebview } from './webviews/welcomeWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -68,9 +81,6 @@ export class Container {
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
-        context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
-        context.subscriptions.push((this._onboardingWebview = new OnboardingWebview(context.extensionPath)));
         context.subscriptions.push(
             (this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath))
         );
@@ -92,6 +102,8 @@ export class Container {
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jqlManager = new JQLManager()));
 
+        context.subscriptions.push((this._explorerFocusManager = new ExplorerFocusManager()));
+
         const settingsV2ViewFactory = new SingleWebview<SectionChangeMessage, ConfigAction>(
             context.extensionPath,
             new VSCConfigWebviewControllerFactory(
@@ -103,7 +115,37 @@ export class Container {
             this._analyticsApi
         );
 
+        const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
+            context.extensionPath,
+            new VSCOnboardingWebviewControllerFactory(
+                new VSCOnboardingActionApi(this._analyticsApi),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                ONBOARDING_URL
+            ),
+            this.analyticsApi
+        );
+
+        const welcomeV2ViewFactory = new SingleWebview<WelcomeInitMessage, WelcomeAction>(
+            context.extensionPath,
+            new VSCWelcomeWebviewControllerFactory(new VSCWelcomeActionApi(), this._commonMessageHandler),
+            this._analyticsApi
+        );
+
+        const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
+            context.extensionPath,
+            new VSCStartWorkWebviewControllerFactory(
+                new VSCStartWorkActionApi(),
+                this._commonMessageHandler,
+                this._analyticsApi
+            ),
+            this._analyticsApi
+        );
+
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
+        context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
+        context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
+        context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
 
         this._pmfStats = new PmfStats(context);
 
@@ -129,8 +171,17 @@ export class Container {
             (this._pipelineViewManager = new PipelineViewManager(this._context.extensionPath))
         );
         this._context.subscriptions.push(
-            (this._bitbucketIssueViewManager = new BitbucketIssueViewManager(this._context.extensionPath))
+            (this._bitbucketIssueWebviewFactory = new MultiWebview<BitbucketIssue, BitbucketIssueAction>(
+                this._context.extensionPath,
+                new VSCBitbucketIssueWebviewControllerFactory(
+                    new VSCBitbucketIssueActionApi(this._cancellationManager),
+                    this._commonMessageHandler,
+                    this._analyticsApi
+                ),
+                this._analyticsApi
+            ))
         );
+
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
     }
 
@@ -188,10 +239,9 @@ export class Container {
     static get bitbucketContext() {
         return this._bitbucketContext;
     }
-
-    private static _configWebview: ConfigWebview;
-    static get configWebview() {
-        return this._configWebview;
+    private static _explorerFocusManager: ExplorerFocusManager;
+    static get explorerFocusManager() {
+        return this._explorerFocusManager;
     }
 
     private static _settingsWebviewFactory: SingleWebview<SectionChangeMessage, ConfigAction>;
@@ -199,14 +249,24 @@ export class Container {
         return this._settingsWebviewFactory;
     }
 
-    private static _welcomeWebview: WelcomeWebview;
-    static get welcomeWebview() {
-        return this._welcomeWebview;
+    private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
+    static get onboardingWebviewFactory() {
+        return this._onboardingWebviewFactory;
     }
 
-    private static _onboardingWebview: OnboardingWebview;
-    static get onboardingWebview() {
-        return this._onboardingWebview;
+    private static _welcomeWebviewFactory: SingleWebview<WelcomeInitMessage, WelcomeAction>;
+    static get welcomeWebviewFactory() {
+        return this._welcomeWebviewFactory;
+    }
+
+    private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
+    static get startWorkWebviewFactory() {
+        return this._startWorkWebviewFactory;
+    }
+
+    private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
+    static get bitbucketIssueWebviewFactory() {
+        return this._bitbucketIssueWebviewFactory;
     }
 
     private static _createIssueWebview: CreateIssueWebview;
@@ -257,11 +317,6 @@ export class Container {
     private static _pipelineViewManager: PipelineViewManager;
     static get pipelineViewManager() {
         return this._pipelineViewManager;
-    }
-
-    private static _bitbucketIssueViewManager: BitbucketIssueViewManager;
-    static get bitbucketIssueViewManager() {
-        return this._bitbucketIssueViewManager;
     }
 
     private static _clientManager: ClientManager;

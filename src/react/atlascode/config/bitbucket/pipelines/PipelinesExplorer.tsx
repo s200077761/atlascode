@@ -1,5 +1,5 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Grid, makeStyles, Switch, Theme, Tooltip, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../../common/IntervalInput';
@@ -58,67 +58,87 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                 <PipelinesExplorerOptions
                     enableItem={
                         <Grid item>
-                            <SwitchWithLabel
-                                label={enabled ? 'Disable pipelines explorer' : 'Enable pipelines Explorer'}
-                                color="primary"
-                                size="small"
-                                value="pipelines.explorerEnabled"
-                                checked={enabled}
-                                onChange={handleChange}
-                                tooltipProps={{
-                                    title: enabled ? 'Disable pipelines explorer' : 'Enable pipelines Explorer',
-                                }}
+                            <ToggleWithLabel
+                                control={
+                                    <Tooltip title="Enable pipelines Explorer">
+                                        <Switch
+                                            color="primary"
+                                            size="small"
+                                            value="pipelines.explorerEnabled"
+                                            checked={enabled}
+                                            onChange={handleChange}
+                                        />
+                                    </Tooltip>
+                                }
+                                label="Enable pipelines Explorer"
+                                spacing={1}
+                                variant="body1"
                             />
                         </Grid>
                     }
                     monitorItem={
                         <Grid item>
-                            <SwitchWithLabel
-                                className={classes.indent}
-                                disabled={!enabled}
+                            <ToggleWithLabel
+                                control={
+                                    <Tooltip title="Enable notifications">
+                                        <Switch
+                                            className={classes.indent}
+                                            disabled={!enabled}
+                                            color="primary"
+                                            size="small"
+                                            value="pipelines.monitorEnabled"
+                                            checked={monitorEnabled}
+                                            onChange={handleChange}
+                                        />
+                                    </Tooltip>
+                                }
                                 label="Show notifications when new Bitbucket pipelines are created"
-                                color="primary"
-                                size="small"
-                                value="pipelines.monitorEnabled"
-                                checked={monitorEnabled}
-                                onChange={handleChange}
-                                tooltipProps={{
-                                    title: monitorEnabled ? `Disable notifications` : `Enable notifications`,
-                                }}
+                                spacing={1}
+                                variant="body1"
                             />
                         </Grid>
                     }
                     hideEmptyItem={
                         <Grid item>
-                            <SwitchWithLabel
-                                className={classes.indent}
-                                disabled={!enabled}
+                            <ToggleWithLabel
+                                control={
+                                    <Tooltip title="Show empty pipelines">
+                                        <Switch
+                                            className={classes.indent}
+                                            disabled={!enabled}
+                                            color="primary"
+                                            size="small"
+                                            checked={hideEmpty}
+                                            value="pipelines.hideEmpty"
+                                            onChange={handleChange}
+                                        />
+                                    </Tooltip>
+                                }
                                 label="Hide Bitbucket pipelines with no results"
-                                color="primary"
-                                size="small"
-                                checked={hideEmpty}
-                                value="pipelines.hideEmpty"
-                                onChange={handleChange}
-                                tooltipProps={{
-                                    title: hideEmpty ? `Hide empty pipelines` : `Show empty pipelines`,
-                                }}
+                                spacing={1}
+                                variant="body1"
                             />
                         </Grid>
                     }
                     hideFilteredItem={
                         <Grid item>
-                            <SwitchWithLabel
-                                className={classes.indent}
-                                disabled={!enabled}
+                            <ToggleWithLabel
+                                control={
+                                    <Tooltip title="Enable filters">
+                                        <Switch
+                                            className={classes.indent}
+                                            disabled={!enabled}
+                                            color="primary"
+                                            size="small"
+                                            checked={hideFiltered}
+                                            value="pipelines.hideFiltered"
+                                            onChange={handleChange}
+                                        />
+                                    </Tooltip>
+                                }
                                 label="Show only Bitbucket pipelines matching the filters below"
-                                color="primary"
-                                size="small"
-                                checked={hideFiltered}
-                                value="pipelines.hideFiltered"
-                                onChange={handleChange}
-                                tooltipProps={{
-                                    title: hideFiltered ? `Disable filters` : `Enable filters`,
-                                }}
+                                spacing={1}
+                                variant="body1"
                             />
                         </Grid>
                     }

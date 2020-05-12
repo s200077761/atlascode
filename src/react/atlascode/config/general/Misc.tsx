@@ -1,5 +1,5 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, MenuItem, TextField } from '@material-ui/core';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Grid, MenuItem, Switch, TextField } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigControllerContext } from '../configController';
 
@@ -42,13 +42,19 @@ export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, out
     return (
         <Grid container direction="column" spacing={3}>
             <Grid item>
-                <SwitchWithLabel
-                    size="small"
-                    color="primary"
-                    id="showWelcome"
-                    checked={showWelcome}
-                    onChange={handleWelcomeChange}
+                <ToggleWithLabel
+                    control={
+                        <Switch
+                            size="small"
+                            color="primary"
+                            id="showWelcome"
+                            checked={showWelcome}
+                            onChange={handleWelcomeChange}
+                        />
+                    }
                     label="Show welcome screen when extension is updated"
+                    spacing={1}
+                    variant="body1"
                 />
             </Grid>
             <Grid item>

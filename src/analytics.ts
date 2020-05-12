@@ -201,8 +201,12 @@ export async function pmfClosed(): Promise<TrackEvent> {
     return trackEvent('closed', 'atlascodePmf');
 }
 
-export async function externalUriEvent(source: string, target: string): Promise<TrackEvent> {
-    return trackEvent('opened', 'externalUri', { attributes: { source: source, target: target } });
+export async function deepLinkEvent(source: string, target: string): Promise<TrackEvent> {
+    return trackEvent('opened', 'deepLink', { attributes: { source: source, target: target } });
+}
+
+export async function externalLinkEvent(source: string, linkId: string): Promise<TrackEvent> {
+    return trackEvent('opened', 'externalLink', { attributes: { source: source, linkType: linkId } });
 }
 
 // Screen Events
@@ -292,6 +296,67 @@ export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> 
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function focusCreateIssueEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusCreateIssue',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function focusIssueEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusIssue',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+export async function focusCreatePullRequestEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusCreatePullRequest',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+export async function focusPullRequestEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'focusPullRequest',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
 export async function doneButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
@@ -373,7 +438,6 @@ export async function configureJQLButtonEvent(source: string): Promise<UIEvent> 
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
-//TODO: There is no reference to this function...
 export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
@@ -446,7 +510,7 @@ export async function openActiveIssueEvent(): Promise<UIEvent> {
             platform: AnalyticsPlatform.for(process.platform),
             action: 'clicked',
             actionSubject: 'button',
-            actionSubjectId: 'cloneRepository',
+            actionSubjectId: 'openActiveIssue',
             source: 'statusBar',
         },
     };

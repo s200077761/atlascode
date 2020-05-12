@@ -1,8 +1,8 @@
 import { MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
 import { commands, Disposable } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { OnboardingNotificationActions, OnboardingNotificationPressedEvent } from '../../atlclients/authNotification';
 import { Commands } from '../../commands';
+import { FocusEvent, FocusEventActions } from '../../webview/ExplorerFocusManager';
 import { BaseTreeDataProvider, Explorer } from '../Explorer';
 import { IssueNode } from '../nodes/issueNode';
 import { CustomJQLRoot } from './customJqlRoot';
@@ -81,10 +81,10 @@ export class JiraExplorer extends Explorer implements Refreshable {
         return issue;
     }
 
-    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+    async focusEvent(e: FocusEvent) {
         const dataProvider = this.getDataProvider();
         if (dataProvider instanceof CustomJQLRoot) {
-            if (e.action === OnboardingNotificationActions.VIEWISSUE) {
+            if (e.action === FocusEventActions.VIEWISSUE) {
                 const firstJQLResult = await dataProvider.getFirstJQLResult();
 
                 //If the JQL query returns nothing, firstJQLResult will be a SimpleJirIssueNode saying "No issue match this query"
@@ -97,8 +97,8 @@ export class JiraExplorer extends Explorer implements Refreshable {
                         commands.executeCommand(commandObj.command, ...(commandObj.arguments ?? []));
                     }
                 }
-            } else if (e.action === OnboardingNotificationActions.CREATEISSUE) {
-                const createIssueNode = dataProvider.getCreateIssueNode();
+            } else if (e.action === FocusEventActions.CREATEISSUE) {
+                const createIssueNode = await dataProvider.getCreateIssueNode();
                 if (createIssueNode instanceof CreateJiraIssueNode) {
                     this.reveal(createIssueNode, { focus: true });
                     commands.executeCommand(Commands.CreateIssue, undefined, 'HintNotification');

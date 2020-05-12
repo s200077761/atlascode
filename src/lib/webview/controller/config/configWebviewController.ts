@@ -4,6 +4,7 @@ import { isBasicAuthInfo, isEmptySiteInfo } from '../../../../atlclients/authInf
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
+import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { ConfigMessage, ConfigMessageType, ConfigResponse, SectionChangeMessage } from '../../../ipc/toUI/config';
 import { Logger } from '../../../logger';
@@ -46,7 +47,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
     }
 
     public screenDetails() {
-        return { id: 'atlascodeSettings', site: undefined, product: undefined };
+        return { id: WebViewID.ConfigWebview, site: undefined, product: undefined };
     }
 
     private postMessage(message: ConfigMessage | ConfigResponse | CommonMessage) {
@@ -252,6 +253,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 break;
             }
 
+            case CommonActionType.OpenJiraIssue:
             case CommonActionType.ExternalLink:
             case CommonActionType.Cancel:
             case CommonActionType.DismissPMFLater:

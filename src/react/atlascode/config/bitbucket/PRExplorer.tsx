@@ -1,5 +1,5 @@
-import { SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Grid, makeStyles, Theme } from '@material-ui/core';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Grid, makeStyles, Switch, Theme } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
@@ -52,70 +52,96 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
         return (
             <Grid container direction="column" spacing={2}>
                 <Grid item>
-                    <SwitchWithLabel
-                        size="small"
-                        color="primary"
-                        id="bbExplorerEnabled"
-                        value="explorer.enabled"
-                        checked={enabled}
-                        onChange={handleChange}
-                        label={
-                            enabled
-                                ? `Disable Bitbucket pull requests explorer`
-                                : `Enable Bitbucket pull requests explorer`
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                size="small"
+                                color="primary"
+                                id="bbExplorerEnabled"
+                                value="explorer.enabled"
+                                checked={enabled}
+                                onChange={handleChange}
+                            />
                         }
+                        label="Enable Bitbucket pull requests explorer"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        size="small"
-                        color="primary"
-                        id="bbRelatedJiraIssues"
-                        value="explorer.relatedJiraIssues.enabled"
-                        checked={relatedJiraIssues}
-                        disabled={!enabled}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbRelatedJiraIssues"
+                                value="explorer.relatedJiraIssues.enabled"
+                                checked={relatedJiraIssues}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
                         label="Show related Jira issues for Bitbucket pull requests"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        size="small"
-                        color="primary"
-                        id="bbRelatedBitbucketIssues"
-                        value="explorer.relatedBitbucketIssues.enabled"
-                        checked={relatedBitbucketIssues}
-                        disabled={!enabled}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbRelatedBitbucketIssues"
+                                value="explorer.relatedBitbucketIssues.enabled"
+                                checked={relatedBitbucketIssues}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
                         label="Show related Bitbucket issues for pull requests"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        size="small"
-                        color="primary"
-                        id="bbpullRequestCreatedNotify"
-                        value="explorer.notifications.pullRequestCreated"
-                        checked={pullRequestCreated}
-                        disabled={!enabled}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbpullRequestCreatedNotify"
+                                value="explorer.notifications.pullRequestCreated"
+                                checked={pullRequestCreated}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
                         label="Show notifications when new Bitbucket pull requests are created"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>
-                    <SwitchWithLabel
-                        className={classes.indent}
-                        size="small"
-                        color="primary"
-                        id="bbNestFiles"
-                        value="explorer.nestFiles"
-                        checked={nestFiles}
-                        disabled={!enabled}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                className={classes.indent}
+                                size="small"
+                                color="primary"
+                                id="bbNestFiles"
+                                value="explorer.nestFiles"
+                                checked={nestFiles}
+                                disabled={!enabled}
+                                onChange={handleChange}
+                            />
+                        }
                         label="Nest modified files by folder"
+                        spacing={1}
+                        variant="body1"
                     />
                 </Grid>
                 <Grid item>

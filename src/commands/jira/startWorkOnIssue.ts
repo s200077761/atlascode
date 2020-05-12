@@ -13,5 +13,7 @@ export async function startWorkOnIssue(issueOrLink: MinimalORIssueLink<DetailedS
         issue = await fetchMinimalIssue(linkedIssue.key, linkedIssue.siteDetails);
     }
 
-    Container.startWorkOnIssueWebview.createOrShowIssue(issue);
+    Container.startWorkWebviewFactory.createOrShow({
+        issue: issue,
+    });
 }

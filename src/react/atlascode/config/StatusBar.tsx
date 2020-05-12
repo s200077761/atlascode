@@ -1,5 +1,5 @@
-import { SmallCheckboxWithLabel, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid } from '@material-ui/core';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Checkbox, Grid, Switch } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../lib/ipc/models/config';
 import { ConfigControllerContext } from './configController';
@@ -46,47 +46,74 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
     return (
         <Grid container direction="column">
             <Grid item>
-                <SwitchWithLabel
-                    size="small"
-                    color="primary"
-                    id="statusbar.enabled"
-                    value="statusbar.enabled"
-                    checked={enabled}
-                    onChange={handleChange}
+                <ToggleWithLabel
+                    control={
+                        <Switch
+                            size="small"
+                            color="primary"
+                            id="statusbar.enabled"
+                            value="statusbar.enabled"
+                            checked={enabled}
+                            onChange={handleChange}
+                        />
+                    }
                     label={`Enable ${productName} Status Bar`}
+                    spacing={1}
+                    variant="body1"
                 />
             </Grid>
             <Box marginLeft={2}>
                 <Grid item>
-                    <SmallCheckboxWithLabel
-                        disabled={disabled}
-                        color="primary"
-                        id="showProduct"
-                        value="statusbar.showProduct"
-                        checked={showProduct}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Checkbox
+                                disabled={disabled}
+                                size="small"
+                                color="primary"
+                                id="showProduct"
+                                value="statusbar.showProduct"
+                                checked={showProduct}
+                                onChange={handleChange}
+                            />
+                        }
+                        spacing={1}
+                        variant="body1"
                         label="Show product name"
                     />
                 </Grid>
                 <Grid item>
-                    <SmallCheckboxWithLabel
-                        disabled={disabled}
-                        color="primary"
-                        id="showUser"
-                        value="statusbar.showUser"
-                        checked={showUser}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                disabled={disabled}
+                                color="primary"
+                                id="showUser"
+                                value="statusbar.showUser"
+                                checked={showUser}
+                                onChange={handleChange}
+                            />
+                        }
+                        spacing={1}
+                        variant="body1"
                         label="Show user's name"
                     />
                 </Grid>
                 <Grid item>
-                    <SmallCheckboxWithLabel
-                        disabled={disabled}
-                        color="primary"
-                        id="showLogin"
-                        value="statusbar.showLogin"
-                        checked={showLogin}
-                        onChange={handleChange}
+                    <ToggleWithLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                disabled={disabled}
+                                color="primary"
+                                id="showLogin"
+                                value="statusbar.showLogin"
+                                checked={showLogin}
+                                onChange={handleChange}
+                            />
+                        }
+                        spacing={1}
+                        variant="body1"
                         label="Show login button when not authenticated"
                     />
                 </Grid>

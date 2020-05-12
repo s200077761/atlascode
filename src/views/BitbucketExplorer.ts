@@ -1,11 +1,11 @@
 import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
-import { OnboardingNotificationActions, OnboardingNotificationPressedEvent } from '../atlclients/authNotification';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
 import { BitbucketEnabledKey } from '../constants';
 import { Container } from '../container';
+import { FocusEvent, FocusEventActions } from '../webview/ExplorerFocusManager';
 import { BaseTreeDataProvider, Explorer } from './Explorer';
 import { CreatePullRequestNode } from './pullrequest/headerNode';
 import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
@@ -30,7 +30,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             this.ctx.onDidChangeBitbucketContext(() => {
                 this.onBitbucketContextChanged();
             }),
-            Container.loginManager.onLoginNotificationActionEvent(this.onboardingNotificationWasPressed, this),
+            Container.explorerFocusManager.onFocusEvent(this.handleFocusEvent, this),
             this._refreshTimer
         );
 
@@ -99,6 +99,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             this.updateMonitor();
         }
 
+        if (configuration.changed(e, 'bitbucket.preferredRemotes')) {
+            this.treeDataProvider?.refresh();
+        }
+
         this.onConfigurationChanged(e);
     }
 
@@ -137,20 +141,16 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     async attemptCreatePRNodeExpansionNTimes(remainingAttempts: number, delay: number, openNode: boolean) {
         const dataProvider = this.getDataProvider();
         if (remainingAttempts === 0) {
-            if (dataProvider) {
-                const forceFocusedNode = await (dataProvider as PullRequestNodeDataProvider).getCreatePullRequestNode(
-                    true
-                );
+            if (dataProvider && dataProvider instanceof PullRequestNodeDataProvider) {
+                const forceFocusedNode = await dataProvider.getCreatePullRequestNode(true);
                 this.reveal(forceFocusedNode!, { focus: true });
             }
         }
 
         setTimeout(async () => {
             let createPRNode: CreatePullRequestNode | undefined;
-            if (dataProvider) {
-                createPRNode = (await (dataProvider as PullRequestNodeDataProvider).getCreatePullRequestNode(
-                    false
-                )) as CreatePullRequestNode;
+            if (dataProvider && dataProvider instanceof PullRequestNodeDataProvider) {
+                createPRNode = (await dataProvider.getCreatePullRequestNode(false)) as CreatePullRequestNode;
             }
             if (createPRNode) {
                 this.reveal(createPRNode, { focus: true });
@@ -163,13 +163,13 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         }, delay);
     }
 
-    async onboardingNotificationWasPressed(e: OnboardingNotificationPressedEvent) {
+    async handleFocusEvent(e: FocusEvent) {
         //We attempt to expand the node 3 times with 1000ms delays in between. This is because after sites change, the PR explorer wipes its nodes and replaces them with simple nodes.
         //Only after it fetches data do those get replaced with useful nodes, but as of right now there doesn't appear to be a good way of detecting when new data is fetched, so
         //we make a few attempts at expanding the node in hopes that it will have been fetched by that time.
-        if (e.action === OnboardingNotificationActions.CREATEPULLREQUEST) {
+        if (e.action === FocusEventActions.CREATEPULLREQUEST) {
             this.attemptCreatePRNodeExpansionNTimes(3, 1000, true);
-        } else if (e.action === OnboardingNotificationActions.VIEWPULLREQUEST) {
+        } else if (e.action === FocusEventActions.VIEWPULLREQUEST) {
             this.attemptDetailsNodeExpansionNTimes(3, 1000, true);
         }
     }

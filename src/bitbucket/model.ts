@@ -1,3 +1,4 @@
+import { CancelToken } from 'axios';
 import { FileDiffQueryParams } from 'src/views/pullrequest/pullRequestNode';
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PipelineApiImpl } from '../pipelines/pipelines';
@@ -59,6 +60,8 @@ export type Repo = {
     url: string;
     avatarUrl: string;
     mainbranch?: string;
+    developmentBranch?: string;
+    branchingModel?: BitbucketBranchingModel;
     issueTrackerEnabled: boolean;
 };
 
@@ -100,6 +103,21 @@ export const emptyUser = {
     url: '',
     avatarUrl: '',
     mention: '',
+};
+
+export const emptyRepo: Repo = {
+    id: '',
+    scm: undefined,
+    name: '',
+    displayName: '',
+    fullName: '',
+    parentFullName: undefined,
+    url: '',
+    avatarUrl: '',
+    mainbranch: undefined,
+    developmentBranch: undefined,
+    branchingModel: undefined,
+    issueTrackerEnabled: false,
 };
 
 export const emptyTask = {
@@ -271,7 +289,10 @@ export function isBitbucketIssue(a: any): a is BitbucketIssue {
     return a && (<BitbucketIssue>a).site !== undefined && (<BitbucketIssue>a).data !== undefined;
 }
 
-export type BitbucketIssueData = any;
+export type BitbucketIssueData = {
+    state: string;
+    [k: string]: any;
+};
 export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
@@ -298,7 +319,7 @@ export interface PullRequestApi {
     postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task>;
     editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task>;
     deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void>;
-    getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
+    getReviewers(site: BitbucketSite, query?: string, cancelToken?: CancelToken): Promise<User[]>;
     create(
         site: BitbucketSite,
         workspaceRepo: WorkspaceRepo,

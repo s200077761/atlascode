@@ -1,5 +1,8 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { env, Uri } from 'vscode';
+import { IntegrationsLinkParams } from '../../atlclients/authInfo';
+import { HTTPClient } from '../../bitbucket/httpClient';
+import { showIssue } from '../../commands/jira/showIssue';
 import { Container } from '../../container';
 import { submitFeedback } from '../../feedback/feedbackSubmitter';
 import { submitJSDPMF } from '../../feedback/pmfJSDSubmitter';
@@ -13,6 +16,7 @@ const knownLinkIdMap: Map<string, string> = new Map([
     [KnownLinkID.AtlascodeRepo, 'https://bitbucket.org/atlassianlabs/atlascode'],
     [KnownLinkID.AtlascodeIssues, 'https://bitbucket.org/atlassianlabs/atlascode/issues'],
     [KnownLinkID.AtlascodeDocs, 'https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code'],
+    [KnownLinkID.Integrations, 'https://integrations.atlassian.com'],
 ]);
 
 export class VSCCommonMessageHandler implements CommonActionMessageHandler {
@@ -54,13 +58,37 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                 }
 
                 if (foundUrl) {
+                    //Integrations link carries query params to help track where the click came from
+                    if (msg.linkId === KnownLinkID.Integrations) {
+                        const aaid = Container.siteManager.getFirstAAID();
+                        const queryParams: IntegrationsLinkParams = aaid
+                            ? {
+                                  aaid: aaid,
+                                  aid: Container.machineId,
+                                  s: 'atlascode.onboarding',
+                              }
+                            : {
+                                  aid: Container.machineId,
+                                  s: 'atlascode.onboarding',
+                              };
+                        foundUrl = `${foundUrl}${HTTPClient.queryObjectToString(queryParams)}`;
+                    }
+
                     env.openExternal(Uri.parse(foundUrl));
-                    // TODO: add new analytics event for clicking links using the linkID
+
+                    //We're only interested in tracking external URIs that are 'known'
+                    if (knownLinkIdMap.has(msg.linkId)) {
+                        this._analytics.fireExternalLinkEvent(msg.source, msg.linkId);
+                    }
                 }
                 break;
             }
             case CommonActionType.SubmitFeedback: {
                 submitFeedback(msg.feedback);
+                break;
+            }
+            case CommonActionType.OpenJiraIssue: {
+                showIssue(msg.issueOrKey);
                 break;
             }
             case CommonActionType.Refresh: {

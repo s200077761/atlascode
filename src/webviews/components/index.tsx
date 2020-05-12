@@ -1,6 +1,5 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import './reset.css';
 import './App.css';
 import { ResourceContext } from './context';
 
@@ -10,13 +9,6 @@ declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
-    atlascodeSettings: React.lazy(() => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage')),
-    atlascodeWelcomeScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeWelcomeScreen" */ './config/Welcome')
-    ),
-    atlascodeOnboardingScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeNewUserOnboardingScreen" */ './config/Onboarding')
-    ),
     pullRequestDetailsScreen: React.lazy(() =>
         import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage')
     ),
@@ -32,9 +24,6 @@ const routes = {
     ),
     pipelineSummaryScreen: React.lazy(() =>
         import(/* webpackChunkName: "pipelineSummaryScreen" */ './pipelines/PipelineSummaryPage')
-    ),
-    bitbucketIssueScreen: React.lazy(() =>
-        import(/* webpackChunkName: "bitbucketIssueScreen" */ './bbissue/BitbucketIssuePage')
     ),
     createBitbucketIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')

@@ -57,6 +57,7 @@ export enum Commands {
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
     ShowConfigPage = 'atlascode.showConfigPage',
+    ShowConfigPageFromExtensionContext = 'atlascode.extensionContext.showConfigPage',
     ShowJiraAuth = 'atlascode.showJiraAuth',
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowWelcomePage = 'atlascode.showWelcomePage',
@@ -91,6 +92,13 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Auth,
             })
         ),
+        commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
+            Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Jira,
+                subSection: ConfigSubSection.Auth,
+            });
+        }),
         commands.registerCommand(Commands.ShowJiraAuth, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
@@ -127,8 +135,8 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Issues,
             })
         ),
-        commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebview.createOrShow()),
-        commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebview.createOrShow()),
+        commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebviewFactory.createOrShow()),
+        commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
             const uri = (await prNode.getTreeItem()).resourceUri;
             if (uri) {
@@ -176,26 +184,20 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.pipelineViewManager.createOrShow(pipelineInfo);
         }),
         commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.bitbucketIssueViewManager.createOrShow(issue)
+            Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue)
         ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
-        commands.registerCommand(Commands.WorkbenchOpenRepository, () => {
-            openWorkbenchRepositoryButtonEvent('pullRequestsTreeView').then((event) =>
-                Container.analyticsClient.sendUIEvent(event)
-            );
+        commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
+            openWorkbenchRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
             commands.executeCommand('workbench.action.addRootFolder');
         }),
-        commands.registerCommand(Commands.WorkbenchOpenWorkspace, () => {
-            openWorkbenchWorkspaceButtonEvent('pullRequestsTreeView').then((event) =>
-                Container.analyticsClient.sendUIEvent(event)
-            );
+        commands.registerCommand(Commands.WorkbenchOpenWorkspace, (source: string) => {
+            openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
             commands.executeCommand('workbench.action.openWorkspace');
         }),
-        commands.registerCommand(Commands.CloneRepository, () => {
-            cloneRepositoryButtonEvent('pullRequestsTreeView').then((event) =>
-                Container.analyticsClient.sendUIEvent(event)
-            );
-            commands.executeCommand('git.clone');
+        commands.registerCommand(Commands.CloneRepository, (source: string, repoUrl?: string) => {
+            cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
+            commands.executeCommand('git.clone', repoUrl);
         })
     );
 }

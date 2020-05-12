@@ -4,11 +4,14 @@ import {
     BitbucketSite,
     Comment,
     emptyBitbucketSite,
+    emptyUser,
     PaginatedBitbucketIssues,
     PaginatedComments,
     UnknownUser,
+    User,
     WorkspaceRepo,
 } from '../model';
+import { CloudPullRequestApi } from './pullRequests';
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -127,89 +130,104 @@ export class BitbucketIssuesApiImpl {
         );
 
         return {
-            data: (data.values || []).reverse().map((comment: any) => ({
-                id: comment.id!,
-                parentId: comment.parent ? comment.parent.id! : undefined,
-                htmlContent: comment.content!.html!,
-                rawContent: comment.content!.raw!,
-                ts: comment.created_on!,
-                updatedTs: comment.updated_on!,
-                deleted: !!comment.deleted,
-                inline: comment.inline,
-                user: comment.user
-                    ? {
-                          accountId: comment.user.account_id!,
-                          displayName: comment.user.display_name!,
-                          url: comment.user.links!.html!.href!,
-                          avatarUrl: comment.user.links!.avatar!.href!,
-                          mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`,
-                      }
-                    : UnknownUser,
-                children: [],
-            })),
+            // we fetch the data sorted by `-created_on` to get the latest comments
+            // reverse them again to return the data in chronological order
+            data: (data.values || []).reverse().map(this.toCommentModel),
             next: data.next,
         };
     }
 
-    async getChanges(issue: BitbucketIssue): Promise<PaginatedComments> {
+    private toCommentModel(comment: any): Comment {
+        return {
+            id: comment.id!,
+            parentId: comment.parent ? comment.parent.id! : undefined,
+            htmlContent: comment.content!.html!,
+            rawContent: comment.content!.raw!,
+            ts: comment.created_on!,
+            updatedTs: comment.updated_on!,
+            deleted: !!comment.deleted,
+            deletable: false,
+            editable: false,
+            inline: comment.inline,
+            user: comment.user
+                ? {
+                      accountId: comment.user.account_id!,
+                      displayName: comment.user.display_name!,
+                      url: comment.user.links!.html!.href!,
+                      avatarUrl: comment.user.links!.avatar!.href!,
+                      mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`,
+                  }
+                : UnknownUser,
+            children: [],
+            tasks: [],
+        };
+    }
+
+    async getChanges(issue: BitbucketIssue, pagelen?: number): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = issue.site;
 
         const { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
             {
-                pagelen: maxItemsSupported.changes,
+                pagelen: pagelen || maxItemsSupported.changes,
                 sort: '-created_on',
             }
         );
 
+        // we fetch the data sorted by `-created_on` to get the latest changes
+        // reverse them again to return the data in chronological order
         const changes: any[] = (data.values || []).reverse();
+        const comments: Comment[] = changes.map(this.convertChangeToComment);
 
-        const updatedChanges: any[] = changes.map((change) => {
-            let content = '';
-            if (change.changes!.state) {
-                content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${
-                    change.changes!.state!.new
-                }</strong></em></li>`;
-            }
-            if (change.changes!.kind) {
-                content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${
-                    change.changes!.kind!.new
-                }</strong></em></li>`;
-            }
-            if (change.changes!.priority) {
-                content += `<li><em>changed issue priority from <strong>${
-                    change.changes!.priority!.old
-                }</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
-            }
+        return { data: comments, next: data.next };
+    }
+
+    private convertChangeToComment(change: any): Comment {
+        let content = '';
+        if (change.changes!.state) {
+            content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${
+                change.changes!.state!.new
+            }</strong></em></li>`;
+        }
+        if (change.changes!.kind) {
+            content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${
+                change.changes!.kind!.new
+            }</strong></em></li>`;
+        }
+        if (change.changes!.priority) {
+            content += `<li><em>changed issue priority from <strong>${
+                change.changes!.priority!.old
+            }</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
+        }
+        //@ts-ignore
+        if (change.changes!.attachment && change.changes!.attachment!.new) {
             //@ts-ignore
-            if (change.changes!.attachment && change.changes!.attachment!.new) {
-                //@ts-ignore
-                content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
-            }
-            //@ts-ignore
-            if (change.changes!.assignee_account_id) {
-                content += `<li><em>updated assignee</em></li>`;
-            }
-            if (change.changes!.content) {
-                content += `<li><em>updated description</em></li>`;
-            }
-            if (change.changes!.title) {
-                content += `<li><em>updated title</em></li>`;
-            }
+            content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
+        }
+        //@ts-ignore
+        if (change.changes!.assignee_account_id) {
+            content += `<li><em>updated assignee</em></li>`;
+        }
+        if (change.changes!.content) {
+            content += `<li><em>updated description</em></li>`;
+        }
+        if (change.changes!.title) {
+            content += `<li><em>updated title</em></li>`;
+        }
 
-            if (content === '') {
-                content += `<li><em>updated issue</em></li>`;
-            }
-            return { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
-        });
+        if (content === '') {
+            content += `<li><em>updated issue</em></li>`;
+        }
 
-        const updatedChangesAsComments: Comment[] = updatedChanges.map((change) => ({
+        change = { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
+
+        return {
             id: change.id as string,
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
             deleted: false,
-            deletable: true,
-            editable: true,
+            deletable: false,
+            editable: false,
             ts: change.created_on!,
             updatedTs: change.created_on!,
             user: change.user
@@ -223,25 +241,28 @@ export class BitbucketIssuesApiImpl {
                 : UnknownUser,
             children: [],
             tasks: [],
-        }));
-
-        return { data: updatedChangesAsComments, next: data.next };
+        };
     }
 
-    async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
+    async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<[string, Comment]> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`, {
-            type: 'issue_change',
-            changes: {
-                state: {
-                    new: newStatus,
+        const { data } = await this.client.post(
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
+            {
+                type: 'issue_change',
+                changes: {
+                    state: {
+                        new: newStatus,
+                    },
                 },
-            },
-            content: {
-                raw: content,
-            },
-        });
+                content: {
+                    raw: content,
+                },
+            }
+        );
+
+        return [data.changes.state.new, this.convertChangeToComment(data)];
     }
 
     async postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {
@@ -257,29 +278,49 @@ export class BitbucketIssuesApiImpl {
         });
     }
 
-    async postComment(issue: BitbucketIssue, content: string): Promise<void> {
+    async postComment(issue: BitbucketIssue, content: string): Promise<Comment> {
         const { ownerSlug, repoSlug } = issue.site;
 
-        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`, {
-            type: 'issue_comment',
-            content: {
-                raw: content,
-            },
-        });
+        const { data } = await this.client.post(
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`,
+            {
+                type: 'issue_comment',
+                content: {
+                    raw: content,
+                },
+            }
+        );
+        return this.toCommentModel(data);
     }
 
-    async assign(issue: BitbucketIssue, account_id?: string): Promise<void> {
+    async assign(issue: BitbucketIssue, account_id?: string): Promise<[User, Comment]> {
         const { ownerSlug, repoSlug } = issue.site;
+
+        if (account_id) {
+            const { data } = await this.client.post(
+                `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
+                {
+                    type: 'issue_change',
+                    changes: {
+                        assignee_account_id: {
+                            new: account_id,
+                        },
+                    },
+                },
+                { fields: '+issue.assignee' }
+            );
+            return [CloudPullRequestApi.toUserModel(data.issue.assignee), this.convertChangeToComment(data)];
+        }
 
         await this.client.put(`/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`, {
             type: 'issue',
-            assignee: account_id
-                ? {
-                      type: 'user',
-                      account_id: account_id,
-                  }
-                : null,
+            assignee: null,
         });
+        // not ideal - the changes endpoint doesn't work for unassigning users,
+        // so we fetch the latest change here to update the webview comments
+        const change = await this.getChanges(issue, 1);
+
+        return [{ ...emptyUser, displayName: 'Unassigned' }, change.data[0]];
     }
 
     async create(

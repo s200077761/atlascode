@@ -1,8 +1,9 @@
+// prettier-ignore-start
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+// prettier-ignore-end
 import './App.css';
 import { ResourceContext } from './context';
-import './reset.css';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -10,13 +11,6 @@ declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
-    atlascodeSettings: React.lazy(() => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage')),
-    atlascodeWelcomeScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeWelcomeScreen" */ './config/Welcome')
-    ),
-    atlascodeOnboardingScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeNewUserOnboardingScreen" */ './config/Onboarding')
-    ),
     pullRequestDetailsScreen: React.lazy(() =>
         import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage')
     ),
@@ -32,9 +26,6 @@ const routes = {
     ),
     pipelineSummaryScreen: React.lazy(() =>
         import(/* webpackChunkName: "pipelineSummaryScreen" */ './pipelines/PipelineSummaryPage')
-    ),
-    bitbucketIssueScreen: React.lazy(() =>
-        import(/* webpackChunkName: "bitbucketIssueScreen" */ './bbissue/BitbucketIssuePage')
     ),
     createBitbucketIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')

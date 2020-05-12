@@ -8,9 +8,14 @@ import {
     bbIssueUrlCopiedEvent,
     bbIssueWorkStartedEvent,
     customJQLCreatedEvent,
+    deepLinkEvent,
     doneButtonEvent,
-    externalUriEvent,
+    externalLinkEvent,
     featureChangeEvent,
+    focusCreateIssueEvent,
+    focusCreatePullRequestEvent,
+    focusIssueEvent,
+    focusPullRequestEvent,
     installedEvent,
     issueCommentEvent,
     issueCreatedEvent,
@@ -22,6 +27,7 @@ import {
     loggedOutEvent,
     logoutButtonEvent,
     moreSettingsButtonEvent,
+    openSettingsButtonEvent,
     pipelineStartEvent,
     pmfClosed,
     pmfSnoozed,
@@ -227,8 +233,14 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireExternalUriEvent(source: string, target: string): Promise<void> {
-        return externalUriEvent(source, target).then((e) => {
+    public async fireDeepLinkEvent(source: string, target: string): Promise<void> {
+        return deepLinkEvent(source, target).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async fireExternalLinkEvent(source: string, linkId: string): Promise<void> {
+        return externalLinkEvent(source, linkId).then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
@@ -263,6 +275,30 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
+    public async fireFocusCreateIssueEvent(source: string): Promise<void> {
+        return focusCreateIssueEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusIssueEvent(source: string): Promise<void> {
+        return focusIssueEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusCreatePullRequestEvent(source: string): Promise<void> {
+        return focusCreatePullRequestEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireFocusPullRequestEvent(source: string): Promise<void> {
+        return focusPullRequestEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
     public async fireAuthenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<void> {
         return authenticateButtonEvent(source, site, isCloud).then((e) => {
             this._analyticsClient.sendUIEvent(e);
@@ -271,6 +307,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireLogoutButtonEvent(source: string): Promise<void> {
         return logoutButtonEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireOpenSettingsButtonEvent(source: string): Promise<void> {
+        return openSettingsButtonEvent(source).then((e) => {
             this._analyticsClient.sendUIEvent(e);
         });
     }

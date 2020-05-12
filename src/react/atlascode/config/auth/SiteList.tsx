@@ -10,6 +10,7 @@ import {
     ListItemIcon,
     ListItemSecondaryAction,
     ListItemText,
+    makeStyles,
     Theme,
     Typography,
 } from '@material-ui/core';
@@ -17,7 +18,6 @@ import CloudIcon from '@material-ui/icons/Cloud';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DomainIcon from '@material-ui/icons/Domain';
 import EditIcon from '@material-ui/icons/Edit';
-import makeStyles from '@material-ui/styles/makeStyles';
 import clsx from 'clsx';
 import React, { useContext } from 'react';
 import { uid } from 'react-uid';

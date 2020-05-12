@@ -1,4 +1,4 @@
-import { SmallRadioWithLabel, SwitchWithLabel } from '@atlassianlabs/guipi-core-components';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import {
     Box,
     Button,
@@ -9,7 +9,9 @@ import {
     DialogTitle,
     Grid,
     IconButton,
+    Radio,
     RadioGroup,
+    Switch,
     TextField,
 } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
@@ -186,14 +188,20 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                         {!errors.baseUrl && isCustomUrl(watches.baseUrl) && (
                             <React.Fragment>
                                 <Grid item>
-                                    <SwitchWithLabel
-                                        name="contextPathEnabled"
-                                        defaultChecked={defaultContextPathEnabled}
-                                        size="small"
-                                        color="primary"
-                                        id="contextPathEnabled"
+                                    <ToggleWithLabel
+                                        control={
+                                            <Switch
+                                                name="contextPathEnabled"
+                                                defaultChecked={defaultContextPathEnabled}
+                                                size="small"
+                                                color="primary"
+                                                id="contextPathEnabled"
+                                                inputRef={register}
+                                            />
+                                        }
+                                        spacing={1}
+                                        variant="body1"
                                         label="Use context path"
-                                        inputRef={register}
                                     />
                                 </Grid>
                                 {watches.contextPathEnabled && (
@@ -268,15 +276,21 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                     />
                                 </Grid>
                                 <Grid item>
-                                    <SwitchWithLabel
-                                        defaultChecked={defaultSSLEnabled}
-                                        name="customSSLEnabled"
-                                        size="small"
-                                        color="primary"
-                                        id="customSSLEnabled"
-                                        value="customSSLEnabled"
+                                    <ToggleWithLabel
+                                        control={
+                                            <Switch
+                                                defaultChecked={defaultSSLEnabled}
+                                                name="customSSLEnabled"
+                                                size="small"
+                                                color="primary"
+                                                id="customSSLEnabled"
+                                                value="customSSLEnabled"
+                                                inputRef={register}
+                                            />
+                                        }
+                                        spacing={1}
+                                        variant="body1"
                                         label="Use Custom SSL Settings"
-                                        inputRef={register}
                                     />
                                 </Grid>
 
@@ -288,17 +302,31 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                                 name="customSSLType"
                                                 defaultValue={defaultSSLType}
                                             >
-                                                <SmallRadioWithLabel
-                                                    inputRef={register}
-                                                    color="primary"
-                                                    value="customServerSSL"
+                                                <ToggleWithLabel
+                                                    control={
+                                                        <Radio
+                                                            inputRef={register}
+                                                            size="small"
+                                                            color="primary"
+                                                            value="customServerSSL"
+                                                        />
+                                                    }
+                                                    spacing={1}
                                                     label="Use custom CA certificate(s) (e.g. a self-signed cert)"
+                                                    variant="body1"
                                                 />
-                                                <SmallRadioWithLabel
-                                                    inputRef={register}
-                                                    value="customClientSSL"
-                                                    color="primary"
+                                                <ToggleWithLabel
+                                                    control={
+                                                        <Radio
+                                                            inputRef={register}
+                                                            value="customClientSSL"
+                                                            color="primary"
+                                                            size="small"
+                                                        />
+                                                    }
+                                                    spacing={1}
                                                     label="Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)"
+                                                    variant="body1"
                                                 />
                                             </RadioGroup>
                                         </Grid>

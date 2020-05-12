@@ -1,4 +1,6 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { FeedbackData, PMFData } from '../models/common';
 
 export enum CommonActionType {
@@ -9,6 +11,7 @@ export enum CommonActionType {
     Refresh = 'refresh',
     SubmitFeedback = 'submitFeedback',
     ExternalLink = 'externalLink',
+    OpenJiraIssue = 'openJiraIssue',
     Cancel = 'cancelInFlight',
 }
 
@@ -20,6 +23,7 @@ export type CommonAction =
     | ReducerAction<CommonActionType.Refresh>
     | ReducerAction<CommonActionType.SubmitFeedback, SubmitFeedbackAction>
     | ReducerAction<CommonActionType.ExternalLink, ExternalLinkAction>
+    | ReducerAction<CommonActionType.OpenJiraIssue, OpenJiraIssueAction>
     | ReducerAction<CommonActionType.Cancel, CancelAction>;
 
 export interface PMFSubmitAction {
@@ -31,8 +35,13 @@ export interface SubmitFeedbackAction {
 }
 
 export interface ExternalLinkAction {
+    source: string;
     linkId: string;
     url?: string;
+}
+
+export interface OpenJiraIssueAction {
+    issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>;
 }
 
 export interface CancelAction {
