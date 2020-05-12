@@ -73,7 +73,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 Click on the features to see more details!
                             </Typography>
                         </Grid>
-                        <Grid item>
+                        <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateIssueFromTodo.gif"
                                 label="Create a Jira issue from a code comment"
@@ -95,7 +95,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 actionNotAvailable
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/StartWorkTutorial.gif"
                                 label="Start Work from a Jira issue"
@@ -125,7 +125,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 actionNotAvailable
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateJiraIssue.gif"
                                 label="Create a Jira issue"
@@ -134,8 +134,8 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         Jira issues can be created by pressing the{' '}
                                         <code className={classes.code}>Create issue...</code> button in the{' '}
                                         <code className={classes.code}>JIRA ISSUES</code>
-                                        explorer. This will open a WebView in VS Code that resembles the issue creation
-                                        process on the Jira website.
+                                        explorer. This will open a view that resembles the issue creation process on the
+                                        Jira website.
                                     </p>
                                 }
                                 productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
@@ -143,7 +143,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 onClick={handleDemoButtonClick}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewJiraIssue.gif"
                                 label="View a Jira issue"
@@ -163,7 +163,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 onClick={handleDemoButtonClick}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item hidden={!config['bitbucket.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreatePullRequest.gif"
                                 label="Create a pull request"
@@ -172,8 +172,8 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         Bitbucket pull requests can be created by pressing the{' '}
                                         <code className={classes.code}>Create pull request...</code>
                                         button in the <code className={classes.code}>BITBUCKET PULL REQUESTS</code>{' '}
-                                        explorer. This will open a webview that resembles the pull request creation
-                                        process on the Bitbucket website.
+                                        explorer. This will open a view that resembles the pull request creation process
+                                        on the Bitbucket website.
                                     </p>
                                 }
                                 productIcon={
@@ -183,7 +183,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 onClick={handleDemoButtonClick}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item hidden={!config['bitbucket.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewAndApprovePullRequest.gif"
                                 label="Review a pull request"
