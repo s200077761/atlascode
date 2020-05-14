@@ -84,7 +84,27 @@ export interface PipelineTarget {
     ref_name?: string;
     selector?: PipelineSelector;
     branch_name?: string;
-    commit?: any; // We need this to be able to re-run pipeline builds but I can't find any complete documentation as to its shape
+    commit?: PipelineTargetCommit;
+    source?: string;
+    destination?: string;
+}
+
+// Per https://api.bitbucket.org/swagger.json this should be the same as a Bitbucket Commit object, but there are some
+// values missing on the object returned by Pipelines that aren't optional on the Bitbucket object. Creating a parallel
+// implementation with just the information returned by Pipelines.
+export interface PipelineTargetCommit {
+    type: string;
+    message: string;
+    hash: string;
+    links: any;
+    summary: PipelineCommitSummary;
+}
+
+export interface PipelineCommitSummary {
+    raw: string;
+    markup: string;
+    html: string;
+    type: string;
 }
 
 // Leaving this here to match the (implied) model of the API.

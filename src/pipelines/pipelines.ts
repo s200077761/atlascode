@@ -67,6 +67,7 @@ export class PipelineApiImpl {
 
         const { data: responseBody } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pipelines/`, {
             ...query,
+            fields: ['+values.target.commit.message', '+values.target.commit.summary.*'],
             sort: '-created_on',
         });
 
