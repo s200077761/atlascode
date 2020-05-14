@@ -17,6 +17,7 @@ import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
 const headerNode = new PullRequestHeaderNode('Showing open pull requests');
+const MAX_WORKSPACE_REPOS_TO_PRELOAD = 3;
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<
@@ -120,10 +121,15 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         for (const wsRepo of workspaceRepos) {
             const repoUri = wsRepo.rootUri;
             this._childrenMap!.has(repoUri)
-                ? this._childrenMap!.get(repoUri)!.markDirty(workspaceRepos.length <= 10)
+                ? this._childrenMap!.get(repoUri)!.markDirty(workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD)
                 : this._childrenMap!.set(
                       repoUri,
-                      new RepositoriesNode(this._fetcher, wsRepo, workspaceRepos.length <= 10, expand)
+                      new RepositoriesNode(
+                          this._fetcher,
+                          wsRepo,
+                          workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD,
+                          expand
+                      )
                   );
         }
     }

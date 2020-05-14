@@ -142,7 +142,7 @@ export class RepositoriesNode extends AbstractBaseNode {
                 return new PullRequestTitlesNode(
                     pr,
                     Container.bitbucketContext.prCommentController,
-                    numPRs <= 25 && this.preloadingEnabled,
+                    numPRs <= 10 && this.preloadingEnabled,
                     this
                 );
             }
