@@ -92,7 +92,7 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                 <Tooltip
                     title={
                         actionNotAvailable
-                            ? `Automatic action not available for '${modalTitle}'`
+                            ? 'Not available for this action'
                             : 'Click to perform this action automatically'
                     }
                 >
@@ -108,7 +108,7 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                     </span>
                 </Tooltip>
                 <Button onClick={handleModalClose}>
-                    <Box className={classes.cancelButton}>Cancel</Box>
+                    <Box className={classes.cancelButton}>Close</Box>
                 </Button>
             </DialogActions>
         </Dialog>

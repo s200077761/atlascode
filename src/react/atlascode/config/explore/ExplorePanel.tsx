@@ -1,6 +1,7 @@
 import { JiraIcon } from '@atlassianlabs/guipi-jira-components';
-import { Fade, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
+import { Fade, Grid, makeStyles, Theme } from '@material-ui/core';
 import React, { useCallback, useContext, useState } from 'react';
+import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
 import BitbucketIcon from '../../icons/BitbucketIcon';
 import { DemoDialog } from '../../onboarding/DemoDialog';
 import { ConfigControllerContext } from '../configController';
@@ -10,11 +11,16 @@ const useStyles = makeStyles(
     (theme: Theme) =>
         ({
             code: {
-                backgroundColor: 'rgb(230, 230, 230)', //bright shade of gray
+                backgroundColor: 'rgb(220, 220, 220)', //bright shade of gray
                 color: 'rgb(208, 66, 103)', //Slack inline code text color (red)
                 borderRadius: 5,
                 margin: theme.spacing(0, 1),
                 padding: theme.spacing(0, 1),
+            },
+            linkified: {
+                '&:hover': {
+                    backgroundColor: 'white',
+                },
             },
         } as const)
 );
@@ -22,9 +28,10 @@ const useStyles = makeStyles(
 type ExplorePanelProps = {
     visible: boolean;
     config: { [key: string]: any };
+    sectionChanger: (section: ConfigSection, subsection: ConfigSubSection) => void;
 };
 
-export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visible, config }) => {
+export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visible, config, sectionChanger }) => {
     const classes = useStyles();
     const controller = useContext(ConfigControllerContext);
     const [modalVisibility, setModalVisibility] = useState(false);
@@ -54,6 +61,24 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
         modalAction();
     }, [modalAction]);
 
+    const openTriggersSection = useCallback(
+        (event: React.MouseEvent<HTMLElement>) => {
+            event.stopPropagation();
+            setModalVisibility(false);
+            sectionChanger(ConfigSection.Jira, ConfigSubSection.Triggers);
+        },
+        [sectionChanger]
+    );
+
+    const openFiltersAndJQLSection = useCallback(
+        (event: React.MouseEvent<HTMLElement>) => {
+            event.stopPropagation();
+            setModalVisibility(false);
+            sectionChanger(ConfigSection.Jira, ConfigSubSection.Issues);
+        },
+        [sectionChanger]
+    );
+
     return (
         <React.Fragment>
             <DemoDialog
@@ -68,11 +93,6 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
             <Fade in={visible}>
                 <div hidden={!visible} role="tabpanel">
                     <Grid container spacing={3} direction="column">
-                        <Grid item>
-                            <Typography variant="h2" align="center">
-                                Click on the features to see more details!
-                            </Typography>
-                        </Grid>
                         <Grid item hidden={!config['jira.enabled']}>
                             <AltDemoButton
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateIssueFromTodo.gif"
@@ -80,17 +100,20 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 description={
                                     <p>
                                         Adding a trigger to your code comments will bring up a{' '}
-                                        <code className={classes.code}>Create Jira Issue</code> button. Pressing this
-                                        button brings up an issue creation screen with the description already filled in
-                                        with the contents of the comment. These triggers are configurable in the
-                                        extension settings under{' '}
-                                        <code className={classes.code}>
+                                        <code className={classes.code}>Create Jira Issue</code> code lens action.
+                                        Pressing this button brings up an issue creation screen with the description
+                                        already filled in with the contents of the comment. These triggers are
+                                        configurable in the extension settings under{' '}
+                                        <code
+                                            className={[classes.code, classes.linkified].join(' ')}
+                                            onClick={openTriggersSection}
+                                        >
                                             Jira > Create Jira Issue Triggers > Comment Triggers
                                         </code>
                                     </p>
                                 }
                                 productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
-                                action={() => () => {}}
+                                action={() => {}}
                                 onClick={handleDemoButtonClick}
                                 actionNotAvailable
                             />
@@ -108,10 +131,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                             assign the issue to yourself, transition the issue's status, and create (and
                                             checkout) a branch
                                         </b>{' '}
-                                        for this issue all in <b>one click!</b> Clicking the{' '}
-                                        <code className={classes.code}>Details</code> node will open a WebView with an
-                                        overview of the pull request. Clicking the file nodes will show a diff for that
-                                        file with inline comments from Bitbucket.
+                                        for this issue all in <b>one click!</b>
                                     </p>
                                 }
                                 productIcon={
@@ -120,7 +140,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         <JiraIcon style={{ float: 'right', color: '#0052CC' }} />
                                     </React.Fragment>
                                 }
-                                action={() => () => {}}
+                                action={() => {}}
                                 onClick={handleDemoButtonClick}
                                 actionNotAvailable
                             />
@@ -152,7 +172,10 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         Jira issues show up in the <code className={classes.code}>JIRA ISSUES</code>{' '}
                                         explorer and are grouped by JQL queries/filters. The issues which show up are
                                         configurable in the extension settings under{' '}
-                                        <code className={classes.code}>
+                                        <code
+                                            className={[classes.code, classes.linkified].join(' ')}
+                                            onClick={openFiltersAndJQLSection}
+                                        >
                                             Jira > Jira Issues Explorer > Filters and Custom JQL.
                                         </code>
                                         To view an issue, expand a filter and click on the issue.

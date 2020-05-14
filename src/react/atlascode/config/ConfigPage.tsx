@@ -105,6 +105,15 @@ const ConfigPage: React.FunctionComponent = () => {
         [openSection]
     );
 
+    const handleCompleteSectionChange = useCallback((section: ConfigSection, subSection: ConfigSubSection) => {
+        setOpenSection(section);
+        setOpenSubsections((oldSections) => {
+            const newSections = { ...oldSections };
+            newSections[section] = [...oldSections[section], subSection];
+            return newSections;
+        });
+    }, []);
+
     const handleJiraToggle = useCallback((enabled: boolean): void => {
         const changes = Object.create(null);
         changes['jira.enabled'] = enabled;
@@ -282,6 +291,7 @@ const ConfigPage: React.FunctionComponent = () => {
                                     <ExplorePanel
                                         visible={openSection === ConfigSection.Explore}
                                         config={state.config!}
+                                        sectionChanger={handleCompleteSectionChange}
                                     />
                                 </Box>
                             </Paper>
