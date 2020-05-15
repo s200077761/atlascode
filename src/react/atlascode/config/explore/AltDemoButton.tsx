@@ -92,7 +92,7 @@ export const AltDemoButton: React.FunctionComponent<AltDemoButtonProps> = ({
                     </Box>
                 </Grid>
                 <Grid item lg={9} md={6} sm={12} xs={12}>
-                    <Typography variant="h4" align="left">
+                    <Typography variant="body1" align="left">
                         {description}
                     </Typography>
                 </Grid>
