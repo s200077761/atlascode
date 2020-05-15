@@ -48,6 +48,10 @@ export interface ConfigControllerApi {
         abortSignal?: AbortSignal
     ) => Promise<FilterSearchResults>;
     validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal) => Promise<JQLErrors>;
+    createPullRequest: () => void;
+    viewPullRequest: () => void;
+    createJiraIssue: () => void;
+    viewJiraIssue: () => void;
 }
 
 export const emptyApi: ConfigControllerApi = {
@@ -103,6 +107,18 @@ export const emptyApi: ConfigControllerApi = {
         return new Promise<JQLErrors>((resolve, reject) => {
             resolve({ errors: [] });
         });
+    },
+    createPullRequest: (): void => {
+        return;
+    },
+    viewPullRequest: (): void => {
+        return;
+    },
+    createJiraIssue: (): void => {
+        return;
+    },
+    viewJiraIssue: (): void => {
+        return;
     },
 };
 
@@ -453,6 +469,26 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         [postMessage, postMessagePromise]
     );
 
+    const createPullRequest = useCallback((): void => {
+        dispatch({ type: ConfigUIActionType.Loading });
+        postMessage({ type: ConfigActionType.CreatePullRequest });
+    }, [postMessage]);
+
+    const viewPullRequest = useCallback((): void => {
+        dispatch({ type: ConfigUIActionType.Loading });
+        postMessage({ type: ConfigActionType.ViewPullRequest });
+    }, [postMessage]);
+
+    const createJiraIssue = useCallback((): void => {
+        dispatch({ type: ConfigUIActionType.Loading });
+        postMessage({ type: ConfigActionType.CreateJiraIssue });
+    }, [postMessage]);
+
+    const viewJiraIssue = useCallback((): void => {
+        dispatch({ type: ConfigUIActionType.Loading });
+        postMessage({ type: ConfigActionType.ViewJiraIssue });
+    }, [postMessage]);
+
     const controllerApi = useMemo<ConfigControllerApi>((): ConfigControllerApi => {
         return {
             postMessage: postMessage,
@@ -466,6 +502,10 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             fetchJqlOptions: fetchJqlOptions,
             fetchFilterSearchResults: fetchFilterSearchResults,
             validateJql: validateJql,
+            createJiraIssue: createJiraIssue,
+            createPullRequest: createPullRequest,
+            viewPullRequest: viewPullRequest,
+            viewJiraIssue: viewJiraIssue,
         };
     }, [
         handleConfigChange,
@@ -479,6 +519,10 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         fetchJqlSuggestions,
         fetchFilterSearchResults,
         validateJql,
+        createJiraIssue,
+        createPullRequest,
+        viewPullRequest,
+        viewJiraIssue,
     ]);
 
     return [state, controllerApi];
