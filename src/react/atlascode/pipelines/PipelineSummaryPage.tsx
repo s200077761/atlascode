@@ -1,5 +1,6 @@
 import { RefreshButton } from '@atlassianlabs/guipi-core-components';
 import {
+    Avatar,
     Button,
     CircularProgress,
     Container,
@@ -15,7 +16,7 @@ import {
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
 import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { distanceInWordsToNow } from 'date-fns';
+import { distanceInWordsToNow, format } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { emptyPipeline } from '../../../lib/ipc/models/pipelineSummary';
 import {
@@ -38,6 +39,10 @@ import SuccessIcon from '../icons/SuccessIcon';
 import { PipelineSummaryControllerContext, usePipelineSummaryController } from './pipelineSummaryController';
 
 const failureRed = 'rgb(255, 86, 48)';
+const successGreen = 'rgb(54, 178, 126)';
+const suspenseBlue = 'rgb(0, 101, 255)';
+const otherOrange = 'rgb(255, 171, 0)';
+const ambiguousGray = 'rgb(192, 192, 192)';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -62,16 +67,24 @@ const useStyles = makeStyles(
                 whiteSpace: 'pre-wrap',
                 fontFamily: 'Monaco, Courier New, Courier, monospace',
                 fontSize: '1.2em',
+                width: '100%',
+            },
+            logHeader: {
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                fontFamily: 'Monaco, Courier New, Courier, monospace',
+                fontSize: '1.2em',
             },
             paper100: {
                 overflow: 'hidden',
                 height: '100%',
             },
-            paperOverflow: {
+            hiddenOverflow: {
                 overflow: 'hidden',
             },
             greenHeader: {
-                backgroundColor: 'rgb(54, 178, 126)',
+                backgroundColor: successGreen,
                 color: 'rgb(255,255,255)',
             },
             greenHeaderButton: {
@@ -79,7 +92,7 @@ const useStyles = makeStyles(
                 color: 'rgb(255,255,255)',
             },
             blueHeader: {
-                backgroundColor: 'rgb(0, 101, 255)',
+                backgroundColor: suspenseBlue,
                 color: 'rgb(255,255,255)',
             },
             blueHeaderButton: {
@@ -87,7 +100,7 @@ const useStyles = makeStyles(
                 color: 'rgb(255,255,255)',
             },
             orangeHeader: {
-                backgroundColor: 'rgb(255, 171, 0)',
+                backgroundColor: otherOrange,
                 color: 'rgb(0,0,0)',
             },
             orangeHeaderButton: {
@@ -103,7 +116,7 @@ const useStyles = makeStyles(
                 color: 'rgb(255, 255, 255)',
             },
             grayHeader: {
-                backgroundColor: 'rgb(192, 192, 192)',
+                backgroundColor: ambiguousGray,
                 color: 'rgb(0, 0, 0)',
             },
             grayHeaderButton: {
@@ -115,6 +128,14 @@ const useStyles = makeStyles(
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 width: '100%',
+            },
+            pipelineHeaderText: {
+                display: 'flex',
+                alignItems: 'center',
+            },
+            pipelineHeaderStatusIcon: {
+                marginRight: '5px',
+                display: 'flex',
             },
             stepHeader: {
                 paddingRight: '24px',
@@ -137,6 +158,7 @@ const useStyles = makeStyles(
             stepHeaderContent: {
                 display: 'flex',
                 justifyContent: 'space-between',
+                alignItems: 'center',
             },
             small: {
                 width: theme.spacing(3),
@@ -147,9 +169,27 @@ const useStyles = makeStyles(
                 marginRight: '5px',
                 verticalAlign: 'text-bottom',
             },
+            stepStatusIcon: {
+                marginRight: '5px',
+                height: '23px',
+                width: '23px',
+                border: '2px solid White',
+                borderRadius: '50%',
+                backgroundColor: 'White',
+            },
             statusIcon: {
                 marginRight: '5px',
                 verticalAlign: 'text-bottom',
+            },
+            avatar: {
+                marginRight: '12px',
+                width: '32px',
+                height: '32px',
+                border: '2px solid White',
+            },
+            flex: {
+                display: 'flex',
+                alignItems: 'center',
             },
         } as const)
 );
@@ -164,6 +204,14 @@ function durationString(totalSeconds?: number): string {
         return `${minutes} min ${seconds} sec`;
     }
     return `${seconds} sec`;
+}
+
+function dateString(completed_on?: string): string {
+    if (!completed_on) {
+        return '';
+    }
+
+    return format(completed_on, 'MMM do YYYY, h:mm:ss a');
 }
 
 function timeString(completed_on?: any, created_on?: any): string {
@@ -194,10 +242,6 @@ type LogSectionProps = {
     onChange: (event: React.ChangeEvent<{}>, expanded: boolean) => void;
 };
 
-type StatusIconProps = {
-    pipelineState: PipelineState;
-};
-
 const PipelineSummaryPage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [state, controller] = usePipelineSummaryController();
@@ -223,6 +267,34 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
         }
     }
 
+    function colorStyleForState(state: PipelineState): any {
+        let styleColor = ambiguousGray;
+        switch (statusForState(state)) {
+            case Status.Pending:
+            // Fall through
+            case Status.InProgress:
+                styleColor = suspenseBlue;
+                break;
+            case Status.Paused:
+            // Fall through
+            case Status.Successful:
+                styleColor = successGreen;
+                break;
+            case Status.Stopped:
+                styleColor = otherOrange;
+                break;
+            case Status.Error:
+            // Fall through
+            case Status.Failed:
+                styleColor = failureRed;
+                break;
+            default:
+                styleColor = ambiguousGray;
+        }
+
+        return { color: styleColor };
+    }
+
     function logsExpansionPanelDetails(logs?: string): any {
         return (
             <ExpansionPanelDetails>
@@ -245,39 +317,39 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                 onChange={onChange}
                 disabled={logRange === undefined || logRange.lastByte < 0}
             >
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} id={aKey}>
-                    <div className={classes.logs}>{name}</div>
+                <ExpansionPanelSummary className={classes.hiddenOverflow} expandIcon={<ExpandMoreIcon />} id={aKey}>
+                    <div className={classes.logHeader}>{name}</div>
                 </ExpansionPanelSummary>
                 {logsExpansionPanelDetails(logs)}
             </ExpansionPanel>
         );
     }
 
-    function IconForPipelineState({ pipelineState }: StatusIconProps): any {
+    const iconForPipelineState = useCallback((pipelineState: PipelineState, className: string) => {
         if (!pipelineState) {
             return Status.Unknown;
         }
         switch (statusForState(pipelineState)) {
             case Status.Successful:
-                return <SuccessIcon className={classes.statusIcon} titleAccess="Success" />;
+                return <SuccessIcon className={className} titleAccess="Success" />;
             case Status.Paused:
-                return <PausedIcon className={classes.statusIcon} titleAccess="Paused" />;
+                return <PausedIcon className={className} titleAccess="Paused" />;
             case Status.Pending:
-                return <InProgressIcon className={classes.statusIcon} titleAccess="Pending" />;
+                return <InProgressIcon className={className} titleAccess="Pending" />;
             case Status.InProgress:
-                return <InProgressIcon className={classes.statusIcon} titleAccess="Building" />;
+                return <InProgressIcon className={className} titleAccess="Building" />;
             case Status.Stopped:
-                return <StoppedIcon className={classes.statusIcon} titleAccess="Stopped" />;
+                return <StoppedIcon className={className} titleAccess="Stopped" />;
             case Status.Error:
-                return <FailedIcon className={classes.statusIcon} titleAccess="Error" />;
+                return <FailedIcon className={className} titleAccess="Error" />;
             case Status.Failed:
-                return <FailedIcon className={classes.statusIcon} titleAccess="Failed" />;
+                return <FailedIcon className={className} titleAccess="Failed" />;
             case Status.NotRun:
-                return <NotRunIcon className={classes.statusIcon} titleAccess="Not Run" />;
+                return <NotRunIcon className={className} titleAccess="Not Run" />;
             default:
-                return <FailedIcon className={classes.statusIcon} titleAccess="Failed" />;
+                return <FailedIcon className={className} titleAccess="Failed" />;
         }
-    }
+    }, []);
 
     function setupAndTeardownSection(
         stepUuid: string,
@@ -345,17 +417,27 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                 <div className={className} style={style}>
                     <Typography variant="h4">
                         <div className={classes.stepHeaderContent}>
-                            <div>
-                                {step.state ? <IconForPipelineState pipelineState={step.state} /> : ''}
+                            <div className={classes.flex}>
+                                {step.state ? (
+                                    <div style={colorStyleForState(step.state)} className={classes.flex}>
+                                        {iconForPipelineState(step.state, classes.stepStatusIcon)}
+                                    </div>
+                                ) : (
+                                    ''
+                                )}
                                 <span>{step.name ?? `Step ${index + 1} `}</span>
                             </div>
-                            <span>{isPaused(step) ? '' : durationString(step.duration_in_seconds)}</span>
+                            <span>
+                                {!step.duration_in_seconds || isPaused(step)
+                                    ? 'Not run'
+                                    : durationString(step.duration_in_seconds)}
+                            </span>
                         </div>
                     </Typography>
                 </div>
             );
         },
-        [classes.stepHeaderContent]
+        [classes.stepHeaderContent, classes.flex, iconForPipelineState, classes.stepStatusIcon]
     );
 
     const pipelineStepItem = useCallback(
@@ -426,8 +508,10 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                         <div />
                     ) : (
                         <div className={classes.pipelineHeader}>
-                            <Typography variant="h3" style={{ verticalAlign: 'middle' }}>
-                                <IconForPipelineState pipelineState={state.pipeline.state} />
+                            <Typography variant="h3" className={classes.pipelineHeaderText}>
+                                <div className={classes.pipelineHeaderStatusIcon}>
+                                    {iconForPipelineState(state.pipeline.state, classes.pipelineHeaderStatusIcon)}
+                                </div>
                                 <a
                                     className={headerClass}
                                     href={`${state.pipeline.repository!.url}/addon/pipelines/home#!/results/${
@@ -437,9 +521,16 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                                 {state.pipeline.duration_in_seconds ? <AccessTimeIcon className={classes.icon} /> : ''}
                                 {`${durationString(state.pipeline.duration_in_seconds)}`}
                                 {state.pipeline.completed_on ? <CalendarTodayIcon className={classes.icon} /> : ''}
-                                {`${timeString(state.pipeline.completed_on)}`}
+                                <span title={dateString(state.pipeline.completed_on)}>{`${timeString(
+                                    state.pipeline.completed_on
+                                )}`}</span>
                             </Typography>
-                            <div>
+                            <div className={classes.flex}>
+                                <Avatar
+                                    alt={state.pipeline.creator_name}
+                                    src={state.pipeline.creator_avatar}
+                                    className={classes.avatar}
+                                />
                                 {isStoppable(state.pipeline) ? (
                                     ''
                                 ) : (
