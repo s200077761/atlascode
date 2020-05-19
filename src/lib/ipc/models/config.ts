@@ -15,6 +15,7 @@ export enum ConfigSection {
     Jira = 'jira',
     Bitbucket = 'bitbucket',
     General = 'general',
+    Explore = 'explore',
 }
 
 export enum ConfigSubSection {
@@ -30,6 +31,8 @@ export enum ConfigSubSection {
     Misc = 'misc',
     Connectivity = 'connect',
     Debug = 'debug',
+    JiraFeatures = 'jiraFeatures',
+    BitbucketFeatures = 'bitbucketFeatures',
 }
 
 export function configTargetForString(target: string): ConfigTarget {

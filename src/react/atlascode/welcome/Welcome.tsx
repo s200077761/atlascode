@@ -83,6 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.1 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Added an "Explore" tab to the settings page to help make key
+                                                    features more discoverable
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.6.0 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>

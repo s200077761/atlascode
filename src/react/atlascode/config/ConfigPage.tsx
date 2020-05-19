@@ -27,6 +27,7 @@ import { AuthDialog } from './auth/AuthDialog';
 import { AuthDialogControllerContext, useAuthDialog } from './auth/useAuthDialog';
 import { BitbucketPanel } from './bitbucket/BitbucketPanel';
 import { ConfigControllerContext, useConfigController } from './configController';
+import { ExplorePanel } from './explore/ExplorePanel';
 import { GeneralPanel } from './general/GeneralPanel';
 import { JiraPanel } from './jira/JiraPanel';
 import { ProductEnabler } from './ProductEnabler';
@@ -102,6 +103,15 @@ const ConfigPage: React.FunctionComponent = () => {
         },
         [openSection]
     );
+
+    const handleCompleteSectionChange = useCallback((section: ConfigSection, subSection: ConfigSubSection) => {
+        setOpenSection(section);
+        setOpenSubsections((oldSections) => {
+            const newSections = { ...oldSections };
+            newSections[section] = [...oldSections[section], subSection];
+            return newSections;
+        });
+    }, []);
 
     const handleJiraToggle = useCallback((enabled: boolean): void => {
         const changes = Object.create(null);
@@ -197,6 +207,12 @@ const ConfigPage: React.FunctionComponent = () => {
                                     value={ConfigSection.General}
                                     label="General"
                                 />
+                                <Tab
+                                    id="simple-tab-3"
+                                    aria-controls="simple-tabpanel-3"
+                                    value={ConfigSection.Explore}
+                                    label="Explore"
+                                />
                             </Tabs>
                             <div className={classes.grow} />
                             <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
@@ -272,6 +288,11 @@ const ConfigPage: React.FunctionComponent = () => {
                                         selectedSubSections={openSubsections[ConfigSection.General]}
                                         onSubsectionChange={handleSubsectionChange}
                                         config={state.config!}
+                                    />
+                                    <ExplorePanel
+                                        visible={openSection === ConfigSection.Explore}
+                                        config={state.config!}
+                                        sectionChanger={handleCompleteSectionChange}
                                     />
                                 </Box>
                             </Paper>

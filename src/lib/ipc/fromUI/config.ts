@@ -13,6 +13,10 @@ export enum ConfigActionType {
     FilterSearchRequest = 'filterSearchRequest',
     ValidateJqlRequest = 'validateJqlRequest',
     SetTarget = 'setTarget',
+    CreateJiraIssue = 'createJiraIssue',
+    ViewJiraIssue = 'viewJiraIssue',
+    CreatePullRequest = 'createPullRequest',
+    ViewPullRequest = 'viewPullRequest',
 }
 
 export type ConfigAction =
@@ -25,6 +29,10 @@ export type ConfigAction =
     | ReducerAction<ConfigActionType.FilterSearchRequest, FilterSearchRequestAction>
     | ReducerAction<ConfigActionType.ValidateJqlRequest, ValidateJqlRequestAction>
     | ReducerAction<ConfigActionType.SetTarget, TargetUpdateAction>
+    | ReducerAction<ConfigActionType.CreateJiraIssue>
+    | ReducerAction<ConfigActionType.ViewJiraIssue>
+    | ReducerAction<ConfigActionType.CreatePullRequest>
+    | ReducerAction<ConfigActionType.ViewPullRequest>
     | CommonAction;
 
 export interface AuthAction {

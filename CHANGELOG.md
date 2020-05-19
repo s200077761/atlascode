@@ -1,3 +1,9 @@
+## What's New in 2.6.1
+
+### Improvements
+
+-   Added an "Explore" tab to the settings page to help make key features more discoverable
+
 ## What's New in 2.6.0
 
 ### Improvements
