@@ -25,6 +25,7 @@ import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
+import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { JiraContext } from './views/jira/jiraContext';
@@ -162,6 +163,8 @@ export class Container {
                 }
             });
         }
+
+        context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
     }
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
@@ -239,6 +242,12 @@ export class Container {
     static get bitbucketContext() {
         return this._bitbucketContext;
     }
+
+    private static _helpExplorer: HelpExplorer;
+    static get helpExplorer() {
+        return this._helpExplorer;
+    }
+
     private static _explorerFocusManager: ExplorerFocusManager;
     static get explorerFocusManager() {
         return this._explorerFocusManager;

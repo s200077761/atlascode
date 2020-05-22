@@ -28,6 +28,7 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
                                 expanded={selectedSubSections.includes(ConfigSubSection.Misc)}
                                 onSubsectionChange={onSubsectionChange}
                                 showWelcome={config['showWelcomeOnInstall']}
+                                helpExplorerEnabled={config['helpExplorerEnabled']}
                                 outputLevel={config['outputLevel']}
                             />
                         </Grid>

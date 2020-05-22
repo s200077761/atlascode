@@ -382,6 +382,16 @@
                 "command": "atlascode.debug.bitbucketSites",
                 "title": "Show Bitbucket sites info",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showExploreSettings",
+                "title": "Explore",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.disableHelpExplorer",
+                "title": "Disable Help Explorer",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -414,6 +424,11 @@
                     "id": "atlascode.views.bb.issuesTreeView",
                     "name": "Bitbucket issues",
                     "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
+                },
+                {
+                    "id": "atlascode.views.helpTreeView",
+                    "name": "Help and Feedback",
+                    "when": "config.atlascode.helpExplorerEnabled"
                 }
             ]
         },
@@ -544,6 +559,10 @@
                     "command": "atlascode.bb.showBitbucketIssueSettings",
                     "when": "view == atlascode.views.bb.issuesTreeView",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "atlascode.disableHelpExplorer",
+                    "when": "view == atlascode.views.helpTreeView"
                 }
             ],
             "view/item/context": [
@@ -765,6 +784,10 @@
                 {
                     "command": "atlascode.jira.showIssueForKey",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.showExploreSettings",
+                    "when": "false"
                 }
             ]
         },
@@ -1258,6 +1281,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Shows a login button in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.helpExplorerEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the help explorer treeview",
                     "scope": "window"
                 }
             }
