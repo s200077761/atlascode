@@ -30,6 +30,7 @@ export enum Status {
     Successful,
     Error,
     Failed,
+    NotRun,
     Unknown,
 }
 
@@ -189,6 +190,8 @@ function statusForResult(result: PipelineResult): Status {
         // fall through
         case 'pipeline_step_state_completed_stopped':
             return Status.Stopped;
+        case 'pipeline_step_state_completed_not_run':
+            return Status.NotRun;
         default:
             return Status.Unknown;
     }
