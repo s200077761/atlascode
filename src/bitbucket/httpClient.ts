@@ -3,6 +3,11 @@ import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
 
+export interface RequestRange {
+    start: number;
+    end: number;
+}
+
 export class HTTPClient {
     private transport: AxiosInstance;
 
@@ -34,14 +39,25 @@ export class HTTPClient {
         );
     }
 
-    async get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken) {
-        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
-        url = HTTPClient.addQueryParams(url, queryParams);
+    /**
+     * Performs a GET request on the passed url with all the authentication and other headers that would normally be
+     * applied. This is necessary for some internal APIs. For anything for which it's not required
+     * [[get(urlSlug: string, queryParams?: any)]] should be used.
+     *
+     * @param url  The full URL to get.
+     */
+    async getUrl(url: string, cancelToken?: CancelToken): Promise<any> {
         const res = await this.transport(url, {
             method: 'GET',
             cancelToken: cancelToken,
         });
         return { data: res.data, headers: res.headers };
+    }
+
+    async get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken) {
+        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
+        url = HTTPClient.addQueryParams(url, queryParams);
+        return this.getUrl(url, cancelToken);
     }
 
     async getRaw(urlSlug: string, queryParams?: any) {
@@ -57,15 +73,21 @@ export class HTTPClient {
         return { data: res.data, headers: res.headers };
     }
 
-    async getOctetStream(urlSlug: string, queryParams?: any) {
+    async getOctetStream(urlSlug: string, range?: RequestRange, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
         url = HTTPClient.addQueryParams(url, queryParams);
 
+        const headers = {
+            accept: 'application/octet-stream',
+        };
+
+        if (range) {
+            headers['Range'] = `bytes=${range.start}-${range.end}`;
+        }
+
         const res = await this.transport(url, {
             method: 'GET',
-            headers: {
-                accept: 'application/octet-stream',
-            },
+            headers: headers,
         });
         return { data: res.data, headers: res.headers };
     }

@@ -24,9 +24,6 @@ const routes = {
     startWorkOnIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage')
     ),
-    pipelineSummaryScreen: React.lazy(() =>
-        import(/* webpackChunkName: "pipelineSummaryScreen" */ './pipelines/PipelineSummaryPage')
-    ),
     createBitbucketIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')
     ),

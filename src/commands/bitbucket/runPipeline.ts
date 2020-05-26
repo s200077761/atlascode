@@ -1,5 +1,6 @@
 import path from 'path';
 import { commands, QuickPickItem, window } from 'vscode';
+import { pipelineStartEvent } from '../../analytics';
 import { bitbucketSiteForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
@@ -38,6 +39,11 @@ async function showBranchPicker(remote: Remote) {
         window.showErrorMessage(`No Bitbucket site has been configured for this repo.`);
         return;
     }
+
+    pipelineStartEvent(bbSite.details).then((e) => {
+        Container.analyticsClient.sendTrackEvent(e);
+    });
+
     const site = siteDetailsForRemote(remote);
     const bbApi = await Container.clientManager.bbClient(site!);
     window

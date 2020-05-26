@@ -113,24 +113,3 @@ export function iconUriForPipeline(pipeline: Pipeline): Uri | { light: Uri; dark
             return undefined;
     }
 }
-
-export function statusForPipeline(pipeline: Pipeline): string {
-    switch (statusForState(pipeline.state)) {
-        case Status.Pending:
-            return 'Pending';
-        case Status.InProgress:
-            return 'Building';
-        case Status.Paused:
-            return 'Success';
-        case Status.Stopped:
-            return 'Stopped';
-        case Status.Successful:
-            return 'Success';
-        case Status.Error:
-            return 'Error';
-        case Status.Failed:
-            return 'Failed';
-        default:
-            return 'Error';
-    }
-}
