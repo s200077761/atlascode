@@ -14,6 +14,7 @@ export class RepositoriesNode extends AbstractBaseNode {
     constructor(
         public fetcher: (wsRepo: WorkspaceRepo) => Promise<PaginatedPullRequests>,
         private workspaceRepo: WorkspaceRepo,
+        private preloadingEnabled: boolean,
         private expand?: boolean
     ) {
         super();
@@ -51,8 +52,9 @@ export class RepositoriesNode extends AbstractBaseNode {
         return item;
     }
 
-    async markDirty() {
+    async markDirty(preloadingEnabled: boolean) {
         this.dirty = true;
+        this.preloadingEnabled = preloadingEnabled;
     }
 
     private async refresh() {
@@ -127,7 +129,7 @@ export class RepositoriesNode extends AbstractBaseNode {
                 return new PullRequestTitlesNode(
                     pr,
                     Container.bitbucketContext.prCommentController,
-                    numPRs <= 10,
+                    numPRs <= 10 && this.preloadingEnabled,
                     this
                 );
             }
@@ -140,7 +142,7 @@ export class RepositoriesNode extends AbstractBaseNode {
                 return new PullRequestTitlesNode(
                     pr,
                     Container.bitbucketContext.prCommentController,
-                    numPRs <= 25,
+                    numPRs <= 10 && this.preloadingEnabled,
                     this
                 );
             }
