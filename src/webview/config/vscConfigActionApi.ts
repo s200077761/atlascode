@@ -28,7 +28,6 @@ import { FeedbackUser } from '../../lib/ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
-import { focusExplorerForSite } from '../common/focusExplorerForSite';
 import { FocusEventActions } from '../ExplorerFocusManager';
 
 export class VSCConfigActionApi implements ConfigActionApi {
@@ -40,12 +39,10 @@ export class VSCConfigActionApi implements ConfigActionApi {
         this._cancelMan = cancelMan;
     }
     public async authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
-        focusExplorerForSite(site);
         return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     public async authenticateCloud(site: SiteInfo, callback: string): Promise<void> {
-        focusExplorerForSite(site);
         return Container.loginManager.userInitiatedOAuthLogin(site, callback);
     }
 

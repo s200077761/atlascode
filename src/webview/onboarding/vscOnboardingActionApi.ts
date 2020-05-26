@@ -16,7 +16,6 @@ import { AnalyticsApi } from '../../lib/analyticsApi';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { OnboardingActionApi } from '../../lib/webview/controller/onboarding/onboardingActionApi';
-import { focusExplorerForSite } from '../common/focusExplorerForSite';
 import { FocusEventActions } from '../ExplorerFocusManager';
 
 export class VSCOnboardingActionApi implements OnboardingActionApi {
@@ -27,12 +26,10 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
     }
 
     public async authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
-        focusExplorerForSite(site);
         return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     public async authenticateCloud(site: SiteInfo, callback: string): Promise<void> {
-        focusExplorerForSite(site);
         return Container.loginManager.userInitiatedOAuthLogin(site, callback);
     }
 
