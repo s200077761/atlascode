@@ -60,7 +60,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
         return [controller, disposables];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        return getHtmlForView(extensionPath, id);
+    public webviewHtml(baseUri: Uri, cspSource: string): string {
+        return getHtmlForView(baseUri, cspSource, id);
     }
 }

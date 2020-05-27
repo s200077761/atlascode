@@ -103,10 +103,6 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     enableFindWidget: true,
                     enableCommandUris: true,
                     enableScripts: true,
-                    localResourceRoots: [
-                        Uri.file(path.join(this._extensionPath, 'build')),
-                        Uri.file(path.join(this._extensionPath, 'images')),
-                    ],
                 }
             );
 
@@ -124,9 +120,17 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this.ws
             );
 
-            this._panel.webview.html = this._getHtmlForWebview(this.id);
+            this._panel.webview.html = this._getHtmlForWebview(
+                this._panel.webview.asWebviewUri(Uri.parse(this._extensionPath)),
+                this._panel.webview.cspSource,
+                this.id
+            );
         } else {
-            this._panel.webview.html = this._getHtmlForWebview(this.id);
+            this._panel.webview.html = this._getHtmlForWebview(
+                this._panel.webview.asWebviewUri(Uri.parse(this._extensionPath)),
+                this._panel.webview.cspSource,
+                this.id
+            );
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
     }
@@ -244,19 +248,15 @@ export abstract class AbstractReactWebview implements ReactWebview {
         this._onDidPanelDispose.dispose();
     }
 
-    private _getHtmlForWebview(viewName: string) {
+    private _getHtmlForWebview(baseUri: Uri, cspSource: string, viewName: string) {
         const manifest = JSON.parse(
-            fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString()
+            fs.readFileSync(path.join(baseUri.fsPath, 'build', 'asset-manifest.json')).toString()
         );
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];
 
-        const scriptUri = Uri.file(path.join(this._extensionPath, 'build', mainScript)).with({
-            scheme: 'vscode-resource',
-        });
-        const styleUri = Uri.file(path.join(this._extensionPath, 'build', mainStyle)).with({
-            scheme: 'vscode-resource',
-        });
+        const scriptUri = baseUri.with({ path: path.join(baseUri.fsPath, 'build', mainScript) });
+        const styleUri = baseUri.with({ path: path.join(this._extensionPath, 'build', mainStyle) });
         const tmpl = Resources.html.get('reactHtml');
 
         if (tmpl) {
@@ -264,7 +264,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
-                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' }),
+                baseUri: baseUri,
+                cspSource: cspSource,
             });
         } else {
             return Resources.htmlNotFound({ resource: 'reactHtml' });
