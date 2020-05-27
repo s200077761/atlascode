@@ -190,7 +190,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             runPipeline();
         }),
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
-            Container.pipelineViewManager.createOrShow(pipelineInfo);
+            Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
         }),
         commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
             Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue)

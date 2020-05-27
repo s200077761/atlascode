@@ -17,6 +17,7 @@ import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
 const headerNode = new PullRequestHeaderNode('Showing open pull requests');
+const MAX_WORKSPACE_REPOS_TO_PRELOAD = 3;
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<
@@ -115,11 +116,21 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         });
 
         // add nodes for newly added repos
+        // Disable preloading when there are more than 10 repos due to rate-limit issues
+        // see https://splunk.paas-inf.net/en-US/app/search/atlascode_bitbucket_user_analysis for repo number distributions for our users
         for (const wsRepo of workspaceRepos) {
             const repoUri = wsRepo.rootUri;
             this._childrenMap!.has(repoUri)
-                ? this._childrenMap!.get(repoUri)!.markDirty()
-                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, wsRepo, expand));
+                ? this._childrenMap!.get(repoUri)!.markDirty(workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD)
+                : this._childrenMap!.set(
+                      repoUri,
+                      new RepositoriesNode(
+                          this._fetcher,
+                          wsRepo,
+                          workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD,
+                          expand
+                      )
+                  );
         }
     }
 

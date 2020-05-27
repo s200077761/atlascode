@@ -30,6 +30,7 @@ export enum Status {
     Successful,
     Error,
     Failed,
+    NotRun,
     Unknown,
 }
 
@@ -101,14 +102,30 @@ export interface PipelineReferenceTarget extends PipelineTarget {
     ref_type: PipelineReferenceType;
 }
 
+export enum PipelineLogStage {
+    SETUP,
+    BUILD,
+    TEARDOWN,
+}
+
+export interface PipelineLogReference {
+    stepIndex: number;
+    stage: PipelineLogStage;
+    commandIndex?: number;
+}
+
 export interface PipelineStep {
     run_number: number;
     uuid: string;
     name?: string;
     completed_on?: string;
     setup_commands: PipelineCommand[];
+    setup_logs?: string;
+    setup_log_range?: PipelineLogRange;
     script_commands: PipelineCommand[];
     teardown_commands: PipelineCommand[];
+    teardown_logs?: string;
+    teardown_log_range?: PipelineLogRange;
     duration_in_seconds: number;
     state?: PipelineState;
 }
@@ -118,6 +135,19 @@ export interface PipelineCommand {
     command: string;
     name: string;
     logs?: string;
+    log_range?: PipelineLogRange;
+}
+
+export interface PipelineStepLogRanges {
+    setupLogRange: PipelineLogRange;
+    buildLogRanges: PipelineLogRange[];
+    teardownLogRange: PipelineLogRange;
+}
+
+export interface PipelineLogRange {
+    firstByte: number;
+    byteCount: number;
+    lastByte: number;
 }
 
 export function statusForState(state: PipelineState): Status {
@@ -160,6 +190,8 @@ function statusForResult(result: PipelineResult): Status {
         // fall through
         case 'pipeline_step_state_completed_stopped':
             return Status.Stopped;
+        case 'pipeline_step_state_completed_not_run':
+            return Status.NotRun;
         default:
             return Status.Unknown;
     }

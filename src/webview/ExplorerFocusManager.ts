@@ -1,4 +1,8 @@
-import { EventEmitter, Event, Disposable } from 'vscode';
+import vscode, { Disposable, Event, EventEmitter } from 'vscode';
+import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { CustomJQLTreeId, PullRequestTreeViewId } from '../constants';
+import { Container } from '../container';
+import { SitesAvailableUpdateEvent } from '../siteManager';
 
 export enum FocusEventActions {
     CREATEISSUE = 'Create an issue',
@@ -13,9 +17,14 @@ export type FocusEvent = {
 };
 
 export class ExplorerFocusManager extends Disposable {
+    private _disposable: Disposable;
     private _onFocusEvent = new EventEmitter<FocusEvent>();
     constructor() {
         super(() => this.dispose());
+
+        this._disposable = Disposable.from(
+            Container.siteManager.onDidSitesAvailableChange(this.onDidSitesChange, this)
+        );
     }
 
     fireEvent(eventType: FocusEventActions, openNode?: boolean) {
@@ -31,5 +40,14 @@ export class ExplorerFocusManager extends Disposable {
 
     dispose() {
         this._onFocusEvent.dispose();
+        this._disposable.dispose();
+    }
+
+    private onDidSitesChange(updateEvent: SitesAvailableUpdateEvent) {
+        if (updateEvent.product.key === ProductJira.key) {
+            vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
+        } else if (updateEvent.product.key === ProductBitbucket.key) {
+            vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
+        }
     }
 }

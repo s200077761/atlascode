@@ -28,6 +28,7 @@ import {
     logoutButtonEvent,
     moreSettingsButtonEvent,
     openSettingsButtonEvent,
+    pipelineRerunEvent,
     pipelineStartEvent,
     pmfClosed,
     pmfSnoozed,
@@ -314,6 +315,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
     public async fireOpenSettingsButtonEvent(source: string): Promise<void> {
         return openSettingsButtonEvent(source).then((e) => {
             this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async firePipelineRerunEvent(site: DetailedSiteInfo, source: string) {
+        return pipelineRerunEvent(site, source).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
         });
     }
 }
