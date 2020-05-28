@@ -59,6 +59,7 @@ export class OAuthDancer implements Disposable {
         this._axios = axios.create({
             timeout: ConnectionTimeout,
             headers: {
+                'User-Agent': 'atlascode/2.x',
                 'Accept-Encoding': 'gzip, deflate',
             },
         });

@@ -38,6 +38,9 @@ export class OnlineDetector extends Disposable {
 
         this._transport = axios.create({
             timeout: ConnectionTimeout,
+            headers: {
+                'User-Agent': 'atlascode/2.x',
+            },
         });
 
         if (Container.config.enableCurlLogging) {

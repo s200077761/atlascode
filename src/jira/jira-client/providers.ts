@@ -21,8 +21,8 @@ export function getAxiosInstance(): AxiosInstance {
     const instance = axios.create({
         timeout: ConnectionTimeout,
         headers: {
+            'User-Agent': 'atlascode/2.x',
             'X-Atlassian-Token': 'no-check',
-            'x-atlassian-force-account-id': 'true',
             'Accept-Encoding': 'gzip, deflate',
         },
     });

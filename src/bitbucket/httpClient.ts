@@ -20,6 +20,7 @@ export class HTTPClient {
         this.transport = axios.create({
             timeout: ConnectionTimeout,
             headers: {
+                'User-Agent': 'atlascode/2.x',
                 'Accept-Encoding': 'gzip, deflate',
                 'Content-Type': 'application/json',
                 Authorization: this.authHeader,
