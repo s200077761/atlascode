@@ -70,12 +70,30 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 headerNode.description = 'Showing pull requests to review';
                 this.refresh();
             }),
+            commands.registerCommand(Commands.BitbucketShowMergedPullRequests, () => {
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getListMerged(wsRepo);
+                };
+                headerNode.description = 'Showing merged pull requests';
+                this.refresh();
+            }),
+            commands.registerCommand(Commands.BitbucketShowDeclinedPullRequests, () => {
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getListDeclined(wsRepo);
+                };
+                headerNode.description = 'Showing declined pull requests';
+                this.refresh();
+            }),
             commands.registerCommand(Commands.BitbucketPullRequestFilters, () => {
                 window
                     .showQuickPick([
                         'Show all open pull requests',
                         'Show pull requests created by me',
                         'Show pull requests to be reviewed',
+                        'Show merged pull requests',
+                        'Show declined pull requests',
                     ])
                     .then((selected: string) => {
                         switch (selected) {
@@ -87,6 +105,12 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                                 break;
                             case 'Show pull requests to be reviewed':
                                 commands.executeCommand(Commands.BitbucketShowPullRequestsToReview);
+                                break;
+                            case 'Show merged pull requests':
+                                commands.executeCommand(Commands.BitbucketShowMergedPullRequests);
+                                break;
+                            case 'Show declined pull requests':
+                                commands.executeCommand(Commands.BitbucketShowDeclinedPullRequests);
                                 break;
                             default:
                                 break;

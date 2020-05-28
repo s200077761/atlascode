@@ -112,6 +112,18 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
     }
 
+    async getListMerged(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        return this.getList(workspaceRepo, {
+            q: 'state="MERGED"',
+        });
+    }
+
+    async getListDeclined(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        return this.getList(workspaceRepo, {
+            q: 'state="DECLINED"',
+        });
+    }
+
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
         if (!paginatedPullRequests.next) {
             return { ...paginatedPullRequests, next: undefined };
