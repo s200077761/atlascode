@@ -6,6 +6,8 @@ import { ConnectionTimeout } from '../util/time';
 import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
+import { AxiosUserAgent } from '../constants';
+
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
 
@@ -13,7 +15,7 @@ export class OAuthRefesher implements Disposable {
         this._axios = axios.create({
             timeout: ConnectionTimeout,
             headers: {
-                'User-Agent': 'atlascode/2.x',
+                'User-Agent': AxiosUserAgent,
                 'Accept-Encoding': 'gzip, deflate',
             },
         });

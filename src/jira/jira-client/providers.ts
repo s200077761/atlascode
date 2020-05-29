@@ -10,6 +10,7 @@ import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { Resources } from '../../resources';
 import { ConnectionTimeout } from '../../util/time';
+import { AxiosUserAgent } from '../../constants';
 
 var tunnel = require('tunnel');
 
@@ -21,7 +22,7 @@ export function getAxiosInstance(): AxiosInstance {
     const instance = axios.create({
         timeout: ConnectionTimeout,
         headers: {
-            'User-Agent': 'atlascode/2.x',
+            'User-Agent': AxiosUserAgent,
             'X-Atlassian-Token': 'no-check',
             'Accept-Encoding': 'gzip, deflate',
         },

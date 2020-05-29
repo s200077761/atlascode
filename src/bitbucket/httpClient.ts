@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
+import { AxiosUserAgent } from '../constants';
 
 export interface RequestRange {
     start: number;
@@ -20,7 +21,7 @@ export class HTTPClient {
         this.transport = axios.create({
             timeout: ConnectionTimeout,
             headers: {
-                'User-Agent': 'atlascode/2.x',
+                'User-Agent': AxiosUserAgent,
                 'Accept-Encoding': 'gzip, deflate',
                 'Content-Type': 'application/json',
                 Authorization: this.authHeader,

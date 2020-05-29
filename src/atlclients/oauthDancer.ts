@@ -27,6 +27,7 @@ import {
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
+import { AxiosUserAgent } from '../constants';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
@@ -59,7 +60,7 @@ export class OAuthDancer implements Disposable {
         this._axios = axios.create({
             timeout: ConnectionTimeout,
             headers: {
-                'User-Agent': 'atlascode/2.x',
+                'User-Agent': AxiosUserAgent,
                 'Accept-Encoding': 'gzip, deflate',
             },
         });

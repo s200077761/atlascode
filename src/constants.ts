@@ -17,6 +17,7 @@ export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';
 export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const BitbucketIssuesTreeViewId = 'atlascode.views.bb.issuesTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';
+export const AxiosUserAgent = 'atlascode/2.x axios/0.19.2';
 
 export const bbAPIConnectivityError = new Error('cannot connect to bitbucket api');
 export const jiraAPIConnectivityError = new Error('cannot connect to jira api');
