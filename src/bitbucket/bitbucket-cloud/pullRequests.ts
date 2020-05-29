@@ -39,7 +39,7 @@ const mergeStrategyLabels = {
     fast_forward: 'Fast forward',
 };
 
-const TEAM_MEMBERS_CACHE_LIMIT = 4000;
+const TEAM_MEMBERS_CACHE_LIMIT = 1000;
 
 export class CloudPullRequestApi implements PullRequestApi {
     private defaultReviewersCache: CacheMap = new CacheMap();
@@ -512,51 +512,27 @@ export class CloudPullRequestApi implements PullRequestApi {
                 return;
             }
 
-            let { data } = await this.client.get(
-                `/teams/${ownerSlug}/members`,
-                {
-                    pagelen: 100,
-                    fields:
-                        'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href',
-                },
-                cancelToken
-            );
-            const teamMembers = data.values || [];
+            const [teamMembers, recentPrParticipants] = await Promise.all([
+                this.getTeamMembers(site),
+                this.getRecentPullRequestsParticipants(site),
+            ]);
 
-            // DO NOT cache data for very large teams
-            if (data.size > TEAM_MEMBERS_CACHE_LIMIT) {
-                this.teamMembersCache.setItem(cacheKey, []);
-                return;
-            }
-
-            while (data.next) {
-                const nextPage = await this.client.get(data.next, undefined, cancelToken);
-                data = nextPage.data;
-                teamMembers.push(...(data.values || []));
-            }
-
-            this.teamMembersCache.setItem(
-                cacheKey,
-                teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m))
-            );
+            this.teamMembersCache.setItem(cacheKey, this.dedupUsers([...teamMembers, ...recentPrParticipants]));
         });
 
         if (query && query.length > 0) {
             const cacheItem = this.teamMembersCache.getItem<User[]>(cacheKey);
             if (cacheItem !== undefined && cacheItem.length > 0) {
-                return cacheItem
+                const matchingUsers = cacheItem
                     .filter((user) => user.displayName.toLowerCase().includes(query.toLowerCase()))
                     .slice(0, 20);
+                if (matchingUsers.length > 0) {
+                    return matchingUsers;
+                }
             }
 
-            // fall back to calling API using nickname query param if the cache is not populated
-            const { data } = await this.client.get(
-                `/teams/${ownerSlug}/members?q=nickname="${query}"`,
-                undefined,
-                cancelToken
-            );
-
-            return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
+            // if no cache hit, fall back to calling API using nickname query param
+            return this.getTeamMembers(site, query);
         }
 
         const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
@@ -576,6 +552,71 @@ export class CloudPullRequestApi implements PullRequestApi {
         this.defaultReviewersCache.setItem(cacheKey, result);
 
         return result;
+    }
+
+    private async getRecentPullRequestsParticipants(site: BitbucketSite): Promise<User[]> {
+        const { ownerSlug, repoSlug } = site;
+        const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests`, {
+            pagelen: 50,
+            fields: 'values.participants',
+            q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"',
+        });
+
+        console.log([[1], [2], [3]].flatMap((x) => x));
+
+        const participants = data.values.flatMap((val: any) =>
+            val.participants.map((p: any) => CloudPullRequestApi.toUserModel(p.user))
+        );
+
+        return this.dedupUsers(participants);
+    }
+
+    private async getTeamMembers(site: BitbucketSite, query?: string): Promise<User[]> {
+        const { ownerSlug } = site;
+
+        if (query && query.length > 0) {
+            // wrapping in try-catch as some users may not have permission to access to the API
+            try {
+                const { data } = await this.client.get(`/teams/${ownerSlug}/members?q=nickname="${query}"`);
+
+                return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
+            } catch (e) {
+                return [];
+            }
+        }
+
+        try {
+            let { data } = await this.client.get(`/teams/${ownerSlug}/members`, {
+                pagelen: 100,
+                fields:
+                    'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href',
+            });
+            const teamMembers = data.values || [];
+
+            // DO NOT fetch data for very large teams
+            if (data.size > TEAM_MEMBERS_CACHE_LIMIT) {
+                return [];
+            }
+
+            while (data.next) {
+                const nextPage = await this.client.get(data.next, undefined);
+                data = nextPage.data;
+                teamMembers.push(...(data.values || []));
+            }
+
+            return teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    private dedupUsers(users: User[]): User[] {
+        const userMap = new Map<string, User>();
+        users.forEach((user: User) => {
+            userMap.set(user.accountId, user);
+        });
+
+        return Array.from(userMap.values());
     }
 
     async create(
