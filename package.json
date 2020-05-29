@@ -422,7 +422,7 @@
                 {
                     "command": "atlascode.extensionContext.showConfigPage",
                     "group": "2_configure",
-                    "when": "extensionStatus==installed"
+                    "when": "extensionStatus==installed && extension==atlassian.atlascode"
                 }
             ],
             "editor/title": [
