@@ -143,7 +143,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 return [new SimpleNode('No pipelines results for this repository')];
             }
 
-            const filteredPipelines = this._pipelines.filter((pipeline) => shouldDisplay(pipeline.target.ref_name));
+            const filteredPipelines = this._pipelines.filter((pipeline) => shouldDisplay(pipeline.target));
             let nodes: AbstractBaseNode[] = [];
             if (filtersActive && filteredPipelines.length === 0 && !this._morePages) {
                 nodes = [new SimpleNode(`No pipelines matching your filters`)];
@@ -208,7 +208,7 @@ export class PipelineNode extends AbstractBaseNode {
 
     getTreeItem() {
         //Labels show up before descriptions, and descriptions are grayed out
-        const label = `${descriptionForState(this.pipeline, true)}`;
+        const label = `${descriptionForState(this.pipeline, false, true)}`;
         let description = '';
         if (this.pipeline.created_on) {
             description = `${distanceInWordsToNow(this.pipeline.created_on)} ago`;

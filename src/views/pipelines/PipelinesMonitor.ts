@@ -50,7 +50,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
 
     private shouldDisplayTarget(target: PipelineTarget): boolean {
         //If there's no branch associated with this pipe, don't filter it
-        return !target.ref_name || shouldDisplay(target.ref_name);
+        return !target.ref_name || shouldDisplay(target);
     }
 
     private diffResults(oldResults: Pipeline[], newResults: Pipeline[]): Pipeline[] {
@@ -84,16 +84,18 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     private composeMessage(newResults: Pipeline[]): string {
         if (newResults.length === 1) {
             const result = newResults[0];
-            return `${descriptionForState(result)}.`;
+            return `${descriptionForState(result, true)}.`;
         } else if (newResults.length === 2) {
-            return `${descriptionForState(newResults[0])} and ${descriptionForState(newResults[1])}.`;
+            return `${descriptionForState(newResults[0], true)} and ${descriptionForState(newResults[1], true)}.`;
         } else if (newResults.length === 3) {
-            return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${generatePipelineTitle(
-                newResults[1]
+            return `New build statuses for ${generatePipelineTitle(newResults[0], true)}, ${generatePipelineTitle(
+                newResults[1],
+                true
             )}, and 1 other build.`;
         } else if (newResults.length > 3) {
-            return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${generatePipelineTitle(
-                newResults[1]
+            return `New build statuses for ${generatePipelineTitle(newResults[0], true)}, ${generatePipelineTitle(
+                newResults[1],
+                true
             )}, and ${newResults.length - 2} other builds.`;
         }
         return '';
