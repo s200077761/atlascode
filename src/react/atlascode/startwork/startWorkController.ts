@@ -5,6 +5,7 @@ import { WorkspaceRepo } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/startWork';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
+import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import {
     emptyStartWorkInitMessage,
     StartWorkInitMessage,
@@ -32,6 +33,7 @@ export interface StartWorkControllerApi {
     ) => Promise<{ transistionStatus?: string; branch?: string; upstream?: string }>;
     closePage: () => void;
     openJiraIssue: () => void;
+    openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
 }
 
 export const emptyApi: StartWorkControllerApi = {
@@ -41,6 +43,9 @@ export const emptyApi: StartWorkControllerApi = {
     startWork: async () => ({}),
     closePage: () => {},
     openJiraIssue: () => {},
+    openSettings: (section?, subsection?): void => {
+        return;
+    },
 };
 
 export const StartWorkControllerContext = React.createContext(emptyApi);
@@ -52,6 +57,10 @@ export interface StartWorkState extends StartWorkInitMessage {
 const emptyState: StartWorkState = {
     ...emptyStartWorkInitMessage,
     isSomethingLoading: false,
+    includeIssueKey: true,
+    includeIssueDescription: true,
+    useCustomPrefixes: false,
+    customPrefixes: [],
 };
 
 export enum StartWorkUIActionType {
@@ -160,6 +169,14 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
         [postMessage, state.issue]
     );
 
+    const openSettings = useCallback(
+        (section?: ConfigSection, subsection?: ConfigSubSection): void => {
+            dispatch({ type: StartWorkUIActionType.Loading });
+            postMessage({ type: StartWorkActionType.OpenSettings, section: section, subsection: subsection });
+        },
+        [postMessage]
+    );
+
     const controllerApi = useMemo<StartWorkControllerApi>((): StartWorkControllerApi => {
         return {
             postMessage: postMessage,
@@ -168,8 +185,9 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             openLink,
             startWork,
             closePage,
+            openSettings: openSettings,
         };
-    }, [openJiraIssue, openLink, postMessage, sendRefresh, startWork, closePage]);
+    }, [openJiraIssue, openLink, postMessage, sendRefresh, startWork, closePage, openSettings]);
 
     return [state, controllerApi];
 }

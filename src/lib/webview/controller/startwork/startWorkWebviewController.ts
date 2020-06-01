@@ -98,6 +98,10 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 type: StartWorkMessageType.Init,
                 ...this.initData!,
                 repoData: repoData,
+                includeIssueKey: this.api.getIncludeIssueKey(),
+                includeIssueDescription: this.api.getIncludeIssueDescription(),
+                useCustomPrefixes: this.api.getUseCustomPrefixes(),
+                customPrefixes: this.api.getCustomPrefixes(),
             });
         } catch (e) {
             let err = new Error(`error updating start work page: ${e}`);
@@ -147,6 +151,11 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             }
             case StartWorkActionType.ClosePage: {
                 this.api.closePage();
+                break;
+            }
+            case StartWorkActionType.OpenSettings: {
+                this.api.openSettings(msg.section, msg.subsection);
+                break;
             }
             case CommonActionType.Refresh: {
                 try {

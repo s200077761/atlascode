@@ -20,6 +20,10 @@ export interface StartWorkIssueMessage {
 export interface StartWorkInitMessage {
     issue: MinimalIssue<DetailedSiteInfo>;
     repoData: RepoData[];
+    includeIssueKey: boolean;
+    includeIssueDescription: boolean;
+    useCustomPrefixes: boolean;
+    customPrefixes: string[];
 }
 
 export interface StartWorkResponseMessage {

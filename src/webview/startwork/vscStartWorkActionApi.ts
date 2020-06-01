@@ -3,6 +3,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
+import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Branch, RefType } from '../../typings/git';
 
@@ -72,6 +73,25 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         );
         await scm.push(remote, destinationBranch, true);
         return;
+    }
+
+    getIncludeIssueKey(): boolean {
+        return Container.config.jira.startWork.includeIssueKeyInLocalBranch;
+    }
+    getIncludeIssueDescription(): boolean {
+        return Container.config.jira.startWork.includeIssueDescriptionInLocalBranch;
+    }
+    getUseCustomPrefixes(): boolean {
+        return Container.config.jira.startWork.useCustomPrefixes;
+    }
+    getCustomPrefixes(): string[] {
+        return Container.config.jira.startWork.customPrefixes;
+    }
+
+    openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
+        Container.settingsWebviewFactory.createOrShow(
+            section ? { section: section, subSection: subsection } : undefined
+        );
     }
 
     closePage() {
