@@ -78,6 +78,18 @@ export class ServerPullRequestApi implements PullRequestApi {
         });
     }
 
+    async getListMerged(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        return this.getList(workspaceRepo, {
+            state: 'MERGED',
+        });
+    }
+
+    async getListDeclined(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        return this.getList(workspaceRepo, {
+            state: 'DECLINED',
+        });
+    }
+
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
         if (!paginatedPullRequests.next) {
             return { ...paginatedPullRequests, next: undefined };
@@ -99,8 +111,6 @@ export class ServerPullRequestApi implements PullRequestApi {
         const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(workspaceRepo, {
             'username.1': currentUser,
-            'role.1': 'REVIEWER',
-            limit: 2,
         });
     }
 

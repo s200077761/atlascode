@@ -303,6 +303,8 @@ export interface PullRequestApi {
     ): Promise<PaginatedPullRequests>;
     getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    getListMerged(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    getListDeclined(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     nextPage(prs: PaginatedPullRequests): Promise<PaginatedPullRequests>;
     getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
