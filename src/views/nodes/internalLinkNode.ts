@@ -4,7 +4,7 @@ import { AbstractBaseNode } from './abstractBaseNode';
 
 export class InternalLinkNode extends AbstractBaseNode {
     constructor(
-        readonly _message: string,
+        readonly message: string,
         readonly description: string,
         readonly icon: iconSet,
         readonly command: vscode.Command
@@ -13,7 +13,7 @@ export class InternalLinkNode extends AbstractBaseNode {
     }
 
     getTreeItem() {
-        const text = this._message;
+        const text = this.message;
         const node = new TreeItem(text, TreeItemCollapsibleState.None);
         node.tooltip = text;
         node.description = this.description;

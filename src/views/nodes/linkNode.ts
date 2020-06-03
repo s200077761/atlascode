@@ -5,7 +5,7 @@ import { AbstractBaseNode } from './abstractBaseNode';
 
 export class LinkNode extends AbstractBaseNode {
     constructor(
-        readonly _message: string,
+        readonly message: string,
         readonly description: string,
         readonly icon: iconSet,
         readonly uriString: string
@@ -14,7 +14,7 @@ export class LinkNode extends AbstractBaseNode {
     }
 
     getTreeItem() {
-        const text = this._message;
+        const text = this.message;
         const node = new TreeItem(text, TreeItemCollapsibleState.None);
         node.tooltip = text;
         node.description = this.description;
