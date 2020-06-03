@@ -1,4 +1,4 @@
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
@@ -7,6 +7,7 @@ import { CommonActionMessageHandler } from '../../lib/webview/controller/common/
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
 import { ConfigWebviewController, id } from '../../lib/webview/controller/config/configWebviewController';
 import { Logger } from '../../logger';
+import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
@@ -28,8 +29,8 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
         this._settingsUrl = settingsUrl;
     }
 
-    public tabIconPath(): string {
-        return Container.context.asAbsolutePath('resources/atlassian-icon.svg');
+    public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
+        return Resources.icons.get(iconSet.ATLASSIANICON);
     }
 
     public uiWebsocketPort(): number {

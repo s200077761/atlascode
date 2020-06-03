@@ -1,10 +1,16 @@
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 
 export type PostMessageFunc = (m: any) => Thenable<boolean>;
 
 export interface VSCWebviewControllerFactory<FD> {
-    tabIconPath(): string;
+    tabIcon():
+        | Uri
+        | {
+              light: Uri;
+              dark: Uri;
+          }
+        | undefined;
     webviewHtml(extensionPath: string): string;
 
     createController(postMessage: PostMessageFunc, factoryData?: FD): [WebviewController<FD>, Disposable | undefined];
