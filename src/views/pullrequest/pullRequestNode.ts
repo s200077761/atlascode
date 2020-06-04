@@ -136,9 +136,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         if (!element) {
             //If the promise is undefined, we didn't begin preloading in the constructor, so we need to make the full call here
             return await (this.childrenPromises ?? this.fetchDataAndProcessChildren());
-        } else {
-            return element.getChildren();
         }
+        return element.getChildren();
     }
 
     // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
@@ -180,21 +179,17 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         let currentDirectory = directory;
         for (let i = 0; i < splitFileName.length; i++) {
             if (i === splitFileName.length - 1) {
-                currentDirectory.diffViewArgs.push(diffViewData); //The last name in the path is the name of the file, so we've reached the end of the file tree
+                currentDirectory.files.push(diffViewData); //The last name in the path is the name of the file, so we've reached the end of the file tree
             } else {
-                const tempDirectory = currentDirectory.members.get(splitFileName[i]);
-
                 //Traverse the file tree, and if a folder doesn't exist, add it
-                if (tempDirectory) {
-                    currentDirectory = tempDirectory;
-                } else {
-                    currentDirectory.members.set(splitFileName[i], {
+                if (!currentDirectory.subdirs.has(splitFileName[i])) {
+                    currentDirectory.subdirs.set(splitFileName[i], {
                         name: splitFileName[i],
-                        diffViewArgs: [],
-                        members: new Map<string, PRDirectory>(),
+                        files: [],
+                        subdirs: new Map<string, PRDirectory>(),
                     });
-                    currentDirectory = currentDirectory.members.get(splitFileName[i])!;
                 }
+                currentDirectory = currentDirectory.subdirs.get(splitFileName[i])!;
             }
         }
     }
@@ -203,15 +198,15 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     private flattenFileStructure(directory: PRDirectory) {
         // Keep flattening until there's nothing left to flatten, and only then move on to children.
         // The initial input is a dummy root directory with empty string as the name, which is ignored to maintain it as the root node.
-        while (directory.name !== '' && directory.members.size === 1 && directory.diffViewArgs.length === 0) {
+        while (directory.name !== '' && directory.subdirs.size === 1 && directory.files.length === 0) {
             const currentFolderName: string = directory.name;
-            const childDirectory = directory.members.values().next().value;
+            const childDirectory = directory.subdirs.values().next().value;
             directory.name = `${currentFolderName}/${childDirectory.name ? childDirectory.name : ''}`;
-            directory.members = childDirectory.members;
-            directory.diffViewArgs = childDirectory.diffViewArgs;
+            directory.subdirs = childDirectory.subdirs;
+            directory.files = childDirectory.files;
         }
-        for (let [, value] of directory.members) {
-            this.flattenFileStructure(value);
+        for (const [, subdir] of directory.subdirs) {
+            this.flattenFileStructure(subdir);
         }
     }
 
@@ -227,21 +222,20 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
             //Create a dummy root directory data structure to hold the files
-            let directoryStructure: PRDirectory = {
+            let rootDirectory: PRDirectory = {
                 name: '',
-                diffViewArgs: [],
-                members: new Map<string, PRDirectory>(),
+                files: [],
+                subdirs: new Map<string, PRDirectory>(),
             };
-            allDiffData.forEach((diffData) => this.createdNestedFileStructure(diffData, directoryStructure));
-            this.flattenFileStructure(directoryStructure);
+            allDiffData.forEach((diffData) => this.createdNestedFileStructure(diffData, rootDirectory));
+            this.flattenFileStructure(rootDirectory);
 
             //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
-            let nestedDirectories: PRDirectory[] = [];
-            for (let [, value] of directoryStructure.members) {
-                nestedDirectories.push(value);
-            }
-            let directoryNodes: DirectoryNode[] = nestedDirectories.map((directory) => new DirectoryNode(directory));
-            let childNodes: AbstractBaseNode[] = directoryStructure.diffViewArgs.map(
+            let directoryNodes: DirectoryNode[] = Array.from(
+                rootDirectory.subdirs.values(),
+                (subdir) => new DirectoryNode(subdir)
+            );
+            let childNodes: AbstractBaseNode[] = rootDirectory.files.map(
                 (diffViewArg) => new PullRequestFilesNode(diffViewArg)
             );
             return childNodes.concat(directoryNodes);
@@ -262,8 +256,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
 interface PRDirectory {
     name: string;
-    diffViewArgs: DiffViewArgs[];
-    members: Map<string, PRDirectory>;
+    files: DiffViewArgs[];
+    subdirs: Map<string, PRDirectory>;
 }
 
 class DirectoryNode extends AbstractBaseNode {
@@ -279,15 +273,14 @@ class DirectoryNode extends AbstractBaseNode {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        let nestedDirectories: PRDirectory[] = [];
-        for (let [, value] of this.directoryData.members) {
-            nestedDirectories.push(value);
-        }
-        let directoryNodes: DirectoryNode[] = nestedDirectories.map((directory) => new DirectoryNode(directory));
-        let childNodes: AbstractBaseNode[] = this.directoryData.diffViewArgs.map(
+        let directoryNodes: DirectoryNode[] = Array.from(
+            this.directoryData.subdirs.values(),
+            (subdir) => new DirectoryNode(subdir)
+        );
+        let fileNodes: AbstractBaseNode[] = this.directoryData.files.map(
             (diffViewArg) => new PullRequestFilesNode(diffViewArg)
         );
-        return childNodes.concat(directoryNodes);
+        return fileNodes.concat(directoryNodes);
     }
 }
 
