@@ -84,22 +84,28 @@ export async function activate(context: ExtensionContext) {
 }
 
 async function activateBitbucketFeatures() {
-    const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
-    if (!gitExtension) {
-        Logger.error(new Error('vscode.git extension not found'));
-        window.showInformationMessage(
-            'Activating Bitbucket features failed. Install vscode.git extension to enable Bitbucket features.'
+    let gitExt: GitExtension;
+    try {
+        const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
+        if (!gitExtension) {
+            throw new Error('vscode.git extension not found');
+        }
+        gitExt = await gitExtension.activate();
+    } catch (e) {
+        Logger.error(e, 'Error activating vscode.git extension');
+        window.showWarningMessage(
+            'Activating Bitbucket features failed. There was an issue activating vscode.git extension.'
         );
         return;
     }
 
     try {
-        const gitApi = gitExtension.exports.getAPI(1);
+        const gitApi = gitExt.getAPI(1);
         const bbContext = new BitbucketContext(gitApi);
         Container.initializeBitbucket(bbContext);
     } catch (e) {
         Logger.error(e, 'Activating Bitbucket features failed');
-        window.showInformationMessage('Activating Bitbucket features failed');
+        window.showWarningMessage('Activating Bitbucket features failed');
     }
 }
 
