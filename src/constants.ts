@@ -16,6 +16,7 @@ export const CustomJQLTreeId = 'atlascode.views.jira.customJql';
 export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';
 export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const BitbucketIssuesTreeViewId = 'atlascode.views.bb.issuesTreeView';
+export const HelpTreeViewId = 'atlascode.views.helpTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';
 export const AxiosUserAgent = 'atlascode/2.x axios/0.19.2';
 

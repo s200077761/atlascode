@@ -38,6 +38,7 @@ export interface IConfig {
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
     onlineCheckerUrls: string[];
+    helpExplorerEnabled: boolean;
 }
 
 export interface JiraConfig {
@@ -317,4 +318,5 @@ export const emptyConfig: IConfig = {
     enableCurlLogging: false,
     enableHttpsTunnel: false,
     onlineCheckerUrls: [],
+    helpExplorerEnabled: true,
 };

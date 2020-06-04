@@ -12,10 +12,11 @@ export enum OutputLevelOption {
 
 type MiscProps = {
     showWelcome: boolean;
+    helpExplorerEnabled: boolean;
     outputLevel: OutputLevelOption;
 };
 
-export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, outputLevel }) => {
+export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, helpExplorerEnabled, outputLevel }) => {
     const controller = useContext(ConfigControllerContext);
 
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
@@ -23,6 +24,12 @@ export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, out
     const handleWelcomeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const changes = Object.create(null);
         changes['showWelcomeOnInstall'] = e.target.checked;
+        setChanges(changes);
+    }, []);
+
+    const handleHelpExplorerEnabledChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const changes = Object.create(null);
+        changes['helpExplorerEnabled'] = e.target.checked;
         setChanges(changes);
     }, []);
 
@@ -53,6 +60,22 @@ export const Misc: React.FunctionComponent<MiscProps> = memo(({ showWelcome, out
                         />
                     }
                     label="Show welcome screen when extension is updated"
+                    spacing={1}
+                    variant="body1"
+                />
+            </Grid>
+            <Grid item>
+                <ToggleWithLabel
+                    control={
+                        <Switch
+                            size="small"
+                            color="primary"
+                            id="enableExplorer"
+                            checked={helpExplorerEnabled}
+                            onChange={handleHelpExplorerEnabledChange}
+                        />
+                    }
+                    label="Enable Help Explorer"
                     spacing={1}
                     variant="body1"
                 />
