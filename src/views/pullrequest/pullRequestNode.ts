@@ -201,8 +201,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     //Directories that contain only one child which is also a directory should be flattened. E.g A > B > C > D.txt => A/B/C/D.txt
     private flattenFileStructure(directory: PRDirectory) {
-        //Keep flattening until there's nothing left to flatten, and only then move on to children
-        while (directory.members.size === 1 && directory.diffViewArgs.length === 0) {
+        // Keep flattening until there's nothing left to flatten, and only then move on to children.
+        // The initial input is a dummy root directory with empty string as the name, which is ignored to maintain it as the root node.
+        while (directory.name !== '' && directory.members.size === 1 && directory.diffViewArgs.length === 0) {
             const currentFolderName: string = directory.name;
             const childDirectory = directory.members.values().next().value;
             directory.name = `${currentFolderName}/${childDirectory.name ? childDirectory.name : ''}`;
@@ -225,7 +226,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         );
 
         if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
-            //Create a directory data structure to represent the files
+            //Create a dummy root directory data structure to hold the files
             let directoryStructure: PRDirectory = {
                 name: '',
                 diffViewArgs: [],
