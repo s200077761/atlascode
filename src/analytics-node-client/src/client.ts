@@ -25,9 +25,8 @@ const DEFAULT_QUEUE_FLUSH_INTERVAL = 10000;
 function getUrlFromEnvironment(env?: string) {
     if (env === 'prod') {
         return 'https://as.atlassian.com/api';
-    } else {
-        return 'https://analytics-service.us-east-1.staging.public.atl-paas.net/api';
     }
+    return 'https://as.staging.atl-paas.net/api';
 }
 
 function useDefault(value: any, defaultValue: any) {
