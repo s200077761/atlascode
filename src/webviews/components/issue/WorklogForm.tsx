@@ -36,7 +36,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         this.state = {
             ...emptyForm,
             savingDisabled: true,
-            started: format(Date.now(), 'YYYY-MM-DD'),
+            started: format(Date.now(), 'YYYY-MM-DDTHH:mm:ss.SSSZZ'),
         };
     }
 
@@ -70,7 +70,8 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
     };
 
     render() {
-        const defaultDate = this.state.started.trim() !== '' ? this.state.started : format(Date.now(), 'YYYY-MM-DD');
+        const defaultDate =
+            this.state.started.trim() !== '' ? this.state.started : format(Date.now(), 'YYYY-MM-DDTHH:mm:ss.SSSZZ');
         return (
             <div>
                 <Form name="worklog-form" onSubmit={this.handleSave}>
@@ -119,6 +120,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                         return (
                                             <div>
                                                 <DateTimePicker
+                                                    defaultValue={defaultDate}
                                                     className="ac-select-container"
                                                     datePickerSelectProps={{
                                                         className: 'ac-select-container',

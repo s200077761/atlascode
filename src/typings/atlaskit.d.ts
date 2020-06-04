@@ -6,19 +6,10 @@ declare module '@atlaskit/avatar-group';
 declare module '@atlaskit/checkbox';
 declare module '@atlaskit/comment';
 declare module '@atlaskit/breadcrumbs';
-declare module '@atlaskit/logo';
 declare module '@atlaskit/lozenge';
-declare module '@atlaskit/tag';
-declare module '@atlaskit/tag-group';
 declare module '@atlaskit/tooltip';
 declare module '@atlaskit/theme';
 declare module '@atlaskit/panel';
-
-/* BEGIN - ONLY USE FOR JQL EDITING */
-declare module '@atlaskit/field-base';
-declare module '@atlaskit/input';
-declare module '@atlaskit/droplist';
-/* END - ONLY USE FOR JQL EDITING */
 
 declare module '@atlaskit/select';
 declare module '@atlaskit/spinner';
