@@ -1,5 +1,4 @@
-import { Disposable } from 'vscode';
-import { Container } from '../../container';
+import { Disposable, Uri } from 'vscode';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { StartWorkInitMessage } from '../../lib/ipc/toUI/startWork';
@@ -7,6 +6,7 @@ import { CommonActionMessageHandler } from '../../lib/webview/controller/common/
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { StartWorkWebviewController } from '../../lib/webview/controller/startwork/startWorkWebviewController';
 import { Logger } from '../../logger';
+import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
@@ -17,8 +17,8 @@ export class VSCStartWorkWebviewControllerFactory implements VSCWebviewControlle
         private analytics: AnalyticsApi
     ) {}
 
-    public tabIconPath(): string {
-        return Container.context.asAbsolutePath('resources/JiraFavicon.png');
+    public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
+        return Resources.icons.get(iconSet.JIRAICON);
     }
 
     public uiWebsocketPort(): number {

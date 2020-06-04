@@ -1,5 +1,4 @@
-import { Disposable } from 'vscode';
-import { Container } from '../../container';
+import { Disposable, Uri } from 'vscode';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { PipelinesSummaryActionApi } from '../../lib/webview/controller/pipelines/pipelinesSummaryActionApi';
@@ -12,12 +11,13 @@ import { Logger } from '../../logger';
 import { Pipeline } from '../../pipelines/model';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
+import { Resources, iconSet } from '../../resources';
 
 export class PipelineSummaryWebviewControllerFactory implements VSCWebviewControllerFactory<Pipeline> {
     constructor(private api: PipelinesSummaryActionApi, private analytics: AnalyticsApi) {}
 
-    public tabIconPath(): string {
-        return Container.context.asAbsolutePath('resources/BitbucketFavicon.png');
+    public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
+        return Resources.icons.get(iconSet.BITBUCKETICON);
     }
 
     public uiWebsocketPort(): number {

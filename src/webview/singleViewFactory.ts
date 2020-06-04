@@ -78,7 +78,7 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                 ],
             });
 
-            this._panel.iconPath = Uri.file(this._controllerFactory.tabIconPath());
+            this._panel.iconPath = this._controllerFactory.tabIcon();
 
             if (Container.isDebugging && Container.config.enableUIWS) {
                 this._ws.start(this.onMessageReceived.bind(this));

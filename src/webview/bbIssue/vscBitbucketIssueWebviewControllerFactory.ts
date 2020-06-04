@@ -1,6 +1,5 @@
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { BitbucketIssue } from '../../bitbucket/model';
-import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { BitbucketIssueActionApi } from '../../lib/webview/controller/bbIssue/bitbucketIssueActionApi';
@@ -10,6 +9,7 @@ import {
 } from '../../lib/webview/controller/bbIssue/bitbucketIssueWebviewController';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { Logger } from '../../logger';
+import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
@@ -24,8 +24,8 @@ export class VSCBitbucketIssueWebviewControllerFactory implements VSCWebviewCont
         this._analytics = analytics;
     }
 
-    public tabIconPath(): string {
-        return Container.context.asAbsolutePath('resources/atlassian-icon.svg');
+    public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
+        return Resources.icons.get(iconSet.BITBUCKETICON);
     }
 
     public uiWebsocketPort(): number {
