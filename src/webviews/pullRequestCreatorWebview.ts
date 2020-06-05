@@ -505,10 +505,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     const wsRepo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
                     if (wsRepo.mainSiteRemote.site) {
                         const bbApi = await clientForSite(wsRepo.mainSiteRemote.site);
-                        const bbIssues = await bbApi.issues!.getIssuesForKeys(wsRepo.mainSiteRemote.site, [
+                        const bbIssues = await bbApi.issues?.getIssuesForKeys(wsRepo.mainSiteRemote.site, [
                             bbIssueKeys[0],
                         ]);
-                        if (bbIssues.length > 0) {
+                        if (bbIssues && bbIssues.length > 0) {
                             issue = bbIssues[0];
                         }
                     }
