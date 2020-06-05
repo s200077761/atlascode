@@ -616,7 +616,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                                     <Chip
                                                                         variant="outlined"
                                                                         color="primary"
-                                                                        label={`${branchType.prefix}${localBranch}`}
+                                                                        label={`${localBranch}`}
                                                                     />
                                                                 </Grid>
                                                             </Grid>

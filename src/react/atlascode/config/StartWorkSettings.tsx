@@ -1,5 +1,5 @@
 import { InlineTextEditor, InlineTextEditorList, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, Switch, Typography } from '@material-ui/core';
+import { Box, Grid, Link, Switch, Typography } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../common/useBorderBoxStyles';
 import { ConfigControllerContext } from './configController';
@@ -75,8 +75,9 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
                     <Typography variant="caption">
                         Branch names will be generated based on the template. Use the keywords <code>prefix</code>,{' '}
                         <code>issueKey</code>, and <code>summary</code> surrounded by double curly brackets to build a
-                        template. Any of the keywords can be excluded. E.g.{' '}
-                        <code>{'{{prefix}}/{{issueKey}}-{{summary}}'}</code> will generate something of the format{' '}
+                        template. Any of the keywords can be excluded if they are not needed, but do not put a
+                        non-keyword in double curly brackets. E.g. <code>{'{{prefix}}/{{issueKey}}-{{summary}}'}</code>{' '}
+                        will generate something of the format{' '}
                         <code>{'BUGFIX/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}</code>
                     </Typography>
 
@@ -114,7 +115,14 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
                     <Typography variant="h4">Custom Prefixes</Typography>
 
                     <Typography variant="caption">
-                        Branch names begin with prefixes. E.g. <code>{'{prefix}{issueKey}-{summary}'}</code>
+                        <p>For repos with no branching model, custom prefixes can be created here.</p>
+                        <p>
+                            <b>Bitbucket Users:</b> Prefixes are part of your branching model and can be configured on
+                            the{' '}
+                            <Link href="https://bitbucket.org/blog/introducing-bitbucket-branching-model-support">
+                                Bitbucket Website
+                            </Link>
+                        </p>
                     </Typography>
 
                     <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
