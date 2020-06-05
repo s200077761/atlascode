@@ -12,9 +12,9 @@ const useStyles = makeStyles((theme: Theme) => ({
             theme.palette.type === 'dark'
                 ? lighten(theme.palette.background.paper, 0.05)
                 : darken(theme.palette.background.paper, 0.05),
-        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
+        color: theme.palette.text.primary,
         '&:hover': {
-            color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
+            color: theme.palette.text.primary,
             backgroundColor:
                 theme.palette.type === 'dark'
                     ? lighten(theme.palette.background.paper, 0.2)
@@ -71,7 +71,7 @@ export const AltDemoButton: React.FunctionComponent<AltDemoButtonProps> = ({
         <Button className={classes.button} onClick={handleClick}>
             <Grid container spacing={2} direction="row" justify="center" alignItems="flex-start">
                 <Grid item xs={12}>
-                    <Typography variant="h3" align="left">
+                    <Typography variant="h4" align="left">
                         {label} {productIcon}
                     </Typography>
                 </Grid>

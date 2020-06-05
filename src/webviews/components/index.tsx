@@ -36,7 +36,7 @@ window.addEventListener(
         const targetEL = ee.target as HTMLElement;
         if (ee && targetEL && targetEL.nodeName === 'IMG') {
             const origianlSrc = targetEL.getAttribute('src');
-            targetEL.setAttribute('src', 'vscode-resource:images/no-image.svg');
+            targetEL.setAttribute('src', `${document.baseURI}images/no-image.svg`);
             targetEL.setAttribute('alt', `Unable to load image: ${origianlSrc}`);
             targetEL.setAttribute('title', `Unable to load image: ${origianlSrc}`);
             targetEL.setAttribute('class', 'ac-broken-img');
@@ -51,7 +51,7 @@ const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
         <React.Suspense fallback={<div className="loading-spinner" />}>
-            <ResourceContext.Provider value="vscode-resource:">
+            <ResourceContext.Provider value={document.baseURI}>
                 <Page />
             </ResourceContext.Provider>
         </React.Suspense>

@@ -6,10 +6,8 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    lighten,
     makeStyles,
     Tooltip,
-    Typography,
 } from '@material-ui/core';
 import Skeleton from '@material-ui/lab/Skeleton';
 import React, { useCallback, useState } from 'react';
@@ -21,12 +19,6 @@ const useStyles = makeStyles((theme) => ({
         borderWidth: 3,
         borderStyle: 'solid',
         borderColor: 'DeepSkyBlue',
-    },
-    cancelButton: {
-        color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : theme.palette.text.primary,
-        '&:hover': {
-            color: theme.palette.type === 'dark' ? lighten(theme.palette.text.primary, 1) : 'white',
-        },
     },
 }));
 
@@ -67,14 +59,10 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
 
     return (
         <Dialog fullWidth={true} maxWidth="md" open={modalVisibility} onClose={handleModalClose}>
-            <DialogTitle disableTypography>
-                <Typography variant="h1">{modalTitle}</Typography>
-            </DialogTitle>
+            <DialogTitle>{modalTitle}</DialogTitle>
             <DialogContent>
                 <Box hidden={!modalDescription}>
-                    <DialogContentText>
-                        <Typography variant="h4">{modalDescription}</Typography>
-                    </DialogContentText>
+                    <DialogContentText>{modalDescription}</DialogContentText>
                 </Box>
                 <Box hidden={imageLoaded}>
                     <Skeleton variant="rect" width="100%" height="400px" />
@@ -107,8 +95,8 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
                         </Button>
                     </span>
                 </Tooltip>
-                <Button onClick={handleModalClose}>
-                    <Box className={classes.cancelButton}>Close</Box>
+                <Button color="primary" onClick={handleModalClose}>
+                    Close
                 </Button>
             </DialogActions>
         </Dialog>

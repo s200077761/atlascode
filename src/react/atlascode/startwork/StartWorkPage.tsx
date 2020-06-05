@@ -12,14 +12,15 @@ import {
     Container,
     Divider,
     Grid,
+    IconButton,
     Link,
     List,
     ListItem,
-    ListItemIcon,
     ListItemText,
     makeStyles,
     MenuItem,
     Paper,
+    Snackbar,
     Switch,
     TextField,
     Theme,
@@ -28,10 +29,10 @@ import {
     Typography,
     useTheme,
 } from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import CloseIcon from '@material-ui/icons/Close';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import SettingsIcon from '@material-ui/icons/Settings';
-import { Autocomplete } from '@material-ui/lab';
+import { Alert, AlertTitle, Autocomplete } from '@material-ui/lab';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { BranchType, emptyRepoData, RepoData } from '../../../lib/ipc/toUI/startWork';
@@ -62,6 +63,9 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
     paperOverflow: {
         overflow: 'hidden',
+    },
+    card: {
+        maxWidth: '600px',
     },
     leftBorder: (props: VSCodeStyles) => ({
         marginLeft: theme.spacing(1),
@@ -95,6 +99,7 @@ const StartWorkPage: React.FunctionComponent = () => {
         branch?: string;
         upstream?: string;
     }>({});
+    const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
 
     const branchTypesToUse = useCallback(() => {
         return state.useCustomPrefixes
@@ -194,6 +199,7 @@ const StartWorkPage: React.FunctionComponent = () => {
             buildBranchName();
         }
     }, [branchType, buildBranchName]);
+    const handleSuccessSnackbarClose = useCallback(() => setSuccessSnackbarOpen(false), [setSuccessSnackbarOpen]);
 
     const handleStartWorkSubmit = useCallback(async () => {
         setSubmitState('submitting');
@@ -209,6 +215,7 @@ const StartWorkPage: React.FunctionComponent = () => {
             );
             setSubmitState('submit-success');
             setSubmitResponse(response);
+            setSuccessSnackbarOpen(true);
         } catch (e) {
             setSubmitState('initial');
         }
@@ -286,6 +293,35 @@ const StartWorkPage: React.FunctionComponent = () => {
                             <Box margin={2}>
                                 <ErrorDisplay />
                                 <PMFDisplay postMessageFunc={controller.postMessage} />
+                                <Collapse in={submitState === 'submit-success'}>
+                                    <Alert variant="standard" severity="success">
+                                        <AlertTitle>Success!</AlertTitle>
+                                        <List dense>
+                                            <ListItem disableGutters>
+                                                <ListItemText>- Assigned the issue to you</ListItemText>
+                                            </ListItem>
+                                            {submitResponse.transistionStatus !== undefined && (
+                                                <ListItem disableGutters>
+                                                    <ListItemText>
+                                                        - Transitioned status to{' '}
+                                                        <code>{submitResponse.transistionStatus}</code>
+                                                    </ListItemText>
+                                                </ListItem>
+                                            )}
+                                            {submitResponse.branch !== undefined && (
+                                                <ListItem disableGutters>
+                                                    <ListItemText>
+                                                        - Switched to <code>{submitResponse.branch}</code> branch with
+                                                        upstream set to{' '}
+                                                        <code>
+                                                            {submitResponse.upstream}/{submitResponse.branch}
+                                                        </code>
+                                                    </ListItemText>
+                                                </ListItem>
+                                            )}
+                                        </List>
+                                    </Alert>
+                                </Collapse>
                                 <Grid container spacing={2} direction="column">
                                     <Grid item>
                                         <Box />
@@ -505,7 +541,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                     </TextField>
                                                 </Grid>
                                                 <Grid item hidden={existingBranches.length === 0}>
-                                                    <Card raised>
+                                                    <Card raised className={classes.card}>
                                                         <CardContent>
                                                             <Grid container spacing={1}>
                                                                 <Grid item>
@@ -611,50 +647,36 @@ const StartWorkPage: React.FunctionComponent = () => {
                                     <Grid item hidden={submitState === 'submit-success'}>
                                         <PrepareCommitTip />
                                     </Grid>
-
-                                    <Grid item hidden={submitState !== 'submit-success'}>
-                                        <Card raised>
-                                            <CardContent>
-                                                <List dense>
-                                                    <ListItem>
-                                                        <ListItemIcon>
-                                                            <CheckCircleIcon />
-                                                        </ListItemIcon>
-                                                        <ListItemText primary="Assigned the issue to you" />
-                                                    </ListItem>
-                                                    {submitResponse.transistionStatus !== undefined && (
-                                                        <ListItem>
-                                                            <ListItemIcon>
-                                                                <CheckCircleIcon />
-                                                            </ListItemIcon>
-                                                            <ListItemText>
-                                                                Transitioned status to{' '}
-                                                                <code>{submitResponse.transistionStatus}</code>
-                                                            </ListItemText>
-                                                        </ListItem>
-                                                    )}
-                                                    {submitResponse.branch !== undefined && (
-                                                        <ListItem>
-                                                            <ListItemIcon>
-                                                                <CheckCircleIcon />
-                                                            </ListItemIcon>
-                                                            <ListItemText>
-                                                                Switched to <code>{submitResponse.branch}</code> branch
-                                                                with upstream set to{' '}
-                                                                <code>
-                                                                    {submitResponse.upstream}/{submitResponse.branch}
-                                                                </code>
-                                                            </ListItemText>
-                                                        </ListItem>
-                                                    )}
-                                                </List>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
                                     <Grid item hidden={submitState !== 'submit-success'}>
                                         <Button variant="contained" color="default" onClick={controller.closePage}>
                                             Close
                                         </Button>
+                                    </Grid>
+                                    <Grid item hidden={submitState !== 'submit-success'}>
+                                        <Snackbar
+                                            open={successSnackbarOpen}
+                                            onClose={handleSuccessSnackbarClose}
+                                            autoHideDuration={6000}
+                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                                        >
+                                            <Alert
+                                                variant="standard"
+                                                severity="success"
+                                                action={
+                                                    <IconButton
+                                                        aria-label="close"
+                                                        color="inherit"
+                                                        size="small"
+                                                        onClick={handleSuccessSnackbarClose}
+                                                    >
+                                                        <CloseIcon fontSize="inherit" />
+                                                    </IconButton>
+                                                }
+                                            >
+                                                <AlertTitle>Success!</AlertTitle>
+                                                <p>See details at the top of this page</p>
+                                            </Alert>
+                                        </Snackbar>
                                     </Grid>
                                 </Grid>
                             </Box>

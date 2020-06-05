@@ -30,13 +30,16 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             return cacheItem;
         }
 
-        const { data } = await this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}`);
+        const [repoData, branchingModel] = await Promise.all([
+            this.client.get(`/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}`),
+            this.getBranchingModel(site),
+        ]);
 
         const { data: defaultBranch } = await this.client.get(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches/default`
         );
 
-        const repo = ServerRepositoriesApi.toRepo(site, data, defaultBranch.id);
+        const repo = ServerRepositoriesApi.toRepo(site, repoData.data, defaultBranch.id, branchingModel);
         this.repoCache.setItem(cacheKey, repo);
         return repo;
     }
@@ -136,7 +139,12 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return avatarUrl;
     }
 
-    static toRepo(site: BitbucketSite, bbRepo: any, defaultBranch: string): Repo {
+    static toRepo(
+        site: BitbucketSite,
+        bbRepo: any,
+        defaultBranch: string,
+        branchingModel?: BitbucketBranchingModel
+    ): Repo {
         if (!bbRepo) {
             return {
                 id: 'REPO_NOT_FOUND',
@@ -162,6 +170,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             url: url,
             avatarUrl: ServerRepositoriesApi.patchAvatarUrl(site.details.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
+            branchingModel: branchingModel,
             issueTrackerEnabled: false,
         };
     }
