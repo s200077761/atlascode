@@ -88,12 +88,10 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 visible={visible}
                                 expanded={selectedSubSections.includes(ConfigSubSection.StartWork)}
                                 onSubsectionChange={onSubsectionChange}
-                                includeIssueKey={config[`${ConfigSection.Jira}.startWork.includeIssueKeyInLocalBranch`]}
-                                includeIssueDescription={
-                                    config[`${ConfigSection.Jira}.startWork.includeIssueDescriptionInLocalBranch`]
-                                }
                                 useCustomPrefixes={config[`${ConfigSection.Jira}.startWork.useCustomPrefixes`]}
                                 customPrefixes={config[`${ConfigSection.Jira}.startWork.customPrefixes`]}
+                                useCustomTemplate={config[`${ConfigSection.Jira}.startWork.useCustomTemplate`]}
+                                customTemplate={config[`${ConfigSection.Jira}.startWork.customTemplate`]}
                             />
                         </Grid>
                         <Grid item>

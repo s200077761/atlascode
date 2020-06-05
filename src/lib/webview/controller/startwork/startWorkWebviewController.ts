@@ -98,10 +98,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 type: StartWorkMessageType.Init,
                 ...this.initData!,
                 repoData: repoData,
-                includeIssueKey: this.api.getIncludeIssueKey(),
-                includeIssueDescription: this.api.getIncludeIssueDescription(),
-                useCustomPrefixes: this.api.getUseCustomPrefixes(),
-                customPrefixes: this.api.getCustomPrefixes(),
+                ...this.api.getStartWorkConfig(),
             });
         } catch (e) {
             let err = new Error(`error updating start work page: ${e}`);
@@ -155,6 +152,14 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             }
             case StartWorkActionType.OpenSettings: {
                 this.api.openSettings(msg.section, msg.subsection);
+                break;
+            }
+            case StartWorkActionType.BuildBranchName: {
+                const branchName = this.api.buildBranchName(msg.prefix, msg.issueKey, msg.summary);
+                this.postMessage({
+                    type: StartWorkMessageType.ComputedBranchNameResponse,
+                    branchName: branchName,
+                });
                 break;
             }
             case CommonActionType.Refresh: {

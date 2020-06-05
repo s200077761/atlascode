@@ -8,20 +8,20 @@ import { PanelSubtitle } from './PanelSubtitle';
 import { PanelTitle } from './PanelTitle';
 
 type StartWorkPanelProps = CommonSubpanelProps & {
-    includeIssueKey: boolean;
-    includeIssueDescription: boolean;
     useCustomPrefixes: boolean;
     customPrefixes: string[];
+    useCustomTemplate: boolean;
+    customTemplate: string;
 };
 
 export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo(
     ({
         visible,
         expanded,
-        includeIssueKey,
-        includeIssueDescription,
         useCustomPrefixes,
         customPrefixes,
+        customTemplate,
+        useCustomTemplate,
         onSubsectionChange,
     }) => {
         const [internalExpanded, setInternalExpanded] = useState<boolean>(expanded);
@@ -55,10 +55,10 @@ export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <StartWorkSettings
-                        includeIssueKey={includeIssueKey}
-                        includeIssueDescription={includeIssueDescription}
                         useCustomPrefixes={useCustomPrefixes}
                         customPrefixes={customPrefixes}
+                        useCustomTemplate={useCustomTemplate}
+                        customTemplate={customTemplate}
                     />
                 </ExpansionPanelDetails>
             </ExpansionPanel>

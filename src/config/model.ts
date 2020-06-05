@@ -84,10 +84,10 @@ export interface JiraExplorer {
 }
 
 export interface StartWork {
-    includeIssueKeyInLocalBranch: boolean;
-    includeIssueDescriptionInLocalBranch: boolean;
     useCustomPrefixes: boolean;
     customPrefixes: string[];
+    useCustomTemplate: boolean;
+    customTemplate: string;
 }
 
 export interface JiraHover {
@@ -240,10 +240,10 @@ export const emptyTodoIssues: TodoIssues = {
 };
 
 export const emptyStartWork: StartWork = {
-    includeIssueKeyInLocalBranch: true,
-    includeIssueDescriptionInLocalBranch: true,
     useCustomPrefixes: false,
     customPrefixes: [],
+    useCustomTemplate: false,
+    customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
 };
 
 export const emptyJiraConfig: JiraConfig = {

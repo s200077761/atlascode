@@ -1,6 +1,7 @@
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { Repo, WorkspaceRepo } from '../../../../bitbucket/model';
+import { StartWork } from '../../../../config/model';
 import { Branch } from '../../../../typings/git';
 import { ConfigSection, ConfigSubSection } from '../../../ipc/models/config';
 
@@ -18,9 +19,7 @@ export interface StartWorkActionApi {
         remote: string
     ): Promise<void>;
     closePage(): void;
-    getIncludeIssueKey(): boolean;
-    getIncludeIssueDescription(): boolean;
-    getUseCustomPrefixes(): boolean;
-    getCustomPrefixes(): string[];
+    getStartWorkConfig(): StartWork;
     openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void;
+    buildBranchName(prefix: string, issueKey: string, summary: string): string;
 }

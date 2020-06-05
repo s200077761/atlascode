@@ -1,7 +1,9 @@
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import Handlebars from 'handlebars';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
+import { StartWork } from '../../config/model';
 import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
@@ -75,23 +77,25 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         return;
     }
 
-    getIncludeIssueKey(): boolean {
-        return Container.config.jira.startWork.includeIssueKeyInLocalBranch;
-    }
-    getIncludeIssueDescription(): boolean {
-        return Container.config.jira.startWork.includeIssueDescriptionInLocalBranch;
-    }
-    getUseCustomPrefixes(): boolean {
-        return Container.config.jira.startWork.useCustomPrefixes;
-    }
-    getCustomPrefixes(): string[] {
-        return Container.config.jira.startWork.customPrefixes;
+    getStartWorkConfig(): StartWork {
+        return {
+            useCustomTemplate: Container.config.jira.startWork.useCustomTemplate,
+            customTemplate: Container.config.jira.startWork.customTemplate,
+            useCustomPrefixes: Container.config.jira.startWork.useCustomPrefixes,
+            customPrefixes: Container.config.jira.startWork.customPrefixes,
+        };
     }
 
     openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
         Container.settingsWebviewFactory.createOrShow(
             section ? { section: section, subSection: subsection } : undefined
         );
+    }
+
+    buildBranchName(prefix: string, issueKey: string, summary: string): string {
+        const template = Handlebars.compile(Container.config.jira.startWork.customTemplate);
+        summary = summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-');
+        return template({ prefix: prefix, issueKey: issueKey, summary: summary });
     }
 
     closePage() {

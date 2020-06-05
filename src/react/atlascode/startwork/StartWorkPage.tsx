@@ -12,7 +12,6 @@ import {
     Container,
     Divider,
     Grid,
-    InputAdornment,
     Link,
     List,
     ListItem,
@@ -72,7 +71,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     }),
 }));
 
-const customPrefix: BranchType = { kind: 'Custom', prefix: '' };
+const emptyPrefix: BranchType = { kind: '', prefix: '' };
 
 const StartWorkPage: React.FunctionComponent = () => {
     const theme = useTheme<Theme>();
@@ -84,7 +83,7 @@ const StartWorkPage: React.FunctionComponent = () => {
     const [branchSetupEnabled, setbranchSetupEnabled] = useState(true);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [repository, setRepository] = useState<RepoData>(emptyRepoData);
-    const [branchType, setBranchType] = useState<BranchType>(customPrefix);
+    const [branchType, setBranchType] = useState<BranchType>(emptyPrefix);
     const [branchTypes, setBranchTypes] = useState<BranchType[]>([]);
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
     const [localBranch, setLocalBranch] = useState('');
@@ -177,19 +176,24 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setUpstream]
     );
 
-    const buildBranchName = useCallback(() => {
-        const key = state.issue.key;
-        const summary = state.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-');
-        if (state.includeIssueKey && state.includeIssueDescription) {
-            return `${key}-${summary}`;
-        } else if (state.includeIssueKey) {
-            return key;
-        } else if (state.includeIssueDescription) {
-            return summary;
+    const buildBranchName = useCallback(async () => {
+        const prefix = branchType.prefix;
+        const issueKey = state.issue.key;
+        const summary = state.issue.summary;
+        if (state.useCustomTemplate) {
+            const branchName: string = await controller.buildBranchName(prefix, issueKey, summary);
+            setLocalBranch(branchName);
         } else {
-            return '';
+            setLocalBranch(`${prefix}${issueKey}-${summary}`);
         }
-    }, [state.issue, state.includeIssueKey, state.includeIssueDescription]);
+    }, [state.issue.key, state.issue.summary, branchType.prefix, controller, state.useCustomTemplate]);
+
+    useEffect(() => {
+        //Checking if the branchType is still the initial value removes race condition on start-up
+        if (branchType !== emptyPrefix) {
+            buildBranchName();
+        }
+    }, [branchType, buildBranchName]);
 
     const handleStartWorkSubmit = useCallback(async () => {
         setSubmitState('submitting');
@@ -232,7 +236,7 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     useEffect(() => {
         setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
-        setBranchType(branchTypes?.[0] || customPrefix);
+        setBranchType(branchTypes?.[0] || emptyPrefix);
         setSourceBranch(
             repository.localBranches?.find(
                 (b) => repository.developmentBranch && b.name === repository.developmentBranch
@@ -251,9 +255,8 @@ const StartWorkPage: React.FunctionComponent = () => {
     }, [repository, state.issue, branchTypes]);
 
     useEffect(() => {
-        setLocalBranch(buildBranchName());
         setSubmitState('initial');
-    }, [buildBranchName]);
+    }, []);
 
     useEffect(() => {
         // best effort to default to a transition that will move the issue to `In progress` state
@@ -452,8 +455,9 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                             </TextField>
                                                         </Grid>
                                                         <Grid item xs={2}>
-                                                            <Tooltip title="Configure branch-naming scheme">
+                                                            <Tooltip title="Change branch-naming configuration">
                                                                 <Button
+                                                                    color="primary"
                                                                     onClick={() =>
                                                                         controller.openSettings(
                                                                             ConfigSection.Jira,
@@ -472,16 +476,6 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                         size="small"
                                                         label="Local branch"
                                                         fullWidth
-                                                        InputProps={{
-                                                            startAdornment:
-                                                                branchType.prefix.length > 0 ? (
-                                                                    <InputAdornment position="start" variant="standard">
-                                                                        <Box fontWeight="fontWeightBold">
-                                                                            {branchType.prefix}
-                                                                        </Box>
-                                                                    </InputAdornment>
-                                                                ) : null,
-                                                        }}
                                                         value={localBranch}
                                                         onChange={handleLocalBranchChange}
                                                     />
