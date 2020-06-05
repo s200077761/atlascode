@@ -225,7 +225,6 @@ export type PullRequestData = {
     version: number;
     url: string;
     author: User;
-    reviewers: Reviewer[];
     participants: Reviewer[];
     source: {
         repo: Repo;

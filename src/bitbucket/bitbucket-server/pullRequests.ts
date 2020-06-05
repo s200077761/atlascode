@@ -806,7 +806,6 @@ export class ServerPullRequestApi implements PullRequestApi {
                 version: data.version,
                 url: data.links.self[0].href,
                 author: this.toUser(site.details, data.author.user),
-                reviewers: [],
                 participants: data.reviewers.map((reviewer: any) => ({
                     ...this.toUser(site.details, reviewer.user),
                     role: reviewer.role,
