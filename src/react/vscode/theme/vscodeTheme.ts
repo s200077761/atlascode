@@ -4,18 +4,18 @@ import { VSCodeStyles } from './styles';
 
 const body = document.body;
 const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
-//vscode-high-contrast
+const isHighContrast: boolean = body.getAttribute('class') === 'vscode-high-contrast';
 
 export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     // Colors that don't appear in vscode-high-contrast
-    const buttonBackground = vscStyles.buttonBackground === '' ? '#0088ff' : vscStyles.buttonBackground; // buttons and switches
-    const buttonHoverBackground = vscStyles.buttonHoverBackground === '' ? '#000000' : vscStyles.buttonHoverBackground; // nothing
-    const sideBarTitleForeground =
-        vscStyles.sideBarTitleForeground === '' ? '#ffffff' : vscStyles.sideBarTitleForeground; // labels in header / section headers
-    const sideBarSectionHeaderBackground =
-        vscStyles.sideBarSectionHeaderBackground === '' ? '#000000' : vscStyles.sideBarSectionHeaderBackground; // secthion backgrounds?
-    const listActiveSelectionBackground =
-        vscStyles.listActiveSelectionBackground === '' ? '#000000' : vscStyles.listActiveSelectionBackground; // nothing?
+    const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
+    const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
+    const sideBarTitleForeground = isHighContrast ? '#ffffff' : vscStyles.sideBarTitleForeground;
+    const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.sideBarSectionHeaderBackground;
+    const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
+
+    // Icons don't always have a useful color in high-contrast
+    const muiSvg = isHighContrast ? { root: { color: '#ffffff' } } : undefined;
 
     return createMuiTheme({
         palette: {
@@ -99,6 +99,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     color: vscStyles.textLinkForeground,
                 },
             },
+            MuiSvgIcon: muiSvg,
             MuiTableRow: {
                 root: {
                     '&$selected, &$selected:hover': {
