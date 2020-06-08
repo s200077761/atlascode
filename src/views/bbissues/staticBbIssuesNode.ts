@@ -28,8 +28,8 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
         }
         if (!this._children) {
             const bbApi = await clientForSite(this.site);
-            let issues = await bbApi.issues!.getIssuesForKeys(this.site, this.issueKeys);
-            if (issues.length === 0) {
+            let issues = await bbApi.issues?.getIssuesForKeys(this.site, this.issueKeys);
+            if (!issues || issues.length === 0) {
                 return [new SimpleNode('No issues found')];
             }
             this._children = issues.map(

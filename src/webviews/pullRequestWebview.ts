@@ -620,10 +620,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         // Add source remote (if necessary) if pull request is from a fork repository
         if (pr.data.source.repo.url !== '' && pr.data.source.repo.url !== pr.data.destination.repo.url) {
+            // Build the fork repo remote url based on the following:
+            // 1) The source repo url from REST API returns http URLs, and we want to use SSH protocol if the existing remotes use SSH
+            // 2) We build the source remote git url from the existing remote as the SSH url may be different from http url
             const parsed = parseGitUrl(urlForRemote(pr.workspaceRepo.mainSiteRemote.remote));
+            const parsedSourceRemoteUrl = parseGitUrl(pr.data.source.repo.url);
+            parsed.owner = parsedSourceRemoteUrl.owner;
+            parsed.name = parsedSourceRemoteUrl.name;
+            parsed.full_name = parsedSourceRemoteUrl.full_name;
             const sourceRemote = {
-                fetchUrl: parseGitUrl(pr.data.source.repo.url).toString(parsed.protocol),
-                name: pr.data.source.repo.fullName,
+                fetchUrl: parsed.toString(parsed.protocol),
+                // Bitbucket Server personal repositories are of the format `~username`
+                // and `~` is an invalid character for git remotes
+                name: pr.data.source.repo.fullName.replace('~', '__').toLowerCase(),
                 isReadOnly: true,
             };
 
