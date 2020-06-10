@@ -6,4 +6,5 @@ export enum UIWSPort {
     WelcomePage,
     StartWork,
     PipelineSummary,
+    CreatePullRequest,
 }
