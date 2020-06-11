@@ -9,14 +9,12 @@ export enum StartWorkActionType {
     ClosePage = 'closePage',
     StartRequest = 'startRequest',
     OpenSettings = 'openSettings',
-    BuildBranchName = 'buildBranchName',
 }
 
 export type StartWorkAction =
     | ReducerAction<StartWorkActionType.ClosePage, {}>
     | ReducerAction<StartWorkActionType.StartRequest, StartRequestAction>
     | ReducerAction<StartWorkActionType.OpenSettings, OpenSettingsAction>
-    | ReducerAction<StartWorkActionType.BuildBranchName, BuildBranchNameAction>
     | CommonAction;
 
 export interface StartRequestAction {
@@ -32,10 +30,4 @@ export interface StartRequestAction {
 export interface OpenSettingsAction {
     section?: ConfigSection;
     subsection?: ConfigSubSection;
-}
-
-export interface BuildBranchNameAction {
-    prefix: string;
-    issueKey: string;
-    summary: string;
 }

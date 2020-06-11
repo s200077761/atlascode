@@ -6,14 +6,12 @@ import { ConfigControllerContext } from './configController';
 
 type StartWorkSettings = {
     useCustomPrefixes: boolean;
-    useCustomTemplate: boolean;
     customTemplate: string;
     customPrefixes: string[];
 };
 
 export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
     useCustomPrefixes,
-    useCustomTemplate,
     customTemplate,
     customPrefixes,
 }) => {
@@ -23,24 +21,23 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const changes = Object.create(null);
-        changes[`jira.startWork.${e.target.value}`] = e.target.checked;
+        changes[`jira.startWorkBranchTemplate.${e.target.value}`] = e.target.checked;
         setChanges(changes);
     }, []);
 
     const handlePrefixesChange = useCallback((newOptions: string[]) => {
         const changes = Object.create(null);
-        changes['jira.startWork.customPrefixes'] = newOptions;
+        changes['jira.startWorkBranchTemplate.customPrefixes'] = newOptions;
         setChanges(changes);
     }, []);
 
     const handleTemplateChange = useCallback((template: string) => {
         const changes = Object.create(null);
-        changes['jira.startWork.customTemplate'] = template;
+        changes['jira.startWorkBranchTemplate.customTemplate'] = template;
         setChanges(changes);
     }, []);
 
     const customPrefixesDisabled = !useCustomPrefixes;
-    const customTemplateDisabled = !useCustomTemplate;
 
     useEffect(() => {
         if (Object.keys(changes).length > 0) {
@@ -51,23 +48,6 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
 
     return (
         <Grid container direction="column">
-            <Grid item>
-                <ToggleWithLabel
-                    control={
-                        <Switch
-                            size="small"
-                            color="primary"
-                            id="useCustomTemplate"
-                            value="useCustomTemplate"
-                            checked={useCustomTemplate}
-                            onChange={handleChange}
-                        />
-                    }
-                    label={`Use custom template`}
-                    spacing={1}
-                    variant="body1"
-                />
-            </Grid>
             <Grid item>
                 <Box margin={2}>
                     <Typography variant="h4">Custom Branch Template</Typography>
@@ -84,7 +64,6 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
                     <Box marginTop={1} paddingBottom={2}>
                         <InlineTextEditor
                             fullWidth
-                            disabled={customTemplateDisabled}
                             label="Custom Template Text"
                             defaultValue={customTemplate}
                             onSave={handleTemplateChange}

@@ -7,7 +7,6 @@ import { StartWorkAction, StartWorkActionType } from '../../../lib/ipc/fromUI/st
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import {
-    ComputedBranchNameMessage,
     emptyStartWorkInitMessage,
     StartWorkInitMessage,
     StartWorkMessage,
@@ -35,7 +34,6 @@ export interface StartWorkControllerApi {
     closePage: () => void;
     openJiraIssue: () => void;
     openSettings: (section?: ConfigSection, subsection?: ConfigSubSection) => void;
-    buildBranchName: (prefix: string, issueKey: string, summary: string) => Promise<string>;
 }
 
 export const emptyApi: StartWorkControllerApi = {
@@ -48,11 +46,6 @@ export const emptyApi: StartWorkControllerApi = {
     openSettings: (section?, subsection?): void => {
         return;
     },
-    buildBranchName: (prefix, issueKey, summary): Promise<string> => {
-        return new Promise<string>((resolve, reject) => {
-            resolve('');
-        });
-    },
 };
 
 export const StartWorkControllerContext = React.createContext(emptyApi);
@@ -64,7 +57,6 @@ export interface StartWorkState extends StartWorkInitMessage {
 const emptyState: StartWorkState = {
     ...emptyStartWorkInitMessage,
     isSomethingLoading: false,
-    useCustomTemplate: false,
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
     useCustomPrefixes: false,
     customPrefixes: [],
@@ -184,31 +176,6 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
         [postMessage]
     );
 
-    const buildBranchName = useCallback(
-        (prefix: string, issueKey: string, summary: string): Promise<string> => {
-            return new Promise<string>((resolve, reject) => {
-                (async () => {
-                    try {
-                        const response = await postMessagePromise(
-                            {
-                                type: StartWorkActionType.BuildBranchName,
-                                prefix: prefix,
-                                issueKey: issueKey,
-                                summary: summary,
-                            },
-                            StartWorkMessageType.ComputedBranchNameResponse,
-                            ConnectionTimeout
-                        );
-                        resolve((response as ComputedBranchNameMessage).branchName);
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
-        },
-        [postMessagePromise]
-    );
-
     const controllerApi = useMemo<StartWorkControllerApi>((): StartWorkControllerApi => {
         return {
             postMessage: postMessage,
@@ -218,9 +185,8 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             startWork,
             closePage,
             openSettings,
-            buildBranchName,
         };
-    }, [openJiraIssue, openLink, postMessage, sendRefresh, startWork, closePage, openSettings, buildBranchName]);
+    }, [openJiraIssue, openLink, postMessage, sendRefresh, startWork, closePage, openSettings]);
 
     return [state, controllerApi];
 }

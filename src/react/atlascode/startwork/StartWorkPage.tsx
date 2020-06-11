@@ -33,6 +33,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { Alert, AlertTitle, Autocomplete } from '@material-ui/lab';
+import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { BranchType, emptyRepoData, RepoData } from '../../../lib/ipc/toUI/startWork';
@@ -181,23 +182,22 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setUpstream]
     );
 
-    const buildBranchName = useCallback(async () => {
-        const prefix = branchType.prefix;
-        const issueKey = state.issue.key;
-        const summary = state.issue.summary;
-        if (state.useCustomTemplate) {
-            const branchName: string = await controller.buildBranchName(prefix, issueKey, summary);
-            setLocalBranch(branchName);
-        } else {
-            setLocalBranch(`${prefix}${issueKey}-${summary}`);
-        }
-    }, [state.issue.key, state.issue.summary, branchType.prefix, controller, state.useCustomTemplate]);
+    const buildBranchName = useCallback(() => {
+        const view = {
+            prefix: branchType.prefix.replace(/\W+/g, '-'),
+            issueKey: state.issue.key,
+            summary: state.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-'),
+        };
+
+        //Mustache escapes HTML in {{}} but not in {{{}}}. However, users should not have to worry about this difference.
+        //This replaces all double curly brackets with triple curly brackets.
+        const adjustedTemplate = state.customTemplate.replace(/\{\{([^\}]*)\}\}/g, '{{{$1}}}');
+        const generatedBranchTitle = Mustache.render(adjustedTemplate, view);
+        setLocalBranch(generatedBranchTitle);
+    }, [state.issue.key, state.issue.summary, branchType.prefix, state.customTemplate]);
 
     useEffect(() => {
-        //Checking if the branchType is still the initial value removes race condition on start-up
-        if (branchType !== emptyPrefix) {
-            buildBranchName();
-        }
+        buildBranchName();
     }, [branchType, buildBranchName]);
     const handleSuccessSnackbarClose = useCallback(() => setSuccessSnackbarOpen(false), [setSuccessSnackbarOpen]);
 

@@ -53,7 +53,7 @@ export interface JiraConfig {
     customJql: SiteJQLV1[];
     jqlList: JQLEntry[];
     todoIssues: TodoIssues;
-    startWork: StartWork;
+    startWorkBranchTemplate: StartWorkBranchTemplate;
 }
 
 export type SiteIdAndProjectKey = {
@@ -84,10 +84,9 @@ export interface JiraExplorer {
     fetchAllQueryResults: boolean;
 }
 
-export interface StartWork {
+export interface StartWorkBranchTemplate {
     useCustomPrefixes: boolean;
     customPrefixes: string[];
-    useCustomTemplate: boolean;
     customTemplate: string;
 }
 
@@ -240,10 +239,9 @@ export const emptyTodoIssues: TodoIssues = {
     triggers: [],
 };
 
-export const emptyStartWork: StartWork = {
+export const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
     useCustomPrefixes: false,
     customPrefixes: [],
-    useCustomTemplate: false,
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
 };
 
@@ -259,7 +257,7 @@ export const emptyJiraConfig: JiraConfig = {
     customJql: [],
     jqlList: [],
     todoIssues: emptyTodoIssues,
-    startWork: emptyStartWork,
+    startWorkBranchTemplate: emptyStartWorkBranchTemplate,
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {

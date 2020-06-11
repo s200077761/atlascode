@@ -23,8 +23,6 @@ import { MessagePoster, WebviewController } from '../webviewController';
 import { StartWorkActionApi } from './startWorkActionApi';
 export const id: string = 'atlascodeSettingsV2';
 
-const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
-
 export class StartWorkWebviewController implements WebviewController<StartWorkIssueMessage> {
     private isRefreshing = false;
     private initData: StartWorkIssueMessage;
@@ -73,7 +71,6 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                                     return a.kind.localeCompare(b.kind);
                                 }
                             ),
-                            customBranchType,
                         ];
                         const developmentBranch = repoDetails.developmentBranch;
                         const href = repoDetails.url;
@@ -152,14 +149,6 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             }
             case StartWorkActionType.OpenSettings: {
                 this.api.openSettings(msg.section, msg.subsection);
-                break;
-            }
-            case StartWorkActionType.BuildBranchName: {
-                const branchName = this.api.buildBranchName(msg.prefix, msg.issueKey, msg.summary);
-                this.postMessage({
-                    type: StartWorkMessageType.ComputedBranchNameResponse,
-                    branchName: branchName,
-                });
                 break;
             }
             case CommonActionType.Refresh: {

@@ -1,9 +1,8 @@
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
-import Handlebars from 'handlebars';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
-import { StartWork } from '../../config/model';
+import { StartWorkBranchTemplate } from '../../config/model';
 import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
@@ -77,12 +76,11 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         return;
     }
 
-    getStartWorkConfig(): StartWork {
+    getStartWorkConfig(): StartWorkBranchTemplate {
         return {
-            useCustomTemplate: Container.config.jira.startWork.useCustomTemplate,
-            customTemplate: Container.config.jira.startWork.customTemplate,
-            useCustomPrefixes: Container.config.jira.startWork.useCustomPrefixes,
-            customPrefixes: Container.config.jira.startWork.customPrefixes,
+            customTemplate: Container.config.jira.startWorkBranchTemplate.customTemplate,
+            useCustomPrefixes: Container.config.jira.startWorkBranchTemplate.useCustomPrefixes,
+            customPrefixes: Container.config.jira.startWorkBranchTemplate.customPrefixes,
         };
     }
 
@@ -90,12 +88,6 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         Container.settingsWebviewFactory.createOrShow(
             section ? { section: section, subSection: subsection } : undefined
         );
-    }
-
-    buildBranchName(prefix: string, issueKey: string, summary: string): string {
-        const template = Handlebars.compile(Container.config.jira.startWork.customTemplate);
-        summary = summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-');
-        return template({ prefix: prefix, issueKey: issueKey, summary: summary });
     }
 
     closePage() {

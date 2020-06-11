@@ -7,13 +7,10 @@ import { Branch } from '../../../typings/git';
 export enum StartWorkMessageType {
     Init = 'init',
     StartWorkResponse = 'startWorkResponse',
-    ComputedBranchNameResponse = 'computedBranchNameResponse',
 }
 
 export type StartWorkMessage = ReducerAction<StartWorkMessageType.Init, StartWorkInitMessage>;
-export type StartWorkResponse =
-    | ReducerAction<StartWorkMessageType.StartWorkResponse, StartWorkResponseMessage>
-    | ReducerAction<StartWorkMessageType.ComputedBranchNameResponse, ComputedBranchNameMessage>;
+export type StartWorkResponse = ReducerAction<StartWorkMessageType.StartWorkResponse, StartWorkResponseMessage>;
 
 export interface ComputedBranchNameMessage {
     branchName: string;
@@ -26,7 +23,6 @@ export interface StartWorkIssueMessage {
 export interface StartWorkInitMessage {
     issue: MinimalIssue<DetailedSiteInfo>;
     repoData: RepoData[];
-    useCustomTemplate: boolean;
     customTemplate: string;
     useCustomPrefixes: boolean;
     customPrefixes: string[];
