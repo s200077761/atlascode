@@ -1,3 +1,30 @@
+## What's New in 2.6.2
+
+### Improvements
+
+-   Better log parsing for Bitbucket Pipelines results
+-   Pipeline page has been reskinned with Material UI
+-   Recently merged pull requests can now be viewed in the "Bitbucket Pull Requests" explorer
+-   Declined pull requests can now be viewed in the "Bitbucket Pull Requests" explorer
+-   This extension now focuses the explorer after authenticating
+-   A "Help and Feedback" explorer has been added
+-   Pull Request preloading has been re-enabled for users with less than 4 repos open
+-   Start Work message styling has been updated
+
+### Bugs fixed
+
+-   "Checkout Source Branch" and "Edit this File" commands now work for Bitbucket Server personal repositories
+-   Logging work on cloud now works as expected
+-   Adding pull request reviewers now works as expected
+-   Added instructions for how to authenticate when using VS Code remotely
+-   Settings for this extension no longer show up on unrelated extensions in the Extensions menu
+-   Branch types are selectable again on Bitbucket Server instances
+-   "Explore" tab of settings page has been restyled to be consistent with our Material UI theme
+-   The "Bitbucket Pull Requests" treeview will now show the top-level directory
+-   Better descriptions for some Bitbucket Pipelines configurations
+-   Webviews running via Remote SSH now work in VS Code Insiders
+-   High contrast color themes no longer break Webviews
+
 ## What's New in 2.6.1
 
 ### Improvements
