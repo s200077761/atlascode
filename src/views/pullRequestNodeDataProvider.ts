@@ -17,6 +17,7 @@ import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
 const headerNode = new PullRequestHeaderNode('Showing open pull requests');
+const MAX_WORKSPACE_REPOS_TO_PRELOAD = 3;
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<
@@ -69,12 +70,30 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 headerNode.description = 'Showing pull requests to review';
                 this.refresh();
             }),
+            commands.registerCommand(Commands.BitbucketShowMergedPullRequests, () => {
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getListMerged(wsRepo);
+                };
+                headerNode.description = 'Showing merged pull requests';
+                this.refresh();
+            }),
+            commands.registerCommand(Commands.BitbucketShowDeclinedPullRequests, () => {
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getListDeclined(wsRepo);
+                };
+                headerNode.description = 'Showing declined pull requests';
+                this.refresh();
+            }),
             commands.registerCommand(Commands.BitbucketPullRequestFilters, () => {
                 window
                     .showQuickPick([
                         'Show all open pull requests',
                         'Show pull requests created by me',
                         'Show pull requests to be reviewed',
+                        'Show merged pull requests',
+                        'Show declined pull requests',
                     ])
                     .then((selected: string) => {
                         switch (selected) {
@@ -86,6 +105,12 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                                 break;
                             case 'Show pull requests to be reviewed':
                                 commands.executeCommand(Commands.BitbucketShowPullRequestsToReview);
+                                break;
+                            case 'Show merged pull requests':
+                                commands.executeCommand(Commands.BitbucketShowMergedPullRequests);
+                                break;
+                            case 'Show declined pull requests':
+                                commands.executeCommand(Commands.BitbucketShowDeclinedPullRequests);
                                 break;
                             default:
                                 break;
@@ -115,11 +140,21 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         });
 
         // add nodes for newly added repos
+        // Disable preloading when there are more than 10 repos due to rate-limit issues
+        // see https://splunk.paas-inf.net/en-US/app/search/atlascode_bitbucket_user_analysis for repo number distributions for our users
         for (const wsRepo of workspaceRepos) {
             const repoUri = wsRepo.rootUri;
             this._childrenMap!.has(repoUri)
-                ? this._childrenMap!.get(repoUri)!.markDirty()
-                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, wsRepo, expand));
+                ? this._childrenMap!.get(repoUri)!.markDirty(workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD)
+                : this._childrenMap!.set(
+                      repoUri,
+                      new RepositoriesNode(
+                          this._fetcher,
+                          wsRepo,
+                          workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD,
+                          expand
+                      )
+                  );
         }
     }
 

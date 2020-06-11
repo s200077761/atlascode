@@ -313,6 +313,18 @@ track:
       attributes:
           - name: instanceType
           - name: hostProduct
+    - id: 24289
+      action: rerun
+      subject: pipeline
+      library: server
+      description: |
+          when a user reruns a pipeline build
+      attributes:
+          - name: instanceType
+          - name: hostProduct
+          - name: source
+            type: string
+            description: 'Source from which the action was triggered'
     - id: 18461
       action: submitted
       subject: atlascodePmf

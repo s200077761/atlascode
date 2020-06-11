@@ -382,6 +382,16 @@
                 "command": "atlascode.debug.bitbucketSites",
                 "title": "Show Bitbucket sites info",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showExploreSettings",
+                "title": "Explore",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.disableHelpExplorer",
+                "title": "Disable Help Explorer",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -414,6 +424,11 @@
                     "id": "atlascode.views.bb.issuesTreeView",
                     "name": "Bitbucket issues",
                     "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
+                },
+                {
+                    "id": "atlascode.views.helpTreeView",
+                    "name": "Help and Feedback",
+                    "when": "config.atlascode.helpExplorerEnabled"
                 }
             ]
         },
@@ -422,7 +437,7 @@
                 {
                     "command": "atlascode.extensionContext.showConfigPage",
                     "group": "2_configure",
-                    "when": "extensionStatus==installed"
+                    "when": "extensionStatus==installed && extension==atlassian.atlascode"
                 }
             ],
             "editor/title": [
@@ -544,6 +559,10 @@
                     "command": "atlascode.bb.showBitbucketIssueSettings",
                     "when": "view == atlascode.views.bb.issuesTreeView",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "atlascode.disableHelpExplorer",
+                    "when": "view == atlascode.views.helpTreeView"
                 }
             ],
             "view/item/context": [
@@ -765,6 +784,10 @@
                 {
                     "command": "atlascode.jira.showIssueForKey",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.showExploreSettings",
+                    "when": "false"
                 }
             ]
         },
@@ -1259,6 +1282,12 @@
                     "default": true,
                     "description": "Shows a login button in the status bar",
                     "scope": "window"
+                },
+                "atlascode.helpExplorerEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the help explorer treeview",
+                    "scope": "window"
                 }
             }
         }
@@ -1270,17 +1299,10 @@
         "@atlaskit/button": "^13.2.0",
         "@atlaskit/checkbox": "^9.0.9",
         "@atlaskit/comment": "^8.0.13",
-        "@atlaskit/css-reset": "^5.0.10",
         "@atlaskit/datetime-picker": "^8.0.16",
-        "@atlaskit/droplist": "^9.0.17",
-        "@atlaskit/field-base": "^13.0.14",
         "@atlaskit/form": "^6.2.0",
         "@atlaskit/icon": "^19.0.6",
-        "@atlaskit/icon-object": "^4.0.10",
-        "@atlaskit/icon-priority": "^4.0.9",
         "@atlaskit/inline-dialog": "^12.0.15",
-        "@atlaskit/input": "^6.0.7",
-        "@atlaskit/layer-manager": "^7.1.0",
         "@atlaskit/logo": "^12.1.8",
         "@atlaskit/lozenge": "^9.0.7",
         "@atlaskit/modal-dialog": "^10.2.1",
@@ -1288,51 +1310,39 @@
         "@atlaskit/page-header": "^9.0.12",
         "@atlaskit/panel": "^0.2.5",
         "@atlaskit/radio": "^3.0.17",
-        "@atlaskit/reduced-ui-pack": "^12.0.6",
         "@atlaskit/section-message": "^4.0.12",
         "@atlaskit/select": "^10.1.0",
         "@atlaskit/spinner": "^12.0.9",
         "@atlaskit/table-tree": "^7.1.0",
-        "@atlaskit/tag": "^9.0.7",
-        "@atlaskit/tag-group": "^9.0.4",
         "@atlaskit/theme": "^9.2.2",
         "@atlaskit/tooltip": "^15.0.14",
-        "@atlaskit/util-shared-styles": "^3.1.2",
         "@atlaskit/width-detector": "^2.0.10",
         "@atlassianlabs/guipi-core-components": "^0.1.1",
         "@atlassianlabs/guipi-core-controller": "^0.1.1",
         "@atlassianlabs/guipi-jira-components": "^0.1.1",
-        "@atlassianlabs/jira-metaui-client": "0.1.20",
-        "@atlassianlabs/jira-metaui-transformer": "0.1.20",
-        "@atlassianlabs/jira-pi-client": "0.1.20",
-        "@atlassianlabs/jira-pi-common-models": "0.1.20",
-        "@atlassianlabs/jira-pi-meta-models": "0.1.20",
-        "@atlassianlabs/pi-client-common": "0.1.20",
-        "@deviniti/jql-autocomplete": "^1.0.2",
+        "@atlassianlabs/jira-metaui-client": "0.1.21",
+        "@atlassianlabs/jira-metaui-transformer": "0.1.21",
+        "@atlassianlabs/jira-pi-client": "0.1.21",
+        "@atlassianlabs/jira-pi-common-models": "0.1.21",
+        "@atlassianlabs/jira-pi-meta-models": "0.1.21",
+        "@atlassianlabs/pi-client-common": "0.1.21",
         "@material-ui/core": "^4.9.13",
         "@material-ui/icons": "^4.9.1",
         "@material-ui/lab": "^4.0.0-alpha.52",
-        "ajv": "^6.11.0",
-        "ajv-keywords": "^3.4.1",
         "analytics-node": "^3.3.0",
         "awesome-debounce-promise": "^2.1.0",
         "axios": "^0.19.2",
         "axios-curlirize": "^1.3.4",
         "clsx": "^1.1.0",
-        "copy-anything": "^2.0.1",
         "date-fns": "^1.30.1",
-        "deep-equal": "^1.1.0",
-        "escape-string-regexp": "^1.0.5",
         "eventemitter3": "^4.0.0",
         "express": "^4.17.1",
         "fast-deep-equal": "^3.1.1",
-        "file-selector": "^0.1.12",
         "filesize": "^4.1.2",
         "flatten-anything": "^2.0.1",
         "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
         "handlebars": "^4.7.3",
-        "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
         "lodash.orderby": "^4.6.0",
@@ -1341,27 +1351,21 @@
         "merge-anything": "^3.0.3",
         "p-any": "^2.1.0",
         "p-cancelable": "^2.0.0",
-        "p-debounce": "^2.1.0",
         "p-queue": "^6.3.0",
         "p-retry": "^4.2.0",
         "p-settle": "^3.1.0",
         "p-timeout": "^3.2.0",
         "react": "^16.13.1",
         "react-async-hook": "^3.6.1",
-        "react-beautiful-dnd": "^12.2.0",
         "react-collapsible": "2.6.3",
         "react-dom": "^16.13.1",
         "react-dropzone": "^10.2.1",
         "react-editext": "3.6.1",
-        "react-final-form": "^6.3.5",
         "react-hook-form": "^4.9.8",
-        "react-intl": "^2.9.0",
-        "react-tabs": "^3.1.0",
         "react-uid": "^2.2.0",
         "scheduler": "^0.19.0",
         "semver": "^7.1.3",
         "slash": "^3.0.0",
-        "spawn-sync": "^2.0.0",
         "ssl-root-cas": "^1.3.1",
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",

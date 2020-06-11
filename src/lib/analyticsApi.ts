@@ -44,4 +44,5 @@ export interface AnalyticsApi {
     fireExternalLinkEvent(source: string, linkId: string): Promise<void>;
     fireDeepLinkEvent(source: string, target: string): Promise<void>;
     fireOpenSettingsButtonEvent(source: string): Promise<void>;
+    firePipelineRerunEvent(site: DetailedSiteInfo, source: string): Promise<void>;
 }

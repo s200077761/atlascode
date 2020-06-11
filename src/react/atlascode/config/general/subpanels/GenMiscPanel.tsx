@@ -9,11 +9,12 @@ import { Misc, OutputLevelOption } from '../Misc';
 
 type GenMiscPanelProps = CommonSubpanelProps & {
     showWelcome: boolean;
+    helpExplorerEnabled: boolean;
     outputLevel: OutputLevelOption;
 };
 
 export const GenMiscPanel: React.FunctionComponent<GenMiscPanelProps> = memo(
-    ({ visible, expanded, onSubsectionChange, showWelcome, outputLevel }) => {
+    ({ visible, expanded, onSubsectionChange, showWelcome, helpExplorerEnabled, outputLevel }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
         const expansionHandler = useCallback(
@@ -44,7 +45,11 @@ export const GenMiscPanel: React.FunctionComponent<GenMiscPanelProps> = memo(
                     <PanelSubtitle>configure logging level, welcome screen, etc</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <Misc showWelcome={showWelcome} outputLevel={outputLevel} />
+                    <Misc
+                        showWelcome={showWelcome}
+                        helpExplorerEnabled={helpExplorerEnabled}
+                        outputLevel={outputLevel}
+                    />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );

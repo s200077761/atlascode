@@ -1,19 +1,19 @@
-import { Disposable } from 'vscode';
-import { Container } from '../../container';
+import { Disposable, Uri } from 'vscode';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { WelcomeInitMessage } from '../../lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { WelcomeActionApi } from '../../lib/webview/controller/welcome/welcomeActionApi';
 import { WelcomeWebviewController } from '../../lib/webview/controller/welcome/welcomeWebviewController';
 import { Logger } from '../../logger';
+import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
 export class VSCWelcomeWebviewControllerFactory implements VSCWebviewControllerFactory<WelcomeInitMessage> {
     constructor(private api: WelcomeActionApi, private commonHandler: CommonActionMessageHandler) {}
 
-    public tabIconPath(): string {
-        return Container.context.asAbsolutePath('resources/atlassian-icon.svg');
+    public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
+        return Resources.icons.get(iconSet.ATLASSIANICON);
     }
 
     public uiWebsocketPort(): number {
@@ -42,7 +42,7 @@ export class VSCWelcomeWebviewControllerFactory implements VSCWebviewControllerF
         return [controller, undefined];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        return getHtmlForView(extensionPath, 'welcomePageV2');
+    public webviewHtml(baseUri: Uri, cspSource: string): string {
+        return getHtmlForView(baseUri, cspSource, 'welcomePageV2');
     }
 }

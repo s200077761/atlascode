@@ -4,14 +4,25 @@ import { VSCodeStyles } from './styles';
 
 const body = document.body;
 const isDark: boolean = body.getAttribute('class') === 'vscode-dark';
+const isHighContrast: boolean = body.getAttribute('class') === 'vscode-high-contrast';
 
 export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
+    // Colors that don't appear in vscode-high-contrast
+    const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
+    const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
+    const sideBarTitleForeground = isHighContrast ? '#ffffff' : vscStyles.sideBarTitleForeground;
+    const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.sideBarSectionHeaderBackground;
+    const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
+
+    // Icons don't always have a useful color in high-contrast
+    const muiSvg = isHighContrast ? { root: { color: '#ffffff' } } : undefined;
+
     return createMuiTheme({
         palette: {
             type: isDark ? 'dark' : 'light',
             primary: {
                 contrastText: vscStyles.buttonForeground,
-                main: vscStyles.buttonBackground,
+                main: buttonBackground,
             },
             text: {
                 primary: vscStyles.foreground,
@@ -48,13 +59,13 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 contained: {
                     '&:hover': {
                         color: vscStyles.buttonForeground,
-                        backgroundColor: vscStyles.buttonHoverBackground,
+                        backgroundColor: buttonHoverBackground,
                     },
                 },
                 text: {
-                    color: vscStyles.buttonBackground,
+                    color: buttonBackground,
                     '&:hover': {
-                        backgroundColor: vscStyles.buttonHoverBackground,
+                        backgroundColor: buttonHoverBackground,
                     },
                 },
             },
@@ -64,17 +75,17 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                 },
                 colorDefault: {
                     backgroundColor: vscStyles.sideBarBackground,
-                    color: vscStyles.sideBarTitleForeground,
+                    color: sideBarTitleForeground,
                 },
                 colorPrimary: {
                     backgroundColor: vscStyles.sideBarBackground,
-                    color: vscStyles.sideBarTitleForeground,
+                    color: sideBarTitleForeground,
                 },
             },
             MuiExpansionPanelSummary: {
                 root: {
-                    backgroundColor: vscStyles.sideBarSectionHeaderBackground,
-                    color: vscStyles.sideBarTitleForeground,
+                    backgroundColor: sideBarSectionHeaderBackground,
+                    color: sideBarTitleForeground,
                 },
             },
             MuiFilledInput: {
@@ -88,10 +99,11 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     color: vscStyles.textLinkForeground,
                 },
             },
+            MuiSvgIcon: muiSvg,
             MuiTableRow: {
                 root: {
                     '&$selected, &$selected:hover': {
-                        backgroundColor: vscStyles.listActiveSelectionBackground,
+                        backgroundColor: listActiveSelectionBackground,
                     },
                 },
             },

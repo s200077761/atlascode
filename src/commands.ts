@@ -16,6 +16,7 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
+import { configuration } from './config/configuration';
 import { Container } from './container';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
@@ -30,6 +31,8 @@ export enum Commands {
     BitbucketShowOpenPullRequests = 'atlascode.bb.showOpenPullRequests',
     BitbucketShowPullRequestsToReview = 'atlascode.bb.showPullRequestsToReview',
     BitbucketShowPullRequestsCreatedByMe = 'atlascode.bb.showOpenPullRequestsCreatedByMe',
+    BitbucketShowMergedPullRequests = 'atlascode.bb.showMergedPullRequests',
+    BitbucketShowDeclinedPullRequests = 'atlascode.bb.showDeclinedPullRequests',
     BitbucketPullRequestFilters = 'atlascode.bb.showPullRequestFilters',
     JiraSearchIssues = 'atlascode.jira.searchIssues',
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
@@ -53,6 +56,7 @@ export enum Commands {
     ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
     ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
     ShowBitbucketIssueSettings = 'atlascode.bb.showBitbucketIssueSettings',
+    ShowExploreSettings = 'atlascode.showExploreSettings',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
@@ -82,6 +86,7 @@ export enum Commands {
     WorkbenchOpenRepository = 'atlascode.workbenchOpenRepository',
     WorkbenchOpenWorkspace = 'atlascode.workbenchOpenWorkspace',
     CloneRepository = 'atlascode.cloneRepository',
+    DisableHelpExplorer = 'atlascode.disableHelpExplorer',
 }
 
 export function registerCommands(vscodeContext: ExtensionContext) {
@@ -135,6 +140,12 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Issues,
             })
         ),
+        commands.registerCommand(Commands.ShowExploreSettings, () =>
+            Container.settingsWebviewFactory.createOrShow({
+                section: ConfigSection.Explore,
+                subSection: undefined,
+            })
+        ),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
@@ -181,7 +192,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             runPipeline();
         }),
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
-            Container.pipelineViewManager.createOrShow(pipelineInfo);
+            Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
         }),
         commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
             Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue)
@@ -198,6 +209,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.CloneRepository, (source: string, repoUrl?: string) => {
             cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
             commands.executeCommand('git.clone', repoUrl);
+        }),
+        commands.registerCommand(Commands.DisableHelpExplorer, () => {
+            configuration.updateEffective('helpExplorerEnabled', false, null, true);
         })
     );
 }

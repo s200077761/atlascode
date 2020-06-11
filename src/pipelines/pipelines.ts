@@ -7,6 +7,7 @@ import {
     Pipeline,
     PipelineCommand,
     PipelineCommitTarget,
+    PipelineLogRange,
     PipelinePullRequestTarget,
     PipelineReferenceTarget,
     PipelineReferenceType,
@@ -14,6 +15,7 @@ import {
     PipelineSelector,
     PipelineSelectorType,
     PipelineStep,
+    PipelineStepLogRanges,
     PipelineTarget,
     PipelineTargetType,
 } from './model';
@@ -49,10 +51,6 @@ export class PipelineApiImpl {
         return data.values!.map((s: any) => PipelineApiImpl.pipelineStepForPipelineStep(s));
     }
 
-    async getStepLog(site: BitbucketSite, pipelineUuid: string, stepUuid: string): Promise<string[]> {
-        return this.getPipelineLog(site, pipelineUuid, stepUuid);
-    }
-
     async getListForRemote(site: BitbucketSite, branchName: string): Promise<Pipeline[]> {
         return this.getSinglepagePipelines(site, { 'target.branch': branchName });
     }
@@ -69,6 +67,7 @@ export class PipelineApiImpl {
 
         const { data: responseBody } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pipelines/`, {
             ...query,
+            fields: ['+values.target.commit.message', '+values.target.commit.summary.*'],
             sort: '-created_on',
         });
 
@@ -87,41 +86,73 @@ export class PipelineApiImpl {
         return cleanedPaginatedPipelines;
     }
 
-    async getPipelineLog(site: BitbucketSite, pipelineUuid: string, stepUuid: string): Promise<string[]> {
+    async getPipelineLogRange(
+        site: BitbucketSite,
+        pipelineUuid: string,
+        stepUuid: string,
+        range: PipelineLogRange
+    ): Promise<string> {
         const { ownerSlug, repoSlug } = site;
-
-        const { data } = await this.client.getOctetStream(
-            `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`
+        const {
+            data,
+        } = await this.client.getOctetStream(
+            `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`,
+            { start: range.firstByte, end: range.lastByte }
         );
 
-        return PipelineApiImpl.splitLogs(data.toString());
+        return data;
     }
 
-    private static splitLogs(logText: string): string[] {
-        const lines = logText.split('\n');
-        var commandAccumulator = '';
-        var lineIndex = 0;
-        const splitLogs: string[] = [];
+    /**
+     * This is an undocumented API call. It probably won't disappear, but code like you expect it to.
+     * @param site the bitbucket site
+     * @param buildNumber the build number for which you want log ranges.
+     */
+    async getLogRanges(site: BitbucketSite, buildNumber: number): Promise<PipelineStepLogRanges[]> {
+        const { ownerSlug, repoSlug } = site;
+        let url:
+            | string
+            | undefined = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pipelines/${buildNumber}/steps/`;
+        let steps: any[] = [];
+        do {
+            const data: any = (await this.client.getUrl(url)).data;
+            steps = steps.concat(data.values);
+            url = data.next;
+        } while (url);
+        const stepRanges: PipelineStepLogRanges[] = [];
+        if (Array.isArray(steps)) {
+            steps.forEach((step) => {
+                const phases = step.tasks?.execution_phases;
+                const setupLogRange = this.splitPhase(phases.SETUP)[0];
+                const buildLogRanges = this.splitPhase(phases.MAIN);
+                const teardownLogRange = this.splitPhase(phases.TEARDOWN)[0];
+                stepRanges.push({
+                    setupLogRange: setupLogRange,
+                    buildLogRanges: buildLogRanges,
+                    teardownLogRange: teardownLogRange,
+                });
+            });
+        }
+        return stepRanges;
+    }
 
-        // Trim any log output preceding the first command
-        while (!lines[lineIndex].startsWith('+ ') && lineIndex < lines.length) {
-            lineIndex++;
+    private splitPhase(phase: any): PipelineLogRange[] {
+        if (Array.isArray(phase)) {
+            return phase
+                .map((phaseBit) => {
+                    if (phaseBit.log_range) {
+                        return {
+                            firstByte: phaseBit.log_range.first_byte_position,
+                            byteCount: phaseBit.log_range.byte_count,
+                            lastByte: phaseBit.log_range.last_byte_position,
+                        };
+                    } else {
+                        return undefined;
+                    }
+                })
+                .filter((x) => x !== undefined) as PipelineLogRange[];
         }
-
-        for (; lineIndex < lines.length; lineIndex++) {
-            if (lines[lineIndex].startsWith('+ ')) {
-                if (commandAccumulator.length > 0) {
-                    splitLogs.push(commandAccumulator);
-                }
-                commandAccumulator = lines[lineIndex] + '\n';
-            } else {
-                commandAccumulator += lines[lineIndex] + '\n';
-            }
-        }
-        if (commandAccumulator.length > 0) {
-            splitLogs.push(commandAccumulator);
-        }
-        return splitLogs;
+        return [];
     }
 
     readSelectorType(type: string): PipelineSelectorType {

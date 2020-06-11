@@ -15,6 +15,7 @@ export function parseGitUrl(url: string): gup.GitUrl {
         const matches = url.match(bbServerRepoRegEx);
         if (matches && matches.groups && matches.groups.type && matches.groups.owner) {
             parsed.owner = matches.groups.type === 'users' ? `~${matches.groups.owner}` : matches.groups.owner;
+            parsed.full_name = `${parsed.owner}/${parsed.name}`;
         }
     }
     return parsed;

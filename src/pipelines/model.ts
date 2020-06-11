@@ -30,6 +30,7 @@ export enum Status {
     Successful,
     Error,
     Failed,
+    NotRun,
     Unknown,
 }
 
@@ -83,7 +84,27 @@ export interface PipelineTarget {
     ref_name?: string;
     selector?: PipelineSelector;
     branch_name?: string;
-    commit?: any; // We need this to be able to re-run pipeline builds but I can't find any complete documentation as to its shape
+    commit?: PipelineTargetCommit;
+    source?: string;
+    destination?: string;
+}
+
+// Per https://api.bitbucket.org/swagger.json this should be the same as a Bitbucket Commit object, but there are some
+// values missing on the object returned by Pipelines that aren't optional on the Bitbucket object. Creating a parallel
+// implementation with just the information returned by Pipelines.
+export interface PipelineTargetCommit {
+    type: string;
+    message: string;
+    hash: string;
+    links: any;
+    summary: PipelineCommitSummary;
+}
+
+export interface PipelineCommitSummary {
+    raw: string;
+    markup: string;
+    html: string;
+    type: string;
 }
 
 // Leaving this here to match the (implied) model of the API.
@@ -101,14 +122,30 @@ export interface PipelineReferenceTarget extends PipelineTarget {
     ref_type: PipelineReferenceType;
 }
 
+export enum PipelineLogStage {
+    SETUP,
+    BUILD,
+    TEARDOWN,
+}
+
+export interface PipelineLogReference {
+    stepIndex: number;
+    stage: PipelineLogStage;
+    commandIndex?: number;
+}
+
 export interface PipelineStep {
     run_number: number;
     uuid: string;
     name?: string;
     completed_on?: string;
     setup_commands: PipelineCommand[];
+    setup_logs?: string;
+    setup_log_range?: PipelineLogRange;
     script_commands: PipelineCommand[];
     teardown_commands: PipelineCommand[];
+    teardown_logs?: string;
+    teardown_log_range?: PipelineLogRange;
     duration_in_seconds: number;
     state?: PipelineState;
 }
@@ -118,6 +155,19 @@ export interface PipelineCommand {
     command: string;
     name: string;
     logs?: string;
+    log_range?: PipelineLogRange;
+}
+
+export interface PipelineStepLogRanges {
+    setupLogRange: PipelineLogRange;
+    buildLogRanges: PipelineLogRange[];
+    teardownLogRange: PipelineLogRange;
+}
+
+export interface PipelineLogRange {
+    firstByte: number;
+    byteCount: number;
+    lastByte: number;
 }
 
 export function statusForState(state: PipelineState): Status {
@@ -160,6 +210,8 @@ function statusForResult(result: PipelineResult): Status {
         // fall through
         case 'pipeline_step_state_completed_stopped':
             return Status.Stopped;
+        case 'pipeline_step_state_completed_not_run':
+            return Status.NotRun;
         default:
             return Status.Unknown;
     }

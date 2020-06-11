@@ -1,6 +1,6 @@
 import { Uri } from 'vscode';
 import { Container } from '../../container';
-import { Pipeline, PipelineSelectorType, Status, statusForState } from '../../pipelines/model';
+import { Pipeline, PipelineSelectorType, PipelineTarget, Status, statusForState } from '../../pipelines/model';
 import { Resources } from '../../resources';
 
 /**
@@ -8,7 +8,15 @@ import { Resources } from '../../resources';
  * preferences of the user.
  * @param branchName The branch name to test.
  */
-export function shouldDisplay(branchName: string | undefined): boolean {
+export function shouldDisplay(target: PipelineTarget | undefined): boolean {
+    let branchName: string | undefined = undefined;
+    if (target?.ref_name) {
+        branchName = target.ref_name;
+    } else if (target?.source || target?.destination) {
+        // For type: pipeline_pullrequest_target allow matching on source or destination
+        branchName = `${target.source ?? ''} ${target.destination ?? ''}`;
+    }
+
     if (!Container.config.bitbucket.pipelines.hideFiltered) {
         return true;
     } else if (!branchName) {
@@ -25,7 +33,11 @@ export function filtersActive(): boolean {
     return Container.config.bitbucket.pipelines.hideFiltered;
 }
 
-export function descriptionForState(result: Pipeline, excludePipelinePrefix?: boolean): string {
+export function descriptionForState(
+    result: Pipeline,
+    truncateCommitMessage: boolean,
+    excludePipelinePrefix?: boolean
+): string {
     const descriptionForResult = {
         pipeline_state_completed_successful: 'was successful',
         pipeline_state_completed_failed: 'has failed',
@@ -45,11 +57,15 @@ export function descriptionForState(result: Pipeline, excludePipelinePrefix?: bo
             words = 'is pending';
     }
 
-    const descriptionString = `${generatePipelineTitle(result, excludePipelinePrefix)} ${words}`;
+    const descriptionString = `${generatePipelineTitle(result, truncateCommitMessage, excludePipelinePrefix)} ${words}`;
     return descriptionString;
 }
 
-export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?: boolean): string {
+export function generatePipelineTitle(
+    pipeline: Pipeline,
+    truncateCommitMessage: boolean,
+    excludePipelinePrefix?: boolean
+): string {
     let description = '';
     let pattern = undefined;
     let type: PipelineSelectorType | undefined = undefined;
@@ -57,10 +73,20 @@ export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?
         pattern = pipeline.target.selector.pattern;
         type = pipeline.target.selector.type;
     }
-    const ref_name = pipeline.target.ref_name;
-    const triggerType = pipeline.triggerName;
-    const buildNumber = pipeline.build_number;
+
     const prefix = excludePipelinePrefix ? '' : `${pipeline.repository.name}: Pipeline `;
+    const buildNumber = pipeline.build_number;
+    const ref_name = pipeline.target.ref_name ?? pipeline.target.source; // source or destination?
+
+    let commitMessage = pipeline.target.commit?.message;
+    if (commitMessage) {
+        if (truncateCommitMessage) {
+            commitMessage = commitMessage.split('\n')[0];
+        }
+        return `${prefix}#${buildNumber} ${commitMessage.trimEnd()} on branch ${ref_name}`;
+    }
+
+    const triggerType = pipeline.triggerName;
 
     //Make sure every case is covered so that a meaningful message is displayed back
     if (type === PipelineSelectorType.Custom) {
@@ -111,26 +137,5 @@ export function iconUriForPipeline(pipeline: Pipeline): Uri | { light: Uri; dark
             return Resources.icons.get('failed');
         default:
             return undefined;
-    }
-}
-
-export function statusForPipeline(pipeline: Pipeline): string {
-    switch (statusForState(pipeline.state)) {
-        case Status.Pending:
-            return 'Pending';
-        case Status.InProgress:
-            return 'Building';
-        case Status.Paused:
-            return 'Success';
-        case Status.Stopped:
-            return 'Stopped';
-        case Status.Successful:
-            return 'Success';
-        case Status.Error:
-            return 'Error';
-        case Status.Failed:
-            return 'Failed';
-        default:
-            return 'Error';
     }
 }

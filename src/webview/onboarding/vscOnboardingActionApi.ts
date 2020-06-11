@@ -1,6 +1,6 @@
 import { flatten } from 'flatten-anything';
 import { merge } from 'merge-anything';
-import vscode, { ConfigurationTarget, env } from 'vscode';
+import { ConfigurationTarget, env } from 'vscode';
 import {
     AuthInfo,
     DetailedSiteInfo,
@@ -11,7 +11,6 @@ import {
     SiteInfo,
 } from '../../atlclients/authInfo';
 import { configuration, IConfig } from '../../config/configuration';
-import { CustomJQLTreeId, PullRequestTreeViewId } from '../../constants';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
@@ -26,21 +25,11 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
         this._analyticsApi = analyticsApi;
     }
 
-    private focusExplorerOnAuth(site: SiteInfo) {
-        if (site.product.key === ProductJira.key) {
-            vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
-        } else if (site.product.key === ProductBitbucket.key) {
-            vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
-        }
-    }
-
     public async authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
-        this.focusExplorerOnAuth(site);
         return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
     }
 
     public async authenticateCloud(site: SiteInfo, callback: string): Promise<void> {
-        this.focusExplorerOnAuth(site);
         return Container.loginManager.userInitiatedOAuthLogin(site, callback);
     }
 
