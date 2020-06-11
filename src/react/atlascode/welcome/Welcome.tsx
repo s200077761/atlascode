@@ -83,6 +83,58 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.2 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Better log parsing for Bitbucket Pipelines results</li>
+                                                <li>Pipeline page has been reskinned with Material UI</li>
+                                                <li>
+                                                    Recently merged pull requests can now be viewed in the "Bitbucket
+                                                    Pull Requests" explorer
+                                                </li>
+                                                <li>
+                                                    Declined pull requests can now be viewed in the "Bitbucket Pull
+                                                    Requests" explorer
+                                                </li>
+                                                <li>This extension now focuses the explorer after authenticating</li>
+                                                <li>A "Help and Feedback" explorer has been added</li>
+                                                <li>
+                                                    Pull Request preloading has been re-enabled for users with less than
+                                                    4 repos open
+                                                </li>
+                                                <li>Start Work message styling has been updated</li>
+                                            </ul>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    "Checkout Source Branch" and "Edit this File" commands now work for
+                                                    Bitbucket Server personal repositories
+                                                </li>
+                                                <li>Logging work on cloud now works as expected</li>
+                                                <li>Adding pull request reviewers now works as expected</li>
+                                                <li>
+                                                    Added instructions for how to authenticate when using VS Code
+                                                    remotely
+                                                </li>
+                                                <li>
+                                                    Settings for this extension no longer show up on unrelated
+                                                    extensions in the Extensions menu
+                                                </li>
+                                                <li>Branch types are selectable again on Bitbucket Server instances</li>
+                                                <li>
+                                                    "Explore" tab of settings page has been restyled to be consistent
+                                                    with our Material UI theme
+                                                </li>
+                                                <li>
+                                                    The "Bitbucket Pull Requests" treeview will now show the top-level
+                                                    directory
+                                                </li>
+                                                <li>Better descriptions for some Bitbucket Pipelines configurations</li>
+                                                <li>Webviews running via Remote SSH now work in VS Code Insiders</li>
+                                                <li>High contrast color themes no longer break Webviews</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.6.1 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
