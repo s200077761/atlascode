@@ -1,3 +1,3 @@
 import React from 'react';
 
-export const ResourceContext = React.createContext(document.baseURI);
+export const ResourceContext = React.createContext('vscode-resource:');
