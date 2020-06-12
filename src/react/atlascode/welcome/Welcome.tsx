@@ -83,6 +83,14 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.3 🎉</h3>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>Explorer no longer focuses on start up of VS Code</li>
+                                                <li>Webviews load as expected for Windows users</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.6.2 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
