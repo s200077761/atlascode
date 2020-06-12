@@ -38,7 +38,7 @@ const routes = {
 const view = document.getElementById('reactView') as HTMLElement;
 const root = document.getElementById('root') as HTMLElement;
 
-attachImageErrorHandler(document.baseURI);
+attachImageErrorHandler();
 
 const App = () => {
     const Page = routes[view.getAttribute('content')!];
@@ -63,7 +63,7 @@ const App = () => {
     }, [themeObserver]);
 
     return (
-        <ResourceContext.Provider value={document.baseURI}>
+        <ResourceContext.Provider value="vscode-resource:">
             <React.Suspense fallback={<AtlLoader />}>
                 <VSCodeStylesContext.Provider value={vscStyles}>
                     <ThemeProvider theme={currentTheme}>

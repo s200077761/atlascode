@@ -1,3 +1,10 @@
+## What's New in 2.6.3
+
+### Bugs fixed
+
+-   Explorer no longer focuses on start up of VS Code
+-   Webviews load as expected for Windows users
+
 ## What's New in 2.6.2
 
 ### Improvements

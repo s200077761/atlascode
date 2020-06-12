@@ -1,4 +1,5 @@
 import { Commands } from '../commands';
+import { KnownLinkID } from '../lib/ipc/models/common';
 import { iconSet } from '../resources';
 import { BaseTreeDataProvider } from './Explorer';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
@@ -21,26 +22,16 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 'Get Started',
                 'Check out our quick-start guide',
                 iconSet.ATLASSIANICON,
-                'https://confluence.atlassian.com/bitbucket/getting-started-with-vs-code-969520759.html'
+                KnownLinkID.GettingStarted
             ),
-            new LinkNode(
-                'What is JQL?',
-                'Learn about Jira Query Language',
-                iconSet.JIRAICON,
-                'https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14'
-            ),
+            new LinkNode('What is JQL?', 'Learn about Jira Query Language', iconSet.JIRAICON, KnownLinkID.WhatIsJQL),
             new LinkNode(
                 'Contribute',
                 'Create pull requests for this extension',
                 iconSet.PULLREQUEST,
-                'https://bitbucket.org/atlassianlabs/atlascode/src/devel/'
+                KnownLinkID.Contribute
             ),
-            new LinkNode(
-                'Report an Issue',
-                'Report and vote on issues',
-                iconSet.ISSUES,
-                'https://bitbucket.org/atlassianlabs/atlascode/issues?status=new&status=open'
-            ),
+            new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
             new InternalLinkNode(
                 'Explore Features',
                 'Overwhelmed? Check out some of the most common features, all in one place',

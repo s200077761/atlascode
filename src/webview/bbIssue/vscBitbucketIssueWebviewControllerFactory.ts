@@ -55,7 +55,7 @@ export class VSCBitbucketIssueWebviewControllerFactory implements VSCWebviewCont
         return [controller, undefined];
     }
 
-    public webviewHtml(baseUri: Uri, cspSource: string): string {
-        return getHtmlForView(baseUri, cspSource, id);
+    public webviewHtml(extensionPath: string): string {
+        return getHtmlForView(extensionPath, id);
     }
 }
