@@ -1,3 +1,4 @@
+import * as path from 'path';
 import {
     Disposable,
     Event,
@@ -71,6 +72,10 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                 enableFindWidget: true,
                 enableCommandUris: true,
                 enableScripts: true,
+                localResourceRoots: [
+                    Uri.file(path.join(this._extensionPath, 'build')),
+                    Uri.file(path.join(this._extensionPath, 'images')),
+                ],
             });
 
             this._panel.iconPath = this._controllerFactory.tabIcon();
@@ -102,18 +107,12 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             );
 
             this._panel.title = this._controller.title();
-            this._panel.webview.html = this._controllerFactory.webviewHtml(
-                this._panel.webview.asWebviewUri(Uri.parse(this._extensionPath)),
-                this._panel.webview.cspSource
-            );
+            this._panel.webview.html = this._controllerFactory.webviewHtml(this._extensionPath);
 
             const { id, site, product } = this._controller.screenDetails();
             this._analyticsApi.fireViewScreenEvent(id, site, product);
         } else {
-            this._panel.webview.html = this._controllerFactory.webviewHtml(
-                this._panel.webview.asWebviewUri(Uri.parse(this._extensionPath)),
-                this._panel.webview.cspSource
-            );
+            this._panel.webview.html = this._controllerFactory.webviewHtml(this._extensionPath);
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
             if (this._controller) {
                 this._controller.update(factoryData);
