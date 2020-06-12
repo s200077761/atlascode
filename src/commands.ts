@@ -18,6 +18,7 @@ import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
 import { Container } from './container';
+import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
@@ -148,12 +149,18 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         ),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
-        commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
-            const uri = (await prNode.getTreeItem()).resourceUri;
-            if (uri) {
-                env.openExternal(uri);
+        commands.registerCommand(
+            Commands.ViewInWebBrowser,
+            async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {
+                if (source && linkId && knownLinkIdMap.has(linkId)) {
+                    Container.analyticsApi.fireExternalLinkEvent(source, linkId);
+                }
+                const uri = (await prNode.getTreeItem()).resourceUri;
+                if (uri) {
+                    env.openExternal(uri);
+                }
             }
-        }),
+        ),
         commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
         commands.registerCommand(
             Commands.ShowIssue,
