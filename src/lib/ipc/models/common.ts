@@ -10,7 +10,7 @@ export enum FeedbackType {
 export enum WebViewID {
     BitbucketIssueWebview = 'bitbucketIssueScreen',
     ConfigWebview = 'atlascodeSettings',
-    OnboardingWebview = 'atlascodeOnboarding',
+    OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',
     StartWork = 'startWork',
 }
