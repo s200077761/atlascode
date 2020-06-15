@@ -58,7 +58,6 @@ const emptyState: StartWorkState = {
     ...emptyStartWorkInitMessage,
     isSomethingLoading: false,
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
-    useCustomPrefixes: false,
     customPrefixes: [],
 };
 

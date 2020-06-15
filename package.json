@@ -889,12 +889,6 @@
                     "description": "The format which will be used to auto-generate branch names",
                     "scope": "window"
                 },
-                "atlascode.jira.startWorkBranchTemplate.useCustomPrefixes": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Allows the user to set their own custom prefixes",
-                    "scope": "window"
-                },
                 "atlascode.jira.startWorkBranchTemplate.customPrefixes": {
                     "type": "array",
                     "items": {

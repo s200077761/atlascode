@@ -8,13 +8,12 @@ import { PanelSubtitle } from './PanelSubtitle';
 import { PanelTitle } from './PanelTitle';
 
 type StartWorkPanelProps = CommonSubpanelProps & {
-    useCustomPrefixes: boolean;
     customPrefixes: string[];
     customTemplate: string;
 };
 
 export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo(
-    ({ visible, expanded, useCustomPrefixes, customPrefixes, customTemplate, onSubsectionChange }) => {
+    ({ visible, expanded, customPrefixes, customTemplate, onSubsectionChange }) => {
         const [internalExpanded, setInternalExpanded] = useState<boolean>(expanded);
 
         const expansionHandler = useCallback(
@@ -45,11 +44,7 @@ export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo
                     <PanelSubtitle>configure the start work screen</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <StartWorkSettings
-                        useCustomPrefixes={useCustomPrefixes}
-                        customPrefixes={customPrefixes}
-                        customTemplate={customTemplate}
-                    />
+                    <StartWorkSettings customPrefixes={customPrefixes} customTemplate={customTemplate} />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );

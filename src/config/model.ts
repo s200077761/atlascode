@@ -85,7 +85,6 @@ export interface JiraExplorer {
 }
 
 export interface StartWorkBranchTemplate {
-    useCustomPrefixes: boolean;
     customPrefixes: string[];
     customTemplate: string;
 }
@@ -240,7 +239,6 @@ export const emptyTodoIssues: TodoIssues = {
 };
 
 export const emptyStartWorkBranchTemplate: StartWorkBranchTemplate = {
-    useCustomPrefixes: false,
     customPrefixes: [],
     customTemplate: '{{prefix}}/{{issueKey}}-{{summary}}',
 };

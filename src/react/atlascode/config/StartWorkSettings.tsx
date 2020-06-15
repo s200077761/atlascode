@@ -1,29 +1,18 @@
-import { InlineTextEditor, InlineTextEditorList, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, Link, Switch, Typography } from '@material-ui/core';
+import { InlineTextEditor, InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
+import { Box, Grid, Link, Typography } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../common/useBorderBoxStyles';
 import { ConfigControllerContext } from './configController';
 
 type StartWorkSettings = {
-    useCustomPrefixes: boolean;
     customTemplate: string;
     customPrefixes: string[];
 };
 
-export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
-    useCustomPrefixes,
-    customTemplate,
-    customPrefixes,
-}) => {
+export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ customTemplate, customPrefixes }) => {
     const controller = useContext(ConfigControllerContext);
     const boxClass = useBorderBoxStyles();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
-
-    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const changes = Object.create(null);
-        changes[`jira.startWorkBranchTemplate.${e.target.value}`] = e.target.checked;
-        setChanges(changes);
-    }, []);
 
     const handlePrefixesChange = useCallback((newOptions: string[]) => {
         const changes = Object.create(null);
@@ -36,8 +25,6 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
         changes['jira.startWorkBranchTemplate.customTemplate'] = template;
         setChanges(changes);
     }, []);
-
-    const customPrefixesDisabled = !useCustomPrefixes;
 
     useEffect(() => {
         if (Object.keys(changes).length > 0) {
@@ -71,26 +58,8 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
                     </Box>
                 </Box>
             </Grid>
-            <Grid item></Grid>
             <Grid item>
-                <ToggleWithLabel
-                    control={
-                        <Switch
-                            size="small"
-                            color="primary"
-                            id="useCustomPrefixes"
-                            value="useCustomPrefixes"
-                            checked={useCustomPrefixes}
-                            onChange={handleChange}
-                        />
-                    }
-                    label={`Use custom branch prefixes`}
-                    spacing={1}
-                    variant="body1"
-                />
-            </Grid>
-            <Grid item>
-                <Box marginTop={2}>
+                <Box margin={2}>
                     <Typography variant="h4">Custom Prefixes</Typography>
 
                     <Typography variant="caption">
@@ -109,9 +78,9 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({
                             options={customPrefixes}
                             reverseButtons={true}
                             addOptionButtonContent="Add Custom Prefix"
-                            disabled={customPrefixesDisabled}
                             inputLabel="Custom Prefix Text"
                             onChange={handlePrefixesChange}
+                            disabled={false}
                             emptyComponent={
                                 <Box width="100%">
                                     <Typography align="center">No prefixes found.</Typography>

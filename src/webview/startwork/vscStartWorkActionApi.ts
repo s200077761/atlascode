@@ -79,7 +79,6 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     getStartWorkConfig(): StartWorkBranchTemplate {
         return {
             customTemplate: Container.config.jira.startWorkBranchTemplate.customTemplate,
-            useCustomPrefixes: Container.config.jira.startWorkBranchTemplate.useCustomPrefixes,
             customPrefixes: Container.config.jira.startWorkBranchTemplate.customPrefixes,
         };
     }

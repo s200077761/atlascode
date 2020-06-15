@@ -89,7 +89,6 @@ const StartWorkPage: React.FunctionComponent = () => {
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [repository, setRepository] = useState<RepoData>(emptyRepoData);
     const [branchType, setBranchType] = useState<BranchType>(emptyPrefix);
-    const [branchTypes, setBranchTypes] = useState<BranchType[]>([]);
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
     const [localBranch, setLocalBranch] = useState('');
     const [upstream, setUpstream] = useState('');
@@ -101,14 +100,6 @@ const StartWorkPage: React.FunctionComponent = () => {
         upstream?: string;
     }>({});
     const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
-
-    const branchTypesToUse = useCallback(() => {
-        return state.useCustomPrefixes
-            ? state.customPrefixes.map((prefix) => {
-                  return { kind: prefix, prefix: prefix };
-              })
-            : repository.branchTypes;
-    }, [state.useCustomPrefixes, state.customPrefixes, repository.branchTypes]);
 
     const toggleTransitionIssueEnabled = useCallback(() => setTransitionIssueEnabled(!transitionIssueEnabled), [
         transitionIssueEnabled,
@@ -132,18 +123,18 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setRepository]
     );
 
-    const handleBranchTypeChange = useCallback(
-        (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
-            setBranchType(event.target.value);
-        },
-        [setBranchType]
-    );
-
     const handleSourceBranchChange = useCallback(
         (event: React.ChangeEvent, value: Branch) => {
             setSourceBranch(value);
         },
         [setSourceBranch]
+    );
+
+    const handleBranchTypeChange = useCallback(
+        (event: React.ChangeEvent, value: BranchType) => {
+            setBranchType(value);
+        },
+        [setBranchType]
     );
 
     const handleExistingBranchClick = useCallback(
@@ -184,7 +175,7 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const buildBranchName = useCallback(() => {
         const view = {
-            prefix: branchType.prefix.replace(/\W+/g, '-'),
+            prefix: branchType.prefix.replace(/ /g, '-'),
             issueKey: state.issue.key,
             summary: state.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-'),
         };
@@ -231,6 +222,10 @@ const StartWorkPage: React.FunctionComponent = () => {
         upstream,
     ]);
 
+    const handleOpenSettings = useCallback(() => {
+        controller.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
+    }, [controller]);
+
     useEffect(() => {
         if (repository.workspaceRepo.rootUri === '' && state.repoData.length > 0) {
             setRepository(state.repoData?.[0]);
@@ -238,12 +233,8 @@ const StartWorkPage: React.FunctionComponent = () => {
     }, [repository, state.repoData]);
 
     useEffect(() => {
-        setBranchTypes(branchTypesToUse);
-    }, [branchTypesToUse]);
-
-    useEffect(() => {
         setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
-        setBranchType(branchTypes?.[0] || emptyPrefix);
+        setBranchType(repository.branchTypes?.[0] || emptyPrefix);
         setSourceBranch(
             repository.localBranches?.find(
                 (b) => repository.developmentBranch && b.name === repository.developmentBranch
@@ -259,7 +250,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                         !repository.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!))
                 ),
         ]);
-    }, [repository, state.issue, branchTypes]);
+    }, [repository, state.issue]);
 
     useEffect(() => {
         setSubmitState('initial');
@@ -274,6 +265,10 @@ const StartWorkPage: React.FunctionComponent = () => {
             emptyTransition;
         setTransition(inProgressTransitionGuess);
     }, [state.issue]);
+
+    const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
+        return { prefix: prefix, kind: prefix };
+    });
 
     return (
         <StartWorkControllerContext.Provider value={controller}>
@@ -470,37 +465,35 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                         alignItems={'center'}
                                                     >
                                                         <Grid item xs={10}>
-                                                            <TextField
-                                                                select
-                                                                size="small"
-                                                                label={
-                                                                    state.useCustomPrefixes
-                                                                        ? 'Branch Prefix'
-                                                                        : 'Branch type'
+                                                            <Autocomplete
+                                                                id="grouped-demo"
+                                                                options={[
+                                                                    ...repository.branchTypes,
+                                                                    ...convertedCustomPrefixes,
+                                                                ]}
+                                                                groupBy={(option) =>
+                                                                    repository.branchTypes
+                                                                        .map((type) => type.prefix)
+                                                                        .includes(option.prefix)
+                                                                        ? 'Repo Branch Type'
+                                                                        : 'Custom Prefix'
                                                                 }
-                                                                fullWidth
+                                                                getOptionLabel={(option) => option.prefix}
+                                                                renderInput={(params) => (
+                                                                    <TextField
+                                                                        {...params}
+                                                                        label={'Branch Prefix'}
+                                                                        fullWidth
+                                                                    />
+                                                                )}
+                                                                disableClearable
                                                                 value={branchType}
                                                                 onChange={handleBranchTypeChange}
-                                                            >
-                                                                {branchTypes.map((item) => (
-                                                                    //@ts-ignore
-                                                                    <MenuItem key={item.kind} value={item}>
-                                                                        {item.kind}
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </TextField>
+                                                            />
                                                         </Grid>
                                                         <Grid item xs={2}>
                                                             <Tooltip title="Change branch-naming configuration">
-                                                                <Button
-                                                                    color="primary"
-                                                                    onClick={() =>
-                                                                        controller.openSettings(
-                                                                            ConfigSection.Jira,
-                                                                            ConfigSubSection.StartWork
-                                                                        )
-                                                                    }
-                                                                >
+                                                                <Button color="primary" onClick={handleOpenSettings}>
                                                                     <SettingsIcon fontSize="large" />
                                                                 </Button>
                                                             </Tooltip>

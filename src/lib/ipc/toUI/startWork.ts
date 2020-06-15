@@ -24,7 +24,6 @@ export interface StartWorkInitMessage {
     issue: MinimalIssue<DetailedSiteInfo>;
     repoData: RepoData[];
     customTemplate: string;
-    useCustomPrefixes: boolean;
     customPrefixes: string[];
 }
 
