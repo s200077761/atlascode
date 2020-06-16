@@ -13,9 +13,6 @@ const routes = {
     pullRequestDetailsScreen: React.lazy(() =>
         import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage')
     ),
-    createPullRequestScreen: React.lazy(() =>
-        import(/* webpackChunkName: "createPullRequestScreen" */ './pullrequest/CreatePullRequestPage')
-    ),
     viewIssueScreen: React.lazy(() => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage')),
     atlascodeCreateIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage')

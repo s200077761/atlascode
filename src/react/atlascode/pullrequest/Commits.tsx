@@ -8,15 +8,11 @@ import {
     TableRow,
     Theme,
     Tooltip,
-    Typography
+    Typography,
 } from '@material-ui/core';
 import { differenceInWeeks, distanceInWordsToNow, format } from 'date-fns';
 import React, { useMemo } from 'react';
 import { Commit } from '../../../bitbucket/model';
-<<<<<<< HEAD
-=======
-import React from 'react';
->>>>>>> 1954501f... VSCODE-1126: MUI create pull request webview
 
 const useStyles = makeStyles((theme: Theme) => ({
     monospace: {
