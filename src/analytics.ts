@@ -457,6 +457,22 @@ export async function openSettingsButtonEvent(source: string): Promise<UIEvent> 
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function exploreFeaturesButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'exploreFeaturesButton',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
 export async function openWorkbenchRepositoryButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
