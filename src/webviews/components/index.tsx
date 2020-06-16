@@ -21,9 +21,6 @@ const routes = {
     startWorkOnIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage')
     ),
-    createBitbucketIssueScreen: React.lazy(() =>
-        import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')
-    ),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;
