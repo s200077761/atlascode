@@ -17,6 +17,7 @@ import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
+import { HelpTreeViewId } from './constants';
 import { Container } from './container';
 import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
@@ -141,12 +142,13 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Issues,
             })
         ),
-        commands.registerCommand(Commands.ShowExploreSettings, () =>
+        commands.registerCommand(Commands.ShowExploreSettings, () => {
+            Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Explore,
                 subSection: undefined,
-            })
-        ),
+            });
+        }),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
         commands.registerCommand(
