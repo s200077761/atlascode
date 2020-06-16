@@ -4,7 +4,7 @@ import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
-import { BitbucketIssue } from './bitbucket/model';
+import { BitbucketIssue, BitbucketSite } from './bitbucket/model';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
@@ -13,6 +13,7 @@ import { JiraSettingsManager } from './jira/settingsManager';
 import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
+import { CreateBitbucketIssueAction } from './lib/ipc/fromUI/createBitbucketIssue';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
@@ -35,6 +36,8 @@ import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { VSCAnalyticsApi } from './vscAnalyticsApi';
 import { VSCBitbucketIssueActionApi } from './webview/bbIssue/vscBitbucketIssueActionApi';
 import { VSCBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscBitbucketIssueWebviewControllerFactory';
+import { VSCCreateBitbucketIssueActionImpl } from './webview/bbIssue/vscCreateBitbucketIssueActionApi';
+import { VSCCreateBitbucketIssueWebviewControllerFactory } from './webview/bbIssue/vscCreateBitbucketIssueWebviewControllerFactory';
 import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageActionHandler';
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
@@ -190,6 +193,15 @@ export class Container {
                     this._analyticsApi
                 ),
                 this._analyticsApi
+            )),
+            (this._createBitbucketIssueWebviewFactory = new SingleWebview<BitbucketSite, CreateBitbucketIssueAction>(
+                this._context.extensionPath,
+                new VSCCreateBitbucketIssueWebviewControllerFactory(
+                    new VSCCreateBitbucketIssueActionImpl(),
+                    this._commonMessageHandler,
+                    this._analyticsApi
+                ),
+                this._analyticsApi
             ))
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
@@ -285,9 +297,14 @@ export class Container {
         return this._startWorkWebviewFactory;
     }
 
-    private static _bitbucketIssueWebviewFactory: MultiWebview<any, ConfigAction>;
+    private static _bitbucketIssueWebviewFactory: MultiWebview<BitbucketIssue, BitbucketIssueAction>;
     static get bitbucketIssueWebviewFactory() {
         return this._bitbucketIssueWebviewFactory;
+    }
+
+    private static _createBitbucketIssueWebviewFactory: SingleWebview<BitbucketSite, CreateBitbucketIssueAction>;
+    static get createBitbucketIssueWebviewFactory() {
+        return this._createBitbucketIssueWebviewFactory;
     }
 
     private static _createIssueWebview: CreateIssueWebview;
