@@ -22,6 +22,7 @@ import { CommonActionMessageHandler } from '../common/commonActionMessageHandler
 import { MessagePoster, WebviewController } from '../webviewController';
 import { StartWorkActionApi } from './startWorkActionApi';
 export const id: string = 'atlascodeSettingsV2';
+const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
 export class StartWorkWebviewController implements WebviewController<StartWorkIssueMessage> {
     private isRefreshing = false;
@@ -71,6 +72,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                                     return a.kind.localeCompare(b.kind);
                                 }
                             ),
+                            customBranchType,
                         ];
                         const developmentBranch = repoDetails.developmentBranch;
                         const href = repoDetails.url;

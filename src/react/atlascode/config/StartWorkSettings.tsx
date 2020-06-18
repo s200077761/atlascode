@@ -41,10 +41,10 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
 
                     <Typography variant="caption">
                         Branch names will be generated based on the template. Use the keywords <code>prefix</code>,{' '}
-                        <code>issueKey</code>, and <code>summary</code> surrounded by double curly brackets to build a
+                        <code>issueKey</code>, and <code>summary</code> surrounded by triple curly brackets to build a
                         template. Any of the keywords can be excluded if they are not needed, but do not put a
-                        non-keyword in double curly brackets. E.g. <code>{'{{prefix}}/{{issueKey}}-{{summary}}'}</code>{' '}
-                        will generate something of the format{' '}
+                        non-keyword in double curly brackets. E.g.{' '}
+                        <code>{'{{{prefix}}}/{{{issueKey}}}-{{{summary}}}'}</code> will generate something of the format{' '}
                         <code>{'BUGFIX/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}</code>
                     </Typography>
 

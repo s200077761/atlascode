@@ -177,13 +177,16 @@ const StartWorkPage: React.FunctionComponent = () => {
         const view = {
             prefix: branchType.prefix.replace(/ /g, '-'),
             issueKey: state.issue.key,
-            summary: state.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-'),
+            summary: state.issue.summary
+                .substring(0, 50)
+                .trim()
+                .toLowerCase()
+                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                .replace(/\W+/g, '-'),
         };
 
-        //Mustache escapes HTML in {{}} but not in {{{}}}. However, users should not have to worry about this difference.
-        //This replaces all double curly brackets with triple curly brackets.
-        const adjustedTemplate = state.customTemplate.replace(/\{\{([^\}]*)\}\}/g, '{{{$1}}}');
-        const generatedBranchTitle = Mustache.render(adjustedTemplate, view);
+        const generatedBranchTitle = Mustache.render(state.customTemplate, view);
         setLocalBranch(generatedBranchTitle);
     }, [state.issue.key, state.issue.summary, branchType.prefix, state.customTemplate]);
 
@@ -473,12 +476,12 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                                 ]}
                                                                 groupBy={(option) =>
                                                                     repository.branchTypes
-                                                                        .map((type) => type.prefix)
-                                                                        .includes(option.prefix)
+                                                                        .map((type) => type.kind)
+                                                                        .includes(option.kind)
                                                                         ? 'Repo Branch Type'
                                                                         : 'Custom Prefix'
                                                                 }
-                                                                getOptionLabel={(option) => option.prefix}
+                                                                getOptionLabel={(option) => option.kind}
                                                                 renderInput={(params) => (
                                                                     <TextField
                                                                         {...params}
