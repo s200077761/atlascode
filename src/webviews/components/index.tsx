@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './App.css';
-import { ResourceContext } from './context';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -51,9 +50,7 @@ const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
         <React.Suspense fallback={<div className="loading-spinner" />}>
-            <ResourceContext.Provider value={document.baseURI}>
-                <Page />
-            </ResourceContext.Provider>
+            <Page />
         </React.Suspense>
     );
 };
