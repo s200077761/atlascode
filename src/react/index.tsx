@@ -63,7 +63,7 @@ const App = () => {
     }, [themeObserver]);
 
     return (
-        <ResourceContext.Provider value="vscode-resource:">
+        <ResourceContext.Provider value={document.baseURI}>
             <React.Suspense fallback={<AtlLoader />}>
                 <VSCodeStylesContext.Provider value={vscStyles}>
                     <ThemeProvider theme={currentTheme}>

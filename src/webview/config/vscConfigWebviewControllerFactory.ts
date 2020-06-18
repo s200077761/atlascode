@@ -65,7 +65,7 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
         return [controller, disposables];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        return getHtmlForView(extensionPath, id);
+    public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
+        return getHtmlForView(extensionPath, baseUri, cspSource, id);
     }
 }
