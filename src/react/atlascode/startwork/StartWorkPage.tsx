@@ -186,8 +186,12 @@ const StartWorkPage: React.FunctionComponent = () => {
                 .replace(/\W+/g, '-'),
         };
 
-        const generatedBranchTitle = Mustache.render(state.customTemplate, view);
-        setLocalBranch(generatedBranchTitle);
+        try {
+            const generatedBranchTitle = Mustache.render(state.customTemplate, view);
+            setLocalBranch(generatedBranchTitle);
+        } catch {
+            setLocalBranch('Invalid template: please follow the format described above');
+        }
     }, [state.issue.key, state.issue.summary, branchType.prefix, state.customTemplate]);
 
     useEffect(() => {

@@ -1,5 +1,6 @@
 import { InlineTextEditor, InlineTextEditorList } from '@atlassianlabs/guipi-core-components';
-import { Box, Grid, Link, Typography } from '@material-ui/core';
+import { Box, FormHelperText, Grid, Link, Typography } from '@material-ui/core';
+import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useBorderBoxStyles } from '../common/useBorderBoxStyles';
 import { ConfigControllerContext } from './configController';
@@ -13,6 +14,7 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
     const controller = useContext(ConfigControllerContext);
     const boxClass = useBorderBoxStyles();
     const [changes, setChanges] = useState<{ [key: string]: any }>({});
+    const [template, setTemplate] = useState<string>(customTemplate);
 
     const handlePrefixesChange = useCallback((newOptions: string[]) => {
         const changes = Object.create(null);
@@ -21,6 +23,7 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
     }, []);
 
     const handleTemplateChange = useCallback((template: string) => {
+        setTemplate(template);
         const changes = Object.create(null);
         changes['jira.startWorkBranchTemplate.customTemplate'] = template;
         setChanges(changes);
@@ -32,6 +35,23 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
             setChanges({});
         }
     }, [changes, controller]);
+
+    const getTemplatePreview = useCallback(() => {
+        const view = {
+            prefix: 'feature',
+            issueKey: 'VSCODE-1005',
+            summary: 'allow-users-to-configure-the-way-branch-name-is-co',
+        };
+
+        //Mustache doesn't seem to throw errors in most cases when the template is invalid, it just ignores variables that are entered wrong.
+        //However, it is possible to cause it to error if the entire format is messed up, so it's better to catch those cases than to
+        //crash the entire page.
+        try {
+            return `Preview: ${Mustache.render(template, view)}`;
+        } catch {
+            return 'Invalid template: please follow the format described above';
+        }
+    }, [template]);
 
     return (
         <Grid container direction="column">
@@ -45,7 +65,7 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                         template. Any of the keywords can be excluded if they are not needed, but do not put a
                         non-keyword in double curly brackets. E.g.{' '}
                         <code>{'{{{prefix}}}/{{{issueKey}}}-{{{summary}}}'}</code> will generate something of the format{' '}
-                        <code>{'BUGFIX/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}</code>
+                        <code>{'feature/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}</code>
                     </Typography>
 
                     <Box marginTop={1} paddingBottom={2}>
@@ -55,6 +75,7 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                             defaultValue={customTemplate}
                             onSave={handleTemplateChange}
                         />
+                        <FormHelperText id="my-helper-text">{getTemplatePreview()}</FormHelperText>
                     </Box>
                 </Box>
             </Grid>
@@ -63,14 +84,16 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                     <Typography variant="h4">Custom Prefixes</Typography>
 
                     <Typography variant="caption">
-                        <p>For repos with no branching model, custom prefixes can be created here.</p>
-                        <p>
+                        <Typography variant="body2">
+                            For repos with no branching model, custom prefixes can be created here.
+                        </Typography>
+                        <Typography variant="body2">
                             <b>Bitbucket Users:</b> Prefixes are part of your branching model and can be configured on
                             the{' '}
                             <Link href="https://bitbucket.org/blog/introducing-bitbucket-branching-model-support">
                                 Bitbucket Website
                             </Link>
-                        </p>
+                        </Typography>
                     </Typography>
 
                     <Box className={boxClass.box} marginTop={1} paddingBottom={2}>
