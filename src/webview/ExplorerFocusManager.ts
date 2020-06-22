@@ -44,10 +44,12 @@ export class ExplorerFocusManager extends Disposable {
     }
 
     private onDidSitesChange(updateEvent: SitesAvailableUpdateEvent) {
-        if (updateEvent.product.key === ProductJira.key) {
-            vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
-        } else if (updateEvent.product.key === ProductBitbucket.key) {
-            vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
+        if (updateEvent.newSites) {
+            if (updateEvent.product.key === ProductJira.key) {
+                vscode.commands.executeCommand(`${CustomJQLTreeId}.focus`);
+            } else if (updateEvent.product.key === ProductBitbucket.key) {
+                vscode.commands.executeCommand(`${PullRequestTreeViewId}.focus`);
+            }
         }
     }
 }

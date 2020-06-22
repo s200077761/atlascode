@@ -1,4 +1,4 @@
-import { prCommentEvent, prTaskEvent } from 'src/analytics';
+import { prCommentEvent, prTaskEvent, fileCheckoutEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from 'uuid';
 import vscode, { commands, CommentThread, MarkdownString } from 'vscode';
@@ -219,6 +219,9 @@ export class PullRequestCommentController implements vscode.Disposable {
                 if (checkoutSucceeded) {
                     const pathURI = vscode.Uri.parse(`${wsRepo.rootUri}/${path}`);
                     commands.executeCommand('vscode.open', pathURI, { viewColumn: -2 }); // -2 represents displays the new file 'beside' the current editor
+                    fileCheckoutEvent(pr.site.details).then((e) => {
+                        Container.analyticsClient.sendTrackEvent(e);
+                    });
                 }
             })
         );

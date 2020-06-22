@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prCommentEvent, prMergeEvent, prTaskEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
+import { clientForSite } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 import {
     ApprovalStatus,
@@ -51,6 +51,7 @@ import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
+import { addSourceRemoteIfNeeded } from '../views/pullrequest/gitActions';
 
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _pr: PullRequest | undefined = undefined;
@@ -616,31 +617,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return;
         }
 
+        await addSourceRemoteIfNeeded(pr);
+
         const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
-
-        // Add source remote (if necessary) if pull request is from a fork repository
-        if (pr.data.source.repo.url !== '' && pr.data.source.repo.url !== pr.data.destination.repo.url) {
-            const parsed = parseGitUrl(urlForRemote(pr.workspaceRepo.mainSiteRemote.remote));
-            const sourceRemote = {
-                fetchUrl: parseGitUrl(pr.data.source.repo.url).toString(parsed.protocol),
-                name: pr.data.source.repo.fullName,
-                isReadOnly: true,
-            };
-
-            await scm
-                .getConfig(`remote.${sourceRemote.name}.url`)
-                .then(async (url) => {
-                    if (!url) {
-                        await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
-                    }
-                })
-                .catch(async (_) => {
-                    await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
-                });
-
-            await scm.fetch(sourceRemote.name, pr.data.source.branchName);
-        }
-
         await scm.fetch();
         await scm.checkout(branch || pr.data.source.branchName);
         if (scm.state.HEAD?.behind) {
