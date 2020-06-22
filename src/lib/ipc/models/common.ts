@@ -10,7 +10,7 @@ export enum FeedbackType {
 export enum WebViewID {
     BitbucketIssueWebview = 'bitbucketIssueScreen',
     ConfigWebview = 'atlascodeSettings',
-    OnboardingWebview = 'atlascodeOnboarding',
+    OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',
     StartWork = 'startWork',
     PullRequestDetailsWebview = 'pullRequestDetailsScreen',
@@ -21,7 +21,25 @@ export enum KnownLinkID {
     AtlascodeIssues = 'atlascodeIssuesLink',
     AtlascodeDocs = 'atlascodeDocsLink',
     Integrations = 'integrationsLink',
+    GettingStarted = 'gettingStartedLink',
+    ReportAnIssue = 'reportAnIssueLink',
+    WhatIsJQL = 'whatIsJQLLink',
+    Contribute = 'contributeLink',
 }
+
+export const knownLinkIdMap: Map<string, string> = new Map([
+    [KnownLinkID.AtlascodeRepo, 'https://bitbucket.org/atlassianlabs/atlascode'],
+    [KnownLinkID.AtlascodeIssues, 'https://bitbucket.org/atlassianlabs/atlascode/issues'],
+    [KnownLinkID.AtlascodeDocs, 'https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code'],
+    [KnownLinkID.Integrations, 'https://integrations.atlassian.com'],
+    [
+        KnownLinkID.GettingStarted,
+        'https://confluence.atlassian.com/bitbucket/getting-started-with-vs-code-969520759.html',
+    ],
+    [KnownLinkID.ReportAnIssue, 'https://bitbucket.org/atlassianlabs/atlascode/issues?status=new&status=open'],
+    [KnownLinkID.WhatIsJQL, 'https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14'],
+    [KnownLinkID.Contribute, 'https://bitbucket.org/atlassianlabs/atlascode/src/devel/'],
+]);
 
 export interface FeedbackData {
     type: FeedbackType;

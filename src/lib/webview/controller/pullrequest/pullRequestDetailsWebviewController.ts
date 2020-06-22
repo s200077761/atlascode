@@ -5,14 +5,14 @@ import { PullRequestDetailsAction } from '../../../ipc/fromUI/pullRequestDetails
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import { SectionChangeMessage } from '../../../ipc/toUI/config';
-import { OnboardingMessage } from '../../../ipc/toUI/onboarding';
+import { PullRequestDetailsMessage } from '../../../ipc/toUI/pullRequestDetails';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { PullRequestDetailsActionApi } from './pullRequestDetailsActionApi';
 
-export const id: string = 'atlascodeOnboardingV2';
+export const id: string = 'pullRequestDetailsPageV2';
 export const title: string = 'Getting Started';
 
 export class PullRequestDetailsWebviewController implements WebviewController<SectionChangeMessage> {
@@ -44,7 +44,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Se
         console.log(this.pullRequestDetailsUrl);
     }
 
-    private postMessage(message: OnboardingMessage | CommonMessage) {
+    private postMessage(message: PullRequestDetailsMessage | CommonMessage) {
         this.messagePoster(message);
     }
 

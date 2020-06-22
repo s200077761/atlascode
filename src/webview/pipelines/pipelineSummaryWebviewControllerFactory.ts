@@ -52,7 +52,8 @@ export class PipelineSummaryWebviewControllerFactory implements VSCWebviewContro
         return [controller, disposables];
     }
 
-    public webviewHtml(baseUri: Uri, cspSource: string): string {
-        return getHtmlForView(baseUri, cspSource, id);
+    public webviewHtml(extensionPath: string): string {
+        const html = getHtmlForView(extensionPath, id);
+        return html;
     }
 }

@@ -17,7 +17,9 @@ import { createIssue } from './commands/jira/createIssue';
 import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { configuration } from './config/configuration';
+import { HelpTreeViewId } from './constants';
 import { Container } from './container';
+import { knownLinkIdMap } from './lib/ipc/models/common';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { IssueNode } from './views/nodes/issueNode';
@@ -141,23 +143,30 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 subSection: ConfigSubSection.Issues,
             })
         ),
-        commands.registerCommand(Commands.ShowExploreSettings, () =>
+        commands.registerCommand(Commands.ShowExploreSettings, () => {
+            Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Explore,
                 subSection: undefined,
-            })
-        ),
+            });
+        }),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebviewFactory.createOrShow()),
         commands.registerCommand(Commands.ShowPullRequestDetailsPage, () =>
             Container.pullRequestDetailsWebviewFactory.createOrShow()
         ),
-        commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
-            const uri = (await prNode.getTreeItem()).resourceUri;
-            if (uri) {
-                env.openExternal(uri);
+        commands.registerCommand(
+            Commands.ViewInWebBrowser,
+            async (prNode: AbstractBaseNode, source?: string, linkId?: string) => {
+                if (source && linkId && knownLinkIdMap.has(linkId)) {
+                    Container.analyticsApi.fireExternalLinkEvent(source, linkId);
+                }
+                const uri = (await prNode.getTreeItem()).resourceUri;
+                if (uri) {
+                    env.openExternal(uri);
+                }
             }
-        }),
+        ),
         commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
         commands.registerCommand(
             Commands.ShowIssue,

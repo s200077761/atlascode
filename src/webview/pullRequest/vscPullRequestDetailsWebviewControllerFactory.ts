@@ -3,9 +3,11 @@ import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
-import { id } from '../../lib/webview/controller/onboarding/onboardingWebviewController';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
-import { PullRequestDetailsWebviewController } from '../../lib/webview/controller/pullrequest/pullRequestDetailsWebviewController';
+import {
+    id,
+    PullRequestDetailsWebviewController,
+} from '../../lib/webview/controller/pullrequest/pullRequestDetailsWebviewController';
 import { Logger } from '../../logger';
 import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
@@ -59,7 +61,7 @@ export class VSCPullRequestDetailsWebviewControllerFactory
         return [controller, undefined];
     }
 
-    public webviewHtml(baseUri: Uri, cspSource: string): string {
-        return getHtmlForView(baseUri, cspSource, id);
+    public webviewHtml(extensionPath: string): string {
+        return getHtmlForView(extensionPath, id);
     }
 }

@@ -11,7 +11,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
 
     return (
         <PullRequestDetailsControllerContext.Provider value={controller}>
-            <Container maxWidth="xl">{/* Page contents go here */}</Container>
+            <Container maxWidth="xl">
+                <p>PULL REQUEST CONTENTS GO HERE</p>
+            </Container>
         </PullRequestDetailsControllerContext.Provider>
     );
 };

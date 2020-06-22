@@ -9,15 +9,8 @@ import { submitJSDPMF } from '../../feedback/pmfJSDSubmitter';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { CancellationManager } from '../../lib/cancellation';
 import { CommonAction, CommonActionType } from '../../lib/ipc/fromUI/common';
-import { KnownLinkID, numForPMFLevel } from '../../lib/ipc/models/common';
+import { KnownLinkID, knownLinkIdMap, numForPMFLevel } from '../../lib/ipc/models/common';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
-
-const knownLinkIdMap: Map<string, string> = new Map([
-    [KnownLinkID.AtlascodeRepo, 'https://bitbucket.org/atlassianlabs/atlascode'],
-    [KnownLinkID.AtlascodeIssues, 'https://bitbucket.org/atlassianlabs/atlascode/issues'],
-    [KnownLinkID.AtlascodeDocs, 'https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code'],
-    [KnownLinkID.Integrations, 'https://integrations.atlassian.com'],
-]);
 
 export class VSCCommonMessageHandler implements CommonActionMessageHandler {
     private _analytics: AnalyticsApi;
