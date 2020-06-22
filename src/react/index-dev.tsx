@@ -33,6 +33,9 @@ const routes = {
     pipelineSummaryV2: React.lazy(() =>
         import(/* webpackChunkName: "pipelineSummaryV2" */ './atlascode/pipelines/PipelineSummaryPage')
     ),
+    pullRequestDetailsPageV2: React.lazy(() =>
+        import(/* webpackChunkName: "pullRequestDetailsPageV2" */ './atlascode/pullRequest/PullRequestDetailsPage')
+    ),
 };
 
 const ports = {
@@ -42,6 +45,7 @@ const ports = {
     welcomePageV2: UIWSPort.WelcomePage,
     startWorkPageV2: UIWSPort.StartWork,
     pipelineSummaryV2: UIWSPort.PipelineSummary,
+    pullRequestDetailsPageV2: UIWSPort.PullRequestDetailsPage,
 };
 
 class VsCodeApi {

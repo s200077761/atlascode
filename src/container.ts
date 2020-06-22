@@ -15,6 +15,7 @@ import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
+import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
@@ -24,7 +25,7 @@ import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, PULLREQUESTDETAILS_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -44,6 +45,8 @@ import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingAction
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
 import { PipelineSummaryActionImplementation } from './webview/pipelines/pipelineSummaryActionImplementation';
 import { PipelineSummaryWebviewControllerFactory } from './webview/pipelines/pipelineSummaryWebviewControllerFactory';
+import { VSCPullRequestDetailsActionApi } from './webview/pullRequest/vscPullRequestDetailsActionApi';
+import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullRequest/vscPullRequestDetailsWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
@@ -146,10 +149,22 @@ export class Container {
             this._analyticsApi
         );
 
+        const pullRequestDetailsV2ViewFactory = new SingleWebview<any, PullRequestDetailsAction>(
+            context.extensionPath,
+            new VSCPullRequestDetailsWebviewControllerFactory(
+                new VSCPullRequestDetailsActionApi(this._analyticsApi),
+                this._commonMessageHandler,
+                this._analyticsApi,
+                PULLREQUESTDETAILS_URL
+            ),
+            this.analyticsApi
+        );
+
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
+        context.subscriptions.push((this._pullRequestDetailsWebviewFactory = pullRequestDetailsV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,
@@ -268,6 +283,11 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
+    }
+
+    private static _pullRequestDetailsWebviewFactory: SingleWebview<any, PullRequestDetailsAction>;
+    static get pullRequestDetailsWebviewFactory() {
+        return this._pullRequestDetailsWebviewFactory;
     }
 
     private static _pipelinesSummaryWebview: MultiWebview<Pipeline, PipelineSummaryAction>;

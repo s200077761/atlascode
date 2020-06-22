@@ -33,6 +33,9 @@ const routes = {
     pipelineSummaryV2: React.lazy(() =>
         import(/* webpackChunkName: "pipelineSummaryV2" */ './atlascode/pipelines/PipelineSummaryPage')
     ),
+    pullRequestDetailsPageV2: React.lazy(() =>
+        import(/* webpackChunkName: "pullRequestDetailsPageV2" */ './atlascode/pullRequest/PullRequestDetailsPage')
+    ),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

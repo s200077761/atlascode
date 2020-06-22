@@ -71,6 +71,8 @@
         "mui:bitbucketIssuePage:dark": "cross-env PAGETSX=\"bbissue/BitbucketIssuePage.tsx\" VIEW=\"bitbucketIssuePageV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
         "mui:welcomePage:light": "cross-env  PAGETSX=\"welcome/Welcome.tsx\" VIEW=\"welcomePageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
         "mui:startWorkPage:light": "cross-env PAGETSX=\"startwork/StartWorkPage.tsx\" VIEW=\"startWorkPageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
+        "mui:pullRequestDetailsPage:dark": "cross-env  PAGETSX=\"pullrequest/PullRequestDetailsPage.tsx\" VIEW=\"pullRequestDetailsPageV2\" THEME=\"dark\" webpack-dev-server --open --config webpack.mui.webview.js",
+        "mui:pullRequestDetailsPage:light": "cross-env PAGETSX=\"pullrequest/PullRequestDetailsPage.tsx\" VIEW=\"pullRequestDetailsPageV2\" THEME=\"light\" webpack-dev-server --open --config webpack.mui.webview.js",
         "webview:viewJiraIssue:dark": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
         "webview:viewJiraIssue:light": "cross-env PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.js",
         "webview:viewPullRequestScreen:dark": "cross-env PAGETSX=\"pullrequest/PullRequestPage.tsx\" VIEW=\"pullRequestDetailsScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.js",
@@ -265,6 +267,11 @@
             {
                 "command": "atlascode.showOnboardingPage",
                 "title": "Open Onboarding Page",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showPullRequestDetailsPage",
+                "title": "Open PR Details Page",
                 "category": "Atlassian"
             },
             {

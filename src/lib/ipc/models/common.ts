@@ -13,6 +13,7 @@ export enum WebViewID {
     OnboardingWebview = 'atlascodeOnboarding',
     WelcomeWebview = 'atlascodeWelcomeScreen',
     StartWork = 'startWork',
+    PullRequestDetailsWebview = 'pullRequestDetailsScreen',
 }
 
 export enum KnownLinkID {
