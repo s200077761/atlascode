@@ -885,7 +885,7 @@
                 },
                 "atlascode.jira.startWorkBranchTemplate.customTemplate": {
                     "type": "string",
-                    "default": "{{{prefix}}}/{{{issueKey}}}-{{{summary}}}",
+                    "default": "{{{prefix}}}{{{issueKey}}}-{{{summary}}}",
                     "description": "The format which will be used to auto-generate branch names",
                     "scope": "window"
                 },

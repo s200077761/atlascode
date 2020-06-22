@@ -83,6 +83,9 @@ const StartWorkPage: React.FunctionComponent = () => {
     const vscStyles = useContext(VSCodeStylesContext);
     const classes = useStyles(vscStyles);
     const [state, controller] = useStartWorkController();
+    const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
+        return { prefix: prefix, kind: prefix };
+    });
 
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
     const [branchSetupEnabled, setbranchSetupEnabled] = useState(true);
@@ -150,13 +153,22 @@ const StartWorkPage: React.FunctionComponent = () => {
                     ? sourceBranchOption.name!
                     : sourceBranchOption.name!.substring(sourceBranchOption.remote!.length + 1);
 
-            const bt = repository.branchTypes.find((branchType) => existingBranchName.startsWith(branchType.prefix))!;
+            const bt = [...repository.branchTypes, ...convertedCustomPrefixes].find((branchType) =>
+                existingBranchName.startsWith(branchType.prefix)
+            )!;
 
             setBranchType(bt);
-            setLocalBranch(updatedLocalBranch.substring(bt.prefix.length));
+
+            //HACK: without this wait, the update to local branch gets overwritten by buildBranchName since that function is called
+            //every time branchType is changed. This is a quick fix, but a better solution would be to create two state variables
+            //for prefixes: one for the autocomplete and the other the "real" prefix. Then, set the "real" prefix to "ExistingBranch" here
+            //and don't call buildBranchName if the "real" prefix is "ExistingBranch".
+            setTimeout(() => {
+                setLocalBranch(updatedLocalBranch.substring(bt.prefix.length));
+            }, 100);
             setSourceBranch(sourceBranchOption);
         },
-        [repository]
+        [repository, convertedCustomPrefixes]
     );
 
     const handleLocalBranchChange = useCallback(
@@ -272,10 +284,6 @@ const StartWorkPage: React.FunctionComponent = () => {
             emptyTransition;
         setTransition(inProgressTransitionGuess);
     }, [state.issue]);
-
-    const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
-        return { prefix: prefix, kind: prefix };
-    });
 
     return (
         <StartWorkControllerContext.Provider value={controller}>
