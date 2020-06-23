@@ -1,10 +1,10 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { PullRequest } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction } from '../../../ipc/fromUI/pullRequestDetails';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
-import { SectionChangeMessage } from '../../../ipc/toUI/config';
 import { PullRequestDetailsMessage } from '../../../ipc/toUI/pullRequestDetails';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
@@ -12,10 +12,10 @@ import { CommonActionMessageHandler } from '../common/commonActionMessageHandler
 import { MessagePoster, WebviewController } from '../webviewController';
 import { PullRequestDetailsActionApi } from './pullRequestDetailsActionApi';
 
-export const id: string = 'pullRequestDetailsPageV2';
-export const title: string = 'Getting Started';
+export const title: string = 'Pull Request'; //TODO: Needs the pull request ID as well...
 
-export class PullRequestDetailsWebviewController implements WebviewController<SectionChangeMessage> {
+export class PullRequestDetailsWebviewController implements WebviewController<PullRequest> {
+    private pr: PullRequest;
     private messagePoster: MessagePoster;
     private api: PullRequestDetailsActionApi;
     private logger: Logger;
@@ -24,18 +24,18 @@ export class PullRequestDetailsWebviewController implements WebviewController<Se
     private commonHandler: CommonActionMessageHandler;
 
     constructor(
+        pr: PullRequest,
         messagePoster: MessagePoster,
         api: PullRequestDetailsActionApi,
         commonHandler: CommonActionMessageHandler,
         logger: Logger,
-        analytics: AnalyticsApi,
-        pullRequestDetailsUrl: string
+        analytics: AnalyticsApi
     ) {
+        this.pr = pr;
         this.messagePoster = messagePoster;
         this.api = api;
         this.logger = logger;
         this.analytics = analytics;
-        this.pullRequestDetailsUrl = pullRequestDetailsUrl;
         this.commonHandler = commonHandler;
 
         //Temporarily logging these objects so compiler doesn't complain they're unused
@@ -49,7 +49,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Se
     }
 
     public title(): string {
-        return title;
+        return `Pull Request ${this.pr.data.id}`;
     }
 
     public screenDetails() {

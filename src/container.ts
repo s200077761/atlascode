@@ -4,7 +4,7 @@ import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
-import { BitbucketIssue } from './bitbucket/model';
+import { BitbucketIssue, PullRequest } from './bitbucket/model';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
@@ -25,7 +25,7 @@ import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
 import { Pipeline } from './pipelines/model';
 import { SiteManager } from './siteManager';
-import { AtlascodeUriHandler, ONBOARDING_URL, PULLREQUESTDETAILS_URL, SETTINGS_URL } from './uriHandler';
+import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { OnlineDetector } from './util/online';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
@@ -149,22 +149,10 @@ export class Container {
             this._analyticsApi
         );
 
-        const pullRequestDetailsV2ViewFactory = new SingleWebview<any, PullRequestDetailsAction>(
-            context.extensionPath,
-            new VSCPullRequestDetailsWebviewControllerFactory(
-                new VSCPullRequestDetailsActionApi(this._analyticsApi),
-                this._commonMessageHandler,
-                this._analyticsApi,
-                PULLREQUESTDETAILS_URL
-            ),
-            this.analyticsApi
-        );
-
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
-        context.subscriptions.push((this._pullRequestDetailsWebviewFactory = pullRequestDetailsV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,
@@ -201,6 +189,17 @@ export class Container {
                 this._context.extensionPath,
                 new VSCBitbucketIssueWebviewControllerFactory(
                     new VSCBitbucketIssueActionApi(this._cancellationManager),
+                    this._commonMessageHandler,
+                    this._analyticsApi
+                ),
+                this._analyticsApi
+            ))
+        );
+        this._context.subscriptions.push(
+            (this._pullRequestDetailsWebviewFactory = new MultiWebview<PullRequest, PullRequestDetailsAction>(
+                this._context.extensionPath,
+                new VSCPullRequestDetailsWebviewControllerFactory(
+                    new VSCPullRequestDetailsActionApi(),
                     this._commonMessageHandler,
                     this._analyticsApi
                 ),
@@ -285,7 +284,7 @@ export class Container {
         return this._onboardingWebviewFactory;
     }
 
-    private static _pullRequestDetailsWebviewFactory: SingleWebview<any, PullRequestDetailsAction>;
+    private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
     static get pullRequestDetailsWebviewFactory() {
         return this._pullRequestDetailsWebviewFactory;
     }

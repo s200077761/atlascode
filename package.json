@@ -270,11 +270,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.showPullRequestDetailsPage",
-                "title": "Open PR Details Page",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
                 "category": "Atlassian"

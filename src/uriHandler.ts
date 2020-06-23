@@ -11,7 +11,6 @@ const ExtensionId = 'atlassian.atlascode';
 
 export const SETTINGS_URL = `${env.uriScheme}://${ExtensionId}/openSettings`;
 export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`;
-export const PULLREQUESTDETAILS_URL = `${env.uriScheme}://${ExtensionId}/openPullRequestDetails`;
 
 /**
  * AtlascodeUriHandler handles URIs of the format <scheme>://atlassian.atlascode/<path and query params>
@@ -41,8 +40,6 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             Container.settingsWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openOnboarding')) {
             Container.onboardingWebviewFactory.createOrShow();
-        } else if (uri.path.endsWith('openPullRequestDetails')) {
-            Container.pullRequestDetailsWebviewFactory.createOrShow();
         } else if (uri.path.endsWith('openPullRequest')) {
             await this.handlePullRequestUri(uri);
         } else if (uri.path.endsWith('cloneRepository')) {

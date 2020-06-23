@@ -1,39 +1,29 @@
 import { Disposable, Uri } from 'vscode';
+import { PullRequest } from '../../bitbucket/model';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
-import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
-import {
-    id,
-    PullRequestDetailsWebviewController,
-} from '../../lib/webview/controller/pullrequest/pullRequestDetailsWebviewController';
+import { PullRequestDetailsWebviewController } from '../../lib/webview/controller/pullrequest/pullRequestDetailsWebviewController';
 import { Logger } from '../../logger';
 import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
-export class VSCPullRequestDetailsWebviewControllerFactory
-    implements VSCWebviewControllerFactory<SectionChangeMessage> {
+export const id: string = 'pullRequestDetailsPageV2';
+export class VSCPullRequestDetailsWebviewControllerFactory implements VSCWebviewControllerFactory<{}> {
     private api: PullRequestDetailsActionApi;
     private commonHandler: CommonActionMessageHandler;
     private analytics: AnalyticsApi;
-    private pullRequestDetailsUrl: string;
 
-    constructor(
-        api: PullRequestDetailsActionApi,
-        commonHandler: CommonActionMessageHandler,
-        analytics: AnalyticsApi,
-        prDetailsUrl: string
-    ) {
+    constructor(api: PullRequestDetailsActionApi, commonHandler: CommonActionMessageHandler, analytics: AnalyticsApi) {
         this.api = api;
         this.commonHandler = commonHandler;
         this.analytics = analytics;
-        this.pullRequestDetailsUrl = prDetailsUrl;
     }
 
     public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
-        return Resources.icons.get(iconSet.BITBUCKETICON);
+        return Resources.icons.get(iconSet.PULLREQUEST);
     }
 
     public uiWebsocketPort(): number {
@@ -47,15 +37,19 @@ export class VSCPullRequestDetailsWebviewControllerFactory
     public createController(postMessage: PostMessageFunc): PullRequestDetailsWebviewController;
 
     public createController(
-        postMessage: PostMessageFunc
+        postMessage: PostMessageFunc,
+        factoryData?: PullRequest
     ): PullRequestDetailsWebviewController | [PullRequestDetailsWebviewController, Disposable | undefined] {
+        if (!factoryData) {
+            throw new Error('Error creating Pull Request webview');
+        }
         const controller = new PullRequestDetailsWebviewController(
+            factoryData,
             postMessage,
             this.api,
             this.commonHandler,
             Logger.Instance,
-            this.analytics,
-            this.pullRequestDetailsUrl
+            this.analytics
         );
 
         return [controller, undefined];
