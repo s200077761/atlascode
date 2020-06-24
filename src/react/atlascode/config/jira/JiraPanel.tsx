@@ -4,6 +4,7 @@ import { ProductJira } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
+import { StartWorkPanel } from '../../common/StartWorkPanel';
 import { StatusBarPanel } from '../../common/StatusBarPanel';
 import { AuthPanel } from '../auth/AuthPanel';
 import { JiraExplorerPanel } from './subpanels/JiraExplorerPanel';
@@ -80,6 +81,15 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 onSubsectionChange={onSubsectionChange}
                                 enabled={config[`${ConfigSection.Jira}.todoIssues.enabled`]}
                                 triggers={config[`${ConfigSection.Jira}.todoIssues.triggers`]}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <StartWorkPanel
+                                visible={visible}
+                                expanded={selectedSubSections.includes(ConfigSubSection.StartWork)}
+                                onSubsectionChange={onSubsectionChange}
+                                customPrefixes={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customPrefixes`]}
+                                customTemplate={config[`${ConfigSection.Jira}.startWorkBranchTemplate.customTemplate`]}
                             />
                         </Grid>
                         <Grid item>

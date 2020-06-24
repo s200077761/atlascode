@@ -33,6 +33,7 @@ export enum ConfigSubSection {
     Debug = 'debug',
     JiraFeatures = 'jiraFeatures',
     BitbucketFeatures = 'bitbucketFeatures',
+    StartWork = 'startWork',
 }
 
 export function configTargetForString(target: string): ConfigTarget {
