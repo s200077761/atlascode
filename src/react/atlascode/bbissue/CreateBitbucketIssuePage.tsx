@@ -3,18 +3,18 @@ import {
     AppBar,
     Box,
     Button,
+    CircularProgress,
     Container,
     Grid,
+    IconButton,
     makeStyles,
     MenuItem,
     Paper,
     TextField,
     Theme,
     Toolbar,
-    Typography,
-    IconButton,
     Tooltip,
-    CircularProgress,
+    Typography,
     useTheme,
 } from '@material-ui/core';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
@@ -27,7 +27,6 @@ import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import LaunchIcon from '@material-ui/icons/Launch';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import React, { useCallback, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
 import { emptyBitbucketSite } from '../../../bitbucket/model';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
@@ -75,45 +74,58 @@ const useStyles = makeStyles(
         } as const)
 );
 
-interface FormData {
-    title: string;
-    description: string;
-    kind: string;
-    priority: string;
-}
-
-const defaultFormData = {
-    title: '',
-    description: '',
-    kind: 'enhancement',
-    priority: 'minor',
-};
-
 const CreateBitbucketIssuePage: React.FunctionComponent = () => {
     const theme = useTheme<Theme>();
     const classes = useStyles();
     const [state, controller] = useCreateBitbucketIssueController();
 
-    const { control, handleSubmit, errors } = useForm<FormData>({ defaultValues: defaultFormData, mode: 'onBlur' });
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [kind, setKind] = useState<'bug' | 'enhancement' | 'proposal' | 'task'>('enhancement');
+    const [priority, setPriority] = useState<'trivial' | 'minor' | 'major' | 'critial' | 'blocker'>('minor');
     const [submitState, setSubmitState] = useState<'initial' | 'submitting'>('initial');
 
-    const submitForm = useCallback(
-        async (formData: FormData) => {
-            console.log(formData);
-            try {
-                setSubmitState('submitting');
-                await controller.submit({
-                    site: state.site,
-                    ...formData,
-                });
-            } finally {
-                // Resetting back to inital state both in error and success case
-                // (ok to do this for success case as the webview is hidden automatically if the request succeeds)
-                setSubmitState('initial');
-            }
+    const handleTitleChange = useCallback(
+        (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
+            setTitle(event.target.value);
         },
-        [controller, state.site]
+        [setTitle]
     );
+    const handleDescriptionChange = useCallback(
+        (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
+            setDescription(event.target.value);
+        },
+        [setDescription]
+    );
+    const handleKindChange = useCallback(
+        (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
+            setKind(event.target.value);
+        },
+        [setKind]
+    );
+    const handlePriorityChange = useCallback(
+        (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
+            setPriority(event.target.value);
+        },
+        [setPriority]
+    );
+
+    const submitForm = useCallback(async () => {
+        try {
+            setSubmitState('submitting');
+            await controller.submit({
+                site: state.site,
+                title,
+                description,
+                kind,
+                priority,
+            });
+        } finally {
+            // Resetting back to inital state both in error and success case
+            // (ok to do this for success case as the webview is hidden automatically if the request succeeds)
+            setSubmitState('initial');
+        }
+    }, [controller, state.site, title, description, kind, priority]);
 
     return (
         <CreateBitbucketIssueControllerContext.Provider value={controller}>
@@ -140,77 +152,72 @@ const CreateBitbucketIssuePage: React.FunctionComponent = () => {
                             <Box margin={2}>
                                 <ErrorDisplay />
                                 <PMFDisplay postMessageFunc={controller.postMessage} />
-                                <form onSubmit={handleSubmit(submitForm)}>
+                                <form onSubmit={submitForm}>
                                     <Grid container spacing={1} direction="column">
                                         <Grid item xs={12}>
-                                            <Controller
-                                                as={
-                                                    <TextField
-                                                        required
-                                                        fullWidth
-                                                        size="small"
-                                                        error={!!errors.title}
-                                                        helperText={errors.title?.message}
-                                                    />
-                                                }
+                                            <TextField
+                                                required
+                                                fullWidth
+                                                size="small"
                                                 label="Title"
                                                 name="title"
-                                                control={control}
-                                                rules={{
-                                                    required: { message: 'Title is required', value: true },
-                                                    minLength: 1,
-                                                }}
+                                                value={title}
+                                                onChange={handleTitleChange}
                                             />
                                         </Grid>
                                         <Grid item xs={12}>
-                                            <Controller
-                                                as={<TextField fullWidth multiline size="small" rows={4} />}
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                size="small"
+                                                rows={4}
+                                                value={description}
+                                                onChange={handleDescriptionChange}
                                                 label="Description"
                                                 name="description"
-                                                control={control}
                                             />
                                         </Grid>
                                         <Grid item xs={12}>
-                                            <Controller
-                                                as={
-                                                    <TextField select size="small">
-                                                        {Object.getOwnPropertyNames(typeIcon).map((name) => (
-                                                            <MenuItem key={name} value={name}>
-                                                                <Grid container spacing={1} direction="row">
-                                                                    <Grid item>{typeIcon[name]}</Grid>
-                                                                    <Grid item>
-                                                                        <Typography>{name}</Typography>
-                                                                    </Grid>
-                                                                </Grid>
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                }
+                                            <TextField
+                                                select
+                                                size="small"
                                                 label="Kind"
                                                 name="kind"
-                                                control={control}
-                                            />
+                                                value={kind}
+                                                onChange={handleKindChange}
+                                            >
+                                                {Object.getOwnPropertyNames(typeIcon).map((name) => (
+                                                    <MenuItem key={name} value={name}>
+                                                        <Grid container spacing={1} direction="row">
+                                                            <Grid item>{typeIcon[name]}</Grid>
+                                                            <Grid item>
+                                                                <Typography>{name}</Typography>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
                                         </Grid>
                                         <Grid item xs={12}>
-                                            <Controller
-                                                as={
-                                                    <TextField select size="small">
-                                                        {Object.getOwnPropertyNames(priorityIcon).map((name) => (
-                                                            <MenuItem key={name} value={name}>
-                                                                <Grid container spacing={1} direction="row">
-                                                                    <Grid item>{priorityIcon[name]}</Grid>
-                                                                    <Grid item>
-                                                                        <Typography>{name}</Typography>
-                                                                    </Grid>
-                                                                </Grid>
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                }
+                                            <TextField
+                                                select
+                                                size="small"
                                                 label="Priority"
                                                 name="priority"
-                                                control={control}
-                                            />
+                                                value={priority}
+                                                onChange={handlePriorityChange}
+                                            >
+                                                {Object.getOwnPropertyNames(priorityIcon).map((name) => (
+                                                    <MenuItem key={name} value={name}>
+                                                        <Grid container spacing={1} direction="row">
+                                                            <Grid item>{priorityIcon[name]}</Grid>
+                                                            <Grid item>
+                                                                <Typography>{name}</Typography>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
                                         </Grid>
                                         <Grid item xs={12}>
                                             <Button

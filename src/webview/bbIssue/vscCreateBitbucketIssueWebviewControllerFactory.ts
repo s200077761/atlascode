@@ -50,7 +50,7 @@ export class VSCCreateBitbucketIssueWebviewControllerFactory implements VSCWebvi
         return [controller, undefined];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        return getHtmlForView(extensionPath, 'createBitbucketIssuePageV2');
+    public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
+        return getHtmlForView(extensionPath, baseUri, cspSource, 'createBitbucketIssuePageV2');
     }
 }
