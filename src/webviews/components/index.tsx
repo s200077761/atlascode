@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './App.css';
-import { ResourceContext } from './context';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -36,7 +35,7 @@ window.addEventListener(
         const targetEL = ee.target as HTMLElement;
         if (ee && targetEL && targetEL.nodeName === 'IMG') {
             const origianlSrc = targetEL.getAttribute('src');
-            targetEL.setAttribute('src', 'vscode-resource:images/no-image.svg');
+            targetEL.setAttribute('src', 'images/no-image.svg');
             targetEL.setAttribute('alt', `Unable to load image: ${origianlSrc}`);
             targetEL.setAttribute('title', `Unable to load image: ${origianlSrc}`);
             targetEL.setAttribute('class', 'ac-broken-img');
@@ -51,9 +50,7 @@ const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
         <React.Suspense fallback={<div className="loading-spinner" />}>
-            <ResourceContext.Provider value="vscode-resource:">
-                <Page />
-            </ResourceContext.Provider>
+            <Page />
         </React.Suspense>
     );
 };

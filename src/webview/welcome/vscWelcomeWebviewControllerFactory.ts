@@ -42,7 +42,7 @@ export class VSCWelcomeWebviewControllerFactory implements VSCWebviewControllerF
         return [controller, undefined];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        return getHtmlForView(extensionPath, 'welcomePageV2');
+    public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
+        return getHtmlForView(extensionPath, baseUri, cspSource, 'welcomePageV2');
     }
 }

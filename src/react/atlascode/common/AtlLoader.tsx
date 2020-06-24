@@ -1,6 +1,5 @@
+import React from 'react';
 import { Container, Grid, makeStyles, Typography } from '@material-ui/core';
-import React, { useContext } from 'react';
-import { ResourceContext } from '../../resourceContext';
 
 const styles = {
     root: {
@@ -23,15 +22,13 @@ const styles = {
 const useStyles = makeStyles(styles);
 
 export const AtlLoader: React.FunctionComponent = () => {
-    const scheme: string = useContext(ResourceContext);
-
     const classes = useStyles();
 
     return (
         <Container maxWidth="xl">
             <Grid container direction="column" justify="center" alignItems="center">
                 <Grid item>
-                    <img className={classes.root} src={`${scheme}images/atlassian-icon.svg`} />
+                    <img className={classes.root} src={'images/atlassian-icon.svg'} />
                 </Grid>
                 <Grid item>
                     <Typography variant="subtitle1">Loading data...</Typography>

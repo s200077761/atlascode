@@ -23,7 +23,6 @@ import React, { useContext } from 'react';
 import { uid } from 'react-uid';
 import { DetailedSiteInfo, Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { ResourceContext } from '../../../resourceContext';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
 
@@ -50,10 +49,9 @@ function generateListItems(
     sites: SiteWithAuthInfo[],
     logout: (site: DetailedSiteInfo) => void,
     edit: (site: SiteWithAuthInfo) => void,
-    scheme: string,
     iconClassName: string
 ): JSX.Element[] {
-    const fallbackImg = `${scheme}images/${product.key}-icon.svg`;
+    const fallbackImg = `images/${product.key}-icon.svg`;
 
     if (sites.length < 1) {
         return [
@@ -101,7 +99,6 @@ function generateListItems(
 }
 
 export const SiteList: React.FunctionComponent<SiteListProps> = ({ sites, product, editServer }) => {
-    const scheme: string = useContext(ResourceContext);
     const controller = useContext(ConfigControllerContext);
     const borderBox = useBorderBoxStyles();
 
@@ -109,7 +106,7 @@ export const SiteList: React.FunctionComponent<SiteListProps> = ({ sites, produc
 
     return (
         <div className={clsx(classes.root, borderBox.box)}>
-            <List>{generateListItems(product, sites, controller.logout, editServer, scheme, classes.iconStyle)}</List>
+            <List>{generateListItems(product, sites, controller.logout, editServer, classes.iconStyle)}</List>
         </div>
     );
 };

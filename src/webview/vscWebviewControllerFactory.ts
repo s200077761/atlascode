@@ -11,7 +11,7 @@ export interface VSCWebviewControllerFactory<FD> {
               dark: Uri;
           }
         | undefined;
-    webviewHtml(extensionPath: string): string;
+    webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string;
 
     createController(postMessage: PostMessageFunc, factoryData?: FD): [WebviewController<FD>, Disposable | undefined];
     createController(postMessage: PostMessageFunc, factoryData?: FD): WebviewController<FD>;

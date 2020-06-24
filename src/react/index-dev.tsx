@@ -7,7 +7,6 @@ import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
 import { AtlLoader } from './atlascode/common/AtlLoader';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
-import { ResourceContext } from './resourceContext';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 
@@ -100,21 +99,19 @@ const App = (): JSX.Element => {
     }, [themeObserver]);
 
     return (
-        <ResourceContext.Provider value="http://localhost:8080/">
-            <React.Suspense fallback={<AtlLoader />}>
-                <VSCodeStylesContext.Provider value={vscStyles}>
-                    <ThemeProvider theme={currentTheme}>
-                        <ErrorControllerContext.Provider value={errorController}>
-                            <ErrorStateContext.Provider value={errorState}>
-                                <CssBaseline />
-                                <AtlGlobalStyles />
-                                <Page />
-                            </ErrorStateContext.Provider>
-                        </ErrorControllerContext.Provider>
-                    </ThemeProvider>
-                </VSCodeStylesContext.Provider>
-            </React.Suspense>
-        </ResourceContext.Provider>
+        <React.Suspense fallback={<AtlLoader />}>
+            <VSCodeStylesContext.Provider value={vscStyles}>
+                <ThemeProvider theme={currentTheme}>
+                    <ErrorControllerContext.Provider value={errorController}>
+                        <ErrorStateContext.Provider value={errorState}>
+                            <CssBaseline />
+                            <AtlGlobalStyles />
+                            <Page />
+                        </ErrorStateContext.Provider>
+                    </ErrorControllerContext.Provider>
+                </ThemeProvider>
+            </VSCodeStylesContext.Provider>
+        </React.Suspense>
     );
 };
 
