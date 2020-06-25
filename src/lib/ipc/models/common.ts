@@ -9,6 +9,7 @@ export enum FeedbackType {
 //These IDs uniquely identify webviews for viewScreenEvents
 export enum WebViewID {
     BitbucketIssueWebview = 'bitbucketIssueScreen',
+    CreateBitbucketIssueWebview = 'createBitbucketIssueScreen',
     ConfigWebview = 'atlascodeSettings',
     OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',

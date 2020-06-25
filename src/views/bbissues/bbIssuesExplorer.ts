@@ -1,15 +1,17 @@
-import { ConfigurationChangeEvent, commands } from 'vscode';
-import { Container } from '../../container';
-import { configuration } from '../../config/configuration';
-import { setCommandContext, CommandContext, BitbucketIssuesTreeViewId } from '../../constants';
-import { BitbucketContext } from '../../bitbucket/bbContext';
-import { Commands } from '../../commands';
-import { BitbucketIssuesDataProvider } from '../bitbucketIssuesDataProvider';
-import { BitbucketIssuesMonitor } from './bbIssuesMonitor';
-import { BitbucketExplorer } from '../BitbucketExplorer';
-import { BaseTreeDataProvider } from '../Explorer';
+import path from 'path';
+import { commands, window, ConfigurationChangeEvent, QuickPickItem } from 'vscode';
 import { startIssueCreationEvent } from '../../analytics';
 import { ProductBitbucket } from '../../atlclients/authInfo';
+import { BitbucketContext } from '../../bitbucket/bbContext';
+import { Commands } from '../../commands';
+import { configuration } from '../../config/configuration';
+import { BitbucketIssuesTreeViewId, CommandContext, setCommandContext } from '../../constants';
+import { Container } from '../../container';
+import { BitbucketExplorer } from '../BitbucketExplorer';
+import { BitbucketIssuesDataProvider } from '../bitbucketIssuesDataProvider';
+import { BaseTreeDataProvider } from '../Explorer';
+import { BitbucketIssuesMonitor } from './bbIssuesMonitor';
+import { BitbucketSite } from '../../bitbucket/model';
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {
@@ -18,13 +20,40 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
         Container.context.subscriptions.push(
             commands.registerCommand(Commands.BitbucketIssuesRefresh, this.refresh, this),
             commands.registerCommand(Commands.CreateBitbucketIssue, (source?: string) => {
-                Container.createBitbucketIssueWebview.createOrShow();
+                this.pickRepoAndShowCreateIssueOptions();
+
                 startIssueCreationEvent(source || 'explorer', ProductBitbucket).then((e) => {
                     Container.analyticsClient.sendTrackEvent(e);
                 });
             }),
             this.ctx.onDidChangeBitbucketContext(() => this.updateExplorerState())
         );
+    }
+
+    private pickRepoAndShowCreateIssueOptions(): void {
+        const options = Container.bitbucketContext
+            .getBitbucketCloudRepositories()
+            .map((repo) => ({ label: path.basename(repo.rootUri), value: repo.mainSiteRemote.site! }));
+
+        if (options.length === 1) {
+            Container.createBitbucketIssueWebviewFactory.createOrShow(options[0].value);
+            return;
+        }
+        const picker = window.createQuickPick<QuickPickItem & { value: BitbucketSite }>();
+        picker.items = options;
+        picker.title = 'Create Bitbucket Issue';
+
+        picker.placeholder =
+            options.length > 0 ? 'Pick a repository' : 'No Bitbucket repositories found in this workspace';
+
+        picker.onDidAccept(() => {
+            if (picker.selectedItems.length > 0) {
+                Container.createBitbucketIssueWebviewFactory.createOrShow(picker.selectedItems[0].value);
+            }
+            picker.hide();
+        });
+
+        picker.show();
     }
 
     viewId(): string {
