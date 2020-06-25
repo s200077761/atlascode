@@ -22,7 +22,6 @@ import { CommonActionMessageHandler } from '../common/commonActionMessageHandler
 import { MessagePoster, WebviewController } from '../webviewController';
 import { StartWorkActionApi } from './startWorkActionApi';
 export const id: string = 'atlascodeSettingsV2';
-
 const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
 export class StartWorkWebviewController implements WebviewController<StartWorkIssueMessage> {
@@ -98,6 +97,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 type: StartWorkMessageType.Init,
                 ...this.initData!,
                 repoData: repoData,
+                ...this.api.getStartWorkConfig(),
             });
         } catch (e) {
             let err = new Error(`error updating start work page: ${e}`);
@@ -147,6 +147,11 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             }
             case StartWorkActionType.ClosePage: {
                 this.api.closePage();
+                break;
+            }
+            case StartWorkActionType.OpenSettings: {
+                this.api.openSettings(msg.section, msg.subsection);
+                break;
             }
             case CommonActionType.Refresh: {
                 try {

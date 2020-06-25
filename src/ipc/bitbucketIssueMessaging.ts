@@ -1,28 +1,11 @@
-import { BitbucketIssue, Comment, User } from '../bitbucket/model';
+import { BitbucketIssue } from '../bitbucket/model';
 import { Message } from './messaging';
 import { RepoData } from './prMessaging';
-
-export interface BitbucketIssueMessageData extends Message {
-    issue: BitbucketIssue;
-    currentUser: User;
-    comments: Comment[];
-    hasMore: boolean;
-    showJiraButton: boolean;
-}
-
-export interface CreateBitbucketIssueData extends Message {
-    type: 'createBitbucketIssueData';
-    repoData: RepoData[];
-}
 
 export interface StartWorkOnBitbucketIssueData extends Message {
     type: 'startWorkOnBitbucketIssueData';
     issue: BitbucketIssue;
     repoData: RepoData[];
-}
-
-export function isCreateBitbucketIssueData(a: Message): a is CreateBitbucketIssueData {
-    return (<CreateBitbucketIssueData>a).type === 'createBitbucketIssueData';
 }
 
 export function isStartWorkOnBitbucketIssueData(a: Message): a is StartWorkOnBitbucketIssueData {

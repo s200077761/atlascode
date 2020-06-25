@@ -2,7 +2,9 @@ import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
+import { StartWorkBranchTemplate } from '../../config/model';
 import { Container } from '../../container';
+import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
 import { StartWorkActionApi } from '../../lib/webview/controller/startwork/startWorkActionApi';
 import { Branch, RefType } from '../../typings/git';
 
@@ -72,6 +74,19 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         );
         await scm.push(remote, destinationBranch, true);
         return;
+    }
+
+    getStartWorkConfig(): StartWorkBranchTemplate {
+        return {
+            customTemplate: Container.config.jira.startWorkBranchTemplate.customTemplate,
+            customPrefixes: Container.config.jira.startWorkBranchTemplate.customPrefixes,
+        };
+    }
+
+    openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
+        Container.settingsWebviewFactory.createOrShow(
+            section ? { section: section, subSection: subsection } : undefined
+        );
     }
 
     closePage() {

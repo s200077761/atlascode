@@ -655,6 +655,11 @@ ui:
       subjectId: moreSettingsButton
       description: |
           Event when a user clicks on the more settings button on the Onboarding page
+    - action: clicked
+      subject: button
+      subjectId: exploreFeaturesButton
+      description: |
+          Event when a user clicks on the explore features button in the Help explorer
     - id: 24344
       action: clicked
       subject: button

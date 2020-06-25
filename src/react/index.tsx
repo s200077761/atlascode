@@ -7,7 +7,6 @@ import { AtlLoader } from './atlascode/common/AtlLoader';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { attachImageErrorHandler } from './imageErrorHandler';
-import { ResourceContext } from './resourceContext';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
 import { createVSCodeTheme } from './vscode/theme/vscodeTheme';
 
@@ -25,6 +24,9 @@ const routes = {
     ),
     bitbucketIssuePageV2: React.lazy(() =>
         import(/* webpackChunkName: "bitbucketIssuePageV2" */ './atlascode/bbissue/BitbucketIssuePage')
+    ),
+    createBitbucketIssuePageV2: React.lazy(() =>
+        import(/* webpackChunkName: "createBitbucketIssuePageV2" */ './atlascode/bbissue/CreateBitbucketIssuePage')
     ),
     welcomePageV2: React.lazy(() => import(/* webpackChunkName: "welcomePageV2" */ './atlascode/welcome/Welcome')),
     startWorkPageV2: React.lazy(() =>
@@ -63,21 +65,19 @@ const App = () => {
     }, [themeObserver]);
 
     return (
-        <ResourceContext.Provider value="vscode-resource:">
-            <React.Suspense fallback={<AtlLoader />}>
-                <VSCodeStylesContext.Provider value={vscStyles}>
-                    <ThemeProvider theme={currentTheme}>
-                        <ErrorControllerContext.Provider value={errorController}>
-                            <ErrorStateContext.Provider value={errorState}>
-                                <CssBaseline />
-                                <AtlGlobalStyles />
-                                <Page />
-                            </ErrorStateContext.Provider>
-                        </ErrorControllerContext.Provider>
-                    </ThemeProvider>
-                </VSCodeStylesContext.Provider>
-            </React.Suspense>
-        </ResourceContext.Provider>
+        <React.Suspense fallback={<AtlLoader />}>
+            <VSCodeStylesContext.Provider value={vscStyles}>
+                <ThemeProvider theme={currentTheme}>
+                    <ErrorControllerContext.Provider value={errorController}>
+                        <ErrorStateContext.Provider value={errorState}>
+                            <CssBaseline />
+                            <AtlGlobalStyles />
+                            <Page />
+                        </ErrorStateContext.Provider>
+                    </ErrorControllerContext.Provider>
+                </ThemeProvider>
+            </VSCodeStylesContext.Provider>
+        </React.Suspense>
     );
 };
 
