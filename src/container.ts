@@ -52,7 +52,6 @@ import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
-import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
@@ -93,9 +92,6 @@ export class Container {
         );
         context.subscriptions.push(
             (this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath))
-        );
-        context.subscriptions.push(
-            (this._createBitbucketIssueWebview = new CreateBitbucketIssueWebview(context.extensionPath))
         );
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
@@ -330,11 +326,6 @@ export class Container {
     private static _pullRequestCreatorView: PullRequestCreatorWebview;
     static get pullRequestCreatorView() {
         return this._pullRequestCreatorView;
-    }
-
-    private static _createBitbucketIssueWebview: CreateBitbucketIssueWebview;
-    static get createBitbucketIssueWebview() {
-        return this._createBitbucketIssueWebview;
     }
 
     private static _jiraExplorer: JiraContext | undefined;
