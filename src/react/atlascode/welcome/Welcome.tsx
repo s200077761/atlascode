@@ -819,7 +819,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                             </ul>
                                         </section>
                                         <section>
-                                            <Link href="https://bitbucket.org/atlassianlabs/atlascode/src/master/CHANGELOG.md">
+                                            <Link href="https://bitbucket.org/atlassianlabs/atlascode/src/main/CHANGELOG.md">
                                                 Previous changelog
                                             </Link>
                                         </section>
