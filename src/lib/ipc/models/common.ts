@@ -14,7 +14,7 @@ export enum WebViewID {
     OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',
     StartWork = 'startWork',
-    CreatePullRequest = 'createPullRequest',
+    CreatePullRequest = 'createPullRequestScreen',
 }
 
 export enum KnownLinkID {

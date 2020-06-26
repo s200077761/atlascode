@@ -4,9 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { Branch } from '../../../typings/git';
 
 const useStyles = makeStyles((theme: Theme) => ({
-    card: {
-        //maxWidth: '700px',
-    },
     warningCard: {
         color: theme.palette.info.contrastText,
         backgroundColor: theme.palette.info.main,
@@ -36,8 +33,8 @@ export const BranchWarning: React.FunctionComponent<BranchWarningProps> = (props
                 : `${props.sourceRemoteName}/${props.sourceBranch.name}`;
 
         setUpstreamSourceBranchName(sourceRemoteBranch);
-        setRemoteBranch(props.remoteBranches.find((remoteBranch) => sourceRemoteBranch === remoteBranch.name));
-    }, [props]);
+        setRemoteBranch(props.remoteBranches.find((rb) => sourceRemoteBranch === rb.name));
+    }, [props.remoteBranches, props.sourceBranch, props.sourceRemoteName]);
 
     return (
         <Collapse
@@ -50,7 +47,7 @@ export const BranchWarning: React.FunctionComponent<BranchWarningProps> = (props
             <Grid container spacing={1}>
                 <Grid item>
                     <Collapse in={props.hasLocalChanges}>
-                        <Card className={classes.card}>
+                        <Card>
                             <CardContent className={classes.warningCard}>
                                 <Grid container spacing={1}>
                                     <Grid item>
@@ -74,7 +71,7 @@ export const BranchWarning: React.FunctionComponent<BranchWarningProps> = (props
                 </Grid>
                 <Grid item>
                     <Collapse in={remoteBranch === undefined}>
-                        <Card className={classes.card}>
+                        <Card>
                             <CardContent className={classes.warningCard}>
                                 <Grid container spacing={1}>
                                     <Grid item>
@@ -98,7 +95,7 @@ export const BranchWarning: React.FunctionComponent<BranchWarningProps> = (props
                 </Grid>
                 <Grid item>
                     <Collapse in={remoteBranch && props.sourceBranch.commit !== remoteBranch.commit}>
-                        <Card className={classes.card}>
+                        <Card>
                             <CardContent className={classes.warningCard}>
                                 <Grid container spacing={1}>
                                     <Grid item>

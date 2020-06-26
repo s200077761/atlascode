@@ -147,7 +147,7 @@ export class Container {
             this._analyticsApi
         );
 
-        const createPullRequstV2ViewFactory = new SingleWebview<WorkspaceRepo, StartWorkAction>(
+        const createPullRequestV2ViewFactory = new SingleWebview<WorkspaceRepo, StartWorkAction>(
             context.extensionPath,
             new VSCCreatePullRequestWebviewControllerFactory(
                 new VSCCreatePullRequestActionApi(this._cancellationManager),
@@ -161,7 +161,7 @@ export class Container {
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
-        context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequstV2ViewFactory));
+        context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,

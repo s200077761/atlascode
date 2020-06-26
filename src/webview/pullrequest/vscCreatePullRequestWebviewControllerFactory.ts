@@ -45,7 +45,7 @@ export class VSCCreatePullRequestWebviewControllerFactory implements VSCWebviewC
         return [controller, undefined];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        return getHtmlForView(extensionPath, 'createPullRequestPageV2');
+    public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
+        return getHtmlForView(extensionPath, baseUri, cspSource, 'createPullRequestPageV2');
     }
 }
