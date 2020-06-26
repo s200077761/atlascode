@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { ConnectionTimeout } from '../util/time';
 
 export interface RequestRange {
@@ -49,11 +50,20 @@ export class HTTPClient {
      * @param url  The full URL to get.
      */
     async getUrl(url: string, cancelToken?: CancelToken): Promise<any> {
-        const res = await this.transport(url, {
-            method: 'GET',
-            cancelToken: cancelToken,
-        });
-        return { data: res.data, headers: res.headers };
+        try {
+            const res = await this.transport(url, {
+                method: 'GET',
+                cancelToken: cancelToken,
+            });
+            return { data: res.data, headers: res.headers };
+        } catch (e) {
+            Logger.error(e, `Error getting URL: ${url}`);
+            if (e.response) {
+                return Promise.reject(await this.errorHandler(e.response));
+            } else {
+                return Promise.reject(e);
+            }
+        }
     }
 
     async get(urlSlug: string, queryParams?: any, cancelToken?: CancelToken) {

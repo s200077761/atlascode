@@ -1,9 +1,14 @@
-import { window } from 'vscode';
+import axios, { AxiosInstance } from 'axios';
+import { v4 } from 'uuid';
+import * as vscode from 'vscode';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { AnalyticsClient } from '../analytics-node-client/src';
+import { configuration } from '../config/configuration';
+import { AxiosUserAgent } from '../constants';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { SiteManager } from '../siteManager';
+import { ConnectionTimeout } from '../util/time';
 import {
     AccessibleResource,
     AuthInfo,
@@ -13,34 +18,94 @@ import {
     OAuthInfo,
     OAuthProvider,
     oauthProviderForSite,
+    OAuthResponse,
     Product,
     ProductBitbucket,
     ProductJira,
     SiteInfo,
 } from './authInfo';
 import { CredentialManager } from './authStore';
+import { BitbucketAuthenticator } from './bitbucketAuthenticator';
+import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { OAuthDancer } from './oauthDancer';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
+    private _activeRequests: Map<string, SiteInfo> = new Map();
+    private _axios: AxiosInstance;
+    private _jiraAuthenticator: JiraAuthenticator;
+    private _bitbucketAuthenticator: BitbucketAuthenticator;
 
     constructor(
         private _credentialManager: CredentialManager,
         private _siteManager: SiteManager,
         private _analyticsClient: AnalyticsClient
-    ) {}
+    ) {
+        this._axios = axios.create({
+            timeout: ConnectionTimeout,
+            headers: {
+                'User-Agent': AxiosUserAgent,
+                'Accept-Encoding': 'gzip, deflate',
+            },
+        });
+        this._bitbucketAuthenticator = new BitbucketAuthenticator(this._axios);
+        this._jiraAuthenticator = new JiraAuthenticator(this._axios);
+    }
 
     // this is *only* called when login buttons are clicked by the user
     public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
-        const provider = oauthProviderForSite(site);
-        try {
+        if (configuration.get<boolean>('useNewAuth')) {
+            const callableUri = await vscode.env.asExternalUri(
+                vscode.Uri.parse(`${vscode.env.uriScheme}://atlassian.atlascode/finalizeAuthentication`)
+            );
+            const rawState = `${v4()}::${callableUri}`;
+            const state = new Buffer(rawState).toString('base64');
+            this._activeRequests.set(state, site);
+            if (site.product.key === ProductJira.key) {
+                this._jiraAuthenticator.startAuthentication(state, site);
+            } else {
+                this._bitbucketAuthenticator.startAuthentication(state, site);
+            }
+
+            return Promise.resolve();
+        } else {
+            const provider = oauthProviderForSite(site)!;
             if (!provider) {
                 throw new Error(`No provider found for ${site.host}`);
             }
 
             const resp = await this._dancer.doDance(provider, site, callback);
+            this.saveDetails(site, resp);
+        }
+    }
+
+    // We get here via the app url
+    public async exchangeCodeForTokens(state: string, code: string) {
+        const site = this._activeRequests.get(state);
+        if (site) {
+            try {
+                const provider = oauthProviderForSite(site)!;
+                const agent = getAgent(site);
+
+                if (site.product.key === ProductJira.key) {
+                    const oauthResponse = await this._jiraAuthenticator.exchangeCode(provider, state, code, agent);
+                    this.saveDetails(site, oauthResponse);
+                } else {
+                    const oauthResponse = await this._bitbucketAuthenticator.exchangeCode(provider, state, code, agent);
+                    this.saveDetails(site, oauthResponse);
+                }
+            } catch (err) {}
+        }
+    }
+
+    private async saveDetails(site: SiteInfo, resp: OAuthResponse) {
+        const provider = oauthProviderForSite(site);
+        try {
+            if (!provider) {
+                throw new Error(`No provider found for ${site.host}`);
+            }
 
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
@@ -64,11 +129,11 @@ export class LoginManager {
             });
         } catch (e) {
             Logger.error(e, 'Error authenticating');
-            if (typeof e === 'object' && e.cancelled !== undefined) {
-                window.showWarningMessage(`${e.message}`);
-            } else {
-                window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
-            }
+            // if (typeof e === 'object' && e.cancelled !== undefined) {
+            //     window.showWarningMessage(`${e.message}`);
+            // } else {
+            //     window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
+            // }
         }
     }
 
@@ -78,66 +143,14 @@ export class LoginManager {
         userId: string,
         resources: AccessibleResource[]
     ): Promise<DetailedSiteInfo[]> {
-        let newSites: DetailedSiteInfo[] = [];
-
         switch (product.key) {
             case ProductBitbucket.key:
-                if (resources.length > 0) {
-                    let resource = resources[0];
-                    const hostname = provider === OAuthProvider.BitbucketCloud ? 'bitbucket.org' : 'staging.bb-inf.net';
-                    const baseApiUrl =
-                        provider === OAuthProvider.BitbucketCloud
-                            ? 'https://api.bitbucket.org/2.0'
-                            : 'https://api-staging.bb-inf.net/2.0';
-                    const siteName =
-                        provider === OAuthProvider.BitbucketCloud ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
-
-                    const credentialId = CredentialManager.generateCredentialId(resource.id, userId);
-
-                    // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
-                    newSites = [
-                        {
-                            avatarUrl: '',
-                            baseApiUrl: baseApiUrl,
-                            baseLinkUrl: resource.url,
-                            host: hostname,
-                            id: resource.id,
-                            name: siteName,
-                            product: ProductBitbucket,
-                            isCloud: true,
-                            userId: userId,
-                            credentialId: credentialId,
-                        },
-                    ];
-                }
-                break;
+                return this._bitbucketAuthenticator.getOAuthSiteDetails(provider, userId, resources);
             case ProductJira.key:
-                let apiUri =
-                    provider === OAuthProvider.JiraCloudStaging ? 'api.stg.atlassian.com' : 'api.atlassian.com';
-
-                //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
-                //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
-
-                newSites = resources.map((r) => {
-                    const credentialId = CredentialManager.generateCredentialId(r.id, userId);
-
-                    return {
-                        avatarUrl: r.avatarUrl,
-                        baseApiUrl: `https://${apiUri}/ex/jira/${r.id}/rest`,
-                        baseLinkUrl: r.url,
-                        host: new URL(r.url).host,
-                        id: r.id,
-                        name: r.name,
-                        product: ProductJira,
-                        isCloud: true,
-                        userId: userId,
-                        credentialId: credentialId,
-                    };
-                });
-                break;
+                return this._jiraAuthenticator.getOAuthSiteDetails(provider, userId, resources);
         }
 
-        return newSites;
+        return [];
     }
 
     public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
