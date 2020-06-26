@@ -1,5 +1,4 @@
 import fs from 'fs';
-import Handlebars from 'handlebars';
 import path from 'path';
 import { ExtensionContext, Uri } from 'vscode';
 
@@ -7,13 +6,13 @@ export class Resources {
     static pipelinesSchemaPath: string = '';
     static icons: Map<string, Uri | { light: Uri; dark: Uri }> = new Map();
     static charlesCert: string;
-    static html: Map<string, Handlebars.TemplateDelegate> = new Map();
-    static htmlNotFound: Handlebars.TemplateDelegate = Handlebars.compile(`<!DOCTYPE html>
+    static html: Map<string, string> = new Map();
+    static htmlNotFound: string = `<!DOCTYPE html>
     <html lang="en">
     <body>
     Resource not found: {{resource}}
     </body>
-    </html>`);
+    </html>`;
 }
 
 export enum iconSet {
@@ -118,39 +117,24 @@ export function registerResources(vscodeContext: ExtensionContext) {
 
     Resources.html.set(
         'reactHtml',
-        Handlebars.compile(
-            fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()
-        )
+        fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()
     );
     Resources.html.set(
         'reactWebviewHtml',
-        Handlebars.compile(
-            fs
-                .readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactWebview.html')))
-                .toString()
-        )
+        fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactWebview.html'))).toString()
     );
     Resources.html.set(
         'statusBarText',
-        Handlebars.compile(
-            fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'statusbar.html'))).toString()
-        )
+        fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'statusbar.html'))).toString()
     );
     Resources.html.set(
         'authSuccessHtml',
-        Handlebars.compile(
-            fs
-                .readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-success.html')))
-                .toString()
-        )
+        fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-success.html'))).toString()
     );
     Resources.html.set(
         'authFailureHtml',
-        Handlebars.compile(
-            fs
-                .readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-failure.html')))
-                .toString()
-        )
+
+        fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-failure.html'))).toString()
     );
 
     Resources.pipelinesSchemaPath = path

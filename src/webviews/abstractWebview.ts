@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import Mustache from 'mustache';
 import * as path from 'path';
 import {
     Disposable,
@@ -259,10 +260,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];
 
-        const tmpl = Resources.html.get('reactHtml');
+        const template = Resources.html.get('reactHtml');
 
-        if (tmpl) {
-            return tmpl({
+        if (template) {
+            return Mustache.render(template, {
                 view: viewName,
                 styleUri: `build/${mainStyle}`,
                 scriptUri: `build/${mainScript}`,
@@ -270,7 +271,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 cspSource: cspSource,
             });
         } else {
-            return Resources.htmlNotFound({ resource: 'reactHtml' });
+            return Mustache.render(Resources.htmlNotFound, { resource: 'reactHtml' });
         }
     }
 }
