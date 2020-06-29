@@ -1,3 +1,9 @@
+## What's New in 2.6.5
+
+### Bugs fixed
+
+-   Branch prefix is no longer duplicated when starting work on an issue
+
 ## What's New in 2.6.4
 
 ### Improvements
