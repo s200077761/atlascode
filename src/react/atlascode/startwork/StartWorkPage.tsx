@@ -220,7 +220,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 branchSetupEnabled,
                 repository.workspaceRepo,
                 sourceBranch,
-                `${branchType.prefix}${localBranch}`,
+                localBranch,
                 upstream
             );
             setSubmitState('submit-success');
@@ -236,7 +236,6 @@ const StartWorkPage: React.FunctionComponent = () => {
         branchSetupEnabled,
         repository,
         sourceBranch,
-        branchType,
         localBranch,
         upstream,
     ]);
