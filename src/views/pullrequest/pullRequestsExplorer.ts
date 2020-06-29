@@ -1,5 +1,7 @@
-import { commands, ConfigurationChangeEvent } from 'vscode';
+import path from 'path';
+import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
+import { WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, PullRequestTreeViewId, setCommandContext } from '../../constants';
@@ -19,12 +21,36 @@ export class PullRequestsExplorer extends BitbucketExplorer {
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
-            commands.registerCommand(
-                Commands.CreatePullRequest,
-                Container.pullRequestCreatorView.createOrShow,
-                Container.pullRequestCreatorView
-            )
+            commands.registerCommand(Commands.CreatePullRequest, () => this.pickRepoAndShowCreatePR())
         );
+    }
+
+    private pickRepoAndShowCreatePR(): void {
+        const options: (QuickPickItem & {
+            value: WorkspaceRepo;
+        })[] = Container.bitbucketContext
+            .getBitbucketRepositories()
+            .map((repo) => ({ label: path.basename(repo.rootUri), value: repo }));
+
+        if (options.length === 1) {
+            Container.createPullRequestWebviewFactory.createOrShow(options[0].value);
+            return;
+        }
+
+        const picker = window.createQuickPick<QuickPickItem & { value: WorkspaceRepo }>();
+        picker.items = options;
+        picker.title = 'Create pull request';
+        picker.placeholder =
+            options.length > 0 ? 'Pick a repository' : 'No Bitbucket repositories found in this workspace';
+
+        picker.onDidAccept(() => {
+            if (picker.selectedItems.length > 0) {
+                Container.createPullRequestWebviewFactory.createOrShow(picker.selectedItems[0].value);
+            }
+            picker.hide();
+        });
+
+        picker.show();
     }
 
     viewId(): string {

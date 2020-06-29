@@ -1,17 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
-import {
-    ApprovalStatus,
-    BitbucketIssue,
-    BitbucketSite,
-    FileChange,
-    Reviewer,
-    SiteRemote,
-    Task,
-    WorkspaceRepo,
-} from '../bitbucket/model';
-import { Branch } from '../typings/git';
-import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Task } from '../bitbucket/model';
 import { Action } from './messaging';
 
 export interface CreateTask extends Action {
@@ -147,47 +136,6 @@ export function isCheckout(a: Action): a is Checkout {
     return (<Checkout>a).branch !== undefined;
 }
 
-export interface CreatePullRequest extends Action {
-    action: 'createPullRequest';
-    workspaceRepo: WorkspaceRepo;
-    destinationSite: BitbucketSite;
-    reviewers: Reviewer[];
-    title: string;
-    summary: string;
-    sourceSiteRemote: SiteRemote;
-    sourceBranch: Branch;
-    destinationBranch: Branch;
-    pushLocalChanges: boolean;
-    closeSourceBranch: boolean;
-    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
-}
-
-export function isCreatePullRequest(a: Action): a is CreatePullRequest {
-    return (<CreatePullRequest>a).action === 'createPullRequest';
-}
-
-export interface FetchDetails extends Action {
-    action: 'fetchDetails';
-    wsRepo: WorkspaceRepo;
-    site: BitbucketSite;
-    sourceBranch: Branch;
-    destinationBranch: Branch;
-}
-
-export interface FetchIssue extends Action {
-    action: 'fetchIssue';
-    repoUri: string;
-    sourceBranch: Branch;
-}
-
-export function isFetchDetails(a: Action): a is FetchDetails {
-    return (<FetchDetails>a).action === 'fetchDetails';
-}
-
-export function isFetchIssue(a: Action): a is FetchIssue {
-    return (<FetchIssue>a).action === 'fetchIssue';
-}
-
 export function isOpenPullRequest(a: Action): a is OpenPullRequest {
     return (<OpenPullRequest>a).action === 'openPullRequest';
 }
@@ -202,17 +150,6 @@ export function isFetchUsers(a: Action): a is FetchUsers {
     return (<FetchUsers>a).action === 'fetchUsers' && (<FetchUsers>a).query !== undefined;
 }
 
-export interface FetchDefaultReviewers extends Action {
-    action: 'fetchDefaultReviewers';
-    site: BitbucketSite;
-}
-
-export function isFetchDefaultReviewers(a: Action): a is FetchDefaultReviewers {
-    return (
-        (<FetchDefaultReviewers>a).action === 'fetchDefaultReviewers' && (<FetchDefaultReviewers>a).site !== undefined
-    );
-}
-
 export interface OpenBuildStatusAction extends Action {
     action: 'openBuildStatus';
     buildStatusUri: string;
@@ -220,17 +157,6 @@ export interface OpenBuildStatusAction extends Action {
 
 export function isOpenBuildStatus(a: Action): a is OpenBuildStatusAction {
     return (<OpenBuildStatusAction>a).buildStatusUri !== undefined;
-}
-
-export interface OpenDiffPreviewAction extends Action {
-    action: 'openDiffPreview';
-    lhsQuery: FileDiffQueryParams;
-    rhsQuery: FileDiffQueryParams;
-    fileDisplayName: string;
-}
-
-export function isOpenDiffPreview(a: Action): a is OpenDiffPreviewAction {
-    return (<OpenDiffPreviewAction>a).action === 'openDiffPreview';
 }
 
 export interface OpenDiffViewAction extends Action {

@@ -100,14 +100,6 @@ export interface RepoData {
     isCloud: boolean;
 }
 
-export interface CreatePRData extends Message {
-    repositories: RepoData[];
-}
-
-export function isCreatePRData(a: Message): a is CreatePRData {
-    return (<CreatePRData>a).type === 'createPullRequestData';
-}
-
 export interface CheckoutResult extends Message {
     currentBranch: string;
 }
