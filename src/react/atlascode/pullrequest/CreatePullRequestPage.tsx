@@ -181,6 +181,9 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
             );
         }
         setReviewers(state.repoData.defaultReviewers);
+        // We only need to run this effect when workspaceRepo changes, and checking the rootUri is sufficient for that.
+        // It also had the added benefit of not running the effect if workspaceRepo object reference changes without the actual values changing as rootUri is a string.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.repoData.workspaceRepo.rootUri]);
 
     useEffect(() => {
@@ -225,7 +228,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                 `${state.commits.map((c) => `* ${c.message.trimRight()}`).join('\n\n')}${createdFromAtlascodeFooter}`
             );
         }
-    }, [state.commits]);
+    }, [sourceBranch.name, state.commits]);
 
     return (
         <CreatePullRequestControllerContext.Provider value={controller}>
