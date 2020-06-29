@@ -83,6 +83,15 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.5 🎉</h3>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Branch prefix is no longer duplicated when starting work on an issue
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.6.4 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
