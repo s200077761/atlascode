@@ -98,8 +98,8 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateIssueFromTodo.gif"
                                 label="Create a Jira issue from a code comment"
                                 description={
-                                    <p>
-                                        Adding a trigger to your code comments will bring up a{' '}
+                                    <>
+                                        Adding a trigger to yours code comments will bring up a{' '}
                                         <code className={classes.code}>Create Jira Issue</code> code lens action.
                                         Pressing this button brings up an issue creation screen with the description
                                         already filled in with the contents of the comment. These triggers are
@@ -110,7 +110,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         >
                                             Jira > Create Jira Issue Triggers > Comment Triggers
                                         </code>
-                                    </p>
+                                    </>
                                 }
                                 productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                                 action={() => {}}
@@ -123,7 +123,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/StartWorkTutorial.gif"
                                 label="Start Work from a Jira issue"
                                 description={
-                                    <p>
+                                    <>
                                         When viewing a Jira issue, pressing{' '}
                                         <code className={classes.code}>Start Work</code> will open the{' '}
                                         <code className={classes.code}>Start Work Screen.</code> From here you can{' '}
@@ -132,7 +132,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                             checkout) a branch
                                         </b>{' '}
                                         for this issue all in <b>one click!</b>
-                                    </p>
+                                    </>
                                 }
                                 productIcon={
                                     <React.Fragment>
@@ -150,13 +150,13 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreateJiraIssue.gif"
                                 label="Create a Jira issue"
                                 description={
-                                    <p>
+                                    <>
                                         Jira issues can be created by pressing the{' '}
                                         <code className={classes.code}>Create issue...</code> button in the{' '}
                                         <code className={classes.code}>JIRA ISSUES</code>
                                         explorer. This will open a view that resembles the issue creation process on the
                                         Jira website.
-                                    </p>
+                                    </>
                                 }
                                 productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                                 action={controller.createJiraIssue}
@@ -168,7 +168,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewJiraIssue.gif"
                                 label="View a Jira issue"
                                 description={
-                                    <p>
+                                    <>
                                         Jira issues show up in the <code className={classes.code}>JIRA ISSUES</code>{' '}
                                         explorer and are grouped by JQL queries/filters. The issues which show up are
                                         configurable in the extension settings under{' '}
@@ -179,7 +179,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                             Jira > Jira Issues Explorer > Filters and Custom JQL.
                                         </code>
                                         To view an issue, expand a filter and click on the issue.
-                                    </p>
+                                    </>
                                 }
                                 productIcon={<JiraIcon style={{ float: 'right', color: '#0052CC' }} />}
                                 action={controller.viewJiraIssue}
@@ -191,13 +191,13 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/CreatePullRequest.gif"
                                 label="Create a pull request"
                                 description={
-                                    <p>
+                                    <>
                                         Bitbucket pull requests can be created by pressing the{' '}
                                         <code className={classes.code}>Create pull request...</code>
                                         button in the <code className={classes.code}>BITBUCKET PULL REQUESTS</code>{' '}
                                         explorer. This will open a view that resembles the pull request creation process
                                         on the Bitbucket website.
-                                    </p>
+                                    </>
                                 }
                                 productIcon={
                                     <BitbucketIcon color={'primary'} style={{ float: 'right', color: '#0052CC' }} />
@@ -211,7 +211,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 gifLink="https://product-integrations-cdn.atl-paas.net/atlascode/ReviewAndApprovePullRequest.gif"
                                 label="Review a pull request"
                                 description={
-                                    <p>
+                                    <>
                                         Bitbucket pull request show up in the{' '}
                                         <code className={classes.code}>BITBUCKET PULL REQUESTS</code> explorer and are
                                         grouped by repository. Expanding a pull request will reveal a{' '}
@@ -219,7 +219,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                         Clicking the <code className={classes.code}>Details</code> node will open a
                                         WebView with an overview of the pull request. Clicking the file nodes will show
                                         a diff for that file with inline comments from Bitbucket.
-                                    </p>
+                                    </>
                                 }
                                 productIcon={
                                     <BitbucketIcon color={'primary'} style={{ float: 'right', color: '#0052CC' }} />

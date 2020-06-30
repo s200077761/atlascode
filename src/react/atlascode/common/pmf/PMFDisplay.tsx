@@ -1,10 +1,10 @@
 import { Box, Button, Collapse, Grid } from '@material-ui/core';
 import { Alert, AlertTitle } from '@material-ui/lab';
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
 import { CommonAction } from '../../../../lib/ipc/fromUI/common';
 import { PMFData } from '../../../../lib/ipc/models/common';
 import { PostMessageFunc } from '../../messagingApi';
-import { PMFDismissal, usePMFController } from './pmfController';
+import { PMFControllerContext, PMFDismissal, PMFStateContext } from './pmfController';
 import { PMFDialog } from './PMFDialog';
 
 export type PMFDisplayProps = {
@@ -12,24 +12,25 @@ export type PMFDisplayProps = {
 };
 
 export const PMFDisplay: React.FunctionComponent<PMFDisplayProps> = ({ postMessageFunc }) => {
-    const [state, controller] = usePMFController(postMessageFunc);
+    const state = useContext(PMFStateContext);
+    const controller = useContext(PMFControllerContext);
 
     const handleLater = useCallback(() => {
-        controller.dismissPMFBanner(PMFDismissal.LATER);
-    }, [controller]);
+        controller.dismissPMFBanner(PMFDismissal.LATER, postMessageFunc);
+    }, [controller, postMessageFunc]);
     const handleNever = useCallback(() => {
-        controller.dismissPMFBanner(PMFDismissal.NEVER);
-    }, [controller]);
+        controller.dismissPMFBanner(PMFDismissal.NEVER, postMessageFunc);
+    }, [controller, postMessageFunc]);
 
     const handleOpenSurvey = useCallback(() => {
-        controller.showPMFSurvey();
-    }, [controller]);
+        controller.showPMFSurvey(postMessageFunc);
+    }, [controller, postMessageFunc]);
 
     const handleSubmitSurvey = useCallback(
         (data: PMFData) => {
-            controller.submitPMFSurvey(data);
+            controller.submitPMFSurvey(data, postMessageFunc);
         },
-        [controller]
+        [controller, postMessageFunc]
     );
 
     return (

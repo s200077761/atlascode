@@ -5,6 +5,7 @@ import useConstant from 'use-constant';
 import AtlGlobalStyles from './atlascode/common/AtlGlobalStyles';
 import { AtlLoader } from './atlascode/common/AtlLoader';
 import { ErrorControllerContext, ErrorStateContext, useErrorController } from './atlascode/common/errorController';
+import { PMFControllerContext, PMFStateContext, usePMFController } from './atlascode/common/pmf/pmfController';
 import { atlascodeTheme } from './atlascode/theme/atlascodeTheme';
 import { attachImageErrorHandler } from './imageErrorHandler';
 import { computeStyles, VSCodeStylesContext } from './vscode/theme/styles';
@@ -48,6 +49,7 @@ attachImageErrorHandler();
 const App = () => {
     const Page = routes[view.getAttribute('content')!];
     const [errorState, errorController] = useErrorController();
+    const [pmfState, pmfController] = usePMFController();
     const [vscStyles, setVscStyles] = useState(computeStyles());
     const [currentTheme, setCurrentTheme] = useState(atlascodeTheme(createVSCodeTheme(vscStyles), false));
     const onColorThemeChanged = useCallback(() => {
@@ -73,9 +75,13 @@ const App = () => {
                 <ThemeProvider theme={currentTheme}>
                     <ErrorControllerContext.Provider value={errorController}>
                         <ErrorStateContext.Provider value={errorState}>
-                            <CssBaseline />
-                            <AtlGlobalStyles />
-                            <Page />
+                            <PMFControllerContext.Provider value={pmfController}>
+                                <PMFStateContext.Provider value={pmfState}>
+                                    <CssBaseline />
+                                    <AtlGlobalStyles />
+                                    <Page />
+                                </PMFStateContext.Provider>
+                            </PMFControllerContext.Provider>
                         </ErrorStateContext.Provider>
                     </ErrorControllerContext.Provider>
                 </ThemeProvider>

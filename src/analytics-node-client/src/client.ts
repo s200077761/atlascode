@@ -167,7 +167,8 @@ class AnalyticsClient {
             flushAt: flushAt || DEFAULT_QUEUE_FLUSH_SIZE,
             flushInterval: flushInterval || DEFAULT_QUEUE_FLUSH_INTERVAL,
             host: baseUrl || getUrlFromEnvironment(env),
-            //agent: Container.isDebugging ? getAgent() : undefined,
+            //un-comment line below to debug analytics calls with charles
+            //agent: getAgent(),
         });
 
         this.deviceId = deviceId;
