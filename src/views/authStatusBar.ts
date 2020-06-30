@@ -1,3 +1,4 @@
+import Mustache from 'mustache';
 import { SitesAvailableUpdateEvent } from 'src/siteManager';
 import { ConfigurationChangeEvent, Disposable, StatusBarAlignment, StatusBarItem, window } from 'vscode';
 import {
@@ -107,17 +108,17 @@ export class AuthStatusBar extends Disposable {
         let text: string = '$(sign-in)';
         let command: string | undefined;
         let showIt: boolean = true;
-        const tmpl = Resources.html.get('statusBarText');
+        const template = Resources.html.get('statusBarText');
 
         switch (product.key) {
             case ProductJira.key: {
                 if (authInfo) {
                     text = `$(person) ${product.name}: ${authInfo.user.displayName}`;
-                    if (tmpl) {
+                    if (template) {
                         const data = { product: product.name, user: authInfo.user.displayName };
-                        const ctx = { ...Container.config.jira.statusbar, ...data };
+                        const context = { ...Container.config.jira.statusbar, ...data };
                         command = Commands.ShowJiraAuth;
-                        text = tmpl(ctx);
+                        text = Mustache.render(template, context);
                     }
                 } else {
                     if (Container.config.jira.statusbar.showLogin) {
@@ -137,11 +138,11 @@ export class AuthStatusBar extends Disposable {
                 if (authInfo) {
                     text = `$(person) ${product.name}: ${authInfo.user.displayName}`;
 
-                    if (tmpl) {
+                    if (template) {
                         let data = { product: product.name, user: authInfo.user.displayName };
-                        let ctx = { ...Container.config.bitbucket.statusbar, ...data };
+                        let context = { ...Container.config.bitbucket.statusbar, ...data };
                         command = Commands.ShowBitbucketAuth;
-                        text = tmpl(ctx);
+                        text = Mustache.render(template, context);
                     }
                 } else {
                     if (Container.config.bitbucket.statusbar.showLogin) {

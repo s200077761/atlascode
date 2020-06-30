@@ -83,6 +83,31 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.5 🎉</h3>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Branch prefix is no longer duplicated when starting work on an issue
+                                                </li>
+                                            </ul>
+                                        </section>
+                                        <h3>🎉 What's New in 2.6.4 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Support for customizing the generated branch name when starting work
+                                                    on an issue
+                                                </li>
+                                                <li>Updated Create Bitbucket Issue webview UI</li>
+                                            </ul>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>Fixed resource loading in webviews in VS Code Insiders</li>
+                                            </ul>
+                                        </section>
+
                                         <h3>🎉 What's New in 2.6.3 🎉</h3>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
@@ -803,7 +828,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                             </ul>
                                         </section>
                                         <section>
-                                            <Link href="https://bitbucket.org/atlassianlabs/atlascode/src/master/CHANGELOG.md">
+                                            <Link href="https://bitbucket.org/atlassianlabs/atlascode/src/main/CHANGELOG.md">
                                                 Previous changelog
                                             </Link>
                                         </section>

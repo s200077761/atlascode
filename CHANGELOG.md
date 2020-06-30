@@ -1,3 +1,20 @@
+## What's New in 2.6.5
+
+### Bugs fixed
+
+-   Branch prefix is no longer duplicated when starting work on an issue
+
+## What's New in 2.6.4
+
+### Improvements
+
+-   Support for customizing the generated branch name when starting work on an issue
+-   Updated Create Bitbucket Issue webview UI
+
+### Bugs fixed
+
+-   Fixed resource loading in webviews in VS Code Insiders
+
 ## What's New in 2.6.3
 
 ### Bugs fixed

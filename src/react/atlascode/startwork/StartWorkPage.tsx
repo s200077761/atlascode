@@ -13,7 +13,6 @@ import {
     Divider,
     Grid,
     IconButton,
-    InputAdornment,
     Link,
     List,
     ListItem,
@@ -26,13 +25,17 @@ import {
     TextField,
     Theme,
     Toolbar,
+    Tooltip,
     Typography,
     useTheme,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import SettingsIcon from '@material-ui/icons/Settings';
 import { Alert, AlertTitle, Autocomplete } from '@material-ui/lab';
+import Mustache from 'mustache';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { ConfigSection, ConfigSubSection } from '../../../lib/ipc/models/config';
 import { BranchType, emptyRepoData, RepoData } from '../../../lib/ipc/toUI/startWork';
 import { Branch } from '../../../typings/git';
 import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
@@ -73,17 +76,22 @@ const useStyles = makeStyles((theme: Theme) => ({
     }),
 }));
 
+const emptyPrefix: BranchType = { kind: '', prefix: '' };
+
 const StartWorkPage: React.FunctionComponent = () => {
     const theme = useTheme<Theme>();
     const vscStyles = useContext(VSCodeStylesContext);
     const classes = useStyles(vscStyles);
     const [state, controller] = useStartWorkController();
+    const convertedCustomPrefixes = state.customPrefixes.map((prefix) => {
+        return { prefix: prefix, kind: prefix };
+    });
 
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
     const [branchSetupEnabled, setbranchSetupEnabled] = useState(true);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [repository, setRepository] = useState<RepoData>(emptyRepoData);
-    const [branchType, setBranchType] = useState<BranchType>({ kind: 'Custom', prefix: '' });
+    const [branchType, setBranchType] = useState<BranchType>(emptyPrefix);
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
     const [localBranch, setLocalBranch] = useState('');
     const [upstream, setUpstream] = useState('');
@@ -118,18 +126,18 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setRepository]
     );
 
-    const handleBranchTypeChange = useCallback(
-        (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
-            setBranchType(event.target.value);
-        },
-        [setBranchType]
-    );
-
     const handleSourceBranchChange = useCallback(
         (event: React.ChangeEvent, value: Branch) => {
             setSourceBranch(value);
         },
         [setSourceBranch]
+    );
+
+    const handleBranchTypeChange = useCallback(
+        (event: React.ChangeEvent, value: BranchType) => {
+            setBranchType(value);
+        },
+        [setBranchType]
     );
 
     const handleExistingBranchClick = useCallback(
@@ -145,13 +153,22 @@ const StartWorkPage: React.FunctionComponent = () => {
                     ? sourceBranchOption.name!
                     : sourceBranchOption.name!.substring(sourceBranchOption.remote!.length + 1);
 
-            const bt = repository.branchTypes.find((branchType) => existingBranchName.startsWith(branchType.prefix))!;
+            const bt = [...repository.branchTypes, ...convertedCustomPrefixes].find((branchType) =>
+                existingBranchName.startsWith(branchType.prefix)
+            )!;
 
             setBranchType(bt);
-            setLocalBranch(updatedLocalBranch.substring(bt.prefix.length));
+
+            //HACK: without this wait, the update to local branch gets overwritten by buildBranchName since that function is called
+            //every time branchType is changed. This is a quick fix, but a better solution would be to create two state variables
+            //for prefixes: one for the autocomplete and the other the "real" prefix. Then, set the "real" prefix to "ExistingBranch" here
+            //and don't call buildBranchName if the "real" prefix is "ExistingBranch".
+            setTimeout(() => {
+                setLocalBranch(updatedLocalBranch.substring(bt.prefix.length));
+            }, 100);
             setSourceBranch(sourceBranchOption);
         },
-        [repository]
+        [repository, convertedCustomPrefixes]
     );
 
     const handleLocalBranchChange = useCallback(
@@ -168,6 +185,30 @@ const StartWorkPage: React.FunctionComponent = () => {
         [setUpstream]
     );
 
+    const buildBranchName = useCallback(() => {
+        const view = {
+            prefix: branchType.prefix.replace(/ /g, '-'),
+            issueKey: state.issue.key,
+            summary: state.issue.summary
+                .substring(0, 50)
+                .trim()
+                .toLowerCase()
+                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                .replace(/\W+/g, '-'),
+        };
+
+        try {
+            const generatedBranchTitle = Mustache.render(state.customTemplate, view);
+            setLocalBranch(generatedBranchTitle);
+        } catch {
+            setLocalBranch('Invalid template: please follow the format described above');
+        }
+    }, [state.issue.key, state.issue.summary, branchType.prefix, state.customTemplate]);
+
+    useEffect(() => {
+        buildBranchName();
+    }, [branchType, buildBranchName]);
     const handleSuccessSnackbarClose = useCallback(() => setSuccessSnackbarOpen(false), [setSuccessSnackbarOpen]);
 
     const handleStartWorkSubmit = useCallback(async () => {
@@ -179,7 +220,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 branchSetupEnabled,
                 repository.workspaceRepo,
                 sourceBranch,
-                `${branchType.prefix}${localBranch}`,
+                localBranch,
                 upstream
             );
             setSubmitState('submit-success');
@@ -195,10 +236,13 @@ const StartWorkPage: React.FunctionComponent = () => {
         branchSetupEnabled,
         repository,
         sourceBranch,
-        branchType,
         localBranch,
         upstream,
     ]);
+
+    const handleOpenSettings = useCallback(() => {
+        controller.openSettings(ConfigSection.Jira, ConfigSubSection.StartWork);
+    }, [controller]);
 
     useEffect(() => {
         if (repository.workspaceRepo.rootUri === '' && state.repoData.length > 0) {
@@ -208,7 +252,7 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     useEffect(() => {
         setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
-        setBranchType(repository.branchTypes?.[0] || { kind: 'Custom', prefix: '' });
+        setBranchType(repository.branchTypes?.[0] || emptyPrefix);
         setSourceBranch(
             repository.localBranches?.find(
                 (b) => repository.developmentBranch && b.name === repository.developmentBranch
@@ -227,11 +271,8 @@ const StartWorkPage: React.FunctionComponent = () => {
     }, [repository, state.issue]);
 
     useEffect(() => {
-        setLocalBranch(
-            `${state.issue.key}-${state.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`
-        );
         setSubmitState('initial');
-    }, [state.issue]);
+    }, []);
 
     useEffect(() => {
         // best effort to default to a transition that will move the issue to `In progress` state
@@ -431,37 +472,53 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                     />
                                                 </Grid>
                                                 <Grid item xs={6} md={3} lg={2} xl={2}>
-                                                    <TextField
-                                                        select
-                                                        size="small"
-                                                        label="Branch type"
-                                                        fullWidth
-                                                        value={branchType}
-                                                        onChange={handleBranchTypeChange}
+                                                    <Grid
+                                                        container
+                                                        spacing={2}
+                                                        justify={'center'}
+                                                        alignItems={'center'}
                                                     >
-                                                        {repository.branchTypes.map((item) => (
-                                                            //@ts-ignore
-                                                            <MenuItem key={item.kind} value={item}>
-                                                                {item.kind}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
+                                                        <Grid item xs={10}>
+                                                            <Autocomplete
+                                                                id="grouped-demo"
+                                                                options={[
+                                                                    ...repository.branchTypes,
+                                                                    ...convertedCustomPrefixes,
+                                                                ]}
+                                                                groupBy={(option) =>
+                                                                    repository.branchTypes
+                                                                        .map((type) => type.kind)
+                                                                        .includes(option.kind)
+                                                                        ? 'Repo Branch Type'
+                                                                        : 'Custom Prefix'
+                                                                }
+                                                                getOptionLabel={(option) => option.kind}
+                                                                renderInput={(params) => (
+                                                                    <TextField
+                                                                        {...params}
+                                                                        label={'Branch Prefix'}
+                                                                        fullWidth
+                                                                    />
+                                                                )}
+                                                                disableClearable
+                                                                value={branchType}
+                                                                onChange={handleBranchTypeChange}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={2}>
+                                                            <Tooltip title="Change branch-naming configuration">
+                                                                <Button color="primary" onClick={handleOpenSettings}>
+                                                                    <SettingsIcon fontSize="large" />
+                                                                </Button>
+                                                            </Tooltip>
+                                                        </Grid>
+                                                    </Grid>
                                                 </Grid>
                                                 <Grid item xs={10} md={6} lg={4} xl={4}>
                                                     <TextField
                                                         size="small"
                                                         label="Local branch"
                                                         fullWidth
-                                                        InputProps={{
-                                                            startAdornment:
-                                                                branchType.prefix.length > 0 ? (
-                                                                    <InputAdornment position="start" variant="standard">
-                                                                        <Box fontWeight="fontWeightBold">
-                                                                            {branchType.prefix}
-                                                                        </Box>
-                                                                    </InputAdornment>
-                                                                ) : null,
-                                                        }}
                                                         value={localBranch}
                                                         onChange={handleLocalBranchChange}
                                                     />
@@ -566,7 +623,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                                     <Chip
                                                                         variant="outlined"
                                                                         color="primary"
-                                                                        label={`${branchType.prefix}${localBranch}`}
+                                                                        label={`${localBranch}`}
                                                                     />
                                                                 </Grid>
                                                             </Grid>

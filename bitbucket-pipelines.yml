@@ -9,7 +9,7 @@ pipelines:
                   - apt-get update && apt-get install -y libsecret-1-dev
                   - npm install -g vsce
                   - npm install
-                  - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/
+                  - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/
     tags:
         '*':
             - step:
@@ -20,8 +20,8 @@ pipelines:
                       - npm install -g vsce
                       - npm -no-git-tag-version --allow-same-version -f version ${BITBUCKET_TAG}
                       - npm install
-                      - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/
-                      - vsce publish -p ${MSKEY} --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --packagePath atlascode-${BITBUCKET_TAG}.vsix
+                      - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/
+                      - vsce publish -p ${MSKEY} --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/ --packagePath atlascode-${BITBUCKET_TAG}.vsix
                       #- curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
     custom:
         nightly:

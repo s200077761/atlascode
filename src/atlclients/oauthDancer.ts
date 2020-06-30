@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
+import Mustache from 'mustache';
 import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
 import { URL } from 'url';
@@ -10,6 +11,7 @@ import { promisify } from 'util';
 import { v4 } from 'uuid';
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode';
+import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
 import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
@@ -27,7 +29,6 @@ import {
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-import { AxiosUserAgent } from '../constants';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
@@ -200,7 +201,7 @@ export class OAuthDancer implements Disposable {
 
                     Logger.debug('oauth timed out', respEvent.req.query);
                     respEvent.res.send(
-                        Resources.html.get('authFailureHtml')!({
+                        Mustache.render(Resources.html.get('authFailureHtml')!, {
                             errMessage: 'Authorization did not complete in the time alotted.',
                             actionMessage: 'Please try again.',
                             vscodeurl: callback,
@@ -267,7 +268,7 @@ export class OAuthDancer implements Disposable {
                         this._authsInFlight.delete(respEvent.provider);
 
                         respEvent.res.send(
-                            Resources.html.get('authSuccessHtml')!({
+                            Mustache.render(Resources.html.get('authSuccessHtml')!, {
                                 product: product,
                                 vscodeurl: callback,
                             })
@@ -285,7 +286,7 @@ export class OAuthDancer implements Disposable {
                         this._authsInFlight.delete(respEvent.provider);
 
                         respEvent.res.send(
-                            Resources.html.get('authFailureHtml')!({
+                            Mustache.render(Resources.html.get('authFailureHtml')!, {
                                 errMessage: `Error authenticating with ${provider}: ${err}`,
                                 actionMessage: 'Give it a moment and try again.',
                                 vscodeurl: callback,

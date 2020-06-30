@@ -31,7 +31,6 @@ module.exports = [
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })],
             alias: {
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
-                handlebars: path.resolve(__dirname, 'node_modules/handlebars/dist/handlebars.js'),
             },
         },
         output: {

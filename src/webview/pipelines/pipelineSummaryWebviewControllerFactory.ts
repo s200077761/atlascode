@@ -9,9 +9,9 @@ import {
 } from '../../lib/webview/controller/pipelines/pipelineSummaryWebviewController';
 import { Logger } from '../../logger';
 import { Pipeline } from '../../pipelines/model';
+import { iconSet, Resources } from '../../resources';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
-import { Resources, iconSet } from '../../resources';
 
 export class PipelineSummaryWebviewControllerFactory implements VSCWebviewControllerFactory<Pipeline> {
     constructor(private api: PipelinesSummaryActionApi, private analytics: AnalyticsApi) {}
@@ -52,8 +52,8 @@ export class PipelineSummaryWebviewControllerFactory implements VSCWebviewContro
         return [controller, disposables];
     }
 
-    public webviewHtml(extensionPath: string): string {
-        const html = getHtmlForView(extensionPath, id);
+    public webviewHtml(extensionPath: string, baseUri: Uri, cspSource: string): string {
+        const html = getHtmlForView(extensionPath, baseUri, cspSource, id);
         return html;
     }
 }

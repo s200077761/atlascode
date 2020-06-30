@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import Mustache from 'mustache';
 import * as path from 'path';
 import {
     Disposable,
@@ -124,9 +125,17 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this.ws
             );
 
-            this._panel.webview.html = this._getHtmlForWebview(this.id);
+            this._panel.webview.html = this._getHtmlForWebview(
+                this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
+                this._panel.webview.cspSource,
+                this.id
+            );
         } else {
-            this._panel.webview.html = this._getHtmlForWebview(this.id);
+            this._panel.webview.html = this._getHtmlForWebview(
+                this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
+                this._panel.webview.cspSource,
+                this.id
+            );
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
     }
@@ -244,30 +253,25 @@ export abstract class AbstractReactWebview implements ReactWebview {
         this._onDidPanelDispose.dispose();
     }
 
-    private _getHtmlForWebview(viewName: string) {
+    private _getHtmlForWebview(baseUri: Uri, cspSource: string, viewName: string) {
         const manifest = JSON.parse(
             fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString()
         );
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];
 
-        const scriptUri = Uri.file(path.join(this._extensionPath, 'build', mainScript)).with({
-            scheme: 'vscode-resource',
-        });
-        const styleUri = Uri.file(path.join(this._extensionPath, 'build', mainStyle)).with({
-            scheme: 'vscode-resource',
-        });
-        const tmpl = Resources.html.get('reactHtml');
+        const template = Resources.html.get('reactHtml');
 
-        if (tmpl) {
-            return tmpl({
+        if (template) {
+            return Mustache.render(template, {
                 view: viewName,
-                styleUri: styleUri,
-                scriptUri: scriptUri,
-                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' }),
+                styleUri: `build/${mainStyle}`,
+                scriptUri: `build/${mainScript}`,
+                baseUri: baseUri,
+                cspSource: cspSource,
             });
         } else {
-            return Resources.htmlNotFound({ resource: 'reactHtml' });
+            return Mustache.render(Resources.htmlNotFound, { resource: 'reactHtml' });
         }
     }
 }

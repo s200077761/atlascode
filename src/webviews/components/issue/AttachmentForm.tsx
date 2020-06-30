@@ -4,9 +4,8 @@ import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import filesize from 'filesize';
-import React, { useContext, useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { FileWithPath, useDropzone } from 'react-dropzone';
-import { ResourceContext } from '../context';
 
 type ItemData = {
     file: FileWithPreview;
@@ -87,14 +86,13 @@ const dialogEditor = (
     files: any[],
     dispatch: any,
     getRootProps: (props?: any | undefined) => any,
-    getInputProps: (props?: any | undefined) => any,
-    scheme: string
+    getInputProps: (props?: any | undefined) => any
 ) => {
     return (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone' })}>
                 <div className="ac-attachment-instructions">
-                    <img className="ac-attachment-filesbg" src={`${scheme}images/files-bg.png`} />
+                    <img className="ac-attachment-filesbg" src={'images/files-bg.png'} />
                     <div className="ac-attachment-drag-and-button">
                         <div className="ac-attachment-drag-text">
                             <span>Drag and drop your files anywhere or</span>
@@ -176,7 +174,6 @@ const inlineEditor = (
 };
 
 export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ field, onFilesChanged, isInline }) => {
-    const scheme: string = useContext(ResourceContext);
     const [files, dispatch] = useReducer(filesReducer, initialState);
     const { getRootProps, getInputProps } = useDropzone({
         onDrop: (acceptedFiles: File[]) => {
@@ -208,5 +205,5 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
         return inlineEditor(files, dispatch, getRootProps, getInputProps);
     }
 
-    return dialogEditor(files, dispatch, getRootProps, getInputProps, scheme);
+    return dialogEditor(files, dispatch, getRootProps, getInputProps);
 };

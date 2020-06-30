@@ -3,7 +3,6 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 // prettier-ignore-end
 import './App.css';
-import { ResourceContext } from './context';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -14,18 +13,12 @@ const routes = {
     pullRequestDetailsScreen: React.lazy(() =>
         import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage')
     ),
-    createPullRequestScreen: React.lazy(() =>
-        import(/* webpackChunkName: "createPullRequestScreen" */ './pullrequest/CreatePullRequestPage')
-    ),
     viewIssueScreen: React.lazy(() => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage')),
     atlascodeCreateIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage')
     ),
     startWorkOnIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage')
-    ),
-    createBitbucketIssueScreen: React.lazy(() =>
-        import(/* webpackChunkName: "createBitbucketIssueScreen" */ './bbissue/CreateBitbucketIssuePage')
     ),
 };
 
@@ -66,9 +59,7 @@ const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
         <React.Suspense fallback={<div className="loading-spinner" />}>
-            <ResourceContext.Provider value="http://localhost:8080/">
-                <Page />
-            </ResourceContext.Provider>
+            <Page />
         </React.Suspense>
     );
 };
