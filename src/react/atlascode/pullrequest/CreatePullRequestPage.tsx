@@ -1,4 +1,4 @@
-import { IconLink, RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     AppBar,
@@ -10,12 +10,14 @@ import {
     Container,
     Divider,
     Grid,
+    IconButton,
     MenuItem,
     Paper,
     Switch,
     TextField,
     Theme,
     Toolbar,
+    Tooltip,
     Typography,
     useTheme,
 } from '@material-ui/core';
@@ -181,6 +183,9 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
             );
         }
         setReviewers(state.repoData.defaultReviewers);
+        // We only need to run this effect when workspaceRepo changes, and checking the rootUri is sufficient for that.
+        // It also had the added benefit of not running the effect if workspaceRepo object reference changes without the actual values changing as rootUri is a string.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.repoData.workspaceRepo.rootUri]);
 
     useEffect(() => {
@@ -225,7 +230,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                 `${state.commits.map((c) => `* ${c.message.trimRight()}`).join('\n\n')}${createdFromAtlascodeFooter}`
             );
         }
-    }, [state.commits]);
+    }, [sourceBranch.name, state.commits]);
 
     return (
         <CreatePullRequestControllerContext.Provider value={controller}>
@@ -239,15 +244,17 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                             {path.basename(state.repoData.workspaceRepo.rootUri)}
                         </Typography>
                         <Box className={classes.grow} />
-                        <IconLink
-                            href={
-                                state.repoData.isCloud
-                                    ? `${state.repoData.href}/pull-requests/new`
-                                    : `${state.repoData.href}/pull-requests?create`
-                            }
-                        >
-                            <LaunchIcon />
-                        </IconLink>
+                        <Tooltip title="Create in browser...">
+                            <IconButton
+                                href={
+                                    state.repoData.isCloud
+                                        ? `${state.repoData.href}/pull-requests/new`
+                                        : `${state.repoData.href}/pull-requests?create`
+                                }
+                            >
+                                <LaunchIcon />
+                            </IconButton>
+                        </Tooltip>
                         <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
                     </Toolbar>
                 </AppBar>
@@ -417,7 +424,16 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         />
                                     </Grid>
                                     <Grid item hidden={state.issue === undefined || transition === emptyTransition}>
-                                        <Grid container spacing={2} className={classes.leftBorder}>
+                                        <Grid container spacing={2} direction="column" className={classes.leftBorder}>
+                                            <Grid item direction="row">
+                                                <Typography>
+                                                    <Box display="inline-flex" fontWeight="fontWeightBold">
+                                                        {state.issue?.key}
+                                                    </Box>{' '}
+                                                    {state.issue?.summary}
+                                                </Typography>
+                                            </Grid>
+
                                             <Grid item xs={6} md={4}>
                                                 <TextField
                                                     select
