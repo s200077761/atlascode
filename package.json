@@ -875,7 +875,7 @@
                         "type": "string"
                     },
                     "default": [
-                        "http://atlassian.com",
+                        "https://www.atlassian.com",
                         "https://bitbucket.org"
                     ],
                     "description": "Online Checker will ping these URLs to determine online status",
