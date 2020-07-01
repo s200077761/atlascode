@@ -10,16 +10,16 @@ export enum PMFDismissal {
 }
 export interface PMFControllerApi {
     showPMFBanner: () => void;
-    dismissPMFBanner: (howLong: PMFDismissal) => void;
-    showPMFSurvey: () => void;
-    submitPMFSurvey: (pmfData: PMFData) => void;
+    dismissPMFBanner: (howLong: PMFDismissal, postMessageFunc: PostMessageFunc<CommonAction>) => void;
+    showPMFSurvey: (postMessageFunc: PostMessageFunc<CommonAction>) => void;
+    submitPMFSurvey: (pmfData: PMFData, postMessageFunc: PostMessageFunc<CommonAction>) => void;
 }
 
 export const emptyPMFController: PMFControllerApi = {
     showPMFBanner: () => {},
-    showPMFSurvey: () => {},
-    submitPMFSurvey: (pmfData: PMFData) => {},
-    dismissPMFBanner: (howLong: PMFDismissal) => {},
+    showPMFSurvey: (postMessageFunc: PostMessageFunc<CommonAction>) => {},
+    submitPMFSurvey: (pmfData: PMFData, postMessageFunc: PostMessageFunc<CommonAction>) => {},
+    dismissPMFBanner: (howLong: PMFDismissal, postMessageFunc: PostMessageFunc<CommonAction>) => {},
 };
 
 export type PMFState = {
@@ -77,38 +77,32 @@ function pmfReducer(state: PMFState, action: PMFAction): PMFState {
     }
 }
 
-export function usePMFController(postMessageFunc: PostMessageFunc<CommonAction>): [PMFState, PMFControllerApi] {
+export function usePMFController(): [PMFState, PMFControllerApi] {
     const [state, dispatch] = useReducer(pmfReducer, emptyPMFState);
 
     const showBanner = useCallback(() => {
         dispatch({ type: PMFActionType.ShowPMFBanner });
     }, []);
 
-    const showSurvey = useCallback(() => {
+    const showSurvey = useCallback((postMessageFunc: PostMessageFunc<CommonAction>) => {
         dispatch({ type: PMFActionType.ShowPMFSurvey });
         postMessageFunc({ type: CommonActionType.OpenPMFSurvey });
-    }, [postMessageFunc]);
+    }, []);
 
-    const submitSurvey = useCallback(
-        (pmfData: PMFData) => {
-            dispatch({ type: PMFActionType.SubmitPMFSurvey });
-            postMessageFunc({ type: CommonActionType.SubmitPMF, pmfData: pmfData });
-        },
-        [postMessageFunc]
-    );
+    const submitSurvey = useCallback((pmfData: PMFData, postMessageFunc: PostMessageFunc<CommonAction>) => {
+        dispatch({ type: PMFActionType.SubmitPMFSurvey });
+        postMessageFunc({ type: CommonActionType.SubmitPMF, pmfData: pmfData });
+    }, []);
 
-    const dismissBanner = useCallback(
-        (howLong: PMFDismissal) => {
-            dispatch({ type: PMFActionType.DismissPMFBanner });
+    const dismissBanner = useCallback((howLong: PMFDismissal, postMessageFunc: PostMessageFunc<CommonAction>) => {
+        dispatch({ type: PMFActionType.DismissPMFBanner });
 
-            if (howLong === PMFDismissal.LATER) {
-                postMessageFunc({ type: CommonActionType.DismissPMFLater });
-            } else {
-                postMessageFunc({ type: CommonActionType.DismissPMFNever });
-            }
-        },
-        [postMessageFunc]
-    );
+        if (howLong === PMFDismissal.LATER) {
+            postMessageFunc({ type: CommonActionType.DismissPMFLater });
+        } else {
+            postMessageFunc({ type: CommonActionType.DismissPMFNever });
+        }
+    }, []);
 
     const controllerApi = useMemo<PMFControllerApi>((): PMFControllerApi => {
         return {
@@ -123,3 +117,5 @@ export function usePMFController(postMessageFunc: PostMessageFunc<CommonAction>)
 }
 
 export const PMFControllerContext = createContext(emptyPMFController);
+
+export const PMFStateContext = createContext(emptyPMFState);

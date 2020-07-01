@@ -11,6 +11,8 @@ import {
 } from 'vscode';
 import { Container } from '../container';
 import { AnalyticsApi } from '../lib/analyticsApi';
+import { CommonActionType } from '../lib/ipc/fromUI/common';
+import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
@@ -137,6 +139,17 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
     private onMessageReceived(a: any): void {
         if (this._controller) {
             this._controller.onMessageReceived(a as R);
+
+            // this is here because getting a refresh event is the only way we know the UI is ready to receive messages.
+            if (a.type && a.type === CommonActionType.Refresh) {
+                const shouldShowSurvey: boolean = Container.pmfStats.shouldShowSurvey();
+                this.postMessage({ type: CommonMessageType.PMFStatus, showPMF: shouldShowSurvey });
+
+                if (shouldShowSurvey && this._controller) {
+                    const { site, product } = this._controller.screenDetails();
+                    this._analyticsApi.fireViewScreenEvent('atlascodePmfBanner', site, product);
+                }
+            }
         }
     }
 

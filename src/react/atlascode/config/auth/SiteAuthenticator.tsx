@@ -31,7 +31,7 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                 <Grid container direction="column" spacing={2}>
                     <Grid item hidden={isRemote === false}>
                         <Typography>
-                            <Box fontWeight="fontWeightBold">
+                            <Box component="span" fontWeight="fontWeightBold">
                                 ⚠️ Authentication cannot be done while running remotely
                             </Box>
                         </Typography>

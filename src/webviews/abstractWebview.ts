@@ -11,7 +11,7 @@ import {
     WebviewPanelOnDidChangeViewStateEvent,
     window,
 } from 'vscode';
-import { pmfClosed, pmfSnoozed, viewScreenEvent } from '../analytics';
+import { pmfClosed, pmfSnoozed, pmfSubmitted, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { submitLegacyJSDPMF } from '../feedback/pmfJSDSubmitter';
@@ -197,6 +197,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 case 'pmfSubmit': {
                     if (isPMFSubmitAction(a)) {
                         submitLegacyJSDPMF(a.pmfData);
+                        pmfSubmitted(a.pmfData.q1).then((e) => {
+                            Container.analyticsClient.sendTrackEvent(e);
+                        });
                     }
                     Container.pmfStats.touchSurveyed();
                     return true;
