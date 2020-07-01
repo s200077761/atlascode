@@ -14,6 +14,7 @@ export enum WebViewID {
     OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',
     StartWork = 'startWork',
+    PullRequestDetailsWebview = 'pullRequestDetailsScreen',
     CreatePullRequest = 'createPullRequestScreen',
 }
 

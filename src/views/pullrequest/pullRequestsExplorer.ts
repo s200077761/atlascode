@@ -1,7 +1,7 @@
 import path from 'path';
 import { commands, ConfigurationChangeEvent, QuickPickItem, window } from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
-import { WorkspaceRepo } from '../../bitbucket/model';
+import { PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { CommandContext, PullRequestTreeViewId, setCommandContext } from '../../constants';
@@ -18,7 +18,10 @@ export class PullRequestsExplorer extends BitbucketExplorer {
         Container.context.subscriptions.push(
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this.refresh()),
             commands.registerCommand(Commands.BitbucketToggleFileNesting, () => this.toggleFileNesting()),
-            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
+            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr: PullRequest) => {
+                //Uncomment this line to see the MUI version of the PR page
+                //TODO: uncomment this and remove the other createOrShow when MUI page is done
+                //await Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, pr);
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
             commands.registerCommand(Commands.CreatePullRequest, () => this.pickRepoAndShowCreatePR())

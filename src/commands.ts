@@ -68,6 +68,7 @@ export enum Commands {
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowWelcomePage = 'atlascode.showWelcomePage',
     ShowOnboardingPage = 'atlascode.showOnboardingPage',
+    ShowPullRequestDetailsPage = 'atlascode.showPullRequestDetailsPage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',

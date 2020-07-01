@@ -4,7 +4,7 @@ import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
-import { BitbucketIssue, BitbucketSite, WorkspaceRepo } from './bitbucket/model';
+import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
 import { JQLManager } from './jira/jqlManager';
@@ -16,6 +16,7 @@ import { ConfigAction } from './lib/ipc/fromUI/config';
 import { CreateBitbucketIssueAction } from './lib/ipc/fromUI/createBitbucketIssue';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
+import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
 import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
@@ -49,6 +50,8 @@ import { PipelineSummaryActionImplementation } from './webview/pipelines/pipelin
 import { PipelineSummaryWebviewControllerFactory } from './webview/pipelines/pipelineSummaryWebviewControllerFactory';
 import { VSCCreatePullRequestActionApi } from './webview/pullrequest/vscCreatePullRequestActionImpl';
 import { VSCCreatePullRequestWebviewControllerFactory } from './webview/pullrequest/vscCreatePullRequestWebviewControllerFactory';
+import { VSCPullRequestDetailsActionApi } from './webview/pullrequest/vscPullRequestDetailsActionApi';
+import { VSCPullRequestDetailsWebviewControllerFactory } from './webview/pullrequest/vscPullRequestDetailsWebviewControllerFactory';
 import { SingleWebview } from './webview/singleViewFactory';
 import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi';
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
@@ -209,6 +212,17 @@ export class Container {
                 this._analyticsApi
             ))
         );
+        this._context.subscriptions.push(
+            (this._pullRequestDetailsWebviewFactory = new MultiWebview<PullRequest, PullRequestDetailsAction>(
+                this._context.extensionPath,
+                new VSCPullRequestDetailsWebviewControllerFactory(
+                    new VSCPullRequestDetailsActionApi(),
+                    this._commonMessageHandler,
+                    this._analyticsApi
+                ),
+                this._analyticsApi
+            ))
+        );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
     }
 
@@ -285,6 +299,11 @@ export class Container {
     private static _onboardingWebviewFactory: SingleWebview<any, OnboardingAction>;
     static get onboardingWebviewFactory() {
         return this._onboardingWebviewFactory;
+    }
+
+    private static _pullRequestDetailsWebviewFactory: MultiWebview<any, PullRequestDetailsAction>;
+    static get pullRequestDetailsWebviewFactory() {
+        return this._pullRequestDetailsWebviewFactory;
     }
 
     private static _pipelinesSummaryWebview: MultiWebview<Pipeline, PipelineSummaryAction>;
