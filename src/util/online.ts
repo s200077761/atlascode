@@ -4,17 +4,17 @@ import pRetry from 'p-retry';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from 'vscode';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { configuration } from '../config/configuration';
+import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
 import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { ConnectionTimeout, Time } from './time';
-import { AxiosUserAgent } from '../constants';
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
 };
 
-const onlinePolling: number = 2 * Time.MINUTES;
+//const onlinePolling: number = 2 * Time.MINUTES;
 const offlinePolling: number = 5 * Time.SECONDS;
 
 export class OnlineDetector extends Disposable {
@@ -61,13 +61,13 @@ export class OnlineDetector extends Disposable {
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (initializing) {
-            await this.checkOnlineStatus();
+        // if (initializing) {
+        //     await this.checkOnlineStatus();
 
-            this._onlineTimer = setInterval(() => {
-                this.checkOnlineStatus();
-            }, onlinePolling);
-        }
+        //     this._onlineTimer = setInterval(() => {
+        //         this.checkOnlineStatus();
+        //     }, onlinePolling);
+        // }
 
         if (initializing || configuration.changed(e, 'offlineMode')) {
             this._isOfflineMode = Container.config.offlineMode;
@@ -77,13 +77,13 @@ export class OnlineDetector extends Disposable {
             }
         }
 
-        if (!initializing && configuration.changed(e, 'onlineCheckerUrls')) {
-            await this.checkOnlineStatus();
+        // if (!initializing && configuration.changed(e, 'onlineCheckerUrls')) {
+        //     await this.checkOnlineStatus();
 
-            this._onlineTimer = setInterval(() => {
-                this.checkOnlineStatus();
-            }, onlinePolling);
-        }
+        //     this._onlineTimer = setInterval(() => {
+        //         this.checkOnlineStatus();
+        //     }, onlinePolling);
+        // }
     }
 
     public isOnline(): boolean {
@@ -91,7 +91,9 @@ export class OnlineDetector extends Disposable {
             return false;
         }
 
-        return this._isOnline;
+        //return this._isOnline;
+
+        return true;
     }
 
     private async runOnlineChecks(): Promise<boolean> {
