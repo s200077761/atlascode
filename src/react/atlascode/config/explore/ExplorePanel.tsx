@@ -99,7 +99,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                 label="Create a Jira issue from a code comment"
                                 description={
                                     <>
-                                        Adding a trigger to yours code comments will bring up a{' '}
+                                        Adding a trigger to your code comments will bring up a{' '}
                                         <code className={classes.code}>Create Jira Issue</code> code lens action.
                                         Pressing this button brings up an issue creation screen with the description
                                         already filled in with the contents of the comment. These triggers are
