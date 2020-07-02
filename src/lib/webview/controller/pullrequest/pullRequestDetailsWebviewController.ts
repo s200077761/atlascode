@@ -1,11 +1,16 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-import { PullRequest } from '../../../../bitbucket/model';
+import Axios from 'axios';
+import { PullRequest, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
-import { PullRequestDetailsAction } from '../../../ipc/fromUI/pullRequestDetails';
+import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
-import { PullRequestDetailsMessage } from '../../../ipc/toUI/pullRequestDetails';
+import {
+    PullRequestDetailsMessage,
+    PullRequestDetailsMessageType,
+    PullRequestDetailsResponse,
+} from '../../../ipc/toUI/pullRequestDetails';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
@@ -16,12 +21,13 @@ export const title: string = 'Pull Request'; //TODO: Needs the pull request ID a
 
 export class PullRequestDetailsWebviewController implements WebviewController<PullRequest> {
     private pr: PullRequest;
+    private currentUser: User;
     private messagePoster: MessagePoster;
     private api: PullRequestDetailsActionApi;
     private logger: Logger;
     private analytics: AnalyticsApi;
-    private pullRequestDetailsUrl: string;
     private commonHandler: CommonActionMessageHandler;
+    private isRefreshing: boolean;
 
     constructor(
         pr: PullRequest,
@@ -39,13 +45,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         this.commonHandler = commonHandler;
 
         //Temporarily logging these objects so compiler doesn't complain they're unused
-        console.log(this.api);
         console.log(this.analytics);
-        console.log(this.pullRequestDetailsUrl);
     }
 
-    private postMessage(message: PullRequestDetailsMessage | CommonMessage) {
+    private postMessage(message: PullRequestDetailsMessage | PullRequestDetailsResponse | CommonMessage) {
         this.messagePoster(message);
+    }
+
+    private async getCurrentUser(): Promise<User> {
+        return this.currentUser || (await this.api.getCurrentUser(this.pr));
     }
 
     public title(): string {
@@ -57,14 +65,26 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     private async invalidate() {
-        //Send data when the page is refreshed
-        // this.postMessage({
-        //     type: PullRequestDetailsMessageType.Init,
-        // });
+        if (this.isRefreshing) {
+            return;
+        }
+        this.isRefreshing = true;
+        this.pr = await this.api.getPR(this.pr);
+        this.postMessage({
+            type: PullRequestDetailsMessageType.Init,
+            pr: this.pr,
+            currentUser: await this.getCurrentUser(),
+        });
+
+        this.isRefreshing = false;
     }
 
-    public update() {
-        //Send initial data to page
+    public async update() {
+        this.postMessage({
+            type: PullRequestDetailsMessageType.Init,
+            pr: this.pr,
+            currentUser: await this.getCurrentUser(),
+        });
     }
 
     public async onMessageReceived(msg: PullRequestDetailsAction | CommonAction) {
@@ -81,6 +101,54 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
             }
+            case PullRequestDetailsActionType.FetchUsersRequest:
+                try {
+                    const users = await this.api.fetchUsers(this.pr, msg.query, msg.abortKey);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.FetchUsersResponse,
+                        users: users,
+                    });
+                } catch (e) {
+                    if (Axios.isCancel(e)) {
+                        this.logger.warn(formatError(e));
+                    } else {
+                        this.logger.error(new Error(`error fetching users: ${e}`));
+                        this.postMessage({
+                            type: CommonMessageType.Error,
+                            reason: formatError(e, 'Error fetching users'),
+                        });
+                    }
+                }
+                break;
+            case PullRequestDetailsActionType.UpdateSummary:
+                try {
+                    await this.api.updateSummary(this.pr, msg.text);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateSummaryResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error fetching users: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error fetching users'),
+                    });
+                }
+                break;
+
+            case PullRequestDetailsActionType.UpdateTitle:
+                try {
+                    await this.api.updateTitle(this.pr, msg.text);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateSummaryResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error fetching users: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error fetching users'),
+                    });
+                }
+                break;
 
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:

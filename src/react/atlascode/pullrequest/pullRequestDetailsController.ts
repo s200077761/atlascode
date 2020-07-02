@@ -1,19 +1,26 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { v4 } from 'uuid';
+import { User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
-import { PullRequestDetailsAction } from '../../../lib/ipc/fromUI/pullRequestDetails';
+import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
     emptyPullRequestDetailsInitMessage,
+    FetchUsersResponseMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
     PullRequestDetailsResponse,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
+import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
 export interface PullRequestDetailsControllerApi {
     postMessage: PostMessageFunc<PullRequestDetailsAction>;
     refresh: () => void;
+    fetchUsers: (query: string, abortSignal?: AbortSignal) => Promise<User[]>;
+    updateSummary: (text: string) => Promise<void>;
+    updateTitle: (text: string) => Promise<void>;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -23,6 +30,9 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     refresh: (): void => {
         return;
     },
+    fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
+    updateSummary: async (text: string) => {},
+    updateTitle: async (text: string) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -90,7 +100,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         }
     }, []);
 
-    const [postMessage] = useMessagingApi<
+    const [postMessage, postMessagePromise] = useMessagingApi<
         PullRequestDetailsAction,
         PullRequestDetailsMessage,
         PullRequestDetailsResponse
@@ -101,12 +111,99 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         postMessage({ type: CommonActionType.Refresh });
     }, [postMessage]);
 
+    const fetchUsers = useCallback(
+        (query: string, abortSignal?: AbortSignal): Promise<User[]> => {
+            return new Promise<User[]>((resolve, reject) => {
+                (async () => {
+                    try {
+                        var abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'pull request fetchUsers cancelled by client',
+                                });
+                            };
+                        }
+
+                        const response = await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.FetchUsersRequest,
+                                query: query,
+                                abortKey: abortSignal ? abortKey : undefined,
+                            },
+                            PullRequestDetailsMessageType.FetchUsersResponse,
+                            ConnectionTimeout
+                        );
+                        resolve((response as FetchUsersResponseMessage).users);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessage, postMessagePromise]
+    );
+
+    const updateSummary = useCallback(
+        (text: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.UpdateSummary,
+                                text: text,
+                            },
+                            PullRequestDetailsMessageType.UpdateSummaryResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
+    const updateTitle = useCallback(
+        (text: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.UpdateTitle,
+                                text: text,
+                            },
+                            PullRequestDetailsMessageType.UpdateTitleResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
             refresh: sendRefresh,
+            fetchUsers: fetchUsers,
+            updateSummary: updateSummary,
+            updateTitle: updateTitle,
         };
-    }, [postMessage, sendRefresh]);
+    }, [postMessage, sendRefresh, fetchUsers, updateSummary, updateTitle]);
 
     return [state, controllerApi];
 }

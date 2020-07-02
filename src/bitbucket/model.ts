@@ -256,6 +256,38 @@ export interface PullRequest {
     // sourceRemote: sourceRemote,
 }
 
+export const emptyPullRequestData: PullRequestData = {
+    siteDetails: emptySiteInfo,
+    id: '',
+    version: 0,
+    url: '',
+    author: emptyUser,
+    reviewers: [],
+    participants: [],
+    source: {
+        repo: emptyRepo,
+        branchName: '',
+        commitHash: '',
+    },
+    destination: {
+        repo: emptyRepo,
+        branchName: '',
+        commitHash: '',
+    },
+    title: '',
+    htmlSummary: '',
+    rawSummary: '',
+    ts: '',
+    updatedTs: '',
+    state: 'OPEN',
+    closeSourceBranch: false,
+    taskCount: 0,
+};
+export const emptyPullRequest: PullRequest = {
+    site: emptyBitbucketSite,
+    data: emptyPullRequestData,
+};
+
 export interface PaginatedPullRequests {
     site: BitbucketSite;
     data: PullRequest[];
