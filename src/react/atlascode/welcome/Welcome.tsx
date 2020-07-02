@@ -83,6 +83,18 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.6.6 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Removed background polling for connectivity</li>
+                                                <li>
+                                                    Added option in general settings to minimize errors when offline
+                                                </li>
+                                                <li>Updated the create pull request view</li>
+                                                <li>Sped-up fetching lists of pull requests</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.6.5 🎉</h3>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
@@ -107,7 +119,6 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 <li>Fixed resource loading in webviews in VS Code Insiders</li>
                                             </ul>
                                         </section>
-
                                         <h3>🎉 What's New in 2.6.3 🎉</h3>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
