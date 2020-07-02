@@ -9,11 +9,12 @@ import { Connectivity } from '../Connectivity';
 
 type GenConnectPanelProps = CommonSubpanelProps & {
     enableHttpsTunnel: boolean;
+    offlineMode: boolean;
     onlineCheckerUrls: string[];
 };
 
 export const GenConnectPanel: React.FunctionComponent<GenConnectPanelProps> = memo(
-    ({ visible, expanded, onSubsectionChange, enableHttpsTunnel, onlineCheckerUrls }) => {
+    ({ visible, expanded, onSubsectionChange, enableHttpsTunnel, offlineMode, onlineCheckerUrls }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
         const expansionHandler = useCallback(
@@ -44,7 +45,11 @@ export const GenConnectPanel: React.FunctionComponent<GenConnectPanelProps> = me
                     <PanelSubtitle>configure general connectivity settings</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <Connectivity enableHttpsTunnel={enableHttpsTunnel} onlineCheckerUrls={onlineCheckerUrls} />
+                    <Connectivity
+                        enableHttpsTunnel={enableHttpsTunnel}
+                        offlineMode={offlineMode}
+                        onlineCheckerUrls={onlineCheckerUrls}
+                    />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );

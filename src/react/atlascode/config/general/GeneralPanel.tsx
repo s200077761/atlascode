@@ -38,6 +38,7 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
                                 expanded={selectedSubSections.includes(ConfigSubSection.Misc)}
                                 onSubsectionChange={onSubsectionChange}
                                 enableHttpsTunnel={config['enableHttpsTunnel']}
+                                offlineMode={config['offlineMode']}
                                 onlineCheckerUrls={config['onlineCheckerUrls']}
                             />
                         </Grid>
