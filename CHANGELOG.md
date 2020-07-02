@@ -1,3 +1,12 @@
+## What's New in 2.6.6
+
+### Improvements
+
+-   Removed background polling for connectivity
+-   Added option in general settings to minimize errors when offline
+-   Updated the create pull request view
+-   Sped-up fetching lists of pull requests
+
 ## What's New in 2.6.5
 
 ### Bugs fixed
