@@ -106,8 +106,6 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             return [];
         }
 
-        this.pr = await this.hydratePullRequest(this.pr);
-
         const bbApi = await clientForSite(this.pr.site);
         let promises = Promise.all([
             bbApi.pullrequests.getChangedFiles(this.pr),
@@ -138,13 +136,6 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             return await (this.childrenPromises ?? this.fetchDataAndProcessChildren());
         }
         return element.getChildren();
-    }
-
-    // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
-    // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
-    private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
-        const bbApi = await clientForSite(this.pr.site);
-        return await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo);
     }
 
     private async createRelatedJiraIssueNode(

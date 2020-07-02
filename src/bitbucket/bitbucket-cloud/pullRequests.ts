@@ -84,7 +84,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const { data } = await this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests`, {
             pagelen: defaultPagelen,
-            fields: '+values.participants',
+            fields: '+values.participants,+values.rendered.*',
             ...queryParams,
         });
 
@@ -574,8 +574,6 @@ export class CloudPullRequestApi implements PullRequestApi {
             q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"',
         });
 
-        console.log([[1], [2], [3]].flatMap((x) => x));
-
         const participants = data.values.flatMap((val: any) =>
             val.participants.map((p: any) => CloudPullRequestApi.toUserModel(p.user))
         );
@@ -784,7 +782,6 @@ export class CloudPullRequestApi implements PullRequestApi {
                 version: -1,
                 url: pr.links!.html!.href!,
                 author: CloudPullRequestApi.toUserModel(pr.author),
-                reviewers: [],
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
