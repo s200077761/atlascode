@@ -4,20 +4,20 @@ import { commands, Uri } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Commit, FileDiff, FileStatus, PullRequest, User, WorkspaceRepo } from '../../bitbucket/model';
+import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
+import { transitionIssue } from '../../jira/transitionIssue';
 import { CancellationManager } from '../../lib/cancellation';
 import { SubmitCreateRequestAction } from '../../lib/ipc/fromUI/createPullRequest';
 import { emptyRepoData, RepoData } from '../../lib/ipc/toUI/createPullRequest';
 import { CreatePullRequestActionApi } from '../../lib/webview/controller/pullrequest/createPullRequestActionApi';
+import { Logger } from '../../logger';
 import { Branch, Commit as GitCommit, RefType } from '../../typings/git';
 import { Shell } from '../../util/shell';
 import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { Logger } from '../../logger';
-import { Commands } from '../../commands';
-import { transitionIssue } from '../../jira/transitionIssue';
 
 export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi {
     constructor(private cancellationManager: CancellationManager) {}
@@ -42,13 +42,14 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         const isCloud = wsRepo.mainSiteRemote.site?.details?.isCloud === true;
 
         const repoScmState = await this.getRepoScmState(wsRepo);
+        const currentUser = await this.currentUser(wsRepo.mainSiteRemote.site!);
 
         const repoData: RepoData = {
             workspaceRepo: wsRepo,
             href: href,
             //branchTypes: [],
             developmentBranch: developmentBranch,
-            defaultReviewers: defaultReviewers,
+            defaultReviewers: defaultReviewers.filter((r) => r.accountId !== currentUser.accountId),
             isCloud: isCloud,
             localBranches: repoScmState.localBranches,
             remoteBranches: repoScmState.remoteBranches,
