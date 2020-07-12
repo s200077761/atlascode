@@ -11,6 +11,8 @@ import {
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
     PullRequestDetailsResponse,
+    PullRequestDetailsSummaryMessage,
+    PullRequestDetailsTitleMessage,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
 import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
@@ -31,7 +33,9 @@ export const emptyApi: PullRequestDetailsControllerApi = {
         return;
     },
     fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
-    updateSummary: async (text: string) => {},
+    updateSummary: async (text: string) => {
+        return;
+    },
     updateTitle: async (text: string) => {},
 };
 
@@ -50,10 +54,14 @@ export enum PullRequestDetailsUIActionType {
     Init = 'init',
     ConfigChange = 'configChange',
     Loading = 'loading',
+    UpdateSummary = 'updateSummary',
+    UpdateTitle = 'updateTitle',
 }
 
 export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -74,7 +82,22 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.Loading: {
             return { ...state, ...{ isSomethingLoading: true } };
         }
-
+        case PullRequestDetailsUIActionType.UpdateSummary: {
+            return {
+                ...state,
+                pr: {
+                    ...state.pr,
+                    data: {
+                        ...state.pr.data,
+                        htmlSummary: action.data.htmlSummary,
+                        rawSummary: action.data.rawSummary,
+                    },
+                },
+            };
+        }
+        case PullRequestDetailsUIActionType.UpdateTitle: {
+            return { ...state, pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } } };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -91,6 +114,14 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.Update: {
                 //FILL THIS IN
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateSummary: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateSummary, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateTitle: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateTitle, data: message });
                 break;
             }
 
@@ -156,7 +187,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                     try {
                         await postMessagePromise(
                             {
-                                type: PullRequestDetailsActionType.UpdateSummary,
+                                type: PullRequestDetailsActionType.UpdateSummaryRequest,
                                 text: text,
                             },
                             PullRequestDetailsMessageType.UpdateSummaryResponse,
@@ -179,7 +210,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                     try {
                         await postMessagePromise(
                             {
-                                type: PullRequestDetailsActionType.UpdateTitle,
+                                type: PullRequestDetailsActionType.UpdateTitleRequest,
                                 text: text,
                             },
                             PullRequestDetailsMessageType.UpdateTitleResponse,

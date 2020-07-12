@@ -1,6 +1,8 @@
 import axios, { CancelToken, CancelTokenSource } from 'axios';
+import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { PullRequest, User } from '../../bitbucket/model';
+import { Commands } from '../../commands';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
 
@@ -32,9 +34,9 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return await bbApi.pullrequests.getReviewers(pr.site, query, cancelToken);
     }
 
-    async updateSummary(pr: PullRequest, text: string): Promise<void> {
+    async updateSummary(pr: PullRequest, text: string): Promise<PullRequest> {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(
+        return await bbApi.pullrequests.update(
             pr,
             pr.data.title,
             text,
@@ -42,13 +44,15 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         );
     }
 
-    async updateTitle(pr: PullRequest, text: string): Promise<void> {
+    async updateTitle(pr: PullRequest, text: string): Promise<PullRequest> {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.update(
+        return await bbApi.pullrequests.update(
             pr,
             text,
             pr.data.rawSummary,
             pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
         );
+
+        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
     }
 }

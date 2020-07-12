@@ -120,11 +120,16 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     }
                 }
                 break;
-            case PullRequestDetailsActionType.UpdateSummary:
+            case PullRequestDetailsActionType.UpdateSummaryRequest:
                 try {
-                    await this.api.updateSummary(this.pr, msg.text);
+                    const pr = await this.api.updateSummary(this.pr, msg.text);
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateSummaryResponse,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateSummary,
+                        rawSummary: pr.data.rawSummary,
+                        htmlSummary: pr.data.htmlSummary,
                     });
                 } catch (e) {
                     this.logger.error(new Error(`error fetching users: ${e}`));
@@ -135,11 +140,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
 
-            case PullRequestDetailsActionType.UpdateTitle:
+            case PullRequestDetailsActionType.UpdateTitleRequest:
                 try {
-                    await this.api.updateTitle(this.pr, msg.text);
+                    const pr = await this.api.updateTitle(this.pr, msg.text);
                     this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateSummaryResponse,
+                        type: PullRequestDetailsMessageType.UpdateTitleResponse,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateTitle,
+                        title: pr.data.title,
                     });
                 } catch (e) {
                     this.logger.error(new Error(`error fetching users: ${e}`));

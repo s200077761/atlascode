@@ -3,14 +3,14 @@ import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
     FetchUsersRequest = 'fetchUsersRequest',
-    UpdateSummary = 'updateSummary',
-    UpdateTitle = 'updateTitle',
+    UpdateSummaryRequest = 'updateSummaryRequest',
+    UpdateTitleRequest = 'updateTitleRequest',
 }
 
 export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.FetchUsersRequest, FetchUsersRequestAction>
-    | ReducerAction<PullRequestDetailsActionType.UpdateSummary, UpdateSummaryAction>
-    | ReducerAction<PullRequestDetailsActionType.UpdateTitle, UpdateTitleAction>
+    | ReducerAction<PullRequestDetailsActionType.UpdateSummaryRequest, UpdateSummaryAction>
+    | ReducerAction<PullRequestDetailsActionType.UpdateTitleRequest, UpdateTitleAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {

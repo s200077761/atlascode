@@ -2,22 +2,23 @@ import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
-import { PullRequestData } from '../../../bitbucket/model';
 import { PanelTitle } from '../common/PanelTitle';
 type SummaryPanelProps = {
-    prData: PullRequestData;
+    rawSummary: string;
+    htmlSummary: string;
     fetchUsers: (input: string) => Promise<any[]>;
     summaryChange: (text: string) => Promise<void>;
 };
 
 export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
-    ({ prData, fetchUsers, summaryChange }) => {
+    ({ rawSummary, htmlSummary, fetchUsers, summaryChange }) => {
         const [internalExpanded, setInternalExpanded] = useState(true);
 
         const expansionHandler = useCallback((event: React.ChangeEvent<{}>, expanded: boolean) => {
             setInternalExpanded(expanded);
         }, []);
 
+        //TODO: Add this back in when @mentions are added
         // const handleFetchUsers = useCallback(
         //     async (input: string) => {
         //         return await fetchUsers(input);
@@ -42,7 +43,7 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
                         fullWidth
                         multiline
                         rows={7}
-                        defaultValue={prData.rawSummary}
+                        defaultValue={rawSummary}
                         onSave={handleSummaryChange}
                     />
                 </ExpansionPanelDetails>

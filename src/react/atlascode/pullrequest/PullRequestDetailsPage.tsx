@@ -77,9 +77,6 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                     </Breadcrumbs>
                                 </Grid>
                                 <Grid item>
-                                    {/* <Typography variant="h3" className={classes.title}>
-                                        {state.pr.data.title}
-                                    </Typography> */}
                                     <InlineTextEditor
                                         fullWidth
                                         defaultValue={state.pr.data.title}
@@ -96,7 +93,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <Grid container spacing={3} direction="column" justify="center">
                     <Grid item>
                         <SummaryPanel
-                            prData={state.pr.data}
+                            rawSummary={state.pr.data.rawSummary}
+                            htmlSummary={state.pr.data.htmlSummary}
                             fetchUsers={handleFetchUsers}
                             summaryChange={handleSummaryChange}
                         />

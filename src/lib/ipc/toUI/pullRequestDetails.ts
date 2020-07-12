@@ -7,11 +7,15 @@ export enum PullRequestDetailsMessageType {
     FetchUsersResponse = 'fetchUsersResponse',
     UpdateSummaryResponse = 'updateSummaryResponse',
     UpdateTitleResponse = 'updateTitleResponse',
+    UpdateSummary = 'updateSummary',
+    UpdateTitle = 'updateTitle',
 }
 
 export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.Init, PullRequestDetailsInitMessage>
-    | ReducerAction<PullRequestDetailsMessageType.Update, PullRequestDetailsInitMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.Update, PullRequestDetailsInitMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>;
 
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
@@ -27,6 +31,15 @@ export interface VoidResponse {}
 
 export interface FetchUsersResponseMessage {
     users: User[];
+}
+
+export interface PullRequestDetailsSummaryMessage {
+    htmlSummary: string;
+    rawSummary: string;
+}
+
+export interface PullRequestDetailsTitleMessage {
+    title: string;
 }
 
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
