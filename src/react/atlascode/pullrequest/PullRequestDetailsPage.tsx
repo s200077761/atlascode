@@ -4,7 +4,7 @@ import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback } from 'react';
 import { User } from '../../../bitbucket/model';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
-import { SummaryPanel } from './summaryPanel';
+import { SummaryPanel } from './SummaryPanel';
 
 const useStyles = makeStyles((theme: Theme) => ({
     grow: {
