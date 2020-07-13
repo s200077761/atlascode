@@ -348,6 +348,7 @@ export interface RepositoriesApi {
     getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]>;
     getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<string[]>;
+    fetchImage(url: string): Promise<string>;
 }
 
 export interface BitbucketApi {

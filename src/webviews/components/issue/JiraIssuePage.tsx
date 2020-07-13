@@ -565,6 +565,21 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 fetchUsers={this.fetchUsers}
                                 onSave={this.handleUpdateComment}
                                 onDelete={this.handleDeleteComment}
+                                fetchImage={async (url: string) => {
+                                    const nonce = uuid.v4();
+                                    return (
+                                        await this.postMessageWithEventPromise(
+                                            {
+                                                action: 'getImage',
+                                                nonce: nonce,
+                                                url: url,
+                                            },
+                                            'getImageDone',
+                                            ConnectionTimeout,
+                                            nonce
+                                        )
+                                    ).imgData;
+                                }}
                             />
                         ))}
                         {this.getInputMarkup(this.state.fields['comment'], true)}

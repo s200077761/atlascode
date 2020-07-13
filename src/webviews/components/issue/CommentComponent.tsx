@@ -10,6 +10,7 @@ import {
 import { distanceInWordsToNow } from 'date-fns';
 import React, { useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
 
 type Props = {
@@ -19,6 +20,7 @@ type Props = {
     fetchUsers: (input: string) => Promise<any[]>;
     onSave: (commentBody: string, commentId?: string, restriction?: CommentVisibility) => void;
     onDelete: (commentId: string) => void;
+    fetchImage?: (url: string) => Promise<string>;
 };
 
 export const CommentComponent: React.FC<Props> = ({
@@ -28,6 +30,7 @@ export const CommentComponent: React.FC<Props> = ({
     fetchUsers,
     onSave,
     onDelete,
+    fetchImage,
 }: Props) => {
     const [editing, setEditing] = useState(false);
     const [commentInputValue, setCommentInputValue] = useState(comment.body);
@@ -119,7 +122,7 @@ export const CommentComponent: React.FC<Props> = ({
                     <p style={{ whiteSpace: 'pre-wrap', opacity: 0.5 }}>{commentInputValue}</p>
                 ) : (
                     <div className="jira-comment">
-                        <p dangerouslySetInnerHTML={{ __html: body }} />
+                        <RenderedContent html={body} fetchImage={fetchImage} />
                     </div>
                 )
             }

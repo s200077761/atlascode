@@ -132,6 +132,11 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return data.values!.map((pr: any) => pr.id) || [];
     }
 
+    async fetchImage(url: string): Promise<string> {
+        const { data } = await this.client.getArrayBuffer(url);
+        return data;
+    }
+
     static patchAvatarUrl(baseUrl: string, avatarUrl: string): string {
         if (avatarUrl && !/^http/.test(avatarUrl)) {
             return `${baseUrl}${avatarUrl}`;

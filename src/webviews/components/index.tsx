@@ -28,10 +28,11 @@ window.addEventListener(
     (ee: ErrorEvent) => {
         const targetEL = ee.target as HTMLElement;
         if (ee && targetEL && targetEL.nodeName === 'IMG') {
-            const origianlSrc = targetEL.getAttribute('src');
+            const originalSrc = targetEL.getAttribute('src');
+            targetEL.setAttribute('atlascode-original-src', `${originalSrc}`);
             targetEL.setAttribute('src', 'images/no-image.svg');
-            targetEL.setAttribute('alt', `Unable to load image: ${origianlSrc}`);
-            targetEL.setAttribute('title', `Unable to load image: ${origianlSrc}`);
+            targetEL.setAttribute('alt', `Unable to load image: ${originalSrc}`);
+            targetEL.setAttribute('title', `Unable to load image: ${originalSrc}`);
             targetEL.setAttribute('class', 'ac-broken-img');
             targetEL.setAttribute('width', '24');
             targetEL.setAttribute('height', '24');
