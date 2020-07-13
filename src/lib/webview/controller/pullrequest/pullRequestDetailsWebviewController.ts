@@ -21,7 +21,6 @@ export const title: string = 'Pull Request'; //TODO: Needs the pull request ID a
 
 export class PullRequestDetailsWebviewController implements WebviewController<PullRequest> {
     private pr: PullRequest;
-    private currentUser: User;
     private messagePoster: MessagePoster;
     private api: PullRequestDetailsActionApi;
     private logger: Logger;
@@ -53,7 +52,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     private async getCurrentUser(): Promise<User> {
-        return this.currentUser || (await this.api.getCurrentUser(this.pr));
+        return await this.api.getCurrentUser(this.pr);
     }
 
     public title(): string {
@@ -65,18 +64,26 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     private async invalidate() {
-        if (this.isRefreshing) {
-            return;
-        }
-        this.isRefreshing = true;
-        this.pr = await this.api.getPR(this.pr);
-        this.postMessage({
-            type: PullRequestDetailsMessageType.Init,
-            pr: this.pr,
-            currentUser: await this.getCurrentUser(),
-        });
+        try {
+            if (this.isRefreshing) {
+                return;
+            }
+            this.isRefreshing = true;
+            this.pr = await this.api.getPR(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.Init,
+                pr: this.pr,
+                currentUser: await this.getCurrentUser(),
+            });
 
-        this.isRefreshing = false;
+            this.isRefreshing = false;
+        } catch (e) {
+            let err = new Error(`error updating pull request: ${e}`);
+            this.logger.error(err);
+            this.postMessage({ type: CommonMessageType.Error, reason: formatError(e) });
+        } finally {
+            this.isRefreshing = false;
+        }
     }
 
     public async update() {

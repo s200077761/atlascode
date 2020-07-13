@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { PullRequest, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
 
@@ -10,8 +11,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     constructor(private cancellationManager: CancellationManager) {}
 
     async getCurrentUser(pr: PullRequest): Promise<User> {
-        const bbApi = await clientForSite(pr.site);
-        return await bbApi.pullrequests.getCurrentUser(pr.site.details);
+        return await Container.bitbucketContext.currentUser(pr.site);
     }
 
     async getPR(pr: PullRequest): Promise<PullRequest> {
