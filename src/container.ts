@@ -216,7 +216,7 @@ export class Container {
             (this._pullRequestDetailsWebviewFactory = new MultiWebview<PullRequest, PullRequestDetailsAction>(
                 this._context.extensionPath,
                 new VSCPullRequestDetailsWebviewControllerFactory(
-                    new VSCPullRequestDetailsActionApi(),
+                    new VSCPullRequestDetailsActionApi(this._cancellationManager),
                     this._commonMessageHandler,
                     this._analyticsApi
                 ),

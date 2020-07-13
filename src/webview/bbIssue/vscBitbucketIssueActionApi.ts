@@ -11,8 +11,7 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
     constructor(private cancellationManager: CancellationManager) {}
 
     async currentUser(issue: BitbucketIssue): Promise<User> {
-        const bbApi = await clientForSite(issue.site);
-        return await bbApi.pullrequests.getCurrentUser(issue.site.details);
+        return await Container.bitbucketContext.currentUser(issue.site);
     }
 
     async getIssue(issue: BitbucketIssue): Promise<BitbucketIssue> {

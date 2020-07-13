@@ -1,19 +1,28 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
+import { v4 } from 'uuid';
+import { User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
-import { PullRequestDetailsAction } from '../../../lib/ipc/fromUI/pullRequestDetails';
+import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
     emptyPullRequestDetailsInitMessage,
+    FetchUsersResponseMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
     PullRequestDetailsResponse,
+    PullRequestDetailsSummaryMessage,
+    PullRequestDetailsTitleMessage,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
+import { ConnectionTimeout } from '../../../util/time';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
 export interface PullRequestDetailsControllerApi {
     postMessage: PostMessageFunc<PullRequestDetailsAction>;
     refresh: () => void;
+    fetchUsers: (query: string, abortSignal?: AbortSignal) => Promise<User[]>;
+    updateSummary: (text: string) => Promise<void>;
+    updateTitle: (text: string) => Promise<void>;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -23,6 +32,11 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     refresh: (): void => {
         return;
     },
+    fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
+    updateSummary: async (text: string) => {
+        return;
+    },
+    updateTitle: async (text: string) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -40,10 +54,14 @@ export enum PullRequestDetailsUIActionType {
     Init = 'init',
     ConfigChange = 'configChange',
     Loading = 'loading',
+    UpdateSummary = 'updateSummary',
+    UpdateTitle = 'updateTitle',
 }
 
 export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -64,7 +82,22 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.Loading: {
             return { ...state, ...{ isSomethingLoading: true } };
         }
-
+        case PullRequestDetailsUIActionType.UpdateSummary: {
+            return {
+                ...state,
+                pr: {
+                    ...state.pr,
+                    data: {
+                        ...state.pr.data,
+                        htmlSummary: action.data.htmlSummary,
+                        rawSummary: action.data.rawSummary,
+                    },
+                },
+            };
+        }
+        case PullRequestDetailsUIActionType.UpdateTitle: {
+            return { ...state, pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } } };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -83,6 +116,14 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 //FILL THIS IN
                 break;
             }
+            case PullRequestDetailsMessageType.UpdateSummary: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateSummary, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateTitle: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateTitle, data: message });
+                break;
+            }
 
             default: {
                 defaultActionGuard(message);
@@ -90,7 +131,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         }
     }, []);
 
-    const [postMessage] = useMessagingApi<
+    const [postMessage, postMessagePromise] = useMessagingApi<
         PullRequestDetailsAction,
         PullRequestDetailsMessage,
         PullRequestDetailsResponse
@@ -101,12 +142,99 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         postMessage({ type: CommonActionType.Refresh });
     }, [postMessage]);
 
+    const fetchUsers = useCallback(
+        (query: string, abortSignal?: AbortSignal): Promise<User[]> => {
+            return new Promise<User[]>((resolve, reject) => {
+                (async () => {
+                    try {
+                        var abortKey: string = '';
+
+                        if (abortSignal) {
+                            abortKey = v4();
+
+                            abortSignal.onabort = () => {
+                                postMessage({
+                                    type: CommonActionType.Cancel,
+                                    abortKey: abortKey,
+                                    reason: 'pull request fetchUsers cancelled by client',
+                                });
+                            };
+                        }
+
+                        const response = await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.FetchUsersRequest,
+                                query: query,
+                                abortKey: abortSignal ? abortKey : undefined,
+                            },
+                            PullRequestDetailsMessageType.FetchUsersResponse,
+                            ConnectionTimeout
+                        );
+                        resolve((response as FetchUsersResponseMessage).users);
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessage, postMessagePromise]
+    );
+
+    const updateSummary = useCallback(
+        (text: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.UpdateSummaryRequest,
+                                text: text,
+                            },
+                            PullRequestDetailsMessageType.UpdateSummaryResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
+    const updateTitle = useCallback(
+        (text: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.UpdateTitleRequest,
+                                text: text,
+                            },
+                            PullRequestDetailsMessageType.UpdateTitleResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
             refresh: sendRefresh,
+            fetchUsers: fetchUsers,
+            updateSummary: updateSummary,
+            updateTitle: updateTitle,
         };
-    }, [postMessage, sendRefresh]);
+    }, [postMessage, sendRefresh, fetchUsers, updateSummary, updateTitle]);
 
     return [state, controllerApi];
 }

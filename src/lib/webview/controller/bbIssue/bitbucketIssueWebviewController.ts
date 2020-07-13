@@ -24,7 +24,6 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
     private _analytics: AnalyticsApi;
     private _commonHandler: CommonActionMessageHandler;
     private _isRefreshing: boolean;
-    private _currentUser: User;
     private _participants: Map<string, User> = new Map();
 
     constructor(
@@ -56,7 +55,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
     }
 
     private async currentUser(): Promise<User> {
-        return this._currentUser || (await this._api.currentUser(this._issue));
+        return await this._api.currentUser(this._issue);
     }
 
     private async invalidate() {
