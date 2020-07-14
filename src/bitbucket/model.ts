@@ -261,7 +261,6 @@ export const emptyPullRequestData: PullRequestData = {
     version: 0,
     url: '',
     author: emptyUser,
-    reviewers: [],
     participants: [],
     source: {
         repo: emptyRepo,
