@@ -405,6 +405,21 @@ export abstract class AbstractIssueEditorPage<
                                 onSave={async (val: string) => {
                                     await this.handleInlineEdit(field, val);
                                 }}
+                                fetchImage={async (url: string) => {
+                                    const nonce = uuid.v4();
+                                    return (
+                                        await this.postMessageWithEventPromise(
+                                            {
+                                                action: 'getImage',
+                                                nonce: nonce,
+                                                url: url,
+                                            },
+                                            'getImageDone',
+                                            ConnectionTimeout,
+                                            nonce
+                                        )
+                                    ).imgData;
+                                }}
                             />
                         );
                     } else {

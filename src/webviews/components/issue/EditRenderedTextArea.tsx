@@ -2,6 +2,7 @@ import { ButtonGroup } from '@atlaskit/button';
 import { Button } from '@atlaskit/button/dist/cjs/components/Button';
 import Comment from '@atlaskit/comment';
 import React, { useState } from 'react';
+import { RenderedContent } from '../RenderedContent';
 import { TextAreaEditor } from './TextAreaEditor';
 
 interface Props {
@@ -9,9 +10,16 @@ interface Props {
     renderedText?: string;
     fetchUsers: (input: string) => Promise<any[]>;
     onSave: (text: string) => Promise<void>;
+    fetchImage?: (url: string) => Promise<string>;
 }
 
-export const EditRenderedTextArea: React.FC<Props> = ({ text, renderedText, fetchUsers, onSave }: Props) => {
+export const EditRenderedTextArea: React.FC<Props> = ({
+    text,
+    renderedText,
+    fetchUsers,
+    onSave,
+    fetchImage,
+}: Props) => {
     const [editing, setEditing] = useState(false);
     const [commentInputValue, setCommentInputValue] = useState(text);
     const [isSaving, setIsSaving] = useState(false);
@@ -64,7 +72,7 @@ export const EditRenderedTextArea: React.FC<Props> = ({ text, renderedText, fetc
         <Comment
             content={
                 <div className="ac-inline-input-view-p" onClick={() => setEditing(true)}>
-                    {renderedText ? <p dangerouslySetInnerHTML={{ __html: renderedText }} /> : <p>{text}</p>}
+                    {renderedText ? <RenderedContent html={renderedText} fetchImage={fetchImage} /> : <p>{text}</p>}
                 </div>
             }
         />

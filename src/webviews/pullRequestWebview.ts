@@ -33,6 +33,7 @@ import {
     isEditComment,
     isEditTask,
     isFetchUsers,
+    isGetImage,
     isMerge,
     isOpenBuildStatus,
     isOpenDiffView,
@@ -50,8 +51,8 @@ import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
 import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
-import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { addSourceRemoteIfNeeded } from '../views/pullrequest/gitActions';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _pr: PullRequest | undefined = undefined;
@@ -328,6 +329,32 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
+                    }
+                    break;
+                }
+                case 'getImage': {
+                    if (isGetImage(msg)) {
+                        handled = true;
+                        const client = await clientForSite(this._pr.site);
+                        const baseUrl = new URL(this._pr.site.details.baseLinkUrl);
+                        const href = new URL(msg.url!, baseUrl);
+
+                        if (href.hostname !== baseUrl.hostname || this._pr.site.details.isCloud) {
+                            this.postMessage({
+                                type: 'getImageDone',
+                                imgData: '',
+                                nonce: msg.nonce,
+                            });
+                            break;
+                        }
+
+                        const url = href.toString();
+                        const imgData = await client.repositories.fetchImage(url);
+                        this.postMessage({
+                            type: 'getImageDone',
+                            imgData: imgData,
+                            nonce: msg.nonce,
+                        });
                     }
                     break;
                 }

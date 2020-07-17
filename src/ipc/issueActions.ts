@@ -164,6 +164,15 @@ export interface DeleteByIDAction extends Action {
     objectWithId: any;
 }
 
+export interface GetImageAction extends Action {
+    action: 'getImage';
+    url: string;
+}
+
+export function isGetImage(a: Action): a is GetImageAction {
+    return (<GetImageAction>a).action === 'getImage';
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }

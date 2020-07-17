@@ -1031,6 +1031,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                     renderedText={pr.htmlSummary}
                                     fetchUsers={this.loadUserOptions}
                                     onSave={this.handleSummaryChange}
+                                    fetchImage={async (url: string) => {
+                                        const nonce = uuid.v4();
+                                        return (
+                                            await this.postMessageWithEventPromise(
+                                                {
+                                                    action: 'getImage',
+                                                    nonce: nonce,
+                                                    url: url,
+                                                },
+                                                'getImageDone',
+                                                ConnectionTimeout,
+                                                nonce
+                                            )
+                                        ).imgData;
+                                    }}
                                 />
                             </Panel>
                             {this.relatedJiraIssuesPanel()}

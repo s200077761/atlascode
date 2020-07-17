@@ -29,6 +29,7 @@ import {
     isCreateIssueLink,
     isCreateWorklog,
     isDeleteByIDAction,
+    isGetImage,
     isIssueComment,
     isIssueDeleteComment,
     isOpenStartWorkPageAction,
@@ -900,6 +901,48 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             this.postMessage({
                                 type: 'error',
                                 reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`),
+                                nonce: msg.nonce,
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'getImage': {
+                    if (isGetImage(msg)) {
+                        handled = true;
+                        try {
+                            if (this._issue.siteDetails.isCloud) {
+                                this.postMessage({
+                                    type: 'getImageDone',
+                                    imgData: '',
+                                    nonce: msg.nonce,
+                                });
+                            }
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
+                            const baseUrl = new URL(this._issue.siteDetails.baseLinkUrl);
+                            const href = new URL(msg.url!, baseUrl);
+                            if (href.hostname !== baseUrl.hostname) {
+                                break;
+                            }
+                            const url = href.toString();
+                            const response = await client.transportFactory().get(url, {
+                                method: 'GET',
+                                headers: {
+                                    Authorization: await client.authorizationProvider('GET', url),
+                                },
+                                responseType: 'arraybuffer',
+                            });
+                            const imgData = Buffer.from(response.data, 'binary').toString('base64');
+                            this.postMessage({
+                                type: 'getImageDone',
+                                imgData: imgData,
+                                nonce: msg.nonce,
+                            });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching image: ${msg.url}`));
+                            this.postMessage({
+                                type: 'getImageDone',
+                                imgData: '',
                                 nonce: msg.nonce,
                             });
                         }

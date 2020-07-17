@@ -167,3 +167,12 @@ export interface OpenDiffViewAction extends Action {
 export function isOpenDiffView(a: Action): a is OpenDiffViewAction {
     return (<OpenDiffViewAction>a).action === 'openDiffView';
 }
+
+export interface GetImageAction extends Action {
+    action: 'getImage';
+    url: string;
+}
+
+export function isGetImage(a: Action): a is GetImageAction {
+    return (<GetImageAction>a).action === 'getImage';
+}

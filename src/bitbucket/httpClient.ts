@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
 import { addCurlLogging } from '../atlclients/interceptors';
+import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
-import { AxiosUserAgent } from '../constants';
 
 export interface RequestRange {
     start: number;
@@ -73,6 +73,17 @@ export class HTTPClient {
             transformResponse: (data) => data,
         });
         return { data: res.data, headers: res.headers };
+    }
+
+    async getArrayBuffer(urlSlug: string, queryParams?: any) {
+        let url = `${urlSlug.startsWith('http') ? '' : this.baseUrl}${urlSlug}`;
+        url = HTTPClient.addQueryParams(url, queryParams);
+
+        const res = await this.transport(url, {
+            method: 'GET',
+            responseType: 'arraybuffer',
+        });
+        return { data: Buffer.from(res.data, 'binary').toString('base64'), headers: res.headers };
     }
 
     async getOctetStream(urlSlug: string, range?: RequestRange, queryParams?: any) {

@@ -99,6 +99,11 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         return data.values!.map((pr: any) => pr.id) || [];
     }
 
+    async fetchImage(url: string): Promise<string> {
+        const { data } = await this.client.getArrayBuffer(url);
+        return data;
+    }
+
     static toRepo(bbRepo: any, branchingModel?: BitbucketBranchingModel): Repo {
         if (!bbRepo) {
             return {
