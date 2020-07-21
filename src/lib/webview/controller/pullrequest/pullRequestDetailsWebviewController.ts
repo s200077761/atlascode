@@ -1,6 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import { PullRequest, User } from '../../../../bitbucket/model';
+import { Commit, PullRequest, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
@@ -21,6 +21,7 @@ export const title: string = 'Pull Request'; //TODO: Needs the pull request ID a
 
 export class PullRequestDetailsWebviewController implements WebviewController<PullRequest> {
     private pr: PullRequest;
+    private commits: Commit[] = [];
     private messagePoster: MessagePoster;
     private api: PullRequestDetailsActionApi;
     private logger: Logger;
@@ -73,7 +74,14 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.postMessage({
                 type: PullRequestDetailsMessageType.Init,
                 pr: this.pr,
+                commits: [],
                 currentUser: await this.getCurrentUser(),
+            });
+
+            this.commits = await this.api.getCommits(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.GetCommits,
+                commits: this.commits,
             });
 
             this.isRefreshing = false;
@@ -90,6 +98,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         this.postMessage({
             type: PullRequestDetailsMessageType.Init,
             pr: this.pr,
+            commits: this.commits,
             currentUser: await this.getCurrentUser(),
         });
     }

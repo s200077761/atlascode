@@ -1,7 +1,7 @@
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { PullRequest, User } from '../../bitbucket/model';
+import { Commit, PullRequest, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
@@ -45,6 +45,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     }
 
     async updateTitle(pr: PullRequest, text: string): Promise<PullRequest> {
+        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         const bbApi = await clientForSite(pr.site);
         return await bbApi.pullrequests.update(
             pr,
@@ -52,7 +53,10 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             pr.data.rawSummary,
             pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
         );
+    }
 
-        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+    async getCommits(pr: PullRequest): Promise<Commit[]> {
+        const bbApi = await clientForSite(pr.site);
+        return await bbApi.pullrequests.getCommits(pr);
     }
 }

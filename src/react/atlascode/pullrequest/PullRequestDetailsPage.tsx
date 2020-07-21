@@ -3,6 +3,8 @@ import { AppBar, Box, Breadcrumbs, Container, Grid, Link, makeStyles, Theme, Too
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback } from 'react';
 import { User } from '../../../bitbucket/model';
+import { BasicPanel } from '../common/BasicPanel';
+import { Commits } from './Commits';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { SummaryPanel } from './SummaryPanel';
 
@@ -98,6 +100,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             fetchUsers={handleFetchUsers}
                             summaryChange={handleSummaryChange}
                         />
+                        <BasicPanel title={'Commits'} isDefaultExpanded>
+                            <Commits commits={state.commits} />
+                        </BasicPanel>
                     </Grid>
                 </Grid>
             </Container>

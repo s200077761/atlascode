@@ -7,6 +7,7 @@ import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../..
 import {
     emptyPullRequestDetailsInitMessage,
     FetchUsersResponseMessage,
+    PullRequestDetailsCommitsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
@@ -56,12 +57,14 @@ export enum PullRequestDetailsUIActionType {
     Loading = 'loading',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
+    GetCommits = 'getCommits',
 }
 
 export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.GetCommits, { data: PullRequestDetailsCommitsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -98,6 +101,9 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateTitle: {
             return { ...state, pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } } };
         }
+        case PullRequestDetailsUIActionType.GetCommits: {
+            return { ...state, commits: action.data.commits };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -122,6 +128,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateTitle: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateTitle, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.GetCommits: {
+                dispatch({ type: PullRequestDetailsUIActionType.GetCommits, data: message });
                 break;
             }
 
