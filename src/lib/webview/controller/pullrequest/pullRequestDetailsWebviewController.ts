@@ -108,9 +108,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
             }
-            case PullRequestDetailsActionType.FetchUsersRequest:
+
+            case PullRequestDetailsActionType.FetchUsersRequest: {
                 try {
-                    const users = await this.api.fetchUsers(this.pr, msg.query, msg.abortKey);
+                    const users = await this.api.fetchUsers(msg.site, msg.query, msg.abortKey);
                     this.postMessage({
                         type: PullRequestDetailsMessageType.FetchUsersResponse,
                         users: users,
@@ -127,7 +128,26 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     }
                 }
                 break;
-            case PullRequestDetailsActionType.UpdateSummaryRequest:
+            }
+
+            case PullRequestDetailsActionType.UpdateReviewers: {
+                try {
+                    const reviewers = await this.api.updateReviewers(this.pr, msg.reviewers);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateReviewers,
+                        reviewers: reviewers,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error updating reviewers: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error fetching users'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.UpdateSummaryRequest: {
                 try {
                     const pr = await this.api.updateSummary(this.pr, msg.text);
                     this.postMessage({
@@ -146,8 +166,9 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     });
                 }
                 break;
+            }
 
-            case PullRequestDetailsActionType.UpdateTitleRequest:
+            case PullRequestDetailsActionType.UpdateTitleRequest: {
                 try {
                     const pr = await this.api.updateTitle(this.pr, msg.text);
                     this.postMessage({
@@ -165,6 +186,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     });
                 }
                 break;
+            }
 
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:
