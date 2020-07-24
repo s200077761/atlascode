@@ -3,6 +3,7 @@ import { AppBar, Box, Breadcrumbs, Container, Grid, Link, makeStyles, Theme, Too
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback } from 'react';
 import { User } from '../../../bitbucket/model';
+import { BranchInfo } from './BranchInfo';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
@@ -95,6 +96,11 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onUpdateReviewers={handleUpdateReviewers}
                             />
                         </Box>
+                        <BranchInfo
+                            source={state.pr.data.source}
+                            destination={state.pr.data.destination}
+                            author={state.pr.data.author}
+                        />
                     </Grid>
 
                     <Grid item>
