@@ -1,6 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import { PullRequest, User } from '../../../../bitbucket/model';
+import { ApprovalStatus, PullRequest, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
@@ -183,6 +183,23 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error fetching users'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.UpdateApprovalStatus: {
+                try {
+                    const status: ApprovalStatus = await this.api.updateApprovalStatus(this.pr, msg.status);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateApprovalStatus,
+                        status: status,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error updating approval status: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating approval status'),
                     });
                 }
                 break;

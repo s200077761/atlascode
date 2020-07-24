@@ -1,7 +1,7 @@
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { BitbucketSite, PullRequest, Reviewer, User } from '../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, PullRequest, Reviewer, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
@@ -65,5 +65,11 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             newReviewers.map((user) => user.accountId)
         );
         return data.participants;
+    }
+
+    async updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus> {
+        const bbApi = await clientForSite(pr.site);
+        const newStatus = await bbApi.pullrequests.updateApproval(pr, status);
+        return newStatus;
     }
 }

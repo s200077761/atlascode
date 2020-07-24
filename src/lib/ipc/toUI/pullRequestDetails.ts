@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { emptyPullRequest, emptyUser, PullRequest, Reviewer, User } from '../../../bitbucket/model';
+import { ApprovalStatus, emptyPullRequest, emptyUser, PullRequest, Reviewer, User } from '../../../bitbucket/model';
 
 export enum PullRequestDetailsMessageType {
     Init = 'init',
@@ -8,9 +8,11 @@ export enum PullRequestDetailsMessageType {
     UpdateSummaryResponse = 'updateSummaryResponse',
     UpdateTitleResponse = 'updateTitleResponse',
     UpdateReviewersResponse = 'updateReviewersResponse',
+    UpdateApprovalStatusResponse = 'updateApprovalStatusResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateReviewers = 'updateReviewers',
+    UpdateApprovalStatus = 'updateApprovalStatus',
 }
 
 export type PullRequestDetailsMessage =
@@ -18,12 +20,14 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.Update, PullRequestDetailsInitMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>;
 
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummaryResponse, VoidResponse>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitleResponse, VoidResponse>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatusResponse, VoidResponse>
     | ReducerAction<PullRequestDetailsMessageType.UpdateReviewersResponse, VoidResponse>;
 
 export interface PullRequestDetailsInitMessage {
@@ -50,6 +54,9 @@ export interface PullRequestDetailsReviewersMessage {
     reviewers: Reviewer[];
 }
 
+export interface PullRequestDetailsApprovalMessage {
+    status: ApprovalStatus;
+}
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
     currentUser: emptyUser,

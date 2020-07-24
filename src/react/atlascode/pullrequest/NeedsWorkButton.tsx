@@ -1,0 +1,30 @@
+import { Box, Button, Typography } from '@material-ui/core';
+import BuildIcon from '@material-ui/icons/Build';
+import React, { useCallback } from 'react';
+import { ApprovalStatus } from '../../../bitbucket/model';
+
+type NeedsWorkButtonProps = {
+    hidden?: boolean;
+    status: ApprovalStatus;
+    onApprove: (status: ApprovalStatus) => void;
+};
+
+export const NeedsWorkButton: React.FunctionComponent<NeedsWorkButtonProps> = ({ hidden, status, onApprove }) => {
+    const handleOnApprove = useCallback(() => {
+        onApprove(status === 'NEEDS_WORK' ? 'UNAPPROVED' : 'NEEDS_WORK');
+    }, [onApprove, status]);
+
+    return (
+        <Box hidden={hidden}>
+            <Button
+                fullWidth
+                onClick={() => handleOnApprove()}
+                startIcon={<BuildIcon htmlColor={status === 'NEEDS_WORK' ? '#FFCC00' : 'gray'} />}
+            >
+                <Typography variant={'button'}>
+                    {status === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}
+                </Typography>
+            </Button>
+        </Box>
+    );
+};

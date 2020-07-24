@@ -1,4 +1,4 @@
-import { BitbucketSite, PullRequest, Reviewer, User } from '../../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, PullRequest, Reviewer, User } from '../../../../bitbucket/model';
 
 export interface PullRequestDetailsActionApi {
     fetchUsers(site: BitbucketSite, query: string, abortKey?: string): Promise<User[]>;
@@ -7,4 +7,5 @@ export interface PullRequestDetailsActionApi {
     getCurrentUser(pr: PullRequest): Promise<User>;
     getPR(pr: PullRequest): Promise<PullRequest>;
     updateReviewers(pr: PullRequest, newReviewers: User[]): Promise<Reviewer[]>;
+    updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
 }

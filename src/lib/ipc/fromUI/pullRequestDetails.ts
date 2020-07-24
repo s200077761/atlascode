@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { BitbucketSite, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, User } from '../../../bitbucket/model';
 import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
@@ -7,6 +7,7 @@ export enum PullRequestDetailsActionType {
     UpdateSummaryRequest = 'updateSummaryRequest',
     UpdateTitleRequest = 'updateTitleRequest',
     UpdateReviewers = 'updateReviewers',
+    UpdateApprovalStatus = 'updateApprovalStatus',
 }
 
 export type PullRequestDetailsAction =
@@ -14,6 +15,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.UpdateSummaryRequest, UpdateSummaryAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateTitleRequest, UpdateTitleAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
+    | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -32,4 +34,8 @@ export interface UpdateTitleAction {
 
 export interface UpdateReviewersAction {
     reviewers: User[];
+}
+
+export interface UpdateApprovalStatusAction {
+    status: ApprovalStatus;
 }

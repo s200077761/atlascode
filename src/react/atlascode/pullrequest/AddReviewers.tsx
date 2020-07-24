@@ -33,7 +33,7 @@ export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site,
         <React.Fragment>
             <Tooltip title="Add Reviewers">
                 <ToggleButton
-                    onClick={handleToggleOpen /*TODO: hide border of button*/}
+                    onClick={handleToggleOpen}
                     selected={isOpen}
                     value={'Add Reviewers'}
                     style={{ borderStyle: 'none' }}

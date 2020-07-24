@@ -1,9 +1,11 @@
 import { InlineTextEditor, RefreshButton } from '@atlassianlabs/guipi-core-components';
 import { AppBar, Box, Breadcrumbs, Container, Grid, Link, makeStyles, Theme, Toolbar } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import React, { useCallback } from 'react';
-import { User } from '../../../bitbucket/model';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ApprovalStatus, User } from '../../../bitbucket/model';
+import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
+import { NeedsWorkButton } from './NeedsWorkButton';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
@@ -26,6 +28,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [state, controller] = usePullRequestDetailsController();
+    const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
 
     const handleFetchUsers = async (input: string, abortSignal?: AbortSignal): Promise<any> => {
         AwesomeDebouncePromise(
@@ -60,6 +63,15 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         [controller]
     );
 
+    useEffect(() => {
+        const foundCurrentUser = state.pr.data.participants.find(
+            (participant) => participant.accountId === state.currentUser.accountId
+        );
+        if (foundCurrentUser) {
+            setCurrentUserApprovalStatus(foundCurrentUser.status);
+        }
+    }, [state.pr.data.participants, state.currentUser.accountId]);
+
     return (
         <PullRequestDetailsControllerContext.Provider value={controller}>
             <Container maxWidth="xl">
@@ -84,6 +96,22 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         <InlineTextEditor fullWidth defaultValue={state.pr.data.title} onSave={handleTitleChange} />
 
                         <Box className={classes.grow} />
+                        <NeedsWorkButton
+                            hidden={
+                                state.pr.site.details.isCloud ||
+                                state.currentUser.accountId === state.pr.data.author.accountId
+                            }
+                            status={currentUserApprovalStatus}
+                            onApprove={controller.updateApprovalStatus}
+                        />
+                        <ApproveButton
+                            hidden={
+                                !state.pr.site.details.isCloud &&
+                                state.currentUser.accountId === state.pr.data.author.accountId
+                            }
+                            status={currentUserApprovalStatus}
+                            onApprove={controller.updateApprovalStatus}
+                        />
                         <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
                     </Toolbar>
                 </AppBar>

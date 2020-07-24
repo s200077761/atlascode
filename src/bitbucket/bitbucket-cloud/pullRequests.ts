@@ -6,6 +6,7 @@ import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { HTTPClient } from '../httpClient';
 import {
+    ApprovalStatus,
     BitbucketSite,
     BuildStatus,
     Comment,
@@ -688,11 +689,19 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
 
-    async updateApproval(pr: PullRequest, status: string) {
+    async updateApproval(pr: PullRequest, status: string): Promise<ApprovalStatus> {
         const { ownerSlug, repoSlug } = pr.site;
+        let data: any;
         status === 'APPROVED'
-            ? await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`, {})
-            : await this.client.delete(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`, {});
+            ? ({ data } = await this.client.post(
+                  `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                  {}
+              ))
+            : ({ data } = await this.client.delete(
+                  `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                  {}
+              ));
+        return data.approved ? 'APPROVED' : 'UNAPPROVED';
     }
 
     async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {

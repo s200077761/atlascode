@@ -1,12 +1,13 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
-import { BitbucketSite, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
     emptyPullRequestDetailsInitMessage,
     FetchUsersResponseMessage,
+    PullRequestDetailsApprovalMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
@@ -25,6 +26,7 @@ export interface PullRequestDetailsControllerApi {
     updateSummary: (text: string) => Promise<void>;
     updateTitle: (text: string) => Promise<void>;
     updateReviewers: (newReviewers: User[]) => Promise<void>;
+    updateApprovalStatus: (status: ApprovalStatus) => Promise<void>;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -40,6 +42,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     },
     updateTitle: async (text: string) => {},
     updateReviewers: async (newReviewers: User[]) => {},
+    updateApprovalStatus: async (status: ApprovalStatus) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -60,6 +63,7 @@ export enum PullRequestDetailsUIActionType {
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateReviewers = 'updateReviewers',
+    UpdateApprovalStatus = 'updateApprovalStatus',
 }
 
 export type PullRequestDetailsUIAction =
@@ -67,6 +71,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -98,13 +103,39 @@ function pullRequestDetailsReducer(
                         rawSummary: action.data.rawSummary,
                     },
                 },
+                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.UpdateTitle: {
-            return { ...state, pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } } };
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } },
+                isSomethingLoading: false,
+            };
         }
         case PullRequestDetailsUIActionType.UpdateReviewers: {
-            return { ...state, pr: { ...state.pr, data: { ...state.pr.data, participants: action.data.reviewers } } };
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, participants: action.data.reviewers } },
+                isSomethingLoading: false,
+            };
+        }
+        case PullRequestDetailsUIActionType.UpdateApprovalStatus: {
+            //Update the status of the current user and leave the rest unchanged
+            const updatedParticipants = state.pr.data.participants.map((participant: Reviewer) => {
+                return participant.accountId === state.currentUser.accountId
+                    ? {
+                          ...participant,
+                          status: action.data.status,
+                      }
+                    : participant;
+            });
+
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, participants: updatedParticipants } },
+                isSomethingLoading: false,
+            };
         }
         default:
             return defaultStateGuard(state, action);
@@ -136,7 +167,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateReviewers, data: message });
                 break;
             }
-
+            case PullRequestDetailsMessageType.UpdateApprovalStatus: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateApprovalStatus, data: message });
+                break;
+            }
             default: {
                 defaultActionGuard(message);
             }
@@ -262,6 +296,30 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessagePromise]
     );
 
+    const updateApprovalStatus = useCallback(
+        (status: ApprovalStatus): Promise<void> => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.UpdateApprovalStatus,
+                                status: status,
+                            },
+                            PullRequestDetailsMessageType.UpdateReviewersResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -270,8 +328,9 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             updateSummary: updateSummary,
             updateTitle: updateTitle,
             updateReviewers: updateReviewers,
+            updateApprovalStatus: updateApprovalStatus,
         };
-    }, [postMessage, sendRefresh, fetchUsers, updateSummary, updateTitle, updateReviewers]);
+    }, [postMessage, sendRefresh, fetchUsers, updateSummary, updateTitle, updateReviewers, updateApprovalStatus]);
 
     return [state, controllerApi];
 }
