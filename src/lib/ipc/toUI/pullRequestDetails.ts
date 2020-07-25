@@ -13,6 +13,7 @@ export enum PullRequestDetailsMessageType {
     UpdateTitle = 'updateTitle',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
+    CheckoutBranch = 'checkoutBranch',
 }
 
 export type PullRequestDetailsMessage =
@@ -21,7 +22,8 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
+    | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>;
 
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
@@ -33,6 +35,7 @@ export type PullRequestDetailsResponse =
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
     currentUser: User;
+    currentBranchName: string;
 }
 
 export interface VoidResponse {}
@@ -57,7 +60,12 @@ export interface PullRequestDetailsReviewersMessage {
 export interface PullRequestDetailsApprovalMessage {
     status: ApprovalStatus;
 }
+
+export interface PullRequestDetailsCheckoutBranchMessage {
+    branchName: string;
+}
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
     currentUser: emptyUser,
+    currentBranchName: '',
 };

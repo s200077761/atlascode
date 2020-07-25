@@ -8,4 +8,6 @@ export interface PullRequestDetailsActionApi {
     getPR(pr: PullRequest): Promise<PullRequest>;
     updateReviewers(pr: PullRequest, newReviewers: User[]): Promise<Reviewer[]>;
     updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
+    checkout(pr: PullRequest): Promise<string>;
+    getCurrentBranchName(pr: PullRequest): string;
 }

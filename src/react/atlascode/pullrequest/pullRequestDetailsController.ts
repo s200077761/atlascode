@@ -8,6 +8,7 @@ import {
     emptyPullRequestDetailsInitMessage,
     FetchUsersResponseMessage,
     PullRequestDetailsApprovalMessage,
+    PullRequestDetailsCheckoutBranchMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
@@ -27,6 +28,7 @@ export interface PullRequestDetailsControllerApi {
     updateTitle: (text: string) => Promise<void>;
     updateReviewers: (newReviewers: User[]) => Promise<void>;
     updateApprovalStatus: (status: ApprovalStatus) => Promise<void>;
+    checkoutBranch: () => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -43,6 +45,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     updateTitle: async (text: string) => {},
     updateReviewers: async (newReviewers: User[]) => {},
     updateApprovalStatus: async (status: ApprovalStatus) => {},
+    checkoutBranch: () => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -64,6 +67,7 @@ export enum PullRequestDetailsUIActionType {
     UpdateTitle = 'updateTitle',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
+    CheckoutBranch = 'checkoutBranch',
 }
 
 export type PullRequestDetailsUIAction =
@@ -72,6 +76,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -137,6 +142,13 @@ function pullRequestDetailsReducer(
                 isSomethingLoading: false,
             };
         }
+        case PullRequestDetailsUIActionType.CheckoutBranch: {
+            return {
+                ...state,
+                currentBranchName: action.data.branchName,
+                isSomethingLoading: false,
+            };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -169,6 +181,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateApprovalStatus: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateApprovalStatus, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.CheckoutBranch: {
+                dispatch({ type: PullRequestDetailsUIActionType.CheckoutBranch, data: message });
                 break;
             }
             default: {
@@ -320,6 +336,11 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessagePromise]
     );
 
+    const checkoutBranch = useCallback(() => {
+        dispatch({ type: PullRequestDetailsUIActionType.Loading });
+        postMessage({ type: PullRequestDetailsActionType.CheckoutBranch });
+    }, [postMessage]);
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -329,8 +350,18 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             updateTitle: updateTitle,
             updateReviewers: updateReviewers,
             updateApprovalStatus: updateApprovalStatus,
+            checkoutBranch: checkoutBranch,
         };
-    }, [postMessage, sendRefresh, fetchUsers, updateSummary, updateTitle, updateReviewers, updateApprovalStatus]);
+    }, [
+        postMessage,
+        sendRefresh,
+        fetchUsers,
+        updateSummary,
+        updateTitle,
+        updateReviewers,
+        updateApprovalStatus,
+        checkoutBranch,
+    ]);
 
     return [state, controllerApi];
 }

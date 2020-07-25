@@ -6,6 +6,7 @@ import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
+import { addSourceRemoteIfNeeded } from '../../views/pullrequest/gitActions';
 
 export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionApi {
     constructor(private cancellationManager: CancellationManager) {}
@@ -71,5 +72,33 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         const bbApi = await clientForSite(pr.site);
         const newStatus = await bbApi.pullrequests.updateApproval(pr, status);
         return newStatus;
+    }
+
+    getCurrentBranchName(pr: PullRequest): string {
+        let currentBranchName = '';
+        if (pr.workspaceRepo) {
+            const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo!.rootUri)!;
+            currentBranchName = scm.state.HEAD ? scm.state.HEAD.name! : '';
+        }
+
+        return currentBranchName;
+    }
+
+    async checkout(pr: PullRequest): Promise<string> {
+        if (!pr.workspaceRepo) {
+            throw new Error('no workspace repo');
+        }
+
+        await addSourceRemoteIfNeeded(pr);
+
+        const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
+        await scm.fetch();
+        await scm.checkout(pr.data.source.branchName);
+        if (scm.state.HEAD?.behind) {
+            scm.pull();
+        }
+
+        //New current branch name
+        return scm.state.HEAD?.name ?? '';
     }
 }

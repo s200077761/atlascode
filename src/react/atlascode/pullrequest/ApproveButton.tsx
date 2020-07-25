@@ -17,6 +17,7 @@ export const ApproveButton: React.FunctionComponent<ApproveButtonProps> = ({ hid
     return (
         <Box hidden={hidden}>
             <Button
+                color={'primary'}
                 onClick={() => handleOnApprove()}
                 startIcon={<CheckCircleIcon htmlColor={status === 'APPROVED' ? '#07b82b' : 'gray'} />}
             >

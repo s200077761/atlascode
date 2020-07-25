@@ -8,6 +8,7 @@ export enum PullRequestDetailsActionType {
     UpdateTitleRequest = 'updateTitleRequest',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
+    CheckoutBranch = 'checkoutBranch',
 }
 
 export type PullRequestDetailsAction =
@@ -16,6 +17,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.UpdateTitleRequest, UpdateTitleAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
+    | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
     | CommonAction;
 
 export interface FetchUsersRequestAction {

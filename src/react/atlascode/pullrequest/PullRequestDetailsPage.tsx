@@ -1,5 +1,5 @@
 import { InlineTextEditor, RefreshButton } from '@atlassianlabs/guipi-core-components';
-import { AppBar, Box, Breadcrumbs, Container, Grid, Link, makeStyles, Theme, Toolbar } from '@material-ui/core';
+import { AppBar, Box, Breadcrumbs, Button, Container, Grid, Link, makeStyles, Theme, Toolbar } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
@@ -129,6 +129,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             destination={state.pr.data.destination}
                             author={state.pr.data.author}
                         />
+                        <Button
+                            disabled={state.pr.data.source.branchName === state.currentBranchName}
+                            onClick={controller.checkoutBranch}
+                        >
+                            {state.pr.data.source.branchName === state.currentBranchName
+                                ? 'Source branch checked out'
+                                : 'Checkout source branch'}
+                        </Button>
                     </Grid>
 
                     <Grid item>

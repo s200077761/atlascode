@@ -27,6 +27,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private analytics: AnalyticsApi;
     private commonHandler: CommonActionMessageHandler;
     private isRefreshing: boolean;
+    private currentBranchName: string;
 
     constructor(
         pr: PullRequest,
@@ -42,9 +43,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         this.logger = logger;
         this.analytics = analytics;
         this.commonHandler = commonHandler;
-
-        //Temporarily logging these objects so compiler doesn't complain they're unused
-        console.log(this.analytics);
     }
 
     private postMessage(message: PullRequestDetailsMessage | PullRequestDetailsResponse | CommonMessage) {
@@ -74,6 +72,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 type: PullRequestDetailsMessageType.Init,
                 pr: this.pr,
                 currentUser: await this.getCurrentUser(),
+                currentBranchName: this.api.getCurrentBranchName(this.pr),
             });
 
             this.isRefreshing = false;
@@ -91,6 +90,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             type: PullRequestDetailsMessageType.Init,
             pr: this.pr,
             currentUser: await this.getCurrentUser(),
+            currentBranchName: this.currentBranchName,
         });
     }
 
@@ -200,6 +200,24 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error updating approval status'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.CheckoutBranch: {
+                try {
+                    this.analytics.firePrCheckoutEvent(this.pr.site.details);
+                    const newBranchName = await this.api.checkout(this.pr);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.CheckoutBranch,
+                        branchName: newBranchName,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error checking out pull request branch: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error checking out pull request'),
                     });
                 }
                 break;
