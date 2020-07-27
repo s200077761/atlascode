@@ -34,7 +34,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({ site, onUpd
     }, [participants]);
 
     return (
-        <Grid container direction="row">
+        <Grid container direction="row" spacing={2} alignItems={'center'}>
             <Grid item>
                 {activeParticipants.length === 0 ? (
                     <Typography variant="body2">No reviewers!</Typography>

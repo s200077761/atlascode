@@ -21,7 +21,9 @@ export const ApproveButton: React.FunctionComponent<ApproveButtonProps> = ({ hid
                 onClick={() => handleOnApprove()}
                 startIcon={<CheckCircleIcon htmlColor={status === 'APPROVED' ? '#07b82b' : 'gray'} />}
             >
-                <Typography variant={'button'}>{status === 'APPROVED' ? 'Unapprove' : 'Approve'}</Typography>
+                <Typography variant={'button'} noWrap>
+                    {status === 'APPROVED' ? 'Unapprove' : 'Approve'}
+                </Typography>
             </Button>
         </Box>
     );

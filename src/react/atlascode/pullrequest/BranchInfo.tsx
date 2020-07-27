@@ -1,4 +1,4 @@
-import { Avatar, Box, Chip, Tooltip } from '@material-ui/core';
+import { Chip, Grid } from '@material-ui/core';
 import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
 import * as React from 'react';
 import { Repo, User } from '../../../bitbucket/model';
@@ -21,20 +21,16 @@ export const BranchInfo: React.FunctionComponent<BranchInfoProps> = ({ source, d
     const targetBranch = destinationPrefix + destination.branchName;
 
     return (
-        <React.Fragment>
-            <Box style={{ display: 'flex', alignItems: 'center' }}>
-                <Chip
-                    avatar={
-                        <Tooltip title={author.displayName}>
-                            <Avatar alt={author.displayName} src={author.avatarUrl} />
-                        </Tooltip>
-                    }
-                    color="primary"
-                    label={sourceBranch}
-                />
+        <Grid container spacing={1} direction={'row'} justify="space-evenly" alignItems="center">
+            <Grid item>
+                <Chip clickable color="primary" label={sourceBranch} />
+            </Grid>
+            <Grid item>
                 <ArrowRightAltIcon />
-                <Chip color="primary" label={targetBranch} />
-            </Box>
-        </React.Fragment>
+            </Grid>
+            <Grid item>
+                <Chip clickable color="primary" label={targetBranch} />
+            </Grid>
+        </Grid>
     );
 };

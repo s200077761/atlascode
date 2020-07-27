@@ -21,7 +21,7 @@ export const NeedsWorkButton: React.FunctionComponent<NeedsWorkButtonProps> = ({
                 onClick={() => handleOnApprove()}
                 startIcon={<BuildIcon htmlColor={status === 'NEEDS_WORK' ? '#FFCC00' : 'gray'} />}
             >
-                <Typography variant={'button'}>
+                <Typography variant={'button'} noWrap>
                     {status === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}
                 </Typography>
             </Button>

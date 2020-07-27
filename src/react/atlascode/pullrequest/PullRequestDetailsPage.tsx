@@ -1,5 +1,20 @@
 import { InlineTextEditor, RefreshButton } from '@atlassianlabs/guipi-core-components';
-import { AppBar, Box, Breadcrumbs, Button, Container, Grid, Link, makeStyles, Theme, Toolbar } from '@material-ui/core';
+import {
+    AppBar,
+    Avatar,
+    Box,
+    Breadcrumbs,
+    Button,
+    Container,
+    Divider,
+    Grid,
+    Link,
+    makeStyles,
+    Theme,
+    Toolbar,
+    Tooltip,
+    Typography,
+} from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
@@ -115,28 +130,60 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
                     </Toolbar>
                 </AppBar>
+                <Box marginTop={1}></Box>
                 <Grid container spacing={3} direction="column" justify="center">
-                    <Grid item>
-                        <Box margin={5}>
-                            <Reviewers
-                                site={state.pr.site}
-                                participants={state.pr.data.participants}
-                                onUpdateReviewers={handleUpdateReviewers}
-                            />
-                        </Box>
-                        <BranchInfo
-                            source={state.pr.data.source}
-                            destination={state.pr.data.destination}
-                            author={state.pr.data.author}
-                        />
-                        <Button
-                            disabled={state.pr.data.source.branchName === state.currentBranchName}
-                            onClick={controller.checkoutBranch}
-                        >
-                            {state.pr.data.source.branchName === state.currentBranchName
-                                ? 'Source branch checked out'
-                                : 'Checkout source branch'}
-                        </Button>
+                    <Grid item container direction="row" justify={'space-between'}>
+                        <Grid xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
+                            <Grid item container spacing={2} direction="row" alignItems={'center'}>
+                                <Grid item>
+                                    <Typography variant="body1">Author:</Typography>
+                                </Grid>
+                                <Grid item>
+                                    <Tooltip title={state.pr.data.author.displayName}>
+                                        <Avatar
+                                            alt={state.pr.data.author.displayName}
+                                            src={state.pr.data.author.avatarUrl}
+                                        />
+                                    </Tooltip>
+                                </Grid>
+                                <Grid item>
+                                    <BranchInfo
+                                        source={state.pr.data.source}
+                                        destination={state.pr.data.destination}
+                                        author={state.pr.data.author}
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Divider />
+                            </Grid>
+                            <Grid item container spacing={3} direction="row" alignItems={'center'}>
+                                <Grid item>
+                                    <Typography variant="body1">Reviewers:</Typography>
+                                </Grid>
+                                <Grid item>
+                                    <Reviewers
+                                        site={state.pr.site}
+                                        participants={state.pr.data.participants}
+                                        onUpdateReviewers={handleUpdateReviewers}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+
+                        <Grid item>
+                            <Button
+                                color="primary"
+                                disabled={state.pr.data.source.branchName === state.currentBranchName}
+                                onClick={controller.checkoutBranch}
+                            >
+                                <Typography variant="button" noWrap>
+                                    {state.pr.data.source.branchName === state.currentBranchName
+                                        ? 'Source branch checked out'
+                                        : 'Checkout source branch'}
+                                </Typography>
+                            </Button>
+                        </Grid>
                     </Grid>
 
                     <Grid item>

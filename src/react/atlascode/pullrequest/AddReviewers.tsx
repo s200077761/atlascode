@@ -1,6 +1,4 @@
-import { Tooltip } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import { ToggleButton } from '@material-ui/lab';
+import { Button, Tooltip, Typography } from '@material-ui/core';
 import React, { useCallback, useState } from 'react';
 import { BitbucketSite, User } from '../../../bitbucket/model';
 import DialogUserPicker from './DialogUserPicker';
@@ -32,14 +30,9 @@ export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site,
     return (
         <React.Fragment>
             <Tooltip title="Add Reviewers">
-                <ToggleButton
-                    onClick={handleToggleOpen}
-                    selected={isOpen}
-                    value={'Add Reviewers'}
-                    style={{ borderStyle: 'none' }}
-                >
-                    <AddIcon />
-                </ToggleButton>
+                <Button color={'primary'} onClick={handleToggleOpen} value={'Add Reviewers'}>
+                    <Typography variant="button">Add Reviewers</Typography>
+                </Button>
             </Tooltip>
             <DialogUserPicker
                 site={site}
