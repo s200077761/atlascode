@@ -58,22 +58,22 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     };
 
     const handleUpdateReviewers = useCallback(
-        async (newReviewers: User[]) => {
-            await controller.updateReviewers(newReviewers);
+        (newReviewers: User[]) => {
+            controller.updateReviewers(newReviewers);
         },
         [controller]
     );
 
     const handleSummaryChange = useCallback(
-        async (text: string): Promise<void> => {
-            await controller.updateSummary(text);
+        (text: string) => {
+            controller.updateSummary(text);
         },
         [controller]
     );
 
     const handleTitleChange = useCallback(
-        async (text: string): Promise<void> => {
-            await controller.updateTitle(text);
+        (text: string) => {
+            controller.updateTitle(text);
         },
         [controller]
     );

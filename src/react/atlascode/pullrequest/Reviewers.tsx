@@ -6,7 +6,7 @@ import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
 import { AddReviewers } from './AddReviewers';
 type ReviewersProps = {
     site: BitbucketSite;
-    onUpdateReviewers: (reviewers: User[]) => Promise<void>;
+    onUpdateReviewers: (reviewers: User[]) => void;
     participants: Reviewer[];
 };
 export const Reviewers: React.FunctionComponent<ReviewersProps> = ({ site, onUpdateReviewers, participants }) => {
@@ -16,7 +16,7 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({ site, onUpd
     const handleUpdateReviewers = useCallback(
         async (newReviewers: User[]) => {
             setIsLoading(true);
-            await onUpdateReviewers(newReviewers);
+            onUpdateReviewers(newReviewers);
         },
         [onUpdateReviewers]
     );

@@ -691,16 +691,16 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async updateApproval(pr: PullRequest, status: string): Promise<ApprovalStatus> {
         const { ownerSlug, repoSlug } = pr.site;
-        let data: any;
-        status === 'APPROVED'
-            ? ({ data } = await this.client.post(
-                  `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                  {}
-              ))
-            : ({ data } = await this.client.delete(
-                  `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                  {}
-              ));
+        const { data } =
+            status === 'APPROVED'
+                ? await this.client.post(
+                      `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                      {}
+                  )
+                : await this.client.delete(
+                      `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
+                      {}
+                  );
         return data.approved ? 'APPROVED' : 'UNAPPROVED';
     }
 

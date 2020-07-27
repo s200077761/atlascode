@@ -151,9 +151,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 try {
                     const pr = await this.api.updateSummary(this.pr, msg.text);
                     this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateSummaryResponse,
-                    });
-                    this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateSummary,
                         rawSummary: pr.data.rawSummary,
                         htmlSummary: pr.data.htmlSummary,
@@ -171,9 +168,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.UpdateTitleRequest: {
                 try {
                     const pr = await this.api.updateTitle(this.pr, msg.text);
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateTitleResponse,
-                    });
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateTitle,
                         title: pr.data.title,

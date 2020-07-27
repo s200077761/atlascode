@@ -24,10 +24,10 @@ export interface PullRequestDetailsControllerApi {
     postMessage: PostMessageFunc<PullRequestDetailsAction>;
     refresh: () => void;
     fetchUsers: (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => Promise<User[]>;
-    updateSummary: (text: string) => Promise<void>;
-    updateTitle: (text: string) => Promise<void>;
-    updateReviewers: (newReviewers: User[]) => Promise<void>;
-    updateApprovalStatus: (status: ApprovalStatus) => Promise<void>;
+    updateSummary: (text: string) => void;
+    updateTitle: (text: string) => void;
+    updateReviewers: (newReviewers: User[]) => void;
+    updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
 }
 
@@ -43,8 +43,8 @@ export const emptyApi: PullRequestDetailsControllerApi = {
         return;
     },
     updateTitle: async (text: string) => {},
-    updateReviewers: async (newReviewers: User[]) => {},
-    updateApprovalStatus: async (status: ApprovalStatus) => {},
+    updateReviewers: (newReviewers: User[]) => {},
+    updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
 };
 
@@ -244,96 +244,35 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     );
 
     const updateSummary = useCallback(
-        (text: string): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
-                (async () => {
-                    try {
-                        await postMessagePromise(
-                            {
-                                type: PullRequestDetailsActionType.UpdateSummaryRequest,
-                                text: text,
-                            },
-                            PullRequestDetailsMessageType.UpdateSummaryResponse,
-                            ConnectionTimeout
-                        );
-                        resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
+        (text: string) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateSummaryRequest, text: text });
         },
-        [postMessagePromise]
+        [postMessage]
     );
 
     const updateTitle = useCallback(
-        (text: string): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
-                (async () => {
-                    try {
-                        await postMessagePromise(
-                            {
-                                type: PullRequestDetailsActionType.UpdateTitleRequest,
-                                text: text,
-                            },
-                            PullRequestDetailsMessageType.UpdateTitleResponse,
-                            ConnectionTimeout
-                        );
-                        resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
+        (text: string) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateTitleRequest, text: text });
         },
-        [postMessagePromise]
+        [postMessage]
     );
 
     const updateReviewers = useCallback(
-        (newReviewers: User[]): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
-                (async () => {
-                    try {
-                        await postMessagePromise(
-                            {
-                                type: PullRequestDetailsActionType.UpdateReviewers,
-                                reviewers: newReviewers,
-                            },
-                            PullRequestDetailsMessageType.UpdateReviewersResponse,
-                            ConnectionTimeout
-                        );
-                        resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
+        (newReviewers: User[]) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateReviewers, reviewers: newReviewers });
         },
-        [postMessagePromise]
+        [postMessage]
     );
 
     const updateApprovalStatus = useCallback(
-        (status: ApprovalStatus): Promise<void> => {
+        (status: ApprovalStatus) => {
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
-            return new Promise<void>((resolve, reject) => {
-                (async () => {
-                    try {
-                        await postMessagePromise(
-                            {
-                                type: PullRequestDetailsActionType.UpdateApprovalStatus,
-                                status: status,
-                            },
-                            PullRequestDetailsMessageType.UpdateReviewersResponse,
-                            ConnectionTimeout
-                        );
-                        resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
+            postMessage({ type: PullRequestDetailsActionType.UpdateApprovalStatus, status: status });
         },
-        [postMessagePromise]
+        [postMessage]
     );
 
     const checkoutBranch = useCallback(() => {

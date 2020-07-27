@@ -5,10 +5,6 @@ export enum PullRequestDetailsMessageType {
     Init = 'init',
     Update = 'configUpdate',
     FetchUsersResponse = 'fetchUsersResponse',
-    UpdateSummaryResponse = 'updateSummaryResponse',
-    UpdateTitleResponse = 'updateTitleResponse',
-    UpdateReviewersResponse = 'updateReviewersResponse',
-    UpdateApprovalStatusResponse = 'updateApprovalStatusResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateReviewers = 'updateReviewers',
@@ -25,20 +21,16 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
     | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>;
 
-export type PullRequestDetailsResponse =
-    | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateSummaryResponse, VoidResponse>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateTitleResponse, VoidResponse>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatusResponse, VoidResponse>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateReviewersResponse, VoidResponse>;
+export type PullRequestDetailsResponse = ReducerAction<
+    PullRequestDetailsMessageType.FetchUsersResponse,
+    FetchUsersResponseMessage
+>;
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
     currentUser: User;
     currentBranchName: string;
 }
-
-export interface VoidResponse {}
 
 export interface FetchUsersResponseMessage {
     users: User[];
