@@ -78,9 +78,9 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 currentUser: await this.getCurrentUser(),
             });
 
-            this.commits = await this.api.getCommits(this.pr);
+            this.commits = await this.api.updateCommits(this.pr);
             this.postMessage({
-                type: PullRequestDetailsMessageType.GetCommits,
+                type: PullRequestDetailsMessageType.UpdateCommits,
                 commits: this.commits,
             });
 

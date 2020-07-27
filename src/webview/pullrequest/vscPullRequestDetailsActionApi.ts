@@ -45,17 +45,19 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     }
 
     async updateTitle(pr: PullRequest, text: string): Promise<PullRequest> {
-        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         const bbApi = await clientForSite(pr.site);
-        return await bbApi.pullrequests.update(
+        const newPr = await bbApi.pullrequests.update(
             pr,
             text,
             pr.data.rawSummary,
             pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
         );
+
+        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+        return newPr;
     }
 
-    async getCommits(pr: PullRequest): Promise<Commit[]> {
+    async updateCommits(pr: PullRequest): Promise<Commit[]> {
         const bbApi = await clientForSite(pr.site);
         return await bbApi.pullrequests.getCommits(pr);
     }

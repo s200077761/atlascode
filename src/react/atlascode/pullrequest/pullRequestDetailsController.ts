@@ -57,14 +57,14 @@ export enum PullRequestDetailsUIActionType {
     Loading = 'loading',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
-    GetCommits = 'getCommits',
+    UpdateCommits = 'updateCommits',
 }
 
 export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
-    | ReducerAction<PullRequestDetailsUIActionType.GetCommits, { data: PullRequestDetailsCommitsMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateCommits, { data: PullRequestDetailsCommitsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -101,7 +101,7 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateTitle: {
             return { ...state, pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } } };
         }
-        case PullRequestDetailsUIActionType.GetCommits: {
+        case PullRequestDetailsUIActionType.UpdateCommits: {
             return { ...state, commits: action.data.commits };
         }
         default:
@@ -130,8 +130,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateTitle, data: message });
                 break;
             }
-            case PullRequestDetailsMessageType.GetCommits: {
-                dispatch({ type: PullRequestDetailsUIActionType.GetCommits, data: message });
+            case PullRequestDetailsMessageType.UpdateCommits: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateCommits, data: message });
                 break;
             }
 

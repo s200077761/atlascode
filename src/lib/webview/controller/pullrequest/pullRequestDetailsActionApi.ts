@@ -7,5 +7,5 @@ export interface PullRequestDetailsActionApi {
     getCurrentUser(pr: PullRequest): Promise<User>;
     getPR(pr: PullRequest): Promise<PullRequest>;
 
-    getCommits(pr: PullRequest): Promise<Commit[]>;
+    updateCommits(pr: PullRequest): Promise<Commit[]>;
 }

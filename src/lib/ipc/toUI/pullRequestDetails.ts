@@ -7,10 +7,9 @@ export enum PullRequestDetailsMessageType {
     FetchUsersResponse = 'fetchUsersResponse',
     UpdateSummaryResponse = 'updateSummaryResponse',
     UpdateTitleResponse = 'updateTitleResponse',
-    GetCommitsResponse = 'getCommitsResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
-    GetCommits = 'getCommits',
+    UpdateCommits = 'updateCommits',
 }
 
 export type PullRequestDetailsMessage =
@@ -18,13 +17,12 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.Update, PullRequestDetailsInitMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>
-    | ReducerAction<PullRequestDetailsMessageType.GetCommits, PullRequestDetailsCommitsMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.UpdateCommits, PullRequestDetailsCommitsMessage>;
 
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummaryResponse, VoidResponse>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateTitleResponse, VoidResponse>
-    | ReducerAction<PullRequestDetailsMessageType.GetCommitsResponse, VoidResponse>;
+    | ReducerAction<PullRequestDetailsMessageType.UpdateTitleResponse, VoidResponse>;
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
