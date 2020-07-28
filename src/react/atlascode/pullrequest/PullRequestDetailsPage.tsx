@@ -18,8 +18,10 @@ import {
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
+import { BasicPanel } from '../common/BasicPanel';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
+import { Commits } from './Commits';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
@@ -193,6 +195,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             fetchUsers={handleFetchUsers}
                             summaryChange={handleSummaryChange}
                         />
+                        <BasicPanel title={'Commits'} isDefaultExpanded>
+                            <Commits commits={state.commits} />
+                        </BasicPanel>
                     </Grid>
                 </Grid>
             </Container>

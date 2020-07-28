@@ -1,5 +1,13 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { ApprovalStatus, emptyPullRequest, emptyUser, PullRequest, Reviewer, User } from '../../../bitbucket/model';
+import {
+    ApprovalStatus,
+    Commit,
+    emptyPullRequest,
+    emptyUser,
+    PullRequest,
+    Reviewer,
+    User,
+} from '../../../bitbucket/model';
 
 export enum PullRequestDetailsMessageType {
     Init = 'init',
@@ -7,6 +15,7 @@ export enum PullRequestDetailsMessageType {
     FetchUsersResponse = 'fetchUsersResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
+    UpdateCommits = 'updateCommits',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
@@ -17,6 +26,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.Update, PullRequestDetailsInitMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateCommits, PullRequestDetailsCommitsMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
     | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>;
@@ -28,6 +38,7 @@ export type PullRequestDetailsResponse = ReducerAction<
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
+    commits: Commit[];
     currentUser: User;
     currentBranchName: string;
 }
@@ -45,6 +56,10 @@ export interface PullRequestDetailsTitleMessage {
     title: string;
 }
 
+export interface PullRequestDetailsCommitsMessage {
+    commits: Commit[];
+}
+
 export interface PullRequestDetailsReviewersMessage {
     reviewers: Reviewer[];
 }
@@ -58,6 +73,7 @@ export interface PullRequestDetailsCheckoutBranchMessage {
 }
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
+    commits: [],
     currentUser: emptyUser,
     currentBranchName: '',
 };

@@ -9,6 +9,7 @@ import {
     FetchUsersResponseMessage,
     PullRequestDetailsApprovalMessage,
     PullRequestDetailsCheckoutBranchMessage,
+    PullRequestDetailsCommitsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
@@ -65,6 +66,7 @@ export enum PullRequestDetailsUIActionType {
     Loading = 'loading',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
+    UpdateCommits = 'updateCommits',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
@@ -74,6 +76,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.Init, { data: PullRequestDetailsInitMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateCommits, { data: PullRequestDetailsCommitsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
@@ -149,6 +152,9 @@ function pullRequestDetailsReducer(
                 isSomethingLoading: false,
             };
         }
+        case PullRequestDetailsUIActionType.UpdateCommits: {
+            return { ...state, commits: action.data.commits };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -175,6 +181,11 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateTitle, data: message });
                 break;
             }
+            case PullRequestDetailsMessageType.UpdateCommits: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateCommits, data: message });
+                break;
+            }
+
             case PullRequestDetailsMessageType.UpdateReviewers: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateReviewers, data: message });
                 break;
