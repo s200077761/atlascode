@@ -1,11 +1,12 @@
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { PullRequest, User } from '../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, PullRequest, Reviewer, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
+import { addSourceRemoteIfNeeded } from '../../views/pullrequest/gitActions';
 
 export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionApi {
     constructor(private cancellationManager: CancellationManager) {}
@@ -20,8 +21,8 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo);
     }
 
-    async fetchUsers(pr: PullRequest, query: string, abortKey?: string): Promise<User[]> {
-        const bbApi = await clientForSite(pr.site);
+    async fetchUsers(site: BitbucketSite, query: string, abortKey?: string | undefined): Promise<User[]> {
+        const client = await Container.clientManager.bbClient(site.details);
 
         var cancelToken: CancelToken | undefined = undefined;
 
@@ -31,7 +32,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             this.cancellationManager.set(abortKey, signal);
         }
 
-        return await bbApi.pullrequests.getReviewers(pr.site, query, cancelToken);
+        return await client.pullrequests.getReviewers(site, query, cancelToken);
     }
 
     async updateSummary(pr: PullRequest, text: string): Promise<PullRequest> {
@@ -54,5 +55,50 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         );
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+    }
+
+    async updateReviewers(pr: PullRequest, newReviewers: User[]): Promise<Reviewer[]> {
+        const bbApi = await clientForSite(pr.site);
+        const { data } = await bbApi.pullrequests.update(
+            pr,
+            pr.data.title,
+            pr.data.rawSummary,
+            newReviewers.map((user) => user.accountId)
+        );
+        return data.participants;
+    }
+
+    async updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus> {
+        const bbApi = await clientForSite(pr.site);
+        const newStatus = await bbApi.pullrequests.updateApproval(pr, status);
+        return newStatus;
+    }
+
+    getCurrentBranchName(pr: PullRequest): string {
+        let currentBranchName = '';
+        if (pr.workspaceRepo) {
+            const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo!.rootUri)!;
+            currentBranchName = scm.state.HEAD ? scm.state.HEAD.name! : '';
+        }
+
+        return currentBranchName;
+    }
+
+    async checkout(pr: PullRequest): Promise<string> {
+        if (!pr.workspaceRepo) {
+            throw new Error('no workspace repo');
+        }
+
+        await addSourceRemoteIfNeeded(pr);
+
+        const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
+        await scm.fetch();
+        await scm.checkout(pr.data.source.branchName);
+        if (scm.state.HEAD?.behind) {
+            scm.pull();
+        }
+
+        //New current branch name
+        return scm.state.HEAD?.name ?? '';
     }
 }

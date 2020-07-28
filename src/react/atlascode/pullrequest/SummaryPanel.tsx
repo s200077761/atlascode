@@ -7,7 +7,7 @@ type SummaryPanelProps = {
     rawSummary: string;
     htmlSummary: string;
     fetchUsers: (input: string) => Promise<any[]>;
-    summaryChange: (text: string) => Promise<void>;
+    summaryChange: (text: string) => void;
 };
 
 export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
@@ -27,8 +27,8 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
         // );
 
         const handleSummaryChange = useCallback(
-            async (text: string) => {
-                await summaryChange(text);
+            (text: string) => {
+                summaryChange(text);
             },
             [summaryChange]
         );
