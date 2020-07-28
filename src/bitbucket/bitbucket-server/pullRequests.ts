@@ -5,6 +5,7 @@ import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
 import { HTTPClient } from '../httpClient';
 import {
+    ApprovalStatus,
     BitbucketSite,
     BuildStatus,
     Comment,
@@ -689,17 +690,19 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(data, 0, pr.site, pr.workspaceRepo);
     }
 
-    async updateApproval(pr: PullRequest, status: string) {
+    async updateApproval(pr: PullRequest, status: string): Promise<ApprovalStatus> {
         const { ownerSlug, repoSlug } = pr.site;
 
         const userSlug = pr.site.details.userId;
 
-        await this.client.put(
+        const { data } = await this.client.put(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
                 status: status,
             }
         );
+
+        return data.status;
     }
 
     async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {

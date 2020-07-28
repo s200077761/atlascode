@@ -1,17 +1,20 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
-import { User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
     emptyPullRequestDetailsInitMessage,
     FetchUsersResponseMessage,
+    PullRequestDetailsApprovalMessage,
+    PullRequestDetailsCheckoutBranchMessage,
     PullRequestDetailsCommitsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
     PullRequestDetailsResponse,
+    PullRequestDetailsReviewersMessage,
     PullRequestDetailsSummaryMessage,
     PullRequestDetailsTitleMessage,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
@@ -21,9 +24,12 @@ import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 export interface PullRequestDetailsControllerApi {
     postMessage: PostMessageFunc<PullRequestDetailsAction>;
     refresh: () => void;
-    fetchUsers: (query: string, abortSignal?: AbortSignal) => Promise<User[]>;
-    updateSummary: (text: string) => Promise<void>;
-    updateTitle: (text: string) => Promise<void>;
+    fetchUsers: (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => Promise<User[]>;
+    updateSummary: (text: string) => void;
+    updateTitle: (text: string) => void;
+    updateReviewers: (newReviewers: User[]) => void;
+    updateApprovalStatus: (status: ApprovalStatus) => void;
+    checkoutBranch: () => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -33,11 +39,14 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     refresh: (): void => {
         return;
     },
-    fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
+    fetchUsers: async (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => [],
     updateSummary: async (text: string) => {
         return;
     },
     updateTitle: async (text: string) => {},
+    updateReviewers: (newReviewers: User[]) => {},
+    updateApprovalStatus: (status: ApprovalStatus) => {},
+    checkoutBranch: () => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -58,6 +67,9 @@ export enum PullRequestDetailsUIActionType {
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateCommits = 'updateCommits',
+    UpdateReviewers = 'updateReviewers',
+    UpdateApprovalStatus = 'updateApprovalStatus',
+    CheckoutBranch = 'checkoutBranch',
 }
 
 export type PullRequestDetailsUIAction =
@@ -65,6 +77,9 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateSummary, { data: PullRequestDetailsSummaryMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateTitle, { data: PullRequestDetailsTitleMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateCommits, { data: PullRequestDetailsCommitsMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -96,10 +111,46 @@ function pullRequestDetailsReducer(
                         rawSummary: action.data.rawSummary,
                     },
                 },
+                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.UpdateTitle: {
-            return { ...state, pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } } };
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } },
+                isSomethingLoading: false,
+            };
+        }
+        case PullRequestDetailsUIActionType.UpdateReviewers: {
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, participants: action.data.reviewers } },
+                isSomethingLoading: false,
+            };
+        }
+        case PullRequestDetailsUIActionType.UpdateApprovalStatus: {
+            //Update the status of the current user and leave the rest unchanged
+            const updatedParticipants = state.pr.data.participants.map((participant: Reviewer) => {
+                return participant.accountId === state.currentUser.accountId
+                    ? {
+                          ...participant,
+                          status: action.data.status,
+                      }
+                    : participant;
+            });
+
+            return {
+                ...state,
+                pr: { ...state.pr, data: { ...state.pr.data, participants: updatedParticipants } },
+                isSomethingLoading: false,
+            };
+        }
+        case PullRequestDetailsUIActionType.CheckoutBranch: {
+            return {
+                ...state,
+                currentBranchName: action.data.branchName,
+                isSomethingLoading: false,
+            };
         }
         case PullRequestDetailsUIActionType.UpdateCommits: {
             return { ...state, commits: action.data.commits };
@@ -135,6 +186,18 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 break;
             }
 
+            case PullRequestDetailsMessageType.UpdateReviewers: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateReviewers, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateApprovalStatus: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateApprovalStatus, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.CheckoutBranch: {
+                dispatch({ type: PullRequestDetailsUIActionType.CheckoutBranch, data: message });
+                break;
+            }
             default: {
                 defaultActionGuard(message);
             }
@@ -153,7 +216,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     }, [postMessage]);
 
     const fetchUsers = useCallback(
-        (query: string, abortSignal?: AbortSignal): Promise<User[]> => {
+        (site: BitbucketSite, query: string, abortSignal?: AbortSignal): Promise<User[]> => {
             return new Promise<User[]>((resolve, reject) => {
                 (async () => {
                     try {
@@ -174,6 +237,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                         const response = await postMessagePromise(
                             {
                                 type: PullRequestDetailsActionType.FetchUsersRequest,
+                                site: site,
                                 query: query,
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
@@ -191,50 +255,41 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     );
 
     const updateSummary = useCallback(
-        (text: string): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
-                (async () => {
-                    try {
-                        await postMessagePromise(
-                            {
-                                type: PullRequestDetailsActionType.UpdateSummaryRequest,
-                                text: text,
-                            },
-                            PullRequestDetailsMessageType.UpdateSummaryResponse,
-                            ConnectionTimeout
-                        );
-                        resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
+        (text: string) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateSummaryRequest, text: text });
         },
-        [postMessagePromise]
+        [postMessage]
     );
 
     const updateTitle = useCallback(
-        (text: string): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
-                (async () => {
-                    try {
-                        await postMessagePromise(
-                            {
-                                type: PullRequestDetailsActionType.UpdateTitleRequest,
-                                text: text,
-                            },
-                            PullRequestDetailsMessageType.UpdateTitleResponse,
-                            ConnectionTimeout
-                        );
-                        resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
-                })();
-            });
+        (text: string) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateTitleRequest, text: text });
         },
-        [postMessagePromise]
+        [postMessage]
     );
+
+    const updateReviewers = useCallback(
+        (newReviewers: User[]) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateReviewers, reviewers: newReviewers });
+        },
+        [postMessage]
+    );
+
+    const updateApprovalStatus = useCallback(
+        (status: ApprovalStatus) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.UpdateApprovalStatus, status: status });
+        },
+        [postMessage]
+    );
+
+    const checkoutBranch = useCallback(() => {
+        dispatch({ type: PullRequestDetailsUIActionType.Loading });
+        postMessage({ type: PullRequestDetailsActionType.CheckoutBranch });
+    }, [postMessage]);
 
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
@@ -243,8 +298,20 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             fetchUsers: fetchUsers,
             updateSummary: updateSummary,
             updateTitle: updateTitle,
+            updateReviewers: updateReviewers,
+            updateApprovalStatus: updateApprovalStatus,
+            checkoutBranch: checkoutBranch,
         };
-    }, [postMessage, sendRefresh, fetchUsers, updateSummary, updateTitle]);
+    }, [
+        postMessage,
+        sendRefresh,
+        fetchUsers,
+        updateSummary,
+        updateTitle,
+        updateReviewers,
+        updateApprovalStatus,
+        checkoutBranch,
+    ]);
 
     return [state, controllerApi];
 }

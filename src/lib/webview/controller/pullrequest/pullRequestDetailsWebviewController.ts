@@ -1,6 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import { Commit, PullRequest, User } from '../../../../bitbucket/model';
+import { ApprovalStatus, Commit, PullRequest, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
@@ -28,6 +28,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private analytics: AnalyticsApi;
     private commonHandler: CommonActionMessageHandler;
     private isRefreshing: boolean;
+    private currentBranchName: string;
 
     constructor(
         pr: PullRequest,
@@ -43,9 +44,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         this.logger = logger;
         this.analytics = analytics;
         this.commonHandler = commonHandler;
-
-        //Temporarily logging these objects so compiler doesn't complain they're unused
-        console.log(this.analytics);
     }
 
     private postMessage(message: PullRequestDetailsMessage | PullRequestDetailsResponse | CommonMessage) {
@@ -76,6 +74,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 pr: this.pr,
                 commits: [],
                 currentUser: await this.getCurrentUser(),
+                currentBranchName: this.api.getCurrentBranchName(this.pr),
             });
 
             this.commits = await this.api.updateCommits(this.pr);
@@ -100,6 +99,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             pr: this.pr,
             commits: this.commits,
             currentUser: await this.getCurrentUser(),
+            currentBranchName: this.currentBranchName,
         });
     }
 
@@ -117,9 +117,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
             }
-            case PullRequestDetailsActionType.FetchUsersRequest:
+
+            case PullRequestDetailsActionType.FetchUsersRequest: {
                 try {
-                    const users = await this.api.fetchUsers(this.pr, msg.query, msg.abortKey);
+                    const users = await this.api.fetchUsers(msg.site, msg.query, msg.abortKey);
                     this.postMessage({
                         type: PullRequestDetailsMessageType.FetchUsersResponse,
                         users: users,
@@ -136,12 +137,28 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     }
                 }
                 break;
-            case PullRequestDetailsActionType.UpdateSummaryRequest:
+            }
+
+            case PullRequestDetailsActionType.UpdateReviewers: {
+                try {
+                    const reviewers = await this.api.updateReviewers(this.pr, msg.reviewers);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateReviewers,
+                        reviewers: reviewers,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error updating reviewers: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error fetching users'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.UpdateSummaryRequest: {
                 try {
                     const pr = await this.api.updateSummary(this.pr, msg.text);
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateSummaryResponse,
-                    });
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateSummary,
                         rawSummary: pr.data.rawSummary,
@@ -155,13 +172,11 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     });
                 }
                 break;
+            }
 
-            case PullRequestDetailsActionType.UpdateTitleRequest:
+            case PullRequestDetailsActionType.UpdateTitleRequest: {
                 try {
                     const pr = await this.api.updateTitle(this.pr, msg.text);
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateTitleResponse,
-                    });
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateTitle,
                         title: pr.data.title,
@@ -174,6 +189,42 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     });
                 }
                 break;
+            }
+
+            case PullRequestDetailsActionType.UpdateApprovalStatus: {
+                try {
+                    const status: ApprovalStatus = await this.api.updateApprovalStatus(this.pr, msg.status);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateApprovalStatus,
+                        status: status,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error updating approval status: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error updating approval status'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.CheckoutBranch: {
+                try {
+                    this.analytics.firePrCheckoutEvent(this.pr.site.details);
+                    const newBranchName = await this.api.checkout(this.pr);
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.CheckoutBranch,
+                        branchName: newBranchName,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error checking out pull request branch: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error checking out pull request'),
+                    });
+                }
+                break;
+            }
 
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:
