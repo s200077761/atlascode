@@ -17,7 +17,7 @@ import {
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ApprovalStatus, FileDiff, User } from '../../../bitbucket/model';
+import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
@@ -89,13 +89,6 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
             setCurrentUserApprovalStatus(foundCurrentUser.status);
         }
     }, [state.pr.data.participants, state.currentUser.accountId]);
-
-    const handleOpenDiff = useCallback(
-        (fileDiff: FileDiff) => {
-            controller.openDiff(fileDiff);
-        },
-        [controller]
-    );
 
     return (
         <PullRequestDetailsControllerContext.Provider value={controller}>
@@ -215,7 +208,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             subtitle={'Click on file names to open diff in editor'}
                             isDefaultExpanded
                         >
-                            <DiffList fileDiffs={state.fileDiffs} openDiffHandler={handleOpenDiff} />
+                            <DiffList fileDiffs={state.fileDiffs} openDiffHandler={controller.openDiff} />
                         </BasicPanel>
                     </Grid>
                 </Grid>

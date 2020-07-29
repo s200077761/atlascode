@@ -102,14 +102,14 @@ export const DiffList: React.FunctionComponent<{
                             <TableCell className={classes.tableCell} align="center">
                                 <Chip
                                     className={clsx(classes.chip, classes.linesAdded)}
-                                    label={`+${row.linesAdded < 10000 ? row.linesAdded : '----'}`}
+                                    label={`+${row.linesAdded}`}
                                     size="small"
                                 />
                             </TableCell>
                             <TableCell className={classes.tableCell} align="center">
                                 <Chip
                                     className={clsx(classes.chip, classes.linesRemoved)}
-                                    label={`-${row.linesRemoved < 10000 ? row.linesRemoved : '----'}`}
+                                    label={`-${row.linesRemoved}`}
                                     size="small"
                                 />
                             </TableCell>
