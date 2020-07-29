@@ -1,11 +1,21 @@
 import axios, { CancelToken, CancelTokenSource } from 'axios';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { ApprovalStatus, BitbucketSite, Commit, PullRequest, Reviewer, User } from '../../bitbucket/model';
+import {
+    ApprovalStatus,
+    BitbucketSite,
+    Commit,
+    FileChange,
+    FileDiff,
+    PullRequest,
+    Reviewer,
+    User,
+} from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
+import { convertFileChangeToFileDiff, getArgsForDiffView } from '../../views/pullrequest/diffViewHelper';
 import { addSourceRemoteIfNeeded } from '../../views/pullrequest/gitActions';
 
 export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionApi {
@@ -106,5 +116,39 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
 
         //New current branch name
         return scm.state.HEAD?.name ?? '';
+    }
+
+    //The difference between FileDiff and FileChange is documented in their model definitions
+    async getFileDiffs(
+        pr: PullRequest
+    ): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }> {
+        const bbApi = await clientForSite(pr.site);
+        const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
+
+        const diffsToChangesMap = new Map<string, FileChange>();
+        const fileDiffs: FileDiff[] = [];
+        fileChanges.forEach((fileChange) => {
+            const fileDiff = convertFileChangeToFileDiff(fileChange);
+            fileDiffs.push(fileDiff);
+            diffsToChangesMap.set(fileDiff.file, fileChange);
+        });
+
+        return {
+            fileDiffs: fileDiffs,
+            diffsToChangesMap: diffsToChangesMap,
+        };
+    }
+
+    async openDiffViewForFile(pr: PullRequest, fileChange: FileChange): Promise<void> {
+        const bbApi = await clientForSite(pr.site);
+        //TODO: When getting comments for page, feed them into here as an argument instead of fetching again
+        const comments = await bbApi.pullrequests.getComments(pr);
+        const diffViewArgs = await getArgsForDiffView(
+            comments,
+            fileChange,
+            pr,
+            Container.bitbucketContext.prCommentController
+        );
+        vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
     }
 }

@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { ApprovalStatus, BitbucketSite, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, FileDiff, User } from '../../../bitbucket/model';
 import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
@@ -9,6 +9,7 @@ export enum PullRequestDetailsActionType {
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    OpenDiffRequest = 'openDiffRequest',
 }
 
 export type PullRequestDetailsAction =
@@ -18,6 +19,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
+    | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -40,4 +42,7 @@ export interface UpdateReviewersAction {
 
 export interface UpdateApprovalStatusAction {
     status: ApprovalStatus;
+}
+export interface OpenDiffAction {
+    fileDiff: FileDiff;
 }

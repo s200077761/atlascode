@@ -22,6 +22,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     chip: {
         borderRadius: '3px',
         fontWeight: 'bold',
+        width: '100%',
     },
     table: {
         width: 'unset',
@@ -50,7 +51,6 @@ const useStyles = makeStyles((theme: Theme) => ({
 export const DiffList: React.FunctionComponent<{
     fileDiffs: FileDiff[];
     openDiffHandler: (filediff: FileDiff) => void;
-    fileDiffsLoading: boolean;
 }> = (props) => {
     const classes = useStyles();
 
@@ -73,7 +73,7 @@ export const DiffList: React.FunctionComponent<{
         }
     };
 
-    const fileStatusClassName = (fileStatus: FileStatus) => {
+    const fileStatusClassName = (status: FileStatus) => {
         switch (status) {
             case FileStatus.ADDED:
                 return classes.fileStatusAdded;
@@ -101,18 +101,16 @@ export const DiffList: React.FunctionComponent<{
                             <TableCell className={classes.tableCell} />
                             <TableCell className={classes.tableCell} align="center">
                                 <Chip
-                                    className={classes.chip}
-                                    label={`+${row.linesAdded}`}
+                                    className={clsx(classes.chip, classes.linesAdded)}
+                                    label={`+${row.linesAdded < 10000 ? row.linesAdded : '----'}`}
                                     size="small"
-                                    color="primary"
                                 />
                             </TableCell>
                             <TableCell className={classes.tableCell} align="center">
                                 <Chip
-                                    className={classes.chip}
-                                    label={`-${row.linesRemoved}`}
+                                    className={clsx(classes.chip, classes.linesRemoved)}
+                                    label={`-${row.linesRemoved < 10000 ? row.linesRemoved : '----'}`}
                                     size="small"
-                                    color="secondary"
                                 />
                             </TableCell>
                             <TableCell className={classes.tableCell}>

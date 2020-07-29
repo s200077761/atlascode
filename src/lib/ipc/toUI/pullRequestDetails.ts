@@ -4,6 +4,7 @@ import {
     Commit,
     emptyPullRequest,
     emptyUser,
+    FileDiff,
     PullRequest,
     Reviewer,
     User,
@@ -19,6 +20,7 @@ export enum PullRequestDetailsMessageType {
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    UpdateFileDiffs = 'updateFileDiffs',
 }
 
 export type PullRequestDetailsMessage =
@@ -29,7 +31,8 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateCommits, PullRequestDetailsCommitsMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
-    | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>;
 
 export type PullRequestDetailsResponse = ReducerAction<
     PullRequestDetailsMessageType.FetchUsersResponse,
@@ -41,6 +44,7 @@ export interface PullRequestDetailsInitMessage {
     commits: Commit[];
     currentUser: User;
     currentBranchName: string;
+    fileDiffs: FileDiff[];
 }
 
 export interface FetchUsersResponseMessage {
@@ -71,9 +75,14 @@ export interface PullRequestDetailsApprovalMessage {
 export interface PullRequestDetailsCheckoutBranchMessage {
     branchName: string;
 }
+
+export interface PullRequestDetailsFileDiffsMessage {
+    fileDiffs: FileDiff[];
+}
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
     commits: [],
     currentUser: emptyUser,
     currentBranchName: '',
+    fileDiffs: [],
 };

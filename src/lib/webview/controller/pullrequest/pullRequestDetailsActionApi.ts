@@ -1,4 +1,13 @@
-import { ApprovalStatus, BitbucketSite, Commit, PullRequest, Reviewer, User } from '../../../../bitbucket/model';
+import {
+    ApprovalStatus,
+    BitbucketSite,
+    Commit,
+    FileChange,
+    FileDiff,
+    PullRequest,
+    Reviewer,
+    User,
+} from '../../../../bitbucket/model';
 
 export interface PullRequestDetailsActionApi {
     fetchUsers(site: BitbucketSite, query: string, abortKey?: string): Promise<User[]>;
@@ -12,4 +21,7 @@ export interface PullRequestDetailsActionApi {
     updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
     checkout(pr: PullRequest): Promise<string>;
     getCurrentBranchName(pr: PullRequest): string;
+    getFileDiffs(pr: PullRequest): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }>;
+
+    openDiffViewForFile(pr: PullRequest, fileChange: FileChange): Promise<void>;
 }

@@ -17,11 +17,12 @@ import {
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ApprovalStatus, User } from '../../../bitbucket/model';
+import { ApprovalStatus, FileDiff, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
+import { DiffList } from './DiffList';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
@@ -88,6 +89,13 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
             setCurrentUserApprovalStatus(foundCurrentUser.status);
         }
     }, [state.pr.data.participants, state.currentUser.accountId]);
+
+    const handleOpenDiff = useCallback(
+        (fileDiff: FileDiff) => {
+            controller.openDiff(fileDiff);
+        },
+        [controller]
+    );
 
     return (
         <PullRequestDetailsControllerContext.Provider value={controller}>
@@ -195,8 +203,19 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             fetchUsers={handleFetchUsers}
                             summaryChange={handleSummaryChange}
                         />
+                    </Grid>
+                    <Grid item>
                         <BasicPanel title={'Commits'} isDefaultExpanded>
                             <Commits commits={state.commits} />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel
+                            title={'Files Changed'}
+                            subtitle={'Click on file names to open diff in editor'}
+                            isDefaultExpanded
+                        >
+                            <DiffList fileDiffs={state.fileDiffs} openDiffHandler={handleOpenDiff} />
                         </BasicPanel>
                     </Grid>
                 </Grid>
