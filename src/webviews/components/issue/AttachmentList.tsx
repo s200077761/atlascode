@@ -21,7 +21,11 @@ const Delete = (data: ItemData) => {
     );
 };
 
-const Filename = (data: ItemData) => <p style={{ display: 'inline' }}>{data.attachment.filename}</p>;
+const Filename = (data: ItemData) => (
+    <a href={data.attachment.content} style={{ display: 'inline' }}>
+        {data.attachment.filename}
+    </a>
+);
 const Size = (data: ItemData) => {
     const numSize = typeof data.attachment.size === 'number' ? data.attachment.size : parseFloat(data.attachment.size);
     const size = filesize(numSize);
