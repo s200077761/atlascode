@@ -8,6 +8,7 @@ import {
     DialogTitle,
     makeStyles,
     Tooltip,
+    Typography,
 } from '@material-ui/core';
 import Skeleton from '@material-ui/lab/Skeleton';
 import React, { useCallback, useState } from 'react';
@@ -59,7 +60,9 @@ export const DemoDialog: React.FunctionComponent<DemoDialogProps> = ({
 
     return (
         <Dialog fullWidth={true} maxWidth="md" open={modalVisibility} onClose={handleModalClose}>
-            <DialogTitle>{modalTitle}</DialogTitle>
+            <DialogTitle>
+                <Typography variant="h4">{modalTitle}</Typography>
+            </DialogTitle>
             <DialogContent>
                 <Box hidden={!modalDescription}>
                     <DialogContentText>{modalDescription}</DialogContentText>
