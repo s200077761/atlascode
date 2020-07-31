@@ -22,6 +22,7 @@ import { BasicPanel } from '../common/BasicPanel';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
+import { DiffList } from './DiffList';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
@@ -195,8 +196,19 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             fetchUsers={handleFetchUsers}
                             summaryChange={handleSummaryChange}
                         />
+                    </Grid>
+                    <Grid item>
                         <BasicPanel title={'Commits'} isDefaultExpanded>
                             <Commits commits={state.commits} />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel
+                            title={'Files Changed'}
+                            subtitle={'Click on file names to open diff in editor'}
+                            isDefaultExpanded
+                        >
+                            <DiffList fileDiffs={state.fileDiffs} openDiffHandler={controller.openDiff} />
                         </BasicPanel>
                     </Grid>
                 </Grid>

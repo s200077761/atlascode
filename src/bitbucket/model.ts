@@ -169,6 +169,21 @@ export type MergeStrategy = {
     isDefault: boolean;
 };
 
+export enum FileStatus {
+    ADDED = 'A',
+    DELETED = 'D',
+    COPIED = 'C',
+    MODIFIED = 'M',
+    RENAMED = 'R',
+    CONFLICT = 'CONFLICT',
+    UNKNOWN = 'X',
+}
+
+//TODO: [VSCODE-1197] get rid of FileChange and FileDiff and replace them with a unified type. I don't even want to attempt this
+//until all the old PR logic is gone because this would break everything right now.
+
+//FileChange is a data structure more in line with what is returned by the API. Diffs returned by the bbServer API
+//necessary to open a diff view and some additional hunkMeta data.
 export type FileChange = {
     status: FileStatus;
     oldPath?: string;
@@ -186,16 +201,7 @@ export type FileChange = {
     };
 };
 
-export enum FileStatus {
-    ADDED = 'A',
-    DELETED = 'D',
-    COPIED = 'C',
-    MODIFIED = 'M',
-    RENAMED = 'R',
-    CONFLICT = 'CONFLICT',
-    UNKNOWN = 'X',
-}
-
+//FileDiff is a data structure more useful for displaying the data as a diff list.
 export interface FileDiff {
     file: string;
     status: FileStatus;
@@ -204,6 +210,8 @@ export interface FileDiff {
     similarity?: number;
     lhsQueryParams?: FileDiffQueryParams;
     rhsQueryParams?: FileDiffQueryParams;
+    //TODO: remove fileChange from fileDiff. This can't be done right now because it will break
+    //the old PR webview, but FileDiff and FileChange should be distinct objects.
     fileChange?: FileChange;
 }
 

@@ -19,10 +19,12 @@ export class PullRequestsExplorer extends BitbucketExplorer {
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this.refresh()),
             commands.registerCommand(Commands.BitbucketToggleFileNesting, () => this.toggleFileNesting()),
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr: PullRequest) => {
-                //Uncomment this line to see the MUI version of the PR page
-                //TODO: uncomment this and remove the other createOrShow when MUI page is done
-                //await Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, pr);
-                await Container.pullRequestViewManager.createOrShow(pr);
+                //TODO: remove this check when everything is finished
+                if (Container.isDebugging) {
+                    await Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, pr);
+                } else {
+                    await Container.pullRequestViewManager.createOrShow(pr);
+                }
             }),
             commands.registerCommand(Commands.CreatePullRequest, () => this.pickRepoAndShowCreatePR())
         );

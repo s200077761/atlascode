@@ -493,11 +493,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         <Typography variant="h4" gutterBottom>
                                             Files changed
                                         </Typography>
-                                        <DiffList
-                                            fileDiffs={state.fileDiffs}
-                                            openDiffHandler={controller.openDiff}
-                                            fileDiffsLoading={false}
-                                        />
+                                        <DiffList fileDiffs={state.fileDiffs} openDiffHandler={controller.openDiff} />
                                     </Grid>
                                 </Grid>
                             </Box>
