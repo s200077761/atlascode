@@ -1,7 +1,7 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
-import { ApprovalStatus, BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, Comment, Reviewer, User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
@@ -9,6 +9,7 @@ import {
     FetchUsersResponseMessage,
     PullRequestDetailsApprovalMessage,
     PullRequestDetailsCheckoutBranchMessage,
+    PullRequestDetailsCommentsMessage,
     PullRequestDetailsCommitsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
@@ -30,6 +31,8 @@ export interface PullRequestDetailsControllerApi {
     updateReviewers: (newReviewers: User[]) => void;
     updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
+    postComment: (rawText: string, parentId?: string) => void;
+    deleteComment: (comment: Comment) => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -47,6 +50,8 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     updateReviewers: (newReviewers: User[]) => {},
     updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
+    postComment: (rawText: string, parentId?: string) => {},
+    deleteComment: (comment: Comment) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -70,6 +75,8 @@ export enum PullRequestDetailsUIActionType {
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    UpdateComments = 'updateComments',
+    AddComment = 'addComment',
 }
 
 export type PullRequestDetailsUIAction =
@@ -80,6 +87,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateComments, { data: PullRequestDetailsCommentsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -153,7 +161,10 @@ function pullRequestDetailsReducer(
             };
         }
         case PullRequestDetailsUIActionType.UpdateCommits: {
-            return { ...state, commits: action.data.commits };
+            return { ...state, commits: action.data.commits, isSomethingLoading: false };
+        }
+        case PullRequestDetailsUIActionType.UpdateComments: {
+            return { ...state, comments: action.data.comments, isSomethingLoading: false };
         }
         default:
             return defaultStateGuard(state, action);
@@ -196,6 +207,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.CheckoutBranch: {
                 dispatch({ type: PullRequestDetailsUIActionType.CheckoutBranch, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateComments: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateComments, data: message });
                 break;
             }
             default: {
@@ -291,6 +306,22 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         postMessage({ type: PullRequestDetailsActionType.CheckoutBranch });
     }, [postMessage]);
 
+    const postComment = useCallback(
+        (rawText: string, parentId?: string) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.PostComment, rawText: rawText, parentId: parentId });
+        },
+        [postMessage]
+    );
+
+    const deleteComment = useCallback(
+        (comment: Comment) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.DeleteComment, comment: comment });
+        },
+        [postMessage]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -301,6 +332,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             updateReviewers: updateReviewers,
             updateApprovalStatus: updateApprovalStatus,
             checkoutBranch: checkoutBranch,
+            postComment: postComment,
+            deleteComment: deleteComment,
         };
     }, [
         postMessage,
@@ -311,6 +344,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         updateReviewers,
         updateApprovalStatus,
         checkoutBranch,
+        postComment,
+        deleteComment,
     ]);
 
     return [state, controllerApi];

@@ -5,6 +5,7 @@ import { User } from '../../../bitbucket/model';
 type CommentFormProps = {
     currentUser: User;
     onSave: (content: string) => Promise<void>;
+    onCancel?: () => void;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
@@ -21,7 +22,10 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
         if (ref.current) {
             ref.current.value = '';
         }
-    }, [ref]);
+        if (props.onCancel) {
+            props.onCancel();
+        }
+    }, [ref, props]);
 
     return (
         <Grid container spacing={1} alignItems="flex-start">

@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { ApprovalStatus, BitbucketSite, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, Comment, User } from '../../../bitbucket/model';
 import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
@@ -9,6 +9,8 @@ export enum PullRequestDetailsActionType {
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    PostComment = 'postComment',
+    DeleteComment = 'deleteComment',
 }
 
 export type PullRequestDetailsAction =
@@ -17,6 +19,8 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.UpdateTitleRequest, UpdateTitleAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
+    | ReducerAction<PullRequestDetailsActionType.PostComment, PostCommentAction>
+    | ReducerAction<PullRequestDetailsActionType.DeleteComment, DeleteCommentAction>
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
     | CommonAction;
 
@@ -40,4 +44,13 @@ export interface UpdateReviewersAction {
 
 export interface UpdateApprovalStatusAction {
     status: ApprovalStatus;
+}
+
+export interface PostCommentAction {
+    rawText: string;
+    parentId?: string;
+}
+
+export interface DeleteCommentAction {
+    comment: Comment;
 }

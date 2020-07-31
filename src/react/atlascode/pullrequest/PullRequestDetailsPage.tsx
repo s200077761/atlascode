@@ -19,10 +19,12 @@ import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
+import CommentForm from '../common/CommentForm';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { NeedsWorkButton } from './NeedsWorkButton';
+import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
@@ -76,6 +78,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const handleTitleChange = useCallback(
         (text: string) => {
             controller.updateTitle(text);
+        },
+        [controller]
+    );
+
+    //TODO: this shouldn't be async, but I can't do anything about this right now...
+    const handlePostComment = useCallback(
+        async (rawText: string) => {
+            controller.postComment(rawText);
         },
         [controller]
     );
@@ -197,6 +207,22 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         />
                         <BasicPanel title={'Commits'} isDefaultExpanded>
                             <Commits commits={state.commits} />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel title={'Comments'} isDefaultExpanded>
+                            <Grid container spacing={2} direction="column">
+                                <Grid item>
+                                    <NestedCommentList
+                                        comments={state.comments}
+                                        currentUser={state.currentUser}
+                                        onDelete={controller.deleteComment}
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <CommentForm currentUser={state.currentUser} onSave={handlePostComment} />
+                                </Grid>
+                            </Grid>
                         </BasicPanel>
                     </Grid>
                 </Grid>

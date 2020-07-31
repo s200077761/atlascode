@@ -1,4 +1,12 @@
-import { ApprovalStatus, BitbucketSite, Commit, PullRequest, Reviewer, User } from '../../../../bitbucket/model';
+import {
+    ApprovalStatus,
+    BitbucketSite,
+    Comment,
+    Commit,
+    PullRequest,
+    Reviewer,
+    User,
+} from '../../../../bitbucket/model';
 
 export interface PullRequestDetailsActionApi {
     fetchUsers(site: BitbucketSite, query: string, abortKey?: string): Promise<User[]>;
@@ -12,4 +20,7 @@ export interface PullRequestDetailsActionApi {
     updateApprovalStatus(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
     checkout(pr: PullRequest): Promise<string>;
     getCurrentBranchName(pr: PullRequest): string;
+    getComments(pr: PullRequest): Promise<Comment[]>;
+    postComment(comment: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<void>;
+    deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]>;
 }
