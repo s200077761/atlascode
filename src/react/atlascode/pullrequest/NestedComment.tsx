@@ -25,7 +25,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
             controller.postComment(content, comment.id);
             setIsReplying(false);
         },
-        [controller, comment.parentId]
+        [controller, comment.id]
     );
 
     const handleCancel = useCallback(() => {
@@ -69,7 +69,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
                 </Grid>
             </Grid>
             <Grid item>
-                <Box hidden={!isReplying}>
+                <Box hidden={!isReplying} marginLeft={5}>
                     <CommentForm currentUser={currentUser} onSave={handleSave} onCancel={handleCancel} />
                 </Box>
             </Grid>

@@ -12,7 +12,6 @@ import {
     BitbucketIssue,
     Commit,
     FileChange,
-    FileDiff,
     isBitbucketIssue,
     PaginatedComments,
     PullRequest,
@@ -50,7 +49,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { iconSet, Resources } from '../resources';
-import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
+import { convertFileChangeToFileDiff, getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 import { addSourceRemoteIfNeeded } from '../views/pullrequest/gitActions';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
@@ -382,7 +381,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async fetchChangedFiles(bbApi: BitbucketApi, pr: PullRequest) {
         const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
-        return fileChanges.map((fileChange) => this.convertFileChangeToFileDiff(fileChange));
+        return fileChanges.map((fileChange) => convertFileChangeToFileDiff(fileChange));
     }
 
     /* 
@@ -720,27 +719,5 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             Container.bitbucketContext.prCommentController
         );
         vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
-    }
-
-    private convertFileChangeToFileDiff(fileChange: FileChange): FileDiff {
-        return {
-            file: this.getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
-            status: fileChange.status,
-            linesAdded: fileChange.linesAdded,
-            linesRemoved: fileChange.linesRemoved,
-            fileChange: fileChange,
-        };
-    }
-
-    private getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
-        let fileDisplayName: string = '';
-        if (newPath && oldPath && newPath !== oldPath) {
-            fileDisplayName = `${oldPath} → ${newPath}`; //This is actually not what we want, but it'll have to be dealt with later...
-        } else if (newPath) {
-            fileDisplayName = newPath;
-        } else if (oldPath) {
-            fileDisplayName = oldPath;
-        }
-        return fileDisplayName;
     }
 }

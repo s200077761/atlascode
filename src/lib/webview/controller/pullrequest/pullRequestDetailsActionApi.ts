@@ -3,6 +3,8 @@ import {
     BitbucketSite,
     Comment,
     Commit,
+    FileChange,
+    FileDiff,
     PullRequest,
     Reviewer,
     User,
@@ -23,4 +25,7 @@ export interface PullRequestDetailsActionApi {
     getComments(pr: PullRequest): Promise<Comment[]>;
     postComment(comment: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<void>;
     deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]>;
+    getFileDiffs(pr: PullRequest): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }>;
+
+    openDiffViewForFile(pr: PullRequest, fileChange: FileChange): Promise<void>;
 }

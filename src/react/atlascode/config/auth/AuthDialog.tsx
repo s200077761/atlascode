@@ -65,7 +65,10 @@ const normalizeContextPath = (cPath: string): string | undefined => {
     if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
         return undefined;
     }
-    return '/' + cPath.replace(/^\/+/g, '').split('/');
+
+    return ('/' + cPath) // Make sure there's at least one leading slash
+        .replace(/\/+/g, '/') // Make sure there are no duplicated slashes anywhere
+        .replace(/\/+$/g, ''); // Make sure there's no trailing slash
 };
 
 const isCustomUrl = (data?: string) => {

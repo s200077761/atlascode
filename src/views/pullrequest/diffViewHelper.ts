@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Comment, FileChange, FileStatus, PaginatedComments, PullRequest } from '../../bitbucket/model';
+import { Comment, FileChange, FileDiff, FileStatus, PaginatedComments, PullRequest } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
@@ -160,4 +160,59 @@ export async function getArgsForDiffView(
             numberOfComments: comments.length ? comments.length : 0,
         },
     };
+}
+
+export function convertFileChangeToFileDiff(fileChange: FileChange): FileDiff {
+    return {
+        file: getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
+        status: fileChange.status,
+        linesAdded: fileChange.linesAdded,
+        linesRemoved: fileChange.linesRemoved,
+        fileChange: fileChange,
+    };
+}
+
+export function getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
+    let fileDisplayName: string = '';
+    if (newPath && oldPath) {
+        fileDisplayName = mergePaths(oldPath, newPath);
+    } else if (newPath) {
+        fileDisplayName = newPath;
+    } else if (oldPath) {
+        fileDisplayName = oldPath;
+    }
+    return fileDisplayName;
+}
+
+/* This function aims to mimic Git's (and therefore Bitbucket's) file rename behavior.
+ * Assuming oldPath = 'A/B/C/D/file.txt' and newPath = 'A/B/E/D/file.txt', this function will return
+ * "A/B/{C/D/file.txt -> E/D/file.txt}". It does not attempt to convert it to:
+ * "A/B/{C -> E}/D/file.txt", though this behavior could be implemented in the future if it's desired.
+ */
+export function mergePaths(oldPath: string, newPath: string): string {
+    //In this case there is nothing to do
+    if (oldPath === newPath) {
+        return oldPath;
+    }
+
+    //For sections that are the same, add them as-is to the combined path
+    //The min check is not necessary but it's a sanity/safety check
+    const oldPathArray = oldPath.split('/');
+    const newPathArray = newPath.split('/');
+    let i = 0;
+    while (oldPathArray[i] === newPathArray[i] && i < Math.min(oldPathArray.length, newPathArray.length)) {
+        i++;
+    }
+
+    //If absolutely nothing is similar, don't bother with the curly brackets
+    if (i === 0) {
+        return `${oldPath} → ${newPathArray}`;
+    }
+
+    //The loop stops when we hit a difference, which means the remainder of both arrays is the difference.
+    //We want our new path string to end with "{oldPathEnding -> newPathEnding}""
+    oldPathArray.slice(0, i).push(`{${oldPathArray.slice(i).join('/')} → ${newPathArray.slice(i).join('/')}}`);
+
+    //It was convenient to work with an array, but we actually need a string
+    return oldPathArray.join('/');
 }

@@ -1,6 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import { ApprovalStatus, Comment, Commit, PullRequest, User } from '../../../../bitbucket/model';
+import { ApprovalStatus, Comment, Commit, FileChange, FileDiff, PullRequest, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
@@ -31,6 +31,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private currentBranchName: string;
     private pageComments: Comment[];
     private inlineComments: Comment[];
+    private fileDiffs: FileDiff[];
+    private diffsToChangesMap: Map<string, FileChange>;
 
     constructor(
         pr: PullRequest,
@@ -86,6 +88,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
                 comments: [],
+                fileDiffs: [],
             });
 
             //TODO: run these promises concurrently
@@ -104,6 +107,13 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             });
 
             this.isRefreshing = false;
+            const diffsAndChanges = await this.api.getFileDiffs(this.pr);
+            this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
+            this.fileDiffs = diffsAndChanges.fileDiffs;
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateFileDiffs,
+                fileDiffs: this.fileDiffs,
+            });
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
             this.logger.error(err);
@@ -121,6 +131,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             currentUser: await this.getCurrentUser(),
             currentBranchName: this.currentBranchName,
             comments: [],
+            fileDiffs: this.fileDiffs,
         });
     }
 
@@ -283,6 +294,23 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
             }
+            case PullRequestDetailsActionType.OpenDiffRequest:
+                try {
+                    //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
+                    const fileChange = this.diffsToChangesMap.get(msg.fileDiff.file);
+                    if (fileChange) {
+                        await this.api.openDiffViewForFile(this.pr, fileChange);
+                    } else {
+                        throw Error('No corresponding FileChange object for FileDiff');
+                    }
+                } catch (e) {
+                    this.logger.error(new Error(`error opening diff: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening diff'),
+                    });
+                }
+                break;
 
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:

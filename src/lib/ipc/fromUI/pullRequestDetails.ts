@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { ApprovalStatus, BitbucketSite, Comment, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, Comment, FileDiff, User } from '../../../bitbucket/model';
 import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
@@ -11,6 +11,7 @@ export enum PullRequestDetailsActionType {
     CheckoutBranch = 'checkoutBranch',
     PostComment = 'postComment',
     DeleteComment = 'deleteComment',
+    OpenDiffRequest = 'openDiffRequest',
 }
 
 export type PullRequestDetailsAction =
@@ -22,6 +23,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.PostComment, PostCommentAction>
     | ReducerAction<PullRequestDetailsActionType.DeleteComment, DeleteCommentAction>
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
+    | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -53,4 +55,8 @@ export interface PostCommentAction {
 
 export interface DeleteCommentAction {
     comment: Comment;
+}
+
+export interface OpenDiffAction {
+    fileDiff: FileDiff;
 }

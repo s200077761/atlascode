@@ -1,7 +1,7 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
-import { ApprovalStatus, BitbucketSite, Comment, Reviewer, User } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketSite, Comment, FileDiff, Reviewer, User } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
@@ -11,6 +11,7 @@ import {
     PullRequestDetailsCheckoutBranchMessage,
     PullRequestDetailsCommentsMessage,
     PullRequestDetailsCommitsMessage,
+    PullRequestDetailsFileDiffsMessage,
     PullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
@@ -33,6 +34,8 @@ export interface PullRequestDetailsControllerApi {
     checkoutBranch: () => void;
     postComment: (rawText: string, parentId?: string) => void;
     deleteComment: (comment: Comment) => void;
+
+    openDiff: (fileDiff: FileDiff) => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -52,6 +55,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     checkoutBranch: () => {},
     postComment: (rawText: string, parentId?: string) => {},
     deleteComment: (comment: Comment) => {},
+    openDiff: (fileDiff: FileDiff) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -77,6 +81,7 @@ export enum PullRequestDetailsUIActionType {
     CheckoutBranch = 'checkoutBranch',
     UpdateComments = 'updateComments',
     AddComment = 'addComment',
+    UpdateFileDiffs = 'updateFileDiffs',
 }
 
 export type PullRequestDetailsUIAction =
@@ -88,6 +93,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateComments, { data: PullRequestDetailsCommentsMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateFileDiffs, { data: PullRequestDetailsFileDiffsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -166,6 +172,12 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateComments: {
             return { ...state, comments: action.data.comments, isSomethingLoading: false };
         }
+        case PullRequestDetailsUIActionType.UpdateCommits: {
+            return { ...state, commits: action.data.commits };
+        }
+        case PullRequestDetailsUIActionType.UpdateFileDiffs: {
+            return { ...state, fileDiffs: action.data.fileDiffs };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -211,6 +223,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateComments: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateComments, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateFileDiffs: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateFileDiffs, data: message });
                 break;
             }
             default: {
@@ -322,6 +338,11 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage]
     );
 
+    const openDiff = useCallback(
+        (fileDiff: FileDiff) => postMessage({ type: PullRequestDetailsActionType.OpenDiffRequest, fileDiff: fileDiff }),
+        [postMessage]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -334,6 +355,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             checkoutBranch: checkoutBranch,
             postComment: postComment,
             deleteComment: deleteComment,
+            openDiff: openDiff,
         };
     }, [
         postMessage,
@@ -346,6 +368,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         checkoutBranch,
         postComment,
         deleteComment,
+        openDiff,
     ]);
 
     return [state, controllerApi];

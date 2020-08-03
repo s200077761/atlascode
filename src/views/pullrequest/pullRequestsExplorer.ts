@@ -19,6 +19,7 @@ export class PullRequestsExplorer extends BitbucketExplorer {
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this.refresh()),
             commands.registerCommand(Commands.BitbucketToggleFileNesting, () => this.toggleFileNesting()),
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr: PullRequest) => {
+                //TODO: remove this check when everything is finished
                 if (Container.isDebugging) {
                     await Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, pr);
                 } else {
