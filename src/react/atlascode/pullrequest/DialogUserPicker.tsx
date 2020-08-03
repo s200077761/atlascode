@@ -79,7 +79,9 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
 
     return (
         <Dialog open={props.hidden} onClose={handleClose} aria-labelledby="reviewers-dialog-title">
-            <DialogTitle>Select Reviewers</DialogTitle>
+            <DialogTitle>
+                <Typography variant="h4">Select Reviewers</Typography>
+            </DialogTitle>
             <DialogContent>
                 <Grid container spacing={1} direction="row" alignItems="center">
                     <Grid item xs={9}>

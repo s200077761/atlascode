@@ -9,6 +9,7 @@ import {
     DialogContentText,
     DialogTitle,
     Grid,
+    Typography,
 } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { v4 } from 'uuid';
@@ -64,7 +65,9 @@ export const FilterSearchDialog: React.FunctionComponent<FilterSearchDialogProps
 
     return (
         <Dialog fullWidth maxWidth="md" open={open} onClose={onCancel}>
-            <DialogTitle>Filter Search</DialogTitle>
+            <DialogTitle>
+                <Typography variant="h4">Filter Search</Typography>
+            </DialogTitle>
             <DialogContent>
                 <DialogContentText>{`Import Filters`}</DialogContentText>
                 <Grid container direction="column" spacing={2}>

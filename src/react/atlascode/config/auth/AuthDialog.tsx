@@ -13,6 +13,7 @@ import {
     RadioGroup,
     Switch,
     TextField,
+    Typography,
 } from '@material-ui/core';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
@@ -168,7 +169,9 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
         const registerRequiredString = useCallback(register(validateRequiredString), []);
         return (
             <Dialog fullWidth maxWidth="md" open={open} onExited={onExited}>
-                <DialogTitle>Authenticate</DialogTitle>
+                <DialogTitle>
+                    <Typography variant="h4">Authenticate</Typography>
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>{`Add ${product.name} Site`}</DialogContentText>
                     <Grid container direction="column" spacing={2}>
