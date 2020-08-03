@@ -16,7 +16,6 @@ import {
     Link,
     List,
     ListItem,
-    ListItemText,
     makeStyles,
     MenuItem,
     Paper,
@@ -307,25 +306,25 @@ const StartWorkPage: React.FunctionComponent = () => {
                                         <AlertTitle>Success!</AlertTitle>
                                         <List dense>
                                             <ListItem disableGutters>
-                                                <ListItemText>- Assigned the issue to you</ListItemText>
+                                                <Typography>- Assigned the issue to you</Typography>
                                             </ListItem>
                                             {submitResponse.transistionStatus !== undefined && (
                                                 <ListItem disableGutters>
-                                                    <ListItemText>
+                                                    <Typography>
                                                         - Transitioned status to{' '}
-                                                        <code>{submitResponse.transistionStatus}</code>
-                                                    </ListItemText>
+                                                        <strong>{submitResponse.transistionStatus}</strong>
+                                                    </Typography>
                                                 </ListItem>
                                             )}
                                             {submitResponse.branch !== undefined && (
                                                 <ListItem disableGutters>
-                                                    <ListItemText>
-                                                        - Switched to <code>{submitResponse.branch}</code> branch with
-                                                        upstream set to{' '}
-                                                        <code>
+                                                    <Typography>
+                                                        - Switched to <strong>{submitResponse.branch}</strong> branch
+                                                        with upstream set to{' '}
+                                                        <strong>
                                                             {submitResponse.upstream}/{submitResponse.branch}
-                                                        </code>
-                                                    </ListItemText>
+                                                        </strong>
+                                                    </Typography>
                                                 </ListItem>
                                             )}
                                         </List>
