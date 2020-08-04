@@ -146,7 +146,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <Box marginTop={1}></Box>
                 <Grid container spacing={3} direction="column" justify="center">
                     <Grid item container direction="row" justify={'space-between'}>
-                        <Grid xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
+                        <Grid item xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
                             <Grid item container spacing={2} direction="row" alignItems={'center'}>
                                 <Grid item>
                                     <Typography variant="body1">Author:</Typography>

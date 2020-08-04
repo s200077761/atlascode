@@ -21,10 +21,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
 
     const handleSave = useCallback(
         async (content: string) => {
-            console.log('before');
-            await controller.postComment(content, comment.id);
-            console.log('after');
-            setIsReplying(false);
+            await controller.postComment(content, comment.id).then(() => setIsReplying(false));
         },
         [controller, comment.id]
     );
@@ -39,7 +36,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
 
     return (
         <React.Fragment>
-            <Grid item container key={comment.id} xs zeroMinWidth spacing={1} direction="row" alignItems="flex-start">
+            <Grid item container xs zeroMinWidth spacing={1} direction="row" alignItems="flex-start">
                 <Grid item zeroMinWidth>
                     <Avatar src={comment.user.avatarUrl} alt={comment.user.displayName} />
                 </Grid>

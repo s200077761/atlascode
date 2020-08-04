@@ -16,7 +16,7 @@ export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> 
     return (
         <Grid item container spacing={1} direction="column" justify="center">
             {comments.map((comment) => (
-                <NestedComment comment={comment} currentUser={currentUser} onDelete={onDelete} />
+                <NestedComment key={comment.id} comment={comment} currentUser={currentUser} onDelete={onDelete} />
             ))}
         </Grid>
     );
