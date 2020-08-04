@@ -266,6 +266,9 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         type: PullRequestDetailsMessageType.UpdateComments,
                         comments: this.pageComments,
                     });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.PostCommentResponse,
+                    });
                 } catch (e) {
                     this.logger.error(new Error(`error adding comment: ${e}`));
                     this.postMessage({

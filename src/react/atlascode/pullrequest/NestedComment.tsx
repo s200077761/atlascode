@@ -19,10 +19,11 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
         setIsReplying(true);
     }, []);
 
-    //TODO: Should this really be async?
     const handleSave = useCallback(
         async (content: string) => {
-            controller.postComment(content, comment.id);
+            console.log('before');
+            await controller.postComment(content, comment.id);
+            console.log('after');
             setIsReplying(false);
         },
         [controller, comment.id]

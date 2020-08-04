@@ -32,7 +32,7 @@ export interface PullRequestDetailsControllerApi {
     updateReviewers: (newReviewers: User[]) => void;
     updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
-    postComment: (rawText: string, parentId?: string) => void;
+    postComment: (rawText: string, parentId?: string) => Promise<void>;
     deleteComment: (comment: Comment) => void;
 
     openDiff: (fileDiff: FileDiff) => void;
@@ -53,7 +53,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     updateReviewers: (newReviewers: User[]) => {},
     updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
-    postComment: (rawText: string, parentId?: string) => {},
+    postComment: async (rawText: string, parentId?: string) => {},
     deleteComment: (comment: Comment) => {},
     openDiff: (fileDiff: FileDiff) => {},
 };
@@ -323,11 +323,27 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     }, [postMessage]);
 
     const postComment = useCallback(
-        (rawText: string, parentId?: string) => {
-            dispatch({ type: PullRequestDetailsUIActionType.Loading });
-            postMessage({ type: PullRequestDetailsActionType.PostComment, rawText: rawText, parentId: parentId });
+        (rawText: string, parentId?: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.PostComment,
+                                rawText: rawText,
+                                parentId: parentId,
+                            },
+                            PullRequestDetailsMessageType.PostCommentResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
         },
-        [postMessage]
+        [postMessagePromise]
     );
 
     const deleteComment = useCallback(

@@ -11,9 +11,9 @@ type CommentFormProps = {
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
     const ref = useRef<HTMLTextAreaElement>();
 
-    const handleSave = useCallback(() => {
+    const handleSave = useCallback(async () => {
         if (ref.current) {
-            props.onSave(ref.current.value);
+            await props.onSave(ref.current.value);
             ref.current.value = '';
         }
     }, [props]);
