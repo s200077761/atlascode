@@ -137,17 +137,21 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return paginatedComments.data;
     }
 
-    async postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<void> {
+    async postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         const newComment: Comment = await bbApi.pullrequests.postComment(pr.site, pr.data.id, rawText, parentId);
+
+        const updatedComments = comments.slice();
         if (newComment.parentId) {
-            const success = this.addToCommentHierarchy(comments, newComment);
+            const success = this.addToCommentHierarchy(updatedComments, newComment);
             if (!success) {
-                throw Error('Parent comment not found');
+                return await this.getComments(pr);
             }
         } else {
-            comments.push(newComment);
+            updatedComments.push(newComment);
         }
+
+        return updatedComments;
     }
 
     async deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]> {

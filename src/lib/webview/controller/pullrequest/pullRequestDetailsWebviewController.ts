@@ -28,7 +28,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private analytics: AnalyticsApi;
     private commonHandler: CommonActionMessageHandler;
     private isRefreshing: boolean;
-    private currentBranchName: string;
     private pageComments: Comment[];
     private inlineComments: Comment[];
     private fileDiffs: FileDiff[];
@@ -106,7 +105,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 comments: this.pageComments,
             });
 
-            this.isRefreshing = false;
             const diffsAndChanges = await this.api.getFileDiffs(this.pr);
             this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
             this.fileDiffs = diffsAndChanges.fileDiffs;
@@ -124,15 +122,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     public async update() {
-        this.postMessage({
-            type: PullRequestDetailsMessageType.Init,
-            pr: this.pr,
-            commits: this.commits,
-            currentUser: await this.getCurrentUser(),
-            currentBranchName: this.currentBranchName,
-            comments: [],
-            fileDiffs: this.fileDiffs,
-        });
+        this.invalidate();
     }
 
     public async onMessageReceived(msg: PullRequestDetailsAction | CommonAction) {
@@ -261,7 +251,12 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.PostComment: {
                 try {
                     this.analytics.firePrCommentEvent(this.pr.site.details);
-                    await this.api.postComment(this.pageComments, this.pr, msg.rawText, msg.parentId);
+                    this.pageComments = await this.api.postComment(
+                        this.pageComments,
+                        this.pr,
+                        msg.rawText,
+                        msg.parentId
+                    );
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateComments,
                         comments: this.pageComments,

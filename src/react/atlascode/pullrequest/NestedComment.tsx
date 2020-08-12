@@ -21,7 +21,8 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
 
     const handleSave = useCallback(
         async (content: string) => {
-            await controller.postComment(content, comment.id).then(() => setIsReplying(false));
+            await controller.postComment(content, comment.id);
+            setIsReplying(false);
         },
         [controller, comment.id]
     );

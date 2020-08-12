@@ -22,9 +22,7 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
         if (ref.current) {
             ref.current.value = '';
         }
-        if (props.onCancel) {
-            props.onCancel();
-        }
+        props.onCancel?.();
     }, [ref, props]);
 
     return (

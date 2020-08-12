@@ -83,10 +83,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         [controller]
     );
 
-    //TODO: this shouldn't be async, but I can't do anything about this right now...
     const handlePostComment = useCallback(
         async (rawText: string) => {
-            controller.postComment(rawText);
+            await controller.postComment(rawText);
         },
         [controller]
     );
