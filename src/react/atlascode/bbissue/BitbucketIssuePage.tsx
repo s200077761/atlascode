@@ -201,7 +201,11 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                         </Grid>
                                     </Grid>
                                     <Grid item>
-                                        <CommentForm currentUser={state.currentUser} onSave={handleSaveComment} />
+                                        <CommentForm
+                                            currentUser={state.currentUser}
+                                            onSave={handleSaveComment}
+                                            fetchUsers={controller.fetchUsers}
+                                        />
                                     </Grid>
                                 </Grid>
                             </Box>

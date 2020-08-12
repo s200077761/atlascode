@@ -1,7 +1,15 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileDiff, MergeStrategy, User } from '../../../bitbucket/model';
+import {
+    ApprovalStatus,
+    BitbucketIssue,
+    BitbucketSite,
+    Comment,
+    FileDiff,
+    MergeStrategy,
+    User,
+} from '../../../bitbucket/model';
 import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
@@ -11,6 +19,8 @@ export enum PullRequestDetailsActionType {
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    PostComment = 'postComment',
+    DeleteComment = 'deleteComment',
     OpenDiffRequest = 'openDiffRequest',
     Merge = 'merge',
 }
@@ -21,6 +31,8 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.UpdateTitleRequest, UpdateTitleAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
+    | ReducerAction<PullRequestDetailsActionType.PostComment, PostCommentAction>
+    | ReducerAction<PullRequestDetailsActionType.DeleteComment, DeleteCommentAction>
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
     | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
@@ -47,6 +59,16 @@ export interface UpdateReviewersAction {
 export interface UpdateApprovalStatusAction {
     status: ApprovalStatus;
 }
+
+export interface PostCommentAction {
+    rawText: string;
+    parentId?: string;
+}
+
+export interface DeleteCommentAction {
+    comment: Comment;
+}
+
 export interface OpenDiffAction {
     fileDiff: FileDiff;
 }

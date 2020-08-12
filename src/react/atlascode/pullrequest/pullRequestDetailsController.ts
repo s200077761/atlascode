@@ -7,6 +7,7 @@ import {
     ApprovalStatus,
     BitbucketIssue,
     BitbucketSite,
+    Comment,
     FileDiff,
     MergeStrategy,
     Reviewer,
@@ -20,6 +21,7 @@ import {
     PullRequestDetailsApprovalMessage,
     PullRequestDetailsBuildStatusesMessage,
     PullRequestDetailsCheckoutBranchMessage,
+    PullRequestDetailsCommentsMessage,
     PullRequestDetailsCommitsMessage,
     PullRequestDetailsFileDiffsMessage,
     PullRequestDetailsInitMessage,
@@ -45,6 +47,9 @@ export interface PullRequestDetailsControllerApi {
     updateReviewers: (newReviewers: User[]) => void;
     updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
+    postComment: (rawText: string, parentId?: string) => Promise<void>;
+    deleteComment: (comment: Comment) => void;
+
     openDiff: (fileDiff: FileDiff) => void;
     merge: (
         mergeStrategy: MergeStrategy,
@@ -69,6 +74,8 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     updateReviewers: (newReviewers: User[]) => {},
     updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
+    postComment: async (rawText: string, parentId?: string) => {},
+    deleteComment: (comment: Comment) => {},
     openDiff: (fileDiff: FileDiff) => {},
     merge: (
         mergeStrategy: MergeStrategy,
@@ -99,6 +106,8 @@ export enum PullRequestDetailsUIActionType {
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    UpdateComments = 'updateComments',
+    AddComment = 'addComment',
     UpdateFileDiffs = 'updateFileDiffs',
     UpdateBuildStatuses = 'updateBuildStatuses',
     UpdateMergeStrategies = 'updateMergeStrategies',
@@ -114,6 +123,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateReviewers, { data: PullRequestDetailsReviewersMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateComments, { data: PullRequestDetailsCommentsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateFileDiffs, { data: PullRequestDetailsFileDiffsMessage }>
     | ReducerAction<
           PullRequestDetailsUIActionType.UpdateBuildStatuses,
@@ -204,7 +214,10 @@ function pullRequestDetailsReducer(
             };
         }
         case PullRequestDetailsUIActionType.UpdateCommits: {
-            return { ...state, commits: action.data.commits };
+            return { ...state, commits: action.data.commits, isSomethingLoading: false };
+        }
+        case PullRequestDetailsUIActionType.UpdateComments: {
+            return { ...state, comments: action.data.comments, isSomethingLoading: false };
         }
         case PullRequestDetailsUIActionType.UpdateCommits: {
             return { ...state, commits: action.data.commits };
@@ -264,6 +277,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.CheckoutBranch: {
                 dispatch({ type: PullRequestDetailsUIActionType.CheckoutBranch, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateComments: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateComments, data: message });
                 break;
             }
             case PullRequestDetailsMessageType.UpdateFileDiffs: {
@@ -379,6 +396,38 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         postMessage({ type: PullRequestDetailsActionType.CheckoutBranch });
     }, [postMessage]);
 
+    const postComment = useCallback(
+        (rawText: string, parentId?: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.PostComment,
+                                rawText: rawText,
+                                parentId: parentId,
+                            },
+                            PullRequestDetailsMessageType.PostCommentResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
+    const deleteComment = useCallback(
+        (comment: Comment) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({ type: PullRequestDetailsActionType.DeleteComment, comment: comment });
+        },
+        [postMessage]
+    );
+
     const openDiff = useCallback(
         (fileDiff: FileDiff) => postMessage({ type: PullRequestDetailsActionType.OpenDiffRequest, fileDiff: fileDiff }),
         [postMessage]
@@ -413,6 +462,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             updateReviewers: updateReviewers,
             updateApprovalStatus: updateApprovalStatus,
             checkoutBranch: checkoutBranch,
+            postComment: postComment,
+            deleteComment: deleteComment,
             openDiff: openDiff,
             merge: merge,
         };
@@ -425,6 +476,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         updateReviewers,
         updateApprovalStatus,
         checkoutBranch,
+        postComment,
+        deleteComment,
         openDiff,
         merge,
     ]);

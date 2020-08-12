@@ -5,6 +5,7 @@ import {
     ApprovalStatus,
     BitbucketIssue,
     BuildStatus,
+    Comment,
     Commit,
     emptyPullRequest,
     emptyUser,
@@ -19,12 +20,14 @@ export enum PullRequestDetailsMessageType {
     Init = 'init',
     Update = 'update',
     FetchUsersResponse = 'fetchUsersResponse',
+    PostCommentResponse = 'postCommentResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateCommits = 'updateCommits',
     UpdateReviewers = 'updateReviewers',
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
+    UpdateComments = 'updateComments',
     UpdateFileDiffs = 'updateFileDiffs',
     UpdateBuildStatuses = 'updateBuildStatuses',
     UpdateMergeStrategies = 'updateMergeStrategies',
@@ -41,6 +44,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateReviewers, PullRequestDetailsReviewersMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
     | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateComments, PullRequestDetailsCommentsMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateBuildStatuses, PullRequestDetailsBuildStatusesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateMergeStrategies, PullRequestDetailsMergeStrategiesMessage>
@@ -49,16 +53,17 @@ export type PullRequestDetailsMessage =
           PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
           PullRequestDetailsRelatedBitbucketIssuesMessage
       >;
-export type PullRequestDetailsResponse = ReducerAction<
-    PullRequestDetailsMessageType.FetchUsersResponse,
-    FetchUsersResponseMessage
->;
+export type PullRequestDetailsResponse =
+    | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
+    | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>;
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
     commits: Commit[];
     currentUser: User;
     currentBranchName: string;
+    comments: Comment[];
     fileDiffs: FileDiff[];
     mergeStrategies: MergeStrategy[];
     buildStatuses: BuildStatus[];
@@ -69,6 +74,8 @@ export interface PullRequestDetailsInitMessage {
 export interface FetchUsersResponseMessage {
     users: User[];
 }
+
+export interface VoidResponseMessage {}
 
 export interface PullRequestDetailsSummaryMessage {
     htmlSummary: string;
@@ -93,6 +100,10 @@ export interface PullRequestDetailsApprovalMessage {
 
 export interface PullRequestDetailsCheckoutBranchMessage {
     branchName: string;
+}
+
+export interface PullRequestDetailsCommentsMessage {
+    comments: Comment[];
 }
 
 export interface PullRequestDetailsFileDiffsMessage {
@@ -120,6 +131,7 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
     commits: [],
     currentUser: emptyUser,
     currentBranchName: '',
+    comments: [],
     fileDiffs: [],
     mergeStrategies: [],
     buildStatuses: [],

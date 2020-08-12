@@ -6,6 +6,7 @@ import {
     ApprovalStatus,
     BitbucketIssue,
     BuildStatus,
+    Comment,
     Commit,
     FileChange,
     FileDiff,
@@ -41,13 +42,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private analytics: AnalyticsApi;
     private commonHandler: CommonActionMessageHandler;
     private isRefreshing: boolean;
-    private currentBranchName: string;
+    private pageComments: Comment[];
+    private inlineComments: Comment[];
     private fileDiffs: FileDiff[];
     private diffsToChangesMap: Map<string, FileChange>;
     private buildStatuses: BuildStatus[];
     private mergeStrategies: MergeStrategy[];
     private relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
     private relatedBitbucketIssues: BitbucketIssue[];
+    private currentBranchName: string;
 
     constructor(
         pr: PullRequest,
@@ -81,6 +84,14 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         return { id: WebViewID.PullRequestDetailsWebview, site: undefined, product: undefined };
     }
 
+    private splitComments(allComments: Comment[]) {
+        this.pageComments = [];
+        this.inlineComments = [];
+        allComments.forEach((comment) =>
+            comment.inline ? this.inlineComments.push(comment) : this.pageComments.push(comment)
+        );
+    }
+
     private async invalidate() {
         try {
             if (this.isRefreshing) {
@@ -94,8 +105,12 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 pr: this.pr,
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
+                comments: [],
+                fileDiffs: [],
             });
 
+            //TODO: run these promises concurrently
+            //TODO: order matters! Try to optimize these calls later
             this.commits = await this.api.updateCommits(this.pr);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateCommits,
@@ -114,18 +129,28 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 mergeStrategies: this.mergeStrategies,
             });
 
-            //TODO: Provide comments once you pull in comments PR
-            //TODO: order matters! Try to optimize these calls later
-            this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, []);
+            this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, this.pageComments);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateRelatedJiraIssues,
                 relatedIssues: this.relatedJiraIssues,
             });
 
-            this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(this.pr, this.commits, []);
+            this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(
+                this.pr,
+                this.commits,
+                this.pageComments
+            );
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
                 relatedIssues: this.relatedBitbucketIssues,
+            });
+
+            const allComments = await this.api.getComments(this.pr);
+            this.splitComments(allComments);
+
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateComments,
+                comments: this.pageComments,
             });
 
             const diffsAndChanges = await this.api.getFileDiffs(this.pr);
@@ -145,18 +170,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     public async update() {
-        this.postMessage({
-            type: PullRequestDetailsMessageType.Init,
-            pr: this.pr,
-            commits: this.commits,
-            currentUser: await this.getCurrentUser(),
-            currentBranchName: this.currentBranchName,
-            fileDiffs: this.fileDiffs,
-            mergeStrategies: this.mergeStrategies,
-            buildStatuses: this.buildStatuses,
-            relatedJiraIssues: this.relatedJiraIssues,
-            relatedBitbucketIssues: this.relatedBitbucketIssues,
-        });
+        this.invalidate();
     }
 
     public async onMessageReceived(msg: PullRequestDetailsAction | CommonAction) {
@@ -282,6 +296,50 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 break;
             }
 
+            case PullRequestDetailsActionType.PostComment: {
+                try {
+                    this.analytics.firePrCommentEvent(this.pr.site.details);
+                    this.pageComments = await this.api.postComment(
+                        this.pageComments,
+                        this.pr,
+                        msg.rawText,
+                        msg.parentId
+                    );
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateComments,
+                        comments: this.pageComments,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.PostCommentResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error adding comment: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error adding comment'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.DeleteComment: {
+                try {
+                    const allComments = await this.api.deleteComment(this.pr, msg.comment);
+                    this.splitComments(allComments);
+
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateComments,
+                        comments: this.pageComments,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error deleting comment: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error deleting comment'),
+                    });
+                }
+                break;
+            }
             case PullRequestDetailsActionType.OpenDiffRequest:
                 try {
                     //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
@@ -312,10 +370,29 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     );
                     this.pr = { ...this.pr, ...updatedPullRequest };
 
-                    //TODO: add comments argument
-                    this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, []);
-                    this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(this.pr, this.commits, []);
-                    this.update();
+                    this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(
+                        this.pr,
+                        this.commits,
+                        this.pageComments
+                    );
+                    this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(
+                        this.pr,
+                        this.commits,
+                        this.pageComments
+                    );
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.Init,
+                        pr: this.pr,
+                        commits: this.commits,
+                        comments: this.pageComments,
+                        currentUser: await this.getCurrentUser(),
+                        currentBranchName: this.currentBranchName,
+                        fileDiffs: this.fileDiffs,
+                        mergeStrategies: this.mergeStrategies,
+                        buildStatuses: this.buildStatuses,
+                        relatedJiraIssues: this.relatedJiraIssues,
+                        relatedBitbucketIssues: this.relatedBitbucketIssues,
+                    });
                 } catch (e) {
                     this.logger.error(new Error(`error merging pull request: ${e}`));
                     this.postMessage({

@@ -130,6 +130,48 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return scm.state.HEAD?.name ?? '';
     }
 
+    private addToCommentHierarchy(comments: Comment[], commentToAdd: Comment): boolean {
+        for (let i = 0; i < comments.length; i++) {
+            if (comments[i].id === commentToAdd.parentId) {
+                comments[i].children.push(commentToAdd);
+                return true;
+            } else if (this.addToCommentHierarchy(comments[i].children, commentToAdd)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    async getComments(pr: PullRequest): Promise<Comment[]> {
+        const bbApi = await clientForSite(pr.site);
+        const paginatedComments = await bbApi.pullrequests.getComments(pr);
+        return paginatedComments.data;
+    }
+
+    async postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]> {
+        const bbApi = await clientForSite(pr.site);
+        const newComment: Comment = await bbApi.pullrequests.postComment(pr.site, pr.data.id, rawText, parentId);
+
+        const updatedComments = comments.slice();
+        if (newComment.parentId) {
+            const success = this.addToCommentHierarchy(updatedComments, newComment);
+            if (!success) {
+                return await this.getComments(pr);
+            }
+        } else {
+            updatedComments.push(newComment);
+        }
+
+        return updatedComments;
+    }
+
+    async deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]> {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.deleteComment(pr.site, pr.data.id, comment.id);
+        const paginatedComments = await bbApi.pullrequests.getComments(pr);
+        return paginatedComments.data;
+    }
+
     //The difference between FileDiff and FileChange is documented in their model definitions
     async getFileDiffs(
         pr: PullRequest
