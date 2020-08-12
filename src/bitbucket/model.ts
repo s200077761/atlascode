@@ -367,7 +367,12 @@ export interface PullRequestApi {
     ): Promise<PullRequest>;
     update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
-    merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
+    merge(
+        pr: PullRequest,
+        closeSourceBranch?: boolean,
+        mergeStrategy?: string,
+        commitMessage?: string
+    ): Promise<PullRequest>;
     postComment(
         site: BitbucketSite,
         prId: string,

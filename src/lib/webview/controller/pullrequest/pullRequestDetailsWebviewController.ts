@@ -1,12 +1,25 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
-import { ApprovalStatus, Commit, FileChange, FileDiff, PullRequest, User } from '../../../../bitbucket/model';
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
+import {
+    ApprovalStatus,
+    BitbucketIssue,
+    BuildStatus,
+    Commit,
+    FileChange,
+    FileDiff,
+    MergeStrategy,
+    PullRequest,
+    User,
+} from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import {
+    emptyPullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
     PullRequestDetailsResponse,
@@ -31,6 +44,11 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private currentBranchName: string;
     private fileDiffs: FileDiff[];
     private diffsToChangesMap: Map<string, FileChange>;
+    private buildStatuses: BuildStatus[];
+    private mergeStrategies: MergeStrategy[];
+    private mainIssue: MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined;
+    private relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
+    private relatedBitbucketIssues: BitbucketIssue[];
 
     constructor(
         pr: PullRequest,
@@ -72,18 +90,49 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.isRefreshing = true;
             this.pr = await this.api.getPR(this.pr);
             this.postMessage({
+                ...emptyPullRequestDetailsInitMessage,
                 type: PullRequestDetailsMessageType.Init,
                 pr: this.pr,
-                commits: [],
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
-                fileDiffs: [],
             });
 
             this.commits = await this.api.updateCommits(this.pr);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateCommits,
                 commits: this.commits,
+            });
+
+            this.buildStatuses = await this.api.updateBuildStatuses(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateBuildStatuses,
+                buildStatuses: this.buildStatuses,
+            });
+
+            this.mergeStrategies = await this.api.updateMergeStrategies(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateMergeStrategies,
+                mergeStrategies: this.mergeStrategies,
+            });
+
+            //TODO: Provide comments once you pull in comments PR
+            //TODO: order matters! Try to optimize these calls later
+            this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, []);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateRelatedJiraIssues,
+                relatedIssues: this.relatedJiraIssues,
+            });
+
+            this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(this.pr, this.commits, []);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
+                relatedIssues: this.relatedBitbucketIssues,
+            });
+
+            this.mainIssue = await this.api.fetchMainIssue(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateMainIssue,
+                mainIssue: this.mainIssue,
             });
 
             const diffsAndChanges = await this.api.getFileDiffs(this.pr);
@@ -110,6 +159,11 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             currentUser: await this.getCurrentUser(),
             currentBranchName: this.currentBranchName,
             fileDiffs: this.fileDiffs,
+            mergeStrategies: this.mergeStrategies,
+            buildStatuses: this.buildStatuses,
+            mainIssue: this.mainIssue,
+            relatedJiraIssues: this.relatedJiraIssues,
+            relatedBitbucketIssues: this.relatedBitbucketIssues,
         });
     }
 
@@ -250,6 +304,31 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error opening diff'),
+                    });
+                }
+                break;
+
+            case PullRequestDetailsActionType.Merge:
+                try {
+                    this.analytics.firePrMergeEvent(this.pr.site.details);
+                    const updatedPullRequest = await this.api.merge(
+                        this.pr,
+                        msg.mergeStrategy,
+                        msg.commitMessage,
+                        msg.closeSourceBranch,
+                        msg.issues
+                    );
+                    this.pr = { ...this.pr, ...updatedPullRequest };
+
+                    //TODO: add comments argument
+                    this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, []);
+                    this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(this.pr, this.commits, []);
+                    this.update();
+                } catch (e) {
+                    this.logger.error(new Error(`error merging pull request: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error merging pull request'),
                     });
                 }
                 break;

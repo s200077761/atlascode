@@ -26,7 +26,7 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<Detai
     }
 
     try {
-        await performTranstion(issueKey, transition, site);
+        await performTransition(issueKey, transition, site);
         return;
     } catch (e) {
         Logger.error(e);
@@ -34,7 +34,7 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<Detai
     }
 }
 
-async function performTranstion(issueKey: string, transition: Transition, site: DetailedSiteInfo) {
+async function performTransition(issueKey: string, transition: Transition, site: DetailedSiteInfo) {
     try {
         const client = await Container.clientManager.jiraClient(site);
         await client.transitionIssue(issueKey, transition.id);

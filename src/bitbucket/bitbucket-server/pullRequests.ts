@@ -705,7 +705,12 @@ export class ServerPullRequestApi implements PullRequestApi {
         return data.status;
     }
 
-    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
+    async merge(
+        pr: PullRequest,
+        closeSourceBranch?: boolean,
+        mergeStrategy?: string,
+        commitMessage?: string
+    ): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
         const body =
@@ -713,11 +718,16 @@ export class ServerPullRequestApi implements PullRequestApi {
                 ? {}
                 : { autoSubject: false, strategyId: mergeStrategy, message: commitMessage };
 
-        await this.client.post(
+        const {
+            data,
+        } = await this.client.post(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/merge`,
             body,
             { version: pr.data.version }
         );
+
+        const taskCount = await this.getTaskCount(pr.site, pr.data.id);
+        return ServerPullRequestApi.toPullRequestModel(data, taskCount, pr.site, pr.workspaceRepo);
     }
 
     async postComment(

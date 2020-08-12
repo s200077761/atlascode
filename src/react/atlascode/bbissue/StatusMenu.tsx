@@ -5,6 +5,9 @@ import Lozenge from '../common/Lozenge';
 type StatusMenuProps = {
     status: string;
     onChange: (value: string) => Promise<void>;
+    fullWidth?: boolean;
+    label?: string;
+    variant?: 'filled' | 'outlined' | 'standard';
 };
 
 const StatusRenderer = {
@@ -43,8 +46,10 @@ const StatusMenu: React.FC<StatusMenuProps> = (props: StatusMenuProps) => {
 
     return (
         <TextField
+            fullWidth={props.fullWidth}
+            label={props.label}
             select
-            variant="standard"
+            variant={props.variant ?? 'standard'}
             size="small"
             value={loading ? loadingStatus : props.status}
             onChange={handleChange}
