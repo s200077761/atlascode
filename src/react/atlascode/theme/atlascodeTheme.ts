@@ -92,6 +92,11 @@ export const atlascodeTheme = (baseTheme: Theme, usedefault?: boolean): Theme =>
             MuiToolbar: {
                 variant: 'dense',
             },
+            MuiDialogTitle: {
+                // It renders as h6 by default which is too small
+                // https://github.com/mui-org/material-ui/issues/16569
+                disableTypography: true,
+            },
         },
         zIndex: {
             ...baseTheme.zIndex,

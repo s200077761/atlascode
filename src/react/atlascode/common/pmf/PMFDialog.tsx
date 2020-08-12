@@ -13,6 +13,7 @@ import {
     Radio,
     RadioGroup,
     TextField,
+    Typography,
 } from '@material-ui/core';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -48,7 +49,9 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
     // BUG: TextFields scroll when not focused. see: https://github.com/mui-org/material-ui/issues/20170
     return (
         <Dialog fullWidth maxWidth="md" open={open} onClose={onCancel}>
-            <DialogTitle>How Are We Doing?</DialogTitle>
+            <DialogTitle>
+                <Typography variant="h4">How Are We Doing?</Typography>
+            </DialogTitle>
             <DialogContent>
                 <Grid container direction="column" spacing={2}>
                     <Grid item>

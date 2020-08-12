@@ -10,6 +10,7 @@ import {
     DialogTitle,
     Grid,
     TextField,
+    Typography,
 } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useAsync } from 'react-async-hook';
@@ -120,7 +121,9 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
 
     return (
         <Dialog fullWidth maxWidth="md" open={open} onClose={onCancel}>
-            <DialogTitle>JQL Editor</DialogTitle>
+            <DialogTitle>
+                <Typography variant="h4">JQL Editor</Typography>
+            </DialogTitle>
             <DialogContent>
                 <DialogContentText>{`Configure JQL Entry`}</DialogContentText>
                 <Grid container direction="column" spacing={2}>

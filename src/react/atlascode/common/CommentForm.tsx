@@ -1,30 +1,17 @@
-import { Avatar, Button, Grid, TextField } from '@material-ui/core';
-import React, { useCallback, useRef } from 'react';
+import { Avatar, Grid } from '@material-ui/core';
+import React from 'react';
 import { User } from '../../../bitbucket/model';
+import { MarkdownEditor } from './editor/MarkdownEditor';
 
 type CommentFormProps = {
     currentUser: User;
+    initialContent?: string;
     onSave: (content: string) => Promise<void>;
     onCancel?: () => void;
+    fetchUsers?: (input: string) => Promise<User[]>;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
-    const ref = useRef<HTMLTextAreaElement>();
-
-    const handleSave = useCallback(async () => {
-        if (ref.current) {
-            await props.onSave(ref.current.value);
-            ref.current.value = '';
-        }
-    }, [props]);
-
-    const handleCancelComment = useCallback(() => {
-        if (ref.current) {
-            ref.current.value = '';
-        }
-        props.onCancel?.();
-    }, [ref, props]);
-
     return (
         <Grid container spacing={1} alignItems="flex-start">
             <Grid item>
@@ -33,21 +20,12 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
             <Grid item xs={10}>
                 <Grid container spacing={1} direction="column">
                     <Grid item>
-                        <TextField inputRef={ref} fullWidth multiline rows={4} />
-                    </Grid>
-                    <Grid item>
-                        <Grid container spacing={1}>
-                            <Grid item>
-                                <Button variant="contained" color="primary" onClick={handleSave}>
-                                    Save
-                                </Button>
-                            </Grid>
-                            <Grid item>
-                                <Button variant="contained" onClick={handleCancelComment}>
-                                    Cancel
-                                </Button>
-                            </Grid>
-                        </Grid>
+                        <MarkdownEditor
+                            initialContent={props.initialContent}
+                            onSave={props.onSave}
+                            onCancel={props.onCancel}
+                            fetchUsers={props.fetchUsers}
+                        />
                     </Grid>
                 </Grid>
             </Grid>
