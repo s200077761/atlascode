@@ -30,7 +30,6 @@ export interface PullRequestDetailsActionApi {
     openDiffViewForFile(pr: PullRequest, fileChange: FileChange): Promise<void>;
     updateBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     updateMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
-    fetchMainIssue(pr: PullRequest): Promise<MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined>;
     fetchRelatedJiraIssues(
         pr: PullRequest,
         commits: Commit[],

@@ -23,7 +23,6 @@ import {
     PullRequestDetailsCommitsMessage,
     PullRequestDetailsFileDiffsMessage,
     PullRequestDetailsInitMessage,
-    PullRequestDetailsMainIssueMessage,
     PullRequestDetailsMergeStrategiesMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
@@ -103,7 +102,6 @@ export enum PullRequestDetailsUIActionType {
     UpdateFileDiffs = 'updateFileDiffs',
     UpdateBuildStatuses = 'updateBuildStatuses',
     UpdateMergeStrategies = 'updateMergeStrategies',
-    UpdateMainIssue = 'updateMainIssue',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
     UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
 }
@@ -125,7 +123,6 @@ export type PullRequestDetailsUIAction =
           PullRequestDetailsUIActionType.UpdateMergeStrategies,
           { data: PullRequestDetailsMergeStrategiesMessage }
       >
-    | ReducerAction<PullRequestDetailsUIActionType.UpdateMainIssue, { data: PullRequestDetailsMainIssueMessage }>
     | ReducerAction<
           PullRequestDetailsUIActionType.UpdateRelatedJiraIssues,
           { data: PullRequestDetailsRelatedJiraIssuesMessage }
@@ -221,9 +218,6 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateMergeStrategies: {
             return { ...state, mergeStrategies: action.data.mergeStrategies };
         }
-        case PullRequestDetailsUIActionType.UpdateMainIssue: {
-            return { ...state, mainIssue: action.data.mainIssue };
-        }
         case PullRequestDetailsUIActionType.UpdateRelatedJiraIssues: {
             return { ...state, relatedJiraIssues: action.data.relatedIssues };
         }
@@ -282,10 +276,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateMergeStrategies: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateMergeStrategies, data: message });
-                break;
-            }
-            case PullRequestDetailsMessageType.UpdateMainIssue: {
-                dispatch({ type: PullRequestDetailsUIActionType.UpdateMainIssue, data: message });
                 break;
             }
             case PullRequestDetailsMessageType.UpdateRelatedJiraIssues: {

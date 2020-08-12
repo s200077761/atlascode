@@ -30,7 +30,6 @@ export enum PullRequestDetailsMessageType {
     UpdateMergeStrategies = 'updateMergeStrategies',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
     UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
-    UpdateMainIssue = 'updateMainIssue',
 }
 
 export type PullRequestDetailsMessage =
@@ -49,9 +48,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<
           PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
           PullRequestDetailsRelatedBitbucketIssuesMessage
-      >
-    | ReducerAction<PullRequestDetailsMessageType.UpdateMainIssue, PullRequestDetailsMainIssueMessage>;
-
+      >;
 export type PullRequestDetailsResponse = ReducerAction<
     PullRequestDetailsMessageType.FetchUsersResponse,
     FetchUsersResponseMessage
@@ -65,7 +62,6 @@ export interface PullRequestDetailsInitMessage {
     fileDiffs: FileDiff[];
     mergeStrategies: MergeStrategy[];
     buildStatuses: BuildStatus[];
-    mainIssue: MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined;
     relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
     relatedBitbucketIssues: BitbucketIssue[];
 }
@@ -119,10 +115,6 @@ export interface PullRequestDetailsRelatedBitbucketIssuesMessage {
     relatedIssues: BitbucketIssue[];
 }
 
-export interface PullRequestDetailsMainIssueMessage {
-    mainIssue: MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined;
-}
-
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
     commits: [],
@@ -131,7 +123,6 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
     fileDiffs: [],
     mergeStrategies: [],
     buildStatuses: [],
-    mainIssue: undefined,
     relatedJiraIssues: [],
     relatedBitbucketIssues: [],
 };

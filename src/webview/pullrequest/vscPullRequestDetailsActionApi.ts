@@ -3,7 +3,6 @@ import axios, { CancelToken, CancelTokenSource } from 'axios';
 import pSettle from 'p-settle';
 import * as vscode from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
-import { parseBitbucketIssueKeys } from '../../bitbucket/bbIssueKeyParser';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import {
@@ -24,7 +23,6 @@ import {
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
-import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { transitionIssue } from '../../jira/transitionIssue';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
@@ -174,36 +172,6 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async updateMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
         const bbApi = await clientForSite(pr.site);
         return await bbApi.pullrequests.getMergeStrategies(pr);
-    }
-
-    async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined> {
-        try {
-            const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
-
-            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-                const jiraIssueKeys = parseJiraIssueKeys(branchAndTitleText);
-                if (jiraIssueKeys.length > 0) {
-                    try {
-                        Container.jiraActiveIssueStatusBar.handleActiveIssueChange(jiraIssueKeys[0]);
-                        return await issueForKey(jiraIssueKeys[0]);
-                    } catch (e) {
-                        Logger.debug('error fetching main jira issue: ', e);
-                    }
-                }
-            }
-
-            const bbIssueKeys = parseBitbucketIssueKeys(branchAndTitleText);
-            const bbApi = await clientForSite(pr.site);
-            if (bbApi.issues) {
-                const bbIssues = await bbApi.issues.getIssuesForKeys(pr.site, bbIssueKeys);
-                if (bbIssues.length > 0) {
-                    return bbIssues[0];
-                }
-            }
-        } catch (e) {
-            Logger.debug('error fetching main jira issue: ', e);
-        }
-        return undefined;
     }
 
     async fetchRelatedJiraIssues(

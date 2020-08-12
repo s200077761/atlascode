@@ -46,7 +46,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private diffsToChangesMap: Map<string, FileChange>;
     private buildStatuses: BuildStatus[];
     private mergeStrategies: MergeStrategy[];
-    private mainIssue: MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined;
     private relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
     private relatedBitbucketIssues: BitbucketIssue[];
 
@@ -129,12 +128,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 relatedIssues: this.relatedBitbucketIssues,
             });
 
-            this.mainIssue = await this.api.fetchMainIssue(this.pr);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateMainIssue,
-                mainIssue: this.mainIssue,
-            });
-
             const diffsAndChanges = await this.api.getFileDiffs(this.pr);
             this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
             this.fileDiffs = diffsAndChanges.fileDiffs;
@@ -161,7 +154,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             fileDiffs: this.fileDiffs,
             mergeStrategies: this.mergeStrategies,
             buildStatuses: this.buildStatuses,
-            mainIssue: this.mainIssue,
             relatedJiraIssues: this.relatedJiraIssues,
             relatedBitbucketIssues: this.relatedBitbucketIssues,
         });
