@@ -1,12 +1,25 @@
-import { Box, Button, Grid, makeStyles, Theme } from '@material-ui/core';
-import { buildMenuItems, exampleSetup } from 'prosemirror-example-setup';
-import { emDash, InputRule, inputRules } from 'prosemirror-inputrules';
-import { defaultMarkdownSerializer, MarkdownSerializer, schema as markdownSchema } from 'prosemirror-markdown';
+import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Box, Button, CircularProgress, Grid, makeStyles, Switch, TextField, Theme, useTheme } from '@material-ui/core';
+import { baseKeymap } from 'prosemirror-commands';
+import { dropCursor } from 'prosemirror-dropcursor';
+import { buildKeymap, buildMenuItems } from 'prosemirror-example-setup';
+import { gapCursor } from 'prosemirror-gapcursor';
+import { history } from 'prosemirror-history';
+import { InputRule, inputRules, textblockTypeInputRule, wrappingInputRule } from 'prosemirror-inputrules';
+import { keymap } from 'prosemirror-keymap';
+import {
+    defaultMarkdownParser,
+    defaultMarkdownSerializer,
+    MarkdownParser,
+    MarkdownSerializer,
+    schema as markdownSchema,
+} from 'prosemirror-markdown';
 import { addMentionNodes, getMentionsPlugin } from 'prosemirror-mentions';
+import { menuBar } from 'prosemirror-menu';
 import { Schema } from 'prosemirror-model';
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { User } from '../../../../bitbucket/model';
 
 function markInputRule(regexp: RegExp, markType: any, getAttrs: any) {
@@ -35,19 +48,36 @@ function markInputRule(regexp: RegExp, markType: any, getAttrs: any) {
 }
 
 const buildInputRules = (schema: any) => {
-    const result = [];
-    let type: any;
+    const rules = [];
 
-    if ((type = schema.marks.strong)) {
-        result.push(markInputRule(/(?:\*\*)([^\*_]+)(?:\*\*|__)$/, type, undefined));
-        result.push(markInputRule(/(?:__)([^_]+)(?:__)$/, type, undefined));
+    if (schema.marks.strong) {
+        rules.push(markInputRule(/(?:\*\*)([^\*_]+)(?:\*\*|__)$/, schema.marks.strong, undefined));
+        rules.push(markInputRule(/(?:__)([^_]+)(?:__)$/, schema.marks.strong, undefined));
     }
-    if ((type = schema.marks.em)) {
-        result.push(markInputRule(/(^|[^\*])(?:\*)([^\*]+)(?:\*)$/, type, undefined));
-        result.push(markInputRule(/(^|[^_])(?:_)([^_]+)(?:_)$/, type, undefined));
+    if (schema.marks.em) {
+        rules.push(markInputRule(/(^|[^\*])(?:\*)([^\*]+)(?:\*)$/, schema.marks.em, undefined));
+        rules.push(markInputRule(/(^|[^_])(?:_)([^_]+)(?:_)$/, schema.marks.em, undefined));
     }
-
-    return result;
+    if (schema.marks.link) {
+        rules.push(
+            markInputRule(/(^|[^!])\[(.*?)\]\((\S+)\)$/, schema.marks.link, (match: string[]) => ({ href: match[3] }))
+        );
+    }
+    rules.push(
+        wrappingInputRule(/^\s*>\s$/, schema.nodes.blockquote),
+        wrappingInputRule(
+            /^(\d+)\.\s$/,
+            schema.nodes.ordered_list,
+            (match: string[]) => ({ order: +match[1] }),
+            (match: string[], node: any) => node.childCount + node.attrs.order === +match[1]
+        ),
+        wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list),
+        textblockTypeInputRule(/^```$/, schema.nodes.code_block),
+        textblockTypeInputRule(new RegExp('^(#{1,6})\\s$'), schema.nodes.heading, (match: string[]) => ({
+            level: match[1].length,
+        }))
+    );
+    return rules;
 };
 
 var schema = new Schema({
@@ -65,6 +95,11 @@ const mdSerializer = new MarkdownSerializer(
     },
     defaultMarkdownSerializer.marks
 );
+
+const mdParser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, {
+    ...defaultMarkdownParser.tokens,
+    // mention node can be added here - mention: { node: 'mention' },
+});
 
 /**
  * IMPORTANT: outer div's "suggestion-item-list" class is mandatory. The plugin uses this class for querying.
@@ -108,43 +143,96 @@ const useStyles = makeStyles(
 );
 
 interface PropsType {
-    onSave: any;
-    fetchUsers: (input: string) => Promise<User[]>;
+    initialContent?: string;
+    onSave: (text: string, abortSignal?: AbortSignal) => Promise<void>;
+    onCancel?: () => void;
+    fetchUsers?: (input: string) => Promise<User[]>;
 }
 
-export const Editor: React.FC<PropsType> = (props: PropsType) => {
+export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
+    const theme = useTheme();
     const classes = useStyles();
 
     const viewHost = useRef<HTMLDivElement>(null);
     const view = useRef<EditorView | null>(null);
+    const [enableRichTextEditor, setEnableRichTextEditor] = useState(true);
+    const [content, setContent] = useState(props.initialContent || '');
+    const [submitState, setSubmitState] = useState<'initial' | 'submitting'>('initial');
 
-    const clearEditor = useCallback(() => {
-        const slice = view.current?.state.doc.slice(0);
-        const tr = view.current!.state.tr.delete(0, slice?.size || 0);
-        view.current?.dispatch(tr);
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setEnableRichTextEditor(e.target.checked);
     }, []);
 
-    const handleSave = useCallback(() => {
-        const mdContent: string = mdSerializer.serialize(view.current!.state.doc);
-        if (mdContent.trim().length > 0) {
-            props.onSave(mdContent);
-        }
+    const handlePlainTextChange = useCallback(
+        (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => setContent(event.target.value),
+        []
+    );
 
-        clearEditor();
-    }, [clearEditor, props]);
+    const clearEditor = useCallback(() => {
+        if (enableRichTextEditor) {
+            const slice = view.current?.state.doc.slice(0);
+            const tr = view.current!.state.tr.delete(0, slice?.size || 0);
+            view.current?.dispatch(tr);
+        } else {
+            setContent('');
+        }
+        props.onCancel?.();
+    }, [enableRichTextEditor, props.onCancel]);
+
+    const handleSave = useCallback(async () => {
+        const mdContent: string = enableRichTextEditor ? mdSerializer.serialize(view.current!.state.doc) : content;
+        if (mdContent.trim().length > 0) {
+            try {
+                setSubmitState('submitting');
+                await props.onSave(mdContent);
+                clearEditor();
+            } finally {
+                setSubmitState('initial');
+            }
+        }
+    }, [props, clearEditor, content, enableRichTextEditor]);
+
+    useEffect(() => {
+        if (!view.current) {
+            return;
+        }
+        if (enableRichTextEditor) {
+            const slice = view.current.state.doc.slice(0);
+            const tr = view.current.state.tr.replaceWith(0, slice?.size || 0, mdParser.parse(content));
+            view.current.dispatch(tr);
+        } else {
+            setContent(mdSerializer.serialize(view.current.state.doc));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enableRichTextEditor]);
 
     useEffect(() => {
         // initial render
         const menuItems = buildMenuItems(schema);
-        const state = EditorState.create({
-            schema,
-            //doc: defaultMarkdownParser.parse(defaultContent),
-            plugins: [
+        const plugins = [
+            reactProps(props),
+            keymap(buildKeymap(schema)),
+            keymap(baseKeymap),
+            dropCursor(),
+            gapCursor(),
+            menuBar({
+                floating: false,
+                content: [
+                    [menuItems.toggleStrong, menuItems.toggleEm, menuItems.toggleCode],
+                    [menuItems.wrapBulletList, menuItems.wrapOrderedList, menuItems.wrapBlockQuote],
+                ],
+            }),
+            history(),
+            inputRules({ rules: buildInputRules(schema) }),
+        ];
+
+        if (props.fetchUsers) {
+            plugins.unshift(
                 // https://github.com/joelewis/prosemirror-mentions
                 getMentionsPlugin({
                     getSuggestions: async (type: any, text: string, done: any) => {
                         if (type === 'mention') {
-                            const users = await props.fetchUsers(text);
+                            const users = await props.fetchUsers!(text);
                             done(
                                 users.map((u) => ({
                                     name: u.displayName,
@@ -161,17 +249,14 @@ export const Editor: React.FC<PropsType> = (props: PropsType) => {
                             return <></>;
                         }
                     },
-                }),
-                reactProps(props),
-                ...exampleSetup({
-                    schema,
-                    menuContent: [
-                        [menuItems.toggleStrong, menuItems.toggleEm, menuItems.toggleCode],
-                        [menuItems.wrapBulletList, menuItems.wrapOrderedList, menuItems.wrapBlockQuote],
-                    ],
-                }),
-                inputRules({ rules: [emDash, ...buildInputRules(schema)] }),
-            ],
+                })
+            );
+        }
+
+        const state = EditorState.create({
+            schema,
+            doc: mdParser.parse(content),
+            plugins: plugins,
         });
         const currView = new EditorView(viewHost.current!, { state });
         view.current = currView;
@@ -191,12 +276,30 @@ export const Editor: React.FC<PropsType> = (props: PropsType) => {
         <Grid container spacing={1} direction="column">
             <Grid item>
                 {/* https://github.com/mui-org/material-ui/issues/17010 */}
-                <Box minHeight="8em" className={classes.editor} {...({ ref: viewHost } as any)} />
+                <Box
+                    hidden={!enableRichTextEditor}
+                    minHeight="8em"
+                    className={classes.editor}
+                    {...({ ref: viewHost } as any)}
+                />
+                <Box hidden={enableRichTextEditor} minHeight="8em">
+                    <TextField multiline fullWidth rows={4} value={content} onChange={handlePlainTextChange} />
+                </Box>
             </Grid>
             <Grid item>
                 <Grid container spacing={1}>
                     <Grid item>
-                        <Button variant="contained" color="primary" onClick={handleSave}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSave}
+                            disabled={submitState === 'submitting'}
+                            endIcon={
+                                submitState === 'submitting' ? (
+                                    <CircularProgress color="inherit" size={theme.typography.fontSize} />
+                                ) : null
+                            }
+                        >
                             Save
                         </Button>
                     </Grid>
@@ -204,6 +307,22 @@ export const Editor: React.FC<PropsType> = (props: PropsType) => {
                         <Button variant="contained" onClick={clearEditor}>
                             Cancel
                         </Button>
+                    </Grid>
+                    <Grid item xs />
+                    <Grid item>
+                        <ToggleWithLabel
+                            label="Rich text editor"
+                            control={
+                                <Switch
+                                    size="small"
+                                    color="primary"
+                                    checked={enableRichTextEditor}
+                                    onChange={handleChange}
+                                />
+                            }
+                            spacing={1}
+                            variant="body2"
+                        />
                     </Grid>
                 </Grid>
             </Grid>

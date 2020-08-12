@@ -1,12 +1,14 @@
 import { Avatar, Grid } from '@material-ui/core';
 import React from 'react';
 import { User } from '../../../bitbucket/model';
-import { Editor } from './editor/MarkdownEditor';
+import { MarkdownEditor } from './editor/MarkdownEditor';
 
 type CommentFormProps = {
     currentUser: User;
+    initialContent?: string;
     onSave: (content: string) => Promise<void>;
-    fetchUsers: (input: string) => Promise<User[]>;
+    onCancel?: () => void;
+    fetchUsers?: (input: string) => Promise<User[]>;
 };
 
 const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
@@ -18,7 +20,12 @@ const CommentForm: React.FC<CommentFormProps> = (props: CommentFormProps) => {
             <Grid item xs={10}>
                 <Grid container spacing={1} direction="column">
                     <Grid item>
-                        <Editor onSave={props.onSave} fetchUsers={props.fetchUsers} />
+                        <MarkdownEditor
+                            initialContent={props.initialContent}
+                            onSave={props.onSave}
+                            onCancel={props.onCancel}
+                            fetchUsers={props.fetchUsers}
+                        />
                     </Grid>
                 </Grid>
             </Grid>
