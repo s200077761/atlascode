@@ -401,6 +401,28 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     });
                 }
                 break;
+            case PullRequestDetailsActionType.OpenJiraIssue:
+                try {
+                    await this.api.openJiraIssue(msg.issue);
+                } catch (e) {
+                    this.logger.error(new Error(`error opening jira issue: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening jira issue'),
+                    });
+                }
+                break;
+            case PullRequestDetailsActionType.OpenBitbucketIssue:
+                try {
+                    await this.api.openBitbucketIssue(msg.issue);
+                } catch (e) {
+                    this.logger.error(new Error(`error opening jira issue: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening jira issue'),
+                    });
+                }
+                break;
 
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:

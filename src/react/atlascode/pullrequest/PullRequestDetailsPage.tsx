@@ -29,6 +29,8 @@ import { MergeDialog } from './MergeDialog';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
+import { RelatedBitbucketIssues } from './RelatedBitbucketIssues';
+import { RelatedJiraIssues } from './RelatedJiraIssues';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
 
@@ -219,6 +221,22 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             fetchUsers={handleFetchUsers}
                             summaryChange={handleSummaryChange}
                         />
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel title={'Related Jira Issues'}>
+                            <RelatedJiraIssues
+                                relatedIssues={state.relatedJiraIssues}
+                                openJiraIssue={controller.openJiraIssue}
+                            />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel title={'Related Bitbucket Issues'}>
+                            <RelatedBitbucketIssues
+                                relatedIssues={state.relatedBitbucketIssues}
+                                openBitbucketIssue={controller.openBitbucketIssue}
+                            />
+                        </BasicPanel>
                     </Grid>
                     <Grid item>
                         <BasicPanel title={'Commits'} isDefaultExpanded>

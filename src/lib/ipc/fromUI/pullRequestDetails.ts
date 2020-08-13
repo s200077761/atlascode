@@ -23,6 +23,8 @@ export enum PullRequestDetailsActionType {
     DeleteComment = 'deleteComment',
     OpenDiffRequest = 'openDiffRequest',
     Merge = 'merge',
+    OpenJiraIssue = 'openJiraIssue',
+    OpenBitbucketIssue = 'openBitbucketIssue',
 }
 
 export type PullRequestDetailsAction =
@@ -36,6 +38,8 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
     | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
+    | ReducerAction<PullRequestDetailsActionType.OpenJiraIssue, OpenJiraIssueAction>
+    | ReducerAction<PullRequestDetailsActionType.OpenBitbucketIssue, OpenBitbucketIssueAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -78,4 +82,12 @@ export interface MergeAction {
     commitMessage: string;
     closeSourceBranch: boolean;
     issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[];
+}
+
+export interface OpenJiraIssueAction {
+    issue: MinimalIssue<DetailedSiteInfo>;
+}
+
+export interface OpenBitbucketIssueAction {
+    issue: BitbucketIssue;
 }

@@ -57,6 +57,8 @@ export interface PullRequestDetailsControllerApi {
         closeSourceBranch: boolean,
         issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
     ) => void;
+    openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    openBitbucketIssue: (issue: BitbucketIssue) => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -83,6 +85,9 @@ export const emptyApi: PullRequestDetailsControllerApi = {
         closeSourceBranch: boolean,
         issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
     ) => {},
+
+    openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => {},
+    openBitbucketIssue: (issue: BitbucketIssue) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -452,6 +457,26 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage]
     );
 
+    const openJiraIssue = useCallback(
+        (issue: MinimalIssue<DetailedSiteInfo>) => {
+            postMessage({
+                type: PullRequestDetailsActionType.OpenJiraIssue,
+                issue: issue,
+            });
+        },
+        [postMessage]
+    );
+
+    const openBitbucketIssue = useCallback(
+        (issue: BitbucketIssue) => {
+            postMessage({
+                type: PullRequestDetailsActionType.OpenBitbucketIssue,
+                issue: issue,
+            });
+        },
+        [postMessage]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -466,6 +491,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             deleteComment: deleteComment,
             openDiff: openDiff,
             merge: merge,
+            openJiraIssue: openJiraIssue,
+            openBitbucketIssue: openBitbucketIssue,
         };
     }, [
         postMessage,
@@ -480,6 +507,8 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         deleteComment,
         openDiff,
         merge,
+        openJiraIssue,
+        openBitbucketIssue,
     ]);
 
     return [state, controllerApi];
