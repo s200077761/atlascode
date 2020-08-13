@@ -1,8 +1,8 @@
-import { Box, Typography } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
 import * as React from 'react';
 import { PullRequestData } from '../../../bitbucket/model';
 
-//This is similar to the existing MergeChecks component, but with hooks and MUI
 type MergeChecksProps = {
     prData: PullRequestData;
 };
@@ -18,24 +18,19 @@ export const MergeChecks: React.FC<MergeChecksProps> = ({ prData }) => {
         unsuccessfulBuilds = buildStatuses.length !== successes.length;
     }
 
+    const allClear = approvalCount > 0 && openTaskCount === 0 && needsWorkCount === 0 && !unsuccessfulBuilds;
+
     return (
-        <Box>
-            <Typography hidden={openTaskCount <= 0} variant="body1">
-                ️⚠️&nbsp;&nbsp;Pull request has unresolved tasks
+        <Alert variant="standard" severity={allClear ? 'success' : 'warning'}>
+            <Typography>
+                {approvalCount === 0
+                    ? 'Pull request has no approvals'
+                    : `Pull request has ${approvalCount} ${approvalCount === 1 ? 'approval' : 'approvals'}`}
             </Typography>
-            <Typography hidden={needsWorkCount <= 0} variant="body1">
-                ️⚠️&nbsp;&nbsp;Pull request has been marked as - Needs work
-            </Typography>
-            {approvalCount === 0 ? (
-                <Typography variant="body1">⚠️&nbsp;&nbsp;Pull request has no approvals</Typography>
-            ) : (
-                <Typography variant="body1">
-                    Pull request has {approvalCount} {approvalCount === 1 ? 'approval' : 'approvals'}
-                </Typography>
-            )}
-            <Typography hidden={!unsuccessfulBuilds} variant="body1">
-                ️⚠️&nbsp;&nbsp;Pull request has unsuccessful builds
-            </Typography>
-        </Box>
+
+            {openTaskCount > 0 && <Typography>Pull request has unresolved tasks</Typography>}
+            {needsWorkCount > 0 && <Typography>Pull request has been marked as - Needs work</Typography>}
+            {unsuccessfulBuilds && <Typography>Pull request has unsuccessful builds</Typography>}
+        </Alert>
     );
 };

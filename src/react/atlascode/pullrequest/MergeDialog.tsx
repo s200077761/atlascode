@@ -1,16 +1,18 @@
-import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
+import { InlineTextEditor, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
     Button,
-    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    FormControlLabel,
     Grid,
     MenuItem,
+    Switch,
+    Table,
+    TableBody,
+    TableContainer,
     TextField,
     Typography,
 } from '@material-ui/core';
@@ -235,10 +237,9 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                     <Typography variant="h4">Merge Pull Request</Typography>
                 </DialogTitle>
                 <DialogContent>
+                    <MergeChecks prData={prData} />
+                    <Box marginTop={5} />
                     <Grid container spacing={1} direction="column" alignItems="flex-start">
-                        <Grid item>
-                            <MergeChecks prData={prData} />
-                        </Grid>
                         <Grid item container direction="column">
                             <Grid item>
                                 <TextField
@@ -270,6 +271,8 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                             <Grid item>
                                 <InlineTextEditor
                                     fullWidth
+                                    multiline
+                                    rows={5}
                                     defaultValue={commitMessage}
                                     onSave={handleCommitMessageChange}
                                     placeholder={'Enter commit message'}
@@ -279,45 +282,57 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                             </Grid>
                         </Grid>
                         <Grid item>
-                            {transitionedJiraIssues.map((issue) => (
-                                <JiraTransitionMenu
-                                    issue={issue}
-                                    handleIssueTransition={handleJiraIssueTransition}
-                                    onShouldTransitionChange={handleShouldTransitionChangeJira}
-                                    key={issue.key}
-                                />
-                            ))}
-                            {transitionedBitbucketIssues.map((issue) => (
-                                <BitbucketTransitionMenu
-                                    issue={issue}
-                                    handleIssueTransition={handleBitbucketIssueTransition}
-                                    onShouldTransitionChange={handleShouldTransitionChangeBitbucket}
-                                    key={issue.data.id}
-                                />
-                            ))}
+                            <Box
+                                hidden={!(transitionedJiraIssues.length > 0 || transitionedBitbucketIssues.length > 0)}
+                            >
+                                <Typography variant="body1">Transitioning Issues:</Typography>
+                            </Box>
+                            <TableContainer>
+                                <Table size="small" aria-label="issues to transition">
+                                    <TableBody>
+                                        {transitionedJiraIssues.map((issue) => (
+                                            <JiraTransitionMenu
+                                                issue={issue}
+                                                handleIssueTransition={handleJiraIssueTransition}
+                                                onShouldTransitionChange={handleShouldTransitionChangeJira}
+                                                key={issue.key}
+                                            />
+                                        ))}
+                                        {transitionedBitbucketIssues.map((issue) => (
+                                            <BitbucketTransitionMenu
+                                                issue={issue}
+                                                handleIssueTransition={handleBitbucketIssueTransition}
+                                                onShouldTransitionChange={handleShouldTransitionChangeBitbucket}
+                                                key={issue.data.id}
+                                            />
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
                         </Grid>
                         <Grid item>
-                            <FormControlLabel
-                                value="Close source branch"
+                            <ToggleWithLabel
                                 control={
-                                    <Checkbox
+                                    <Switch
+                                        size="small"
                                         color="primary"
+                                        value="Close source branch"
                                         checked={closeSourceBranch}
                                         onChange={handleCloseSourceBranchChange}
-                                        name={'Close source branch'}
                                     />
                                 }
-                                label="Close source branch"
-                                labelPlacement="end"
+                                label={'Close source branch'}
+                                spacing={1}
+                                variant="body1"
                             />
                         </Grid>
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} color="primary">
+                    <Button variant="contained" onClick={handleClose} color="primary">
                         Cancel
                     </Button>
-                    <Button onClick={handleMerge} color="primary">
+                    <Button variant="contained" onClick={handleMerge} color="primary">
                         Merge
                     </Button>
                 </DialogActions>
