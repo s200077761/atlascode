@@ -83,16 +83,37 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
-                                        <h3>🎉 What's New in 2.6.6 🎉</h3>
+                                        <h3>🎉 What's New in 2.7.0 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
                                             <ul>
-                                                <li>Removed background polling for connectivity</li>
+                                                <li>Show images in comments for issues on Jira server instances</li>
+                                                <li>Add hyperlinks to attachment list in Jira issue webview</li>
+                                                <li>Markdown editor for Bitbucket Issue webview</li>
+                                            </ul>
+                                        </section>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
                                                 <li>
-                                                    Added option in general settings to minimize errors when offline
+                                                    Fixed an issue affecting authenticating with sites with multi-level
+                                                    context paths
                                                 </li>
-                                                <li>Updated the create pull request view</li>
-                                                <li>Sped-up fetching lists of pull requests</li>
+                                            </ul>
+                                        </section>
+                                        <h3>🎉 What's New in 2.6.4 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Support for customizing the generated branch name when starting work
+                                                    on an issue
+                                                </li>
+                                                <li>Updated Create Bitbucket Issue webview UI</li>
+                                            </ul>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>Fixed resource loading in webviews in VS Code Insiders</li>
                                             </ul>
                                         </section>
                                         <h3>🎉 What's New in 2.6.5 🎉</h3>
