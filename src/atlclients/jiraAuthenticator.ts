@@ -17,20 +17,17 @@ import {
 import { CredentialManager } from './authStore';
 import { JiraProdStrategy, JiraStagingStrategy } from './strategy';
 
-export class JiraAuthentictor extends Authenticator {
+export class JiraAuthentictor implements Authenticator {
     private activeCodes: Map<string, string> = new Map();
 
-    constructor(private axios: AxiosInstance) {
-        super();
-    }
+    constructor(private axios: AxiosInstance) {}
 
     public startAuthentication(state: string, site: SiteInfo) {
         const provider = oauthProviderForSite(site)!;
         const strategy = provider === OAuthProvider.JiraCloud ? JiraProdStrategy : JiraStagingStrategy;
         const verifier = this.verifier();
         this.activeCodes.set(state, verifier);
-        const codeChallenge = this.base64URLEncode(this.sha256(verifier));
-        const url = `${strategy.authorizationURL}?client_id=${strategy.clientID}&redirect_uri=${strategy.callbackURL}&response_type=code&scope=${strategy.scope}&audience=${strategy.authParams.audience}&prompt=${strategy.authParams.prompt}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+        const url = this.constructUrl(strategy, state, verifier);
         vscode.env.openExternal(vscode.Uri.parse(url));
     }
 
@@ -125,6 +122,22 @@ export class JiraAuthentictor extends Authenticator {
 
         return newSites;
     }
+
+    private constructUrl(strategy: any, state: string, verifier: string): string {
+        const codeChallenge = this.base64URLEncode(this.sha256(verifier));
+        const params = new URLSearchParams();
+        params.append('client_id', strategy.clientID);
+        params.append('redirect_uri', strategy.callbackURL);
+        params.append('response_type', 'code');
+        params.append('scope', strategy.scope);
+        params.append('audience', strategy.authParams.audience);
+        params.append('prompt', strategy.authParams.prompt);
+        params.append('state', state);
+        params.append('code_challenge', codeChallenge);
+        params.append('code_challenge_method', 'S256');
+        return strategy.authorizationURL + '?' + params.toString();
+    }
+
     private async getUser(
         provider: OAuthProvider,
         accessToken: string,

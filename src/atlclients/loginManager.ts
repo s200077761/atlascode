@@ -57,10 +57,20 @@ export class LoginManager {
     // this is *only* called when login buttons are clicked by the user
     public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
         if (configuration.get<boolean>('useNewAuth')) {
+            // `callableUri` is the URI for the last redirect in the OAuth process (redirecting to the extension). This
+            // should work for VS Code, Insiders, and any online version.
             const callableUri = await vscode.env.asExternalUri(
                 vscode.Uri.parse(`${vscode.env.uriScheme}://atlassian.atlascode/finalizeAuthentication`)
             );
+
+            // Since there's no consistent way to include a URI for the final redirect in the OAuth sequence we
+            // encode it in the state parameter. This parameter will be passed along through all steps in the OAuth
+            // dance meaning it will be included in the redirect to our auth service. We decode the uri in the auth
+            // service and redirect from there. That redirect is then handled by `exchangeCodesForTokens()`. Additinally
+            // state needs to be unique to correlate incoming responses with outgoing requests so a UUID is included.
             const rawState = `${v4()}::${callableUri}`;
+
+            // The UUID / redirect URI combination is base64 encoded to prevent any issues with URL encoding.
             const state = new Buffer(rawState).toString('base64');
             this._activeRequests.set(state, site);
             if (site.product.key === ProductJira.key) {
@@ -77,11 +87,11 @@ export class LoginManager {
             }
 
             const resp = await this._dancer.doDance(provider, site, callback);
-            this.saveDetails(site, resp);
+            this.saveDetails(provider, site, resp);
         }
     }
 
-    // We get here via the app url
+    // We get here via the app url as part of the OAuth dance
     public async exchangeCodeForTokens(state: string, code: string) {
         const site = this._activeRequests.get(state);
         if (site) {
@@ -91,22 +101,19 @@ export class LoginManager {
 
                 if (site.product.key === ProductJira.key) {
                     const oauthResponse = await this._jiraAuthenticator.exchangeCode(provider, state, code, agent);
-                    this.saveDetails(site, oauthResponse);
+                    this.saveDetails(provider, site, oauthResponse);
                 } else {
                     const oauthResponse = await this._bitbucketAuthenticator.exchangeCode(provider, state, code, agent);
-                    this.saveDetails(site, oauthResponse);
+                    this.saveDetails(provider, site, oauthResponse);
                 }
-            } catch (err) {}
+            } catch (e) {
+                Logger.error(e, 'Error while exchanging bearer token for access token.');
+            }
         }
     }
 
-    private async saveDetails(site: SiteInfo, resp: OAuthResponse) {
-        const provider = oauthProviderForSite(site);
+    private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse) {
         try {
-            if (!provider) {
-                throw new Error(`No provider found for ${site.host}`);
-            }
-
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
                 refresh: resp.refresh,
@@ -129,11 +136,7 @@ export class LoginManager {
             });
         } catch (e) {
             Logger.error(e, 'Error authenticating');
-            // if (typeof e === 'object' && e.cancelled !== undefined) {
-            //     window.showWarningMessage(`${e.message}`);
-            // } else {
-            //     window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
-            // }
+            vscode.window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
         }
     }
 

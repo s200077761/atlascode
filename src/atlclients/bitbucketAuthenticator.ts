@@ -15,10 +15,8 @@ import {
 import { CredentialManager } from './authStore';
 import { BitbucketProdStrategy, BitbucketStagingStrategy } from './strategy';
 
-export class BitbucketAuthenticator extends Authenticator {
-    constructor(private axios: AxiosInstance) {
-        super();
-    }
+export class BitbucketAuthenticator implements Authenticator {
+    constructor(private axios: AxiosInstance) {}
 
     public startAuthentication(state: string, site: SiteInfo) {
         const provider = oauthProviderForSite(site);
