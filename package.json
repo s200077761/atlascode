@@ -1313,6 +1313,7 @@
         }
     },
     "dependencies": {
+        "@atlaskit/analytics-next": "^6.3.7",
         "@atlaskit/avatar": "^17.0.0",
         "@atlaskit/avatar-group": "^4.0.13",
         "@atlaskit/breadcrumbs": "^9.1.0",
@@ -1496,7 +1497,7 @@
         "vscode-test": "^1.2.0",
         "webpack": "^4.42.1",
         "webpack-cli": "^3.3.11",
-        "webpack-dev-server": "^3.10.3",
+        "webpack-dev-server": "^3.11.0",
         "webpack-manifest-plugin": "^2.2.0"
     }
 }
