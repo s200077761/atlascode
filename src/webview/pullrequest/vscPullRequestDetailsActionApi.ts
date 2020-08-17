@@ -157,8 +157,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.deleteComment(pr.site, pr.data.id, comment.id);
-        const paginatedComments = await bbApi.pullrequests.getComments(pr);
-        return paginatedComments.data;
+        return await this.getComments(pr);
     }
 
     //The difference between FileDiff and FileChange is documented in their model definitions
