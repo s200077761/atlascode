@@ -19,11 +19,13 @@ import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
+import CommentForm from '../common/CommentForm';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { NeedsWorkButton } from './NeedsWorkButton';
+import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
@@ -77,6 +79,13 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const handleTitleChange = useCallback(
         (text: string) => {
             controller.updateTitle(text);
+        },
+        [controller]
+    );
+
+    const handlePostComment = useCallback(
+        async (rawText: string) => {
+            await controller.postComment(rawText);
         },
         [controller]
     );
@@ -136,7 +145,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <Box marginTop={1}></Box>
                 <Grid container spacing={3} direction="column" justify="center">
                     <Grid item container direction="row" justify={'space-between'}>
-                        <Grid xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
+                        <Grid item xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
                             <Grid item container spacing={2} direction="row" alignItems={'center'}>
                                 <Grid item>
                                     <Typography variant="body1">Author:</Typography>
@@ -209,6 +218,22 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             isDefaultExpanded
                         >
                             <DiffList fileDiffs={state.fileDiffs} openDiffHandler={controller.openDiff} />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel title={'Comments'} isDefaultExpanded>
+                            <Grid container spacing={2} direction="column">
+                                <Grid item>
+                                    <NestedCommentList
+                                        comments={state.comments}
+                                        currentUser={state.currentUser}
+                                        onDelete={controller.deleteComment}
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <CommentForm currentUser={state.currentUser} onSave={handlePostComment} />
+                                </Grid>
+                            </Grid>
                         </BasicPanel>
                     </Grid>
                 </Grid>

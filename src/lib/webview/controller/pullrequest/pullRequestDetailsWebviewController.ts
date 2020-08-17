@@ -1,6 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import { ApprovalStatus, Commit, FileChange, FileDiff, PullRequest, User } from '../../../../bitbucket/model';
+import { ApprovalStatus, Comment, Commit, FileChange, FileDiff, PullRequest, User } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
@@ -28,7 +28,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private analytics: AnalyticsApi;
     private commonHandler: CommonActionMessageHandler;
     private isRefreshing: boolean;
-    private currentBranchName: string;
+    private pageComments: Comment[];
+    private inlineComments: Comment[];
     private fileDiffs: FileDiff[];
     private diffsToChangesMap: Map<string, FileChange>;
 
@@ -64,6 +65,14 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         return { id: WebViewID.PullRequestDetailsWebview, site: undefined, product: undefined };
     }
 
+    private splitComments(allComments: Comment[]) {
+        this.pageComments = [];
+        this.inlineComments = [];
+        allComments.forEach((comment) =>
+            comment.inline ? this.inlineComments.push(comment) : this.pageComments.push(comment)
+        );
+    }
+
     private async invalidate() {
         try {
             if (this.isRefreshing) {
@@ -77,13 +86,23 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 commits: [],
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
+                comments: [],
                 fileDiffs: [],
             });
 
+            //TODO: run these promises concurrently
             this.commits = await this.api.updateCommits(this.pr);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateCommits,
                 commits: this.commits,
+            });
+
+            const allComments = await this.api.getComments(this.pr);
+            this.splitComments(allComments);
+
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateComments,
+                comments: this.pageComments,
             });
 
             const diffsAndChanges = await this.api.getFileDiffs(this.pr);
@@ -103,14 +122,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     public async update() {
-        this.postMessage({
-            type: PullRequestDetailsMessageType.Init,
-            pr: this.pr,
-            commits: this.commits,
-            currentUser: await this.getCurrentUser(),
-            currentBranchName: this.currentBranchName,
-            fileDiffs: this.fileDiffs,
-        });
+        this.invalidate();
     }
 
     public async onMessageReceived(msg: PullRequestDetailsAction | CommonAction) {
@@ -236,6 +248,50 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 break;
             }
 
+            case PullRequestDetailsActionType.PostComment: {
+                try {
+                    this.analytics.firePrCommentEvent(this.pr.site.details);
+                    this.pageComments = await this.api.postComment(
+                        this.pageComments,
+                        this.pr,
+                        msg.rawText,
+                        msg.parentId
+                    );
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateComments,
+                        comments: this.pageComments,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.PostCommentResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error adding comment: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error adding comment'),
+                    });
+                }
+                break;
+            }
+
+            case PullRequestDetailsActionType.DeleteComment: {
+                try {
+                    const allComments = await this.api.deleteComment(this.pr, msg.comment);
+                    this.splitComments(allComments);
+
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateComments,
+                        comments: this.pageComments,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error deleting comment: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error deleting comment'),
+                    });
+                }
+                break;
+            }
             case PullRequestDetailsActionType.OpenDiffRequest:
                 try {
                     //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
