@@ -1,20 +1,35 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { v4 } from 'uuid';
-import { ApprovalStatus, BitbucketSite, Comment, FileDiff, Reviewer, User } from '../../../bitbucket/model';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import {
+    ApprovalStatus,
+    BitbucketIssue,
+    BitbucketSite,
+    Comment,
+    FileDiff,
+    MergeStrategy,
+    Reviewer,
+    User,
+} from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../lib/ipc/fromUI/pullRequestDetails';
 import {
     emptyPullRequestDetailsInitMessage,
     FetchUsersResponseMessage,
     PullRequestDetailsApprovalMessage,
+    PullRequestDetailsBuildStatusesMessage,
     PullRequestDetailsCheckoutBranchMessage,
     PullRequestDetailsCommentsMessage,
     PullRequestDetailsCommitsMessage,
     PullRequestDetailsFileDiffsMessage,
     PullRequestDetailsInitMessage,
+    PullRequestDetailsMergeStrategiesMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
+    PullRequestDetailsRelatedBitbucketIssuesMessage,
+    PullRequestDetailsRelatedJiraIssuesMessage,
     PullRequestDetailsResponse,
     PullRequestDetailsReviewersMessage,
     PullRequestDetailsSummaryMessage,
@@ -36,6 +51,12 @@ export interface PullRequestDetailsControllerApi {
     deleteComment: (comment: Comment) => void;
 
     openDiff: (fileDiff: FileDiff) => void;
+    merge: (
+        mergeStrategy: MergeStrategy,
+        commitMessage: string,
+        closeSourceBranch: boolean,
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+    ) => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -56,6 +77,12 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     postComment: async (rawText: string, parentId?: string) => {},
     deleteComment: (comment: Comment) => {},
     openDiff: (fileDiff: FileDiff) => {},
+    merge: (
+        mergeStrategy: MergeStrategy,
+        commitMessage: string,
+        closeSourceBranch: boolean,
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+    ) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -82,6 +109,10 @@ export enum PullRequestDetailsUIActionType {
     UpdateComments = 'updateComments',
     AddComment = 'addComment',
     UpdateFileDiffs = 'updateFileDiffs',
+    UpdateBuildStatuses = 'updateBuildStatuses',
+    UpdateMergeStrategies = 'updateMergeStrategies',
+    UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
+    UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
 }
 
 export type PullRequestDetailsUIAction =
@@ -94,6 +125,22 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateComments, { data: PullRequestDetailsCommentsMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateFileDiffs, { data: PullRequestDetailsFileDiffsMessage }>
+    | ReducerAction<
+          PullRequestDetailsUIActionType.UpdateBuildStatuses,
+          { data: PullRequestDetailsBuildStatusesMessage }
+      >
+    | ReducerAction<
+          PullRequestDetailsUIActionType.UpdateMergeStrategies,
+          { data: PullRequestDetailsMergeStrategiesMessage }
+      >
+    | ReducerAction<
+          PullRequestDetailsUIActionType.UpdateRelatedJiraIssues,
+          { data: PullRequestDetailsRelatedJiraIssuesMessage }
+      >
+    | ReducerAction<
+          PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues,
+          { data: PullRequestDetailsRelatedBitbucketIssuesMessage }
+      >
     | ReducerAction<PullRequestDetailsUIActionType.Loading>;
 
 function pullRequestDetailsReducer(
@@ -178,6 +225,18 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateFileDiffs: {
             return { ...state, fileDiffs: action.data.fileDiffs };
         }
+        case PullRequestDetailsUIActionType.UpdateBuildStatuses: {
+            return { ...state, buildStatuses: action.data.buildStatuses };
+        }
+        case PullRequestDetailsUIActionType.UpdateMergeStrategies: {
+            return { ...state, mergeStrategies: action.data.mergeStrategies };
+        }
+        case PullRequestDetailsUIActionType.UpdateRelatedJiraIssues: {
+            return { ...state, relatedJiraIssues: action.data.relatedIssues };
+        }
+        case PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues: {
+            return { ...state, relatedBitbucketIssues: action.data.relatedIssues };
+        }
         default:
             return defaultStateGuard(state, action);
     }
@@ -208,7 +267,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateCommits, data: message });
                 break;
             }
-
             case PullRequestDetailsMessageType.UpdateReviewers: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateReviewers, data: message });
                 break;
@@ -227,6 +285,22 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateFileDiffs: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateFileDiffs, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateBuildStatuses: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateBuildStatuses, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateMergeStrategies: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateMergeStrategies, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateRelatedJiraIssues: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateRelatedJiraIssues, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues, data: message });
                 break;
             }
             default: {
@@ -359,6 +433,25 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage]
     );
 
+    const merge = useCallback(
+        (
+            mergeStrategy: MergeStrategy,
+            commitMessage: string,
+            closeSourceBranch: boolean,
+            issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+        ) => {
+            dispatch({ type: PullRequestDetailsUIActionType.Loading });
+            postMessage({
+                type: PullRequestDetailsActionType.Merge,
+                mergeStrategy: mergeStrategy,
+                commitMessage: commitMessage,
+                closeSourceBranch: closeSourceBranch,
+                issues: issues,
+            });
+        },
+        [postMessage]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -372,6 +465,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             postComment: postComment,
             deleteComment: deleteComment,
             openDiff: openDiff,
+            merge: merge,
         };
     }, [
         postMessage,
@@ -385,6 +479,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         postComment,
         deleteComment,
         openDiff,
+        merge,
     ]);
 
     return [state, controllerApi];

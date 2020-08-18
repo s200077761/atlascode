@@ -1,12 +1,26 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import Axios from 'axios';
-import { ApprovalStatus, Comment, Commit, FileChange, FileDiff, PullRequest, User } from '../../../../bitbucket/model';
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
+import {
+    ApprovalStatus,
+    BitbucketIssue,
+    BuildStatus,
+    Comment,
+    Commit,
+    FileChange,
+    FileDiff,
+    MergeStrategy,
+    PullRequest,
+    User,
+} from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonAction, CommonActionType } from '../../../ipc/fromUI/common';
 import { PullRequestDetailsAction, PullRequestDetailsActionType } from '../../../ipc/fromUI/pullRequestDetails';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import {
+    emptyPullRequestDetailsInitMessage,
     PullRequestDetailsMessage,
     PullRequestDetailsMessageType,
     PullRequestDetailsResponse,
@@ -32,6 +46,11 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private inlineComments: Comment[];
     private fileDiffs: FileDiff[];
     private diffsToChangesMap: Map<string, FileChange>;
+    private buildStatuses: BuildStatus[];
+    private mergeStrategies: MergeStrategy[];
+    private relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
+    private relatedBitbucketIssues: BitbucketIssue[];
+    private currentBranchName: string;
 
     constructor(
         pr: PullRequest,
@@ -66,11 +85,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     private splitComments(allComments: Comment[]) {
-        this.pageComments = [];
-        this.inlineComments = [];
-        allComments.forEach((comment) =>
-            comment.inline ? this.inlineComments.push(comment) : this.pageComments.push(comment)
-        );
+        const pageComments: Comment[] = [];
+        const inlineComments: Comment[] = [];
+        allComments.forEach((comment) => (comment.inline ? inlineComments.push(comment) : pageComments.push(comment)));
+        return [pageComments, inlineComments];
     }
 
     private async invalidate() {
@@ -81,9 +99,9 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.isRefreshing = true;
             this.pr = await this.api.getPR(this.pr);
             this.postMessage({
+                ...emptyPullRequestDetailsInitMessage,
                 type: PullRequestDetailsMessageType.Init,
                 pr: this.pr,
-                commits: [],
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
                 comments: [],
@@ -91,15 +109,27 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             });
 
             //TODO: run these promises concurrently
+            //TODO: order matters! Try to optimize these calls later
             this.commits = await this.api.updateCommits(this.pr);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateCommits,
                 commits: this.commits,
             });
 
-            const allComments = await this.api.getComments(this.pr);
-            this.splitComments(allComments);
+            this.buildStatuses = await this.api.updateBuildStatuses(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateBuildStatuses,
+                buildStatuses: this.buildStatuses,
+            });
 
+            this.mergeStrategies = await this.api.updateMergeStrategies(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateMergeStrategies,
+                mergeStrategies: this.mergeStrategies,
+            });
+
+            const allComments = await this.api.getComments(this.pr);
+            [this.pageComments, this.inlineComments] = this.splitComments(allComments);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateComments,
                 comments: this.pageComments,
@@ -111,6 +141,22 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateFileDiffs,
                 fileDiffs: this.fileDiffs,
+            });
+
+            this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, this.pageComments);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateRelatedJiraIssues,
+                relatedIssues: this.relatedJiraIssues,
+            });
+
+            this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(
+                this.pr,
+                this.commits,
+                this.pageComments
+            );
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
+                relatedIssues: this.relatedBitbucketIssues,
             });
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
@@ -277,7 +323,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.DeleteComment: {
                 try {
                     const allComments = await this.api.deleteComment(this.pr, msg.comment);
-                    this.splitComments(allComments);
+                    [this.pageComments, this.inlineComments] = this.splitComments(allComments);
 
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateComments,
@@ -297,7 +343,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
                     const fileChange = this.diffsToChangesMap.get(msg.fileDiff.file);
                     if (fileChange) {
-                        await this.api.openDiffViewForFile(this.pr, fileChange);
+                        //Inline comments are passed in to avoid refetching them.
+                        await this.api.openDiffViewForFile(this.pr, fileChange, this.inlineComments);
                     } else {
                         throw Error('No corresponding FileChange object for FileDiff');
                     }
@@ -306,6 +353,50 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error opening diff'),
+                    });
+                }
+                break;
+
+            case PullRequestDetailsActionType.Merge:
+                try {
+                    this.analytics.firePrMergeEvent(this.pr.site.details);
+                    const updatedPullRequest = await this.api.merge(
+                        this.pr,
+                        msg.mergeStrategy,
+                        msg.commitMessage,
+                        msg.closeSourceBranch,
+                        msg.issues
+                    );
+                    this.pr = { ...this.pr, ...updatedPullRequest };
+
+                    this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(
+                        this.pr,
+                        this.commits,
+                        this.pageComments
+                    );
+                    this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(
+                        this.pr,
+                        this.commits,
+                        this.pageComments
+                    );
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.Init,
+                        pr: this.pr,
+                        commits: this.commits,
+                        comments: this.pageComments,
+                        currentUser: await this.getCurrentUser(),
+                        currentBranchName: this.currentBranchName,
+                        fileDiffs: this.fileDiffs,
+                        mergeStrategies: this.mergeStrategies,
+                        buildStatuses: this.buildStatuses,
+                        relatedJiraIssues: this.relatedJiraIssues,
+                        relatedBitbucketIssues: this.relatedBitbucketIssues,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error merging pull request: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error merging pull request'),
                     });
                 }
                 break;

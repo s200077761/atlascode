@@ -1,5 +1,15 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { ApprovalStatus, BitbucketSite, Comment, FileDiff, User } from '../../../bitbucket/model';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import {
+    ApprovalStatus,
+    BitbucketIssue,
+    BitbucketSite,
+    Comment,
+    FileDiff,
+    MergeStrategy,
+    User,
+} from '../../../bitbucket/model';
 import { CommonAction } from './common';
 
 export enum PullRequestDetailsActionType {
@@ -12,6 +22,7 @@ export enum PullRequestDetailsActionType {
     PostComment = 'postComment',
     DeleteComment = 'deleteComment',
     OpenDiffRequest = 'openDiffRequest',
+    Merge = 'merge',
 }
 
 export type PullRequestDetailsAction =
@@ -24,6 +35,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.DeleteComment, DeleteCommentAction>
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
     | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
+    | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -59,4 +71,11 @@ export interface DeleteCommentAction {
 
 export interface OpenDiffAction {
     fileDiff: FileDiff;
+}
+
+export interface MergeAction {
+    mergeStrategy: MergeStrategy;
+    commitMessage: string;
+    closeSourceBranch: boolean;
+    issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[];
 }

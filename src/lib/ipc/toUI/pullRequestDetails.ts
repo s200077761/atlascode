@@ -1,11 +1,16 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import {
     ApprovalStatus,
+    BitbucketIssue,
+    BuildStatus,
     Comment,
     Commit,
     emptyPullRequest,
     emptyUser,
     FileDiff,
+    MergeStrategy,
     PullRequest,
     Reviewer,
     User,
@@ -13,7 +18,7 @@ import {
 
 export enum PullRequestDetailsMessageType {
     Init = 'init',
-    Update = 'configUpdate',
+    Update = 'update',
     FetchUsersResponse = 'fetchUsersResponse',
     PostCommentResponse = 'postCommentResponse',
     UpdateSummary = 'updateSummary',
@@ -24,6 +29,10 @@ export enum PullRequestDetailsMessageType {
     CheckoutBranch = 'checkoutBranch',
     UpdateComments = 'updateComments',
     UpdateFileDiffs = 'updateFileDiffs',
+    UpdateBuildStatuses = 'updateBuildStatuses',
+    UpdateMergeStrategies = 'updateMergeStrategies',
+    UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
+    UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
 }
 
 export type PullRequestDetailsMessage =
@@ -36,10 +45,17 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateApprovalStatus, PullRequestDetailsApprovalMessage>
     | ReducerAction<PullRequestDetailsMessageType.CheckoutBranch, PullRequestDetailsCheckoutBranchMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateComments, PullRequestDetailsCommentsMessage>
-    | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>;
-
+    | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateBuildStatuses, PullRequestDetailsBuildStatusesMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateMergeStrategies, PullRequestDetailsMergeStrategiesMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateRelatedJiraIssues, PullRequestDetailsRelatedJiraIssuesMessage>
+    | ReducerAction<
+          PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
+          PullRequestDetailsRelatedBitbucketIssuesMessage
+      >;
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
     | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>;
 
 export interface PullRequestDetailsInitMessage {
@@ -49,6 +65,10 @@ export interface PullRequestDetailsInitMessage {
     currentBranchName: string;
     comments: Comment[];
     fileDiffs: FileDiff[];
+    mergeStrategies: MergeStrategy[];
+    buildStatuses: BuildStatus[];
+    relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
+    relatedBitbucketIssues: BitbucketIssue[];
 }
 
 export interface FetchUsersResponseMessage {
@@ -89,6 +109,23 @@ export interface PullRequestDetailsCommentsMessage {
 export interface PullRequestDetailsFileDiffsMessage {
     fileDiffs: FileDiff[];
 }
+
+export interface PullRequestDetailsMergeStrategiesMessage {
+    mergeStrategies: MergeStrategy[];
+}
+
+export interface PullRequestDetailsBuildStatusesMessage {
+    buildStatuses: BuildStatus[];
+}
+
+export interface PullRequestDetailsRelatedJiraIssuesMessage {
+    relatedIssues: MinimalIssue<DetailedSiteInfo>[];
+}
+
+export interface PullRequestDetailsRelatedBitbucketIssuesMessage {
+    relatedIssues: BitbucketIssue[];
+}
+
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
     commits: [],
@@ -96,4 +133,8 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
     currentBranchName: '',
     comments: [],
     fileDiffs: [],
+    mergeStrategies: [],
+    buildStatuses: [],
+    relatedJiraIssues: [],
+    relatedBitbucketIssues: [],
 };

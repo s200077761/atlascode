@@ -704,7 +704,12 @@ export class CloudPullRequestApi implements PullRequestApi {
         return data.approved ? 'APPROVED' : 'UNAPPROVED';
     }
 
-    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
+    async merge(
+        pr: PullRequest,
+        closeSourceBranch?: boolean,
+        mergeStrategy?: string,
+        commitMessage?: string
+    ): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
         let body = Object.create({});
@@ -717,7 +722,11 @@ export class CloudPullRequestApi implements PullRequestApi {
             };
         }
 
-        await this.client.post(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/merge`, body);
+        const { data } = await this.client.post(
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/merge`,
+            body
+        );
+        return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
 
     async postComment(

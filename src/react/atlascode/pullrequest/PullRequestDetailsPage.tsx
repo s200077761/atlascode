@@ -20,10 +20,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import CommentForm from '../common/CommentForm';
+import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
+import { MergeDialog } from './MergeDialog';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
@@ -144,6 +146,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 </AppBar>
                 <Box marginTop={1}></Box>
                 <Grid container spacing={3} direction="column" justify="center">
+                    <ErrorDisplay />
+
                     <Grid item container direction="row" justify={'space-between'}>
                         <Grid item xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
                             <Grid item container spacing={2} direction="row" alignItems={'center'}>
@@ -195,6 +199,16 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         : 'Checkout source branch'}
                                 </Typography>
                             </Button>
+                        </Grid>
+                        <Grid item>
+                            <MergeDialog
+                                prData={state.pr.data}
+                                commits={state.commits}
+                                relatedJiraIssues={state.relatedJiraIssues}
+                                relatedBitbucketIssues={state.relatedBitbucketIssues}
+                                mergeStrategies={state.mergeStrategies}
+                                merge={controller.merge}
+                            />
                         </Grid>
                     </Grid>
 
