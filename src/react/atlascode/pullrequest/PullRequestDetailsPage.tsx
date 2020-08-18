@@ -213,7 +213,6 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             />
                         </Grid>
                     </Grid>
-
                     <Grid item>
                         <SummaryPanel
                             rawSummary={state.pr.data.rawSummary}
@@ -223,7 +222,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         />
                     </Grid>
                     <Grid item>
-                        <BasicPanel title={'Related Jira Issues'}>
+                        <BasicPanel title={'Related Jira Issues'} subtitle={`${state.relatedJiraIssues.length} issues`}>
                             <RelatedJiraIssues
                                 relatedIssues={state.relatedJiraIssues}
                                 openJiraIssue={controller.openJiraIssue}
@@ -231,7 +230,10 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         </BasicPanel>
                     </Grid>
                     <Grid item>
-                        <BasicPanel title={'Related Bitbucket Issues'}>
+                        <BasicPanel
+                            title={'Related Bitbucket Issues'}
+                            subtitle={`${state.relatedBitbucketIssues.length} issues`}
+                        >
                             <RelatedBitbucketIssues
                                 relatedIssues={state.relatedBitbucketIssues}
                                 openBitbucketIssue={controller.openBitbucketIssue}
@@ -239,7 +241,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         </BasicPanel>
                     </Grid>
                     <Grid item>
-                        <BasicPanel title={'Commits'} isDefaultExpanded>
+                        <BasicPanel title={'Commits'} subtitle={`${state.commits.length} commits`} isDefaultExpanded>
                             <Commits commits={state.commits} />
                         </BasicPanel>
                     </Grid>
