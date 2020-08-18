@@ -1,6 +1,6 @@
 import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
-import pSettle from 'p-settle';
+import pSettle, { PromiseFulfilledResult } from 'p-settle';
 import * as vscode from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
@@ -193,12 +193,9 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         };
     }
 
-    async openDiffViewForFile(pr: PullRequest, fileChange: FileChange): Promise<void> {
-        const bbApi = await clientForSite(pr.site);
-        //TODO: When getting comments for page, feed them into here as an argument instead of fetching again
-        const comments = await bbApi.pullrequests.getComments(pr);
+    async openDiffViewForFile(pr: PullRequest, fileChange: FileChange, comments: Comment[]): Promise<void> {
         const diffViewArgs = await getArgsForDiffView(
-            comments,
+            { data: comments }, //Needs to be converted to PaginatedComment type
             fileChange,
             pr,
             Container.bitbucketContext.prCommentController
@@ -225,29 +222,17 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         try {
             if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits, comments);
-
-                const jqlPromises: Promise<MinimalIssue<DetailedSiteInfo>>[] = [];
-                issueKeys.forEach((key) => {
-                    jqlPromises.push(
-                        (async () => {
-                            return await issueForKey(key);
-                        })()
-                    );
-                });
-
-                let issueResults = await pSettle<MinimalIssue<DetailedSiteInfo>>(jqlPromises);
-
-                issueResults.forEach((result) => {
-                    if (result.isFulfilled) {
-                        foundIssues.push(result.value);
-                    }
-                });
+                const issueResults = await pSettle<MinimalIssue<DetailedSiteInfo>>(issueKeys.map(issueForKey));
+                foundIssues = issueResults
+                    .filter((result) => result.isFulfilled)
+                    .map((result: PromiseFulfilledResult<MinimalIssue<DetailedSiteInfo>>) => result.value);
             }
         } catch (e) {
             foundIssues = [];
             Logger.debug('error fetching related jira issues: ', e);
+        } finally {
+            return foundIssues;
         }
-        return foundIssues;
     }
 
     async fetchRelatedBitbucketIssues(

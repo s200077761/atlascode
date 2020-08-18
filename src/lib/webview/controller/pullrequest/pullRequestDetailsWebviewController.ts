@@ -85,11 +85,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     }
 
     private splitComments(allComments: Comment[]) {
-        this.pageComments = [];
-        this.inlineComments = [];
-        allComments.forEach((comment) =>
-            comment.inline ? this.inlineComments.push(comment) : this.pageComments.push(comment)
-        );
+        const pageComments: Comment[] = [];
+        const inlineComments: Comment[] = [];
+        allComments.forEach((comment) => (comment.inline ? inlineComments.push(comment) : pageComments.push(comment)));
+        return [pageComments, inlineComments];
     }
 
     private async invalidate() {
@@ -129,6 +128,21 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 mergeStrategies: this.mergeStrategies,
             });
 
+            const allComments = await this.api.getComments(this.pr);
+            [this.pageComments, this.inlineComments] = this.splitComments(allComments);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateComments,
+                comments: this.pageComments,
+            });
+
+            const diffsAndChanges = await this.api.getFileDiffs(this.pr);
+            this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
+            this.fileDiffs = diffsAndChanges.fileDiffs;
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateFileDiffs,
+                fileDiffs: this.fileDiffs,
+            });
+
             this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, this.pageComments);
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateRelatedJiraIssues,
@@ -143,22 +157,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
                 relatedIssues: this.relatedBitbucketIssues,
-            });
-
-            const allComments = await this.api.getComments(this.pr);
-            this.splitComments(allComments);
-
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateComments,
-                comments: this.pageComments,
-            });
-
-            const diffsAndChanges = await this.api.getFileDiffs(this.pr);
-            this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
-            this.fileDiffs = diffsAndChanges.fileDiffs;
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateFileDiffs,
-                fileDiffs: this.fileDiffs,
             });
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
@@ -325,7 +323,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             case PullRequestDetailsActionType.DeleteComment: {
                 try {
                     const allComments = await this.api.deleteComment(this.pr, msg.comment);
-                    this.splitComments(allComments);
+                    [this.pageComments, this.inlineComments] = this.splitComments(allComments);
 
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateComments,
@@ -345,7 +343,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
                     const fileChange = this.diffsToChangesMap.get(msg.fileDiff.file);
                     if (fileChange) {
-                        await this.api.openDiffViewForFile(this.pr, fileChange);
+                        //Inline comments are passed in to avoid refetching them.
+                        await this.api.openDiffViewForFile(this.pr, fileChange, this.inlineComments);
                     } else {
                         throw Error('No corresponding FileChange object for FileDiff');
                     }

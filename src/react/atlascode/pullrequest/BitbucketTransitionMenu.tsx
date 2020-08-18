@@ -1,7 +1,13 @@
-import { Checkbox, TableCell, TableRow, Typography } from '@material-ui/core';
+import { Checkbox, makeStyles, TableCell, TableRow, Theme, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { BitbucketIssue } from '../../../bitbucket/model';
 import StatusMenu from '../bbissue/StatusMenu';
+
+const useStyles = makeStyles((theme: Theme) => ({
+    tableCell: {
+        borderBottom: 'none',
+    },
+}));
 
 type BitbucketTransitionMenuProps = {
     issue: BitbucketIssue;
@@ -14,7 +20,8 @@ export const BitbucketTransitionMenu: React.FC<BitbucketTransitionMenuProps> = (
     handleIssueTransition,
     onShouldTransitionChange,
 }) => {
-    const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(true);
+    const classes = useStyles();
+    const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(false);
 
     const toggleTransitionIssueEnabled = useCallback(() => {
         setTransitionIssueEnabled(!transitionIssueEnabled);
@@ -34,17 +41,17 @@ export const BitbucketTransitionMenu: React.FC<BitbucketTransitionMenuProps> = (
 
     return (
         <TableRow key={issue.data.id}>
-            <TableCell>
+            <TableCell className={classes.tableCell} align={'left'}>
                 <Checkbox color={'primary'} checked={transitionIssueEnabled} onChange={toggleTransitionIssueEnabled} />
             </TableCell>
-            <TableCell>
+            <TableCell className={classes.tableCell} align={'left'}>
                 <Typography>
                     <Typography>
                         <strong>#{issue.data.id}</strong>: {issue.data.title}
                     </Typography>
                 </Typography>
             </TableCell>
-            <TableCell>
+            <TableCell className={classes.tableCell} align={'left'}>
                 <StatusMenu
                     fullWidth
                     variant="outlined"

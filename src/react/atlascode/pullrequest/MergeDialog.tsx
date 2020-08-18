@@ -8,12 +8,14 @@ import {
     DialogContent,
     DialogTitle,
     Grid,
+    makeStyles,
     MenuItem,
     Switch,
     Table,
     TableBody,
     TableContainer,
     TextField,
+    Theme,
     Typography,
 } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,6 +24,12 @@ import { BitbucketIssue, Commit, MergeStrategy, PullRequestData } from '../../..
 import { BitbucketTransitionMenu } from './BitbucketTransitionMenu';
 import { JiraTransitionMenu } from './JiraTransitionMenu';
 import { MergeChecks } from './MergeChecks';
+
+const useStyles = makeStyles((theme: Theme) => ({
+    table: {
+        width: 'unset',
+    },
+}));
 
 const emptyMergeStrategy: MergeStrategy = {
     label: 'Default merge strategy',
@@ -51,9 +59,11 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     mergeStrategies,
     merge,
 }) => {
+    const classes = useStyles();
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [commitMessage, setCommitMessage] = useState<string>('');
     const [mergeStrategy, setMergeStrategy] = useState<MergeStrategy>(emptyMergeStrategy);
+    const [isMerging, setIsMerging] = useState<boolean>(false);
     const [transitionedJiraIssues, setTransitionedJiraIssues] = useState<MinimalIssue<DetailedSiteInfo>[]>(
         relatedJiraIssues
     );
@@ -69,6 +79,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
         const bitbucketIssues = transitionedBitbucketIssues.filter((issue) =>
             bitbucketIssuesToTransition.get(issue.data.id)
         );
+        setIsMerging(true);
         merge(mergeStrategy, commitMessage, closeSourceBranch, [...jiraIssues, ...bitbucketIssues]);
         setDialogOpen(false);
     }, [
@@ -103,7 +114,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     }, []);
 
     const isEmptyCommitMessage = useCallback((text: string) => {
-        return text === '';
+        return text.trim() === '';
     }, []);
 
     const getDefaultCommitMessage = useCallback(
@@ -213,6 +224,10 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     }, [getDefaultCommitMessage, setCommitMessage, mergeStrategy]);
 
     useEffect(() => {
+        setIsMerging(false);
+    }, [prData.state]);
+
+    useEffect(() => {
         if (mergeStrategy.value === emptyMergeStrategy.value) {
             const defaultMergeStrategy = mergeStrategies.find((strategy) => strategy.isDefault === true);
             setMergeStrategy(defaultMergeStrategy ?? emptyMergeStrategy);
@@ -221,7 +236,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
 
     return (
         <Box>
-            <Button color={'primary'} onClick={handleOpen} disabled={prData.state !== 'OPEN'}>
+            <Button color={'primary'} onClick={handleOpen} disabled={prData.state !== 'OPEN' || isMerging}>
                 <Typography variant={'button'} noWrap>
                     {prData.state === 'OPEN' ? 'Merge' : 'Merged'}
                 </Typography>
@@ -283,13 +298,14 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                         </Grid>
                         <Grid item>
                             <Box
+                                marginTop={3}
                                 hidden={!(transitionedJiraIssues.length > 0 || transitionedBitbucketIssues.length > 0)}
                             >
-                                <Typography variant="body1">Transitioning Issues:</Typography>
+                                <Typography variant="h5">Transition issues</Typography>
                             </Box>
                             <TableContainer>
                                 <Table size="small" aria-label="issues to transition">
-                                    <TableBody>
+                                    <TableBody className={classes.table}>
                                         {transitionedJiraIssues.map((issue) => (
                                             <JiraTransitionMenu
                                                 issue={issue}
