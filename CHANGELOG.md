@@ -1,3 +1,15 @@
+## What's New in 2.7.0
+
+### Improvements
+
+-   Show images in comments for issues on Jira server instances
+-   Add hyperlinks to attachment list in Jira issue webview
+-   Markdown editor for Bitbucket Issue webview
+
+### Bugs fixed
+
+-   Fixed an issue affecting authenticating with sites with multi-level context paths
+
 ## What's New in 2.6.6
 
 ### Improvements

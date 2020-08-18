@@ -54,16 +54,20 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             if (!prUrl) {
                 throw new Error(`Cannot parse pull request URL from: ${query}`);
             }
-            const client = await clientForHostname('bitbucket.org')!;
+            const repoUrl = prUrl.slice(0, prUrl.indexOf('/pull-requests'));
             const site = bitbucketSiteForRemote({
                 name: '',
-                fetchUrl: prUrl.slice(0, prUrl.indexOf('/pull-requests')),
+                fetchUrl: repoUrl,
                 isReadOnly: true,
             })!;
+
             const prUrlPath = Uri.parse(prUrl).path;
             const prId = prUrlPath.slice(prUrlPath.lastIndexOf('/') + 1);
+            const client = await clientForHostname('bitbucket.org')!;
             const pr = await client.pullrequests.getById(site, parseInt(prId));
-            Container.pullRequestViewManager.createOrShow(pr);
+
+            const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
+            Container.pullRequestViewManager.createOrShow({ ...pr, workspaceRepo: wsRepo });
             this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'pullRequest');
         } catch (e) {
             Logger.debug('error opening pull request:', e);
@@ -77,16 +81,6 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             const repoUrl = decodeURIComponent(query.get('q') || '');
             if (!repoUrl) {
                 throw new Error(`Cannot parse clone URL from: ${query}`);
-            }
-            for (const wsRepo of Container.bitbucketContext.getBitbucketCloudRepositories()) {
-                const site = wsRepo.mainSiteRemote.site!;
-                const fullName = `${site.ownerSlug}/${site.repoSlug}`;
-                if (repoUrl.includes(fullName)) {
-                    window.showInformationMessage(
-                        `Skipped cloning. Repository is open in this workspace already: ${wsRepo.rootUri}`
-                    );
-                    return;
-                }
             }
 
             const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
