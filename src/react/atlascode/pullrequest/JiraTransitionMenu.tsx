@@ -18,6 +18,7 @@ import Lozenge from '../common/Lozenge';
 const useStyles = makeStyles((theme: Theme) => ({
     tableCell: {
         borderBottom: 'none',
+        align: 'align',
     },
 }));
 
@@ -65,15 +66,15 @@ export const JiraTransitionMenu: React.FC<JiraTransitionMenuProps> = ({
         <Box />
     ) : (
         <TableRow key={issue.id}>
-            <TableCell className={classes.tableCell} align={'left'}>
+            <TableCell className={classes.tableCell}>
                 <Checkbox color={'primary'} checked={transitionIssueEnabled} onChange={toggleTransitionIssueEnabled} />
             </TableCell>
-            <TableCell className={classes.tableCell} align={'left'}>
+            <TableCell className={classes.tableCell}>
                 <Typography>
                     <strong>{issue.key}</strong>: {issue.summary}
                 </Typography>
             </TableCell>
-            <TableCell className={classes.tableCell} align={'left'}>
+            <TableCell className={classes.tableCell}>
                 <TextField select value={transition} onChange={handleIssueTransitionChange}>
                     {(issue.transitions || [emptyTransition]).map((transition) => (
                         //@ts-ignore

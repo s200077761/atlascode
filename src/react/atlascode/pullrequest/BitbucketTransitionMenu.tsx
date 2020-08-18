@@ -6,6 +6,7 @@ import StatusMenu from '../bbissue/StatusMenu';
 const useStyles = makeStyles((theme: Theme) => ({
     tableCell: {
         borderBottom: 'none',
+        align: 'left',
     },
 }));
 
@@ -41,17 +42,17 @@ export const BitbucketTransitionMenu: React.FC<BitbucketTransitionMenuProps> = (
 
     return (
         <TableRow key={issue.data.id}>
-            <TableCell className={classes.tableCell} align={'left'}>
+            <TableCell className={classes.tableCell}>
                 <Checkbox color={'primary'} checked={transitionIssueEnabled} onChange={toggleTransitionIssueEnabled} />
             </TableCell>
-            <TableCell className={classes.tableCell} align={'left'}>
+            <TableCell className={classes.tableCell}>
                 <Typography>
                     <Typography>
                         <strong>#{issue.data.id}</strong>: {issue.data.title}
                     </Typography>
                 </Typography>
             </TableCell>
-            <TableCell className={classes.tableCell} align={'left'}>
+            <TableCell className={classes.tableCell}>
                 <StatusMenu
                     fullWidth
                     variant="outlined"

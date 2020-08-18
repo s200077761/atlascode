@@ -31,6 +31,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
     tableCell: {
         borderBottom: 'none',
+        align: 'left',
     },
 }));
 
@@ -49,22 +50,20 @@ export const RelatedBitbucketIssues: React.FunctionComponent<RelatedBitbucketIss
                 <TableBody>
                     {relatedIssues.map((issue) => (
                         <TableRow key={issue.data.id}>
-                            <TableCell align={'left'} className={classes.tableCell}>
+                            <TableCell align={'left'}>
                                 <Link href="#" onClick={() => openBitbucketIssue(issue)}>
                                     <Typography>#{issue.data.id}</Typography>
                                 </Link>
                             </TableCell>
-                            <TableCell align={'left'} className={classes.tableCell}>
+                            <TableCell align={'left'}>
                                 <Typography>{issue.data.title}</Typography>
                             </TableCell>
-                            <TableCell align={'left'} className={classes.tableCell}>
+                            <TableCell align={'left'}>
                                 <Tooltip title={`Priority: ${issue.data.priority}`}>
                                     <Typography>{issue.data.priority}</Typography>
                                 </Tooltip>
                             </TableCell>
-                            <TableCell align={'left'} className={classes.tableCell}>
-                                {StatusRenderer[issue.data.state]}
-                            </TableCell>
+                            <TableCell align={'left'}>{StatusRenderer[issue.data.state]}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
