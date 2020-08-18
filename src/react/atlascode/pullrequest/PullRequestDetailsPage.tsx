@@ -29,6 +29,8 @@ import { MergeDialog } from './MergeDialog';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
+import { RelatedBitbucketIssues } from './RelatedBitbucketIssues';
+import { RelatedJiraIssues } from './RelatedJiraIssues';
 import { Reviewers } from './Reviewers';
 import { SummaryPanel } from './SummaryPanel';
 
@@ -211,7 +213,6 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             />
                         </Grid>
                     </Grid>
-
                     <Grid item>
                         <SummaryPanel
                             rawSummary={state.pr.data.rawSummary}
@@ -221,7 +222,26 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                         />
                     </Grid>
                     <Grid item>
-                        <BasicPanel title={'Commits'} isDefaultExpanded>
+                        <BasicPanel title={'Related Jira Issues'} subtitle={`${state.relatedJiraIssues.length} issues`}>
+                            <RelatedJiraIssues
+                                relatedIssues={state.relatedJiraIssues}
+                                openJiraIssue={controller.openJiraIssue}
+                            />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel
+                            title={'Related Bitbucket Issues'}
+                            subtitle={`${state.relatedBitbucketIssues.length} issues`}
+                        >
+                            <RelatedBitbucketIssues
+                                relatedIssues={state.relatedBitbucketIssues}
+                                openBitbucketIssue={controller.openBitbucketIssue}
+                            />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel title={'Commits'} subtitle={`${state.commits.length} commits`} isDefaultExpanded>
                             <Commits commits={state.commits} />
                         </BasicPanel>
                     </Grid>

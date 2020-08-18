@@ -46,4 +46,6 @@ export interface PullRequestDetailsActionApi {
         closeSourceBranch: boolean,
         issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
     ): Promise<PullRequest>;
+    openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
+    openBitbucketIssue(issue: BitbucketIssue): Promise<void>;
 }

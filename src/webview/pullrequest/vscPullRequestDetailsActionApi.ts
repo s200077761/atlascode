@@ -21,6 +21,7 @@ import {
     User,
 } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { showIssue } from '../../commands/jira/showIssue';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { transitionIssue } from '../../jira/transitionIssue';
@@ -289,5 +290,12 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
                 await bbApi.issues!.postChange(issue, issue.data.state!);
             }
         });
+    }
+
+    async openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>) {
+        await showIssue(issue);
+    }
+    async openBitbucketIssue(issue: BitbucketIssue) {
+        await vscode.commands.executeCommand(Commands.ShowBitbucketIssue, issue);
     }
 }
