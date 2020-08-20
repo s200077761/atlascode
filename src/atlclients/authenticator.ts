@@ -11,7 +11,7 @@ export interface Tokens {
 
 export interface Authenticator {
     /**
-     * This starts the authentication processs. It will open a browser window to the appropriate auth service. When
+     * This starts the authentication process. It will open a browser window to the appropriate auth service. When
      * the user has authenticated with that service the browser will be redirected to the Atlascode auth service (or
      * auth service running on the user's machine) where the app redirect URI will be decoded and the user will be
      * redirect to VS Code or some equivalent.
@@ -22,12 +22,12 @@ export interface Authenticator {
     startAuthentication(state: string, site: SiteInfo): void;
 
     /**
-     * When the final redirect to the application happens this method should be called to exchanged the bearer token for
-     * an access and refresh token.
+     * When the final redirect to the application happens this method should be called to exchange the authorization
+     * token for an access and refresh token.
      * @param provider The OAuth provider for the site.
      * @param state The state parameter for the OAuth process. This will be the same as the value provided to
      * startAuthentication.
-     * @param code The bearer token returned in the redirect.
+     * @param code The authorization token returned in the redirect.
      * @param agent The agent to use during the code exchange.
      */
     exchangeCode(
