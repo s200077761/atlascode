@@ -48,6 +48,7 @@ export interface PullRequestDetailsControllerApi {
     updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
     postComment: (rawText: string, parentId?: string) => Promise<void>;
+    editComment: (rawContent: string, commentId: string) => Promise<void>;
     deleteComment: (comment: Comment) => void;
 
     openDiff: (fileDiff: FileDiff) => void;
@@ -77,6 +78,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
     postComment: async (rawText: string, parentId?: string) => {},
+    editComment: async (rawContent: string, commentId: string) => {},
     deleteComment: (comment: Comment) => {},
     openDiff: (fileDiff: FileDiff) => {},
     merge: (
@@ -425,6 +427,30 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessagePromise]
     );
 
+    const editComment = useCallback(
+        (rawContent: string, commentId: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.EditComment,
+                                rawContent: rawContent,
+                                commentId: commentId,
+                            },
+                            PullRequestDetailsMessageType.EditCommentResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const deleteComment = useCallback(
         (comment: Comment) => {
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
@@ -488,6 +514,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             updateApprovalStatus: updateApprovalStatus,
             checkoutBranch: checkoutBranch,
             postComment: postComment,
+            editComment: editComment,
             deleteComment: deleteComment,
             openDiff: openDiff,
             merge: merge,
@@ -504,6 +531,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         updateApprovalStatus,
         checkoutBranch,
         postComment,
+        editComment,
         deleteComment,
         openDiff,
         merge,

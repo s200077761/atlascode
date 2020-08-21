@@ -143,6 +143,26 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return false;
     }
 
+    private replaceCommentInHierarchy(comments: Comment[], updatedComment: Comment): [Comment[], boolean] {
+        for (const comment of comments) {
+            if (comment.id === updatedComment.id) {
+                return [
+                    comments.map((c) =>
+                        c.id === updatedComment.id ? { ...updatedComment, children: c.children, tasks: c.tasks } : c
+                    ),
+                    true,
+                ];
+            } else {
+                let success = false;
+                [comment.children, success] = this.replaceCommentInHierarchy(comment.children, updatedComment);
+                if (success) {
+                    return [comments, success];
+                }
+            }
+        }
+        return [comments, false];
+    }
+
     async getComments(pr: PullRequest): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         const paginatedComments = await bbApi.pullrequests.getComments(pr);
@@ -164,6 +184,13 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         }
 
         return updatedComments;
+    }
+
+    async editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]> {
+        const bbApi = await clientForSite(pr.site);
+        const newComment: Comment = await bbApi.pullrequests.editComment(pr.site, pr.data.id, content, commentId);
+        const [updatedComments, success] = this.replaceCommentInHierarchy(comments, newComment);
+        return success ? updatedComments : await this.getComments(pr);
     }
 
     async deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]> {

@@ -13,6 +13,7 @@ type NestedCommentProps = {
 };
 export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ comment, currentUser, onDelete }) => {
     const [isReplying, setIsReplying] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const controller = useContext(PullRequestDetailsControllerContext);
 
     const handleReplyPressed = useCallback(() => {
@@ -27,6 +28,22 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
         [controller, comment.id]
     );
 
+    const handleEditPressed = useCallback(() => {
+        setIsEditing(true);
+    }, []);
+
+    const handleEdit = useCallback(
+        async (content: string) => {
+            controller.editComment(content, comment.id);
+            setIsEditing(false);
+        },
+        [controller, comment.id]
+    );
+
+    const handleCancelEdit = useCallback(() => {
+        setIsEditing(false);
+    }, []);
+
     const handleCancel = useCallback(() => {
         setIsReplying(false);
     }, []);
@@ -37,36 +54,53 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
 
     return (
         <React.Fragment>
-            <Grid item container xs zeroMinWidth spacing={1} direction="row" alignItems="flex-start">
-                <Grid item zeroMinWidth>
-                    <Avatar src={comment.user.avatarUrl} alt={comment.user.displayName} />
-                </Grid>
-                <Grid container item xs zeroMinWidth direction={'column'}>
-                    <Grid item>
-                        <Typography variant="subtitle2">
-                            {comment.user.displayName}
-                            {'  '}
-                            {format(comment.ts, 'YYYY-MM-DD h:mm A')}
-                        </Typography>
+            {!isEditing && (
+                <Grid item container xs zeroMinWidth spacing={1} direction="row" alignItems="flex-start">
+                    <Grid item zeroMinWidth>
+                        <Avatar src={comment.user.avatarUrl} alt={comment.user.displayName} />
                     </Grid>
+                    <Grid container item xs zeroMinWidth direction={'column'}>
+                        <Grid item>
+                            <Typography variant="subtitle2">
+                                {comment.user.displayName}
+                                {'  '}
+                                {format(comment.ts, 'YYYY-MM-DD h:mm A')}
+                            </Typography>
+                        </Grid>
 
-                    <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
-                    <Grid item container direction={'row'}>
-                        <Grid item>
-                            <Button color={'primary'} onClick={handleReplyPressed}>
-                                Reply
-                            </Button>
-                        </Grid>
-                        <Grid item>
-                            <Box hidden={comment.deleted || !comment.deletable}>
-                                <Button color={'primary'} onClick={handleDelete}>
-                                    Delete
+                        <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
+                        <Grid item container direction={'row'}>
+                            <Grid item>
+                                <Button color={'primary'} onClick={handleReplyPressed}>
+                                    Reply
                                 </Button>
-                            </Box>
+                            </Grid>
+                            <Grid item>
+                                <Box hidden={!comment.editable}>
+                                    <Button color={'primary'} onClick={handleEditPressed}>
+                                        Edit
+                                    </Button>
+                                </Box>
+                            </Grid>
+                            <Grid item>
+                                <Box hidden={comment.deleted || !comment.deletable}>
+                                    <Button color={'primary'} onClick={handleDelete}>
+                                        Delete
+                                    </Button>
+                                </Box>
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Grid>
-            </Grid>
+            )}
+            {isEditing && (
+                <CommentForm
+                    initialContent={comment.rawContent}
+                    currentUser={currentUser}
+                    onSave={handleEdit}
+                    onCancel={handleCancelEdit}
+                />
+            )}
             <Grid item>
                 <Box hidden={!isReplying} marginLeft={5}>
                     <CommentForm currentUser={currentUser} onSave={handleSave} onCancel={handleCancel} />

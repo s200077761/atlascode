@@ -21,6 +21,7 @@ export enum PullRequestDetailsMessageType {
     Update = 'update',
     FetchUsersResponse = 'fetchUsersResponse',
     PostCommentResponse = 'postCommentResponse',
+    EditCommentResponse = 'editCommentResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateCommits = 'updateCommits',
@@ -56,7 +57,8 @@ export type PullRequestDetailsMessage =
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
-    | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.EditCommentResponse, VoidResponseMessage>;
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
