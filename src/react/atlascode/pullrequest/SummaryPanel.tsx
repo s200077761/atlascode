@@ -1,8 +1,8 @@
-import { InlineTextEditor } from '@atlassianlabs/guipi-core-components';
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
 import { PanelTitle } from '../common/PanelTitle';
+import InlineRenderedTextEditor from './InlineRenderedTextEditor';
 type SummaryPanelProps = {
     rawSummary: string;
     htmlSummary: string;
@@ -18,16 +18,15 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
             setInternalExpanded(expanded);
         }, []);
 
-        //TODO: Add this back in when @mentions are added
-        // const handleFetchUsers = useCallback(
-        //     async (input: string) => {
-        //         return await fetchUsers(input);
-        //     },
-        //     [fetchUsers]
-        // );
+        const handleFetchUsers = useCallback(
+            async (input: string) => {
+                return await fetchUsers(input);
+            },
+            [fetchUsers]
+        );
 
         const handleSummaryChange = useCallback(
-            (text: string) => {
+            async (text: string) => {
                 summaryChange(text);
             },
             [summaryChange]
@@ -39,12 +38,11 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
                     <PanelTitle>Summary</PanelTitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <InlineTextEditor
-                        fullWidth
-                        multiline
-                        rows={7}
-                        defaultValue={rawSummary}
+                    <InlineRenderedTextEditor
+                        rawContent={rawSummary}
+                        htmlContent={htmlSummary}
                         onSave={handleSummaryChange}
+                        fetchUsers={handleFetchUsers}
                     />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
