@@ -1,4 +1,5 @@
 import { commands, Disposable, env, QuickPickItem, Uri, UriHandler, window } from 'vscode';
+import { LoginManager } from './atlclients/loginManager';
 import { bitbucketSiteForRemote, clientForHostname } from './bitbucket/bbUtils';
 import { WorkspaceRepo } from './bitbucket/model';
 import { Commands } from './commands';
@@ -31,7 +32,7 @@ export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
 
-    constructor(private analyticsApi: AnalyticsApi) {
+    constructor(private loginManager: LoginManager, private analyticsApi: AnalyticsApi) {
         this.disposables = window.registerUriHandler(this);
     }
 
@@ -44,6 +45,8 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.handlePullRequestUri(uri);
         } else if (uri.path.endsWith('cloneRepository')) {
             await this.handleCloneRepository(uri);
+        } else if (uri.path.endsWith('finalizeAuthentication')) {
+            await this.finalizeAuthentication(uri);
         }
     }
 
@@ -127,6 +130,13 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         ];
 
         window.showQuickPick(options).then((selection) => selection?.action());
+    }
+
+    private async finalizeAuthentication(uri: Uri) {
+        const query = new URLSearchParams(uri.query);
+        const code = query.get('code') ?? '';
+        const state = query.get('state') ?? '';
+        this.loginManager.exchangeCodeForTokens(state, code);
     }
 
     dispose(): void {

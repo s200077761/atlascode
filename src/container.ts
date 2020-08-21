@@ -84,7 +84,6 @@ export class Container {
 
         this._context = context;
         this._version = version;
-        context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler(this._analyticsApi)));
         context.subscriptions.push((this._credentialManager = new CredentialManager(this._analyticsClient)));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
@@ -173,6 +172,9 @@ export class Container {
         this._pmfStats = new PmfStats(context);
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
+        context.subscriptions.push(
+            (this._uriHandler = new AtlascodeUriHandler(this._loginManager, this._analyticsApi))
+        );
 
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraContext()));

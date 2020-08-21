@@ -28,7 +28,7 @@ import {
     UserInfo,
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
-import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
+import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './oldStrategy';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;

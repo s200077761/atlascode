@@ -821,6 +821,12 @@
                     ],
                     "description": "Location to which configuration changes are saved"
                 },
+                "atlascode.useNewAuth": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables the use of the stand-alone auth service for remote authentication",
+                    "scope": "window"
+                },
                 "atlascode.enableCurlLogging": {
                     "type": "boolean",
                     "default": false,

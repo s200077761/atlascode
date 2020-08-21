@@ -1,12 +1,19 @@
 import axios, { AxiosInstance } from 'axios';
 import { Disposable } from 'vscode';
+import { configuration } from '../config/configuration';
+import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
 import { getAgent } from '../jira/jira-client/providers';
 import { ConnectionTimeout } from '../util/time';
 import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
 import { addCurlLogging } from './interceptors';
+import {
+    BitbucketProdStrategy as OldBitbucketProdStrategy,
+    BitbucketStagingStrategy as OldBitbucketStagingStrategy,
+    JiraProdStrategy as OldJiraProdStrategy,
+    JiraStagingStrategy as OldJiraStagingStrategy,
+} from './oldStrategy';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-import { AxiosUserAgent } from '../constants';
 
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
@@ -30,26 +37,43 @@ export class OAuthRefesher implements Disposable {
         const product = provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
         if (product === ProductJira) {
-            const strategy = provider.endsWith('staging') ? JiraStagingStrategy : JiraProdStrategy;
-            const tokenResponse = await this._axios(strategy.tokenURL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                data: JSON.stringify({
+            let strategy: any = undefined;
+            let dataString = '';
+            if (configuration.get<boolean>('useNewAuth')) {
+                strategy = provider.endsWith('staging') ? JiraStagingStrategy : JiraProdStrategy;
+                dataString = JSON.stringify({
+                    grant_type: 'refresh_token',
+                    client_id: strategy.clientID,
+                    refresh_token: refreshToken,
+                });
+            } else {
+                strategy = provider.endsWith('staging') ? OldJiraStagingStrategy : OldJiraProdStrategy;
+                dataString = JSON.stringify({
                     grant_type: 'refresh_token',
                     client_id: strategy.clientID,
                     client_secret: strategy.clientSecret,
                     refresh_token: refreshToken,
                     redirect_uri: strategy.callbackURL,
-                }),
+                });
+            }
+            const tokenResponse = await this._axios(strategy.tokenURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                data: dataString,
                 ...getAgent(),
             });
 
             const data = tokenResponse.data;
             return data.access_token;
         } else {
-            const strategy = provider.endsWith('staging') ? BitbucketStagingStrategy : BitbucketProdStrategy;
+            let strategy: any = undefined;
+            if (configuration.get<boolean>('useNewAuth')) {
+                strategy = provider.endsWith('staging') ? BitbucketStagingStrategy : BitbucketProdStrategy;
+            } else {
+                strategy = provider.endsWith('staging') ? OldBitbucketStagingStrategy : OldBitbucketProdStrategy;
+            }
             const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
 
             const tokenResponse = await this._axios(strategy.tokenURL, {
