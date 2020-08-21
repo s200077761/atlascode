@@ -3,8 +3,10 @@ import { format } from 'date-fns';
 import React, { useCallback, useContext, useState } from 'react';
 import { Comment, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
+import { CommentTaskList } from './CommentTaskList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
+import { TaskAdder } from './TaskAdder';
 
 type NestedCommentProps = {
     comment: Comment;
@@ -13,11 +15,28 @@ type NestedCommentProps = {
 };
 export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ comment, currentUser, onDelete }) => {
     const [isReplying, setIsReplying] = useState(false);
+    const [isCreatingTask, setIsCreatingTask] = useState(false);
     const controller = useContext(PullRequestDetailsControllerContext);
 
     const handleReplyPressed = useCallback(() => {
         setIsReplying(true);
     }, []);
+
+    const handleCreateTaskPressed = useCallback(() => {
+        setIsCreatingTask(true);
+    }, []);
+
+    const handleCancelTask = useCallback(() => {
+        setIsCreatingTask(false);
+    }, []);
+
+    const handleAddTask = useCallback(
+        async (content: string) => {
+            await controller.addTask(content, comment.id);
+            setIsCreatingTask(false);
+        },
+        [controller, comment.id]
+    );
 
     const handleSave = useCallback(
         async (content: string) => {
@@ -64,8 +83,21 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
                                 </Button>
                             </Box>
                         </Grid>
+                        <Grid item>
+                            <Button color={'primary'} onClick={handleCreateTaskPressed}>
+                                Create Task
+                            </Button>
+                        </Grid>
                     </Grid>
                 </Grid>
+            </Grid>
+            <Grid item>
+                <Box hidden={!isCreatingTask}>
+                    <TaskAdder handleCancel={handleCancelTask} addTask={handleAddTask} />
+                </Box>
+            </Grid>
+            <Grid item>
+                <CommentTaskList tasks={comment.tasks} onEdit={controller.editTask} onDelete={controller.deleteTask} />
             </Grid>
             <Grid item>
                 <Box hidden={!isReplying} marginLeft={5}>

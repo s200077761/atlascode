@@ -12,6 +12,7 @@ import {
     FileDiff,
     MergeStrategy,
     PullRequest,
+    Task,
     User,
 } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
@@ -44,6 +45,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private isRefreshing: boolean;
     private pageComments: Comment[];
     private inlineComments: Comment[];
+    private tasks: Task[];
     private fileDiffs: FileDiff[];
     private diffsToChangesMap: Map<string, FileChange>;
     private buildStatuses: BuildStatus[];
@@ -105,6 +107,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
                 comments: [],
+                tasks: [],
                 fileDiffs: [],
             });
 
@@ -133,6 +136,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             this.postMessage({
                 type: PullRequestDetailsMessageType.UpdateComments,
                 comments: this.pageComments,
+            });
+
+            //TODO: This should actually return comments too because it should assign comments
+            //their corresponding tasks
+            this.tasks = await this.api.getTasks(this.pr);
+            this.postMessage({
+                type: PullRequestDetailsMessageType.UpdateTasks,
+                comments: this.pageComments,
+                tasks: this.tasks,
             });
 
             const diffsAndChanges = await this.api.getFileDiffs(this.pr);
@@ -338,6 +350,83 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
             }
+            case PullRequestDetailsActionType.AddTask: {
+                try {
+                    const { tasks, comments } = await this.api.createTask(
+                        this.tasks,
+                        [...this.pageComments, ...this.inlineComments],
+                        this.pr,
+                        msg.content,
+                        msg.commentId
+                    );
+                    [this.pageComments, this.inlineComments] = this.splitComments(comments);
+                    this.tasks = tasks;
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateTasks,
+                        tasks: this.tasks,
+                        comments: this.pageComments,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.AddTaskResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error adding task: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error adding task'),
+                    });
+                }
+                break;
+            }
+            case PullRequestDetailsActionType.EditTask: {
+                try {
+                    const { tasks, comments } = await this.api.editTask(
+                        this.tasks,
+                        [...this.pageComments, ...this.inlineComments],
+                        this.pr,
+                        msg.task
+                    );
+                    [this.pageComments, this.inlineComments] = this.splitComments(comments);
+                    this.tasks = tasks;
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateTasks,
+                        tasks: this.tasks,
+                        comments: this.pageComments,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.EditTaskResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error editing task: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error editing task'),
+                    });
+                }
+                break;
+            }
+            case PullRequestDetailsActionType.DeleteTask: {
+                try {
+                    const { tasks, comments } = await this.api.deleteTask(this.pr, msg.task);
+                    [this.pageComments, this.inlineComments] = this.splitComments(comments);
+                    this.tasks = tasks;
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateTasks,
+                        tasks: this.tasks,
+                        comments: this.pageComments,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.DeleteTaskResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error deleting task: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error deleting task'),
+                    });
+                }
+                break;
+            }
             case PullRequestDetailsActionType.OpenDiffRequest:
                 try {
                     //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
@@ -384,6 +473,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         pr: this.pr,
                         commits: this.commits,
                         comments: this.pageComments,
+                        tasks: this.tasks,
                         currentUser: await this.getCurrentUser(),
                         currentBranchName: this.currentBranchName,
                         fileDiffs: this.fileDiffs,
