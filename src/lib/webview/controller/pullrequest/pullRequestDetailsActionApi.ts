@@ -12,6 +12,7 @@ import {
     MergeStrategy,
     PullRequest,
     Reviewer,
+    Task,
     User,
 } from '../../../../bitbucket/model';
 
@@ -49,4 +50,21 @@ export interface PullRequestDetailsActionApi {
     ): Promise<PullRequest>;
     openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
     openBitbucketIssue(issue: BitbucketIssue): Promise<void>;
+    getTasks(pr: PullRequest): Promise<Task[]>;
+
+    createTask(
+        tasks: Task[],
+        comments: Comment[],
+        pr: PullRequest,
+        content: string,
+        commentId?: string
+    ): Promise<{ tasks: Task[]; comments: Comment[] }>;
+
+    editTask(
+        tasks: Task[],
+        comments: Comment[],
+        pr: PullRequest,
+        task: Task
+    ): Promise<{ tasks: Task[]; comments: Comment[] }>;
+    deleteTask(pr: PullRequest, task: Task): Promise<{ tasks: Task[]; comments: Comment[] }>;
 }

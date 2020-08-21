@@ -8,6 +8,7 @@ import {
     Comment,
     FileDiff,
     MergeStrategy,
+    Task,
     User,
 } from '../../../bitbucket/model';
 import { CommonAction } from './common';
@@ -22,6 +23,9 @@ export enum PullRequestDetailsActionType {
     PostComment = 'postComment',
     EditComment = 'editComment',
     DeleteComment = 'deleteComment',
+    AddTask = 'addTask',
+    EditTask = 'editTask',
+    DeleteTask = 'deleteTask',
     OpenDiffRequest = 'openDiffRequest',
     Merge = 'merge',
     OpenJiraIssue = 'openJiraIssue',
@@ -37,6 +41,9 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.PostComment, PostCommentAction>
     | ReducerAction<PullRequestDetailsActionType.EditComment, EditCommentAction>
     | ReducerAction<PullRequestDetailsActionType.DeleteComment, DeleteCommentAction>
+    | ReducerAction<PullRequestDetailsActionType.AddTask, AddTaskAction>
+    | ReducerAction<PullRequestDetailsActionType.EditTask, EditTaskAction>
+    | ReducerAction<PullRequestDetailsActionType.DeleteTask, DeleteTaskAction>
     | ReducerAction<PullRequestDetailsActionType.CheckoutBranch>
     | ReducerAction<PullRequestDetailsActionType.OpenDiffRequest, OpenDiffAction>
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
@@ -78,6 +85,19 @@ export interface EditCommentAction {
 
 export interface DeleteCommentAction {
     comment: Comment;
+}
+
+export interface AddTaskAction {
+    content: string;
+    commentId?: string;
+}
+
+export interface EditTaskAction {
+    task: Task;
+}
+
+export interface DeleteTaskAction {
+    task: Task;
 }
 
 export interface OpenDiffAction {

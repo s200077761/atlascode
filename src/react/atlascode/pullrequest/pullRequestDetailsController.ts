@@ -11,6 +11,7 @@ import {
     FileDiff,
     MergeStrategy,
     Reviewer,
+    Task,
     User,
 } from '../../../bitbucket/model';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
@@ -33,6 +34,7 @@ import {
     PullRequestDetailsResponse,
     PullRequestDetailsReviewersMessage,
     PullRequestDetailsSummaryMessage,
+    PullRequestDetailsTasksMessage,
     PullRequestDetailsTitleMessage,
 } from '../../../lib/ipc/toUI/pullRequestDetails';
 import { ConnectionTimeout } from '../../../util/time';
@@ -50,6 +52,9 @@ export interface PullRequestDetailsControllerApi {
     postComment: (rawText: string, parentId?: string) => Promise<void>;
     editComment: (rawContent: string, commentId: string) => Promise<void>;
     deleteComment: (comment: Comment) => void;
+    addTask: (content: string, parentId?: string) => Promise<void>;
+    editTask: (task: Task) => Promise<void>;
+    deleteTask: (task: Task) => Promise<void>;
 
     openDiff: (fileDiff: FileDiff) => void;
     merge: (
@@ -80,6 +85,9 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     postComment: async (rawText: string, parentId?: string) => {},
     editComment: async (rawContent: string, commentId: string) => {},
     deleteComment: (comment: Comment) => {},
+    addTask: async (content: string, parentId?: string) => {},
+    editTask: async (task: Task) => {},
+    deleteTask: async (task: Task) => {},
     openDiff: (fileDiff: FileDiff) => {},
     merge: (
         mergeStrategy: MergeStrategy,
@@ -114,6 +122,7 @@ export enum PullRequestDetailsUIActionType {
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
     UpdateComments = 'updateComments',
+    UpdateTasks = 'updateTasks',
     AddComment = 'addComment',
     UpdateFileDiffs = 'updateFileDiffs',
     UpdateBuildStatuses = 'updateBuildStatuses',
@@ -131,6 +140,7 @@ export type PullRequestDetailsUIAction =
     | ReducerAction<PullRequestDetailsUIActionType.UpdateApprovalStatus, { data: PullRequestDetailsApprovalMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.CheckoutBranch, { data: PullRequestDetailsCheckoutBranchMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateComments, { data: PullRequestDetailsCommentsMessage }>
+    | ReducerAction<PullRequestDetailsUIActionType.UpdateTasks, { data: PullRequestDetailsTasksMessage }>
     | ReducerAction<PullRequestDetailsUIActionType.UpdateFileDiffs, { data: PullRequestDetailsFileDiffsMessage }>
     | ReducerAction<
           PullRequestDetailsUIActionType.UpdateBuildStatuses,
@@ -226,6 +236,9 @@ function pullRequestDetailsReducer(
         case PullRequestDetailsUIActionType.UpdateComments: {
             return { ...state, comments: action.data.comments, isSomethingLoading: false };
         }
+        case PullRequestDetailsUIActionType.UpdateTasks: {
+            return { ...state, comments: action.data.comments, tasks: action.data.tasks, isSomethingLoading: false };
+        }
         case PullRequestDetailsUIActionType.UpdateCommits: {
             return { ...state, commits: action.data.commits };
         }
@@ -288,6 +301,10 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             }
             case PullRequestDetailsMessageType.UpdateComments: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateComments, data: message });
+                break;
+            }
+            case PullRequestDetailsMessageType.UpdateTasks: {
+                dispatch({ type: PullRequestDetailsUIActionType.UpdateTasks, data: message });
                 break;
             }
             case PullRequestDetailsMessageType.UpdateFileDiffs: {
@@ -459,6 +476,76 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage]
     );
 
+    const addTask = useCallback(
+        (content: string, commentId?: string): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.AddTask,
+                                content: content,
+                                commentId: commentId,
+                            },
+                            PullRequestDetailsMessageType.AddTaskResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
+    const editTask = useCallback(
+        (task: Task): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.EditTask,
+                                task: task,
+                            },
+                            PullRequestDetailsMessageType.EditTaskResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
+    const deleteTask = useCallback(
+        (task: Task): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.DeleteTask,
+                                task: task,
+                            },
+                            PullRequestDetailsMessageType.DeleteTaskResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
+        },
+        [postMessagePromise]
+    );
+
     const openDiff = useCallback(
         (fileDiff: FileDiff) => postMessage({ type: PullRequestDetailsActionType.OpenDiffRequest, fileDiff: fileDiff }),
         [postMessage]
@@ -516,6 +603,9 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             postComment: postComment,
             editComment: editComment,
             deleteComment: deleteComment,
+            addTask: addTask,
+            editTask: editTask,
+            deleteTask: deleteTask,
             openDiff: openDiff,
             merge: merge,
             openJiraIssue: openJiraIssue,
@@ -533,6 +623,9 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         postComment,
         editComment,
         deleteComment,
+        addTask,
+        editTask,
+        deleteTask,
         openDiff,
         merge,
         openJiraIssue,

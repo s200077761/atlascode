@@ -389,8 +389,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             created: taskData.created_on,
             updated: taskData.updated_on,
             isComplete: taskData.state !== 'UNRESOLVED',
-            editable: taskBelongsToUser && taskData.state === 'UNRESOLVED',
-            deletable: taskBelongsToUser && taskData.state === 'UNRESOLVED',
+            editable: taskBelongsToUser,
+            deletable: taskBelongsToUser,
             id: taskData.id,
             content: taskData.content.raw,
         };
@@ -405,6 +405,9 @@ export class CloudPullRequestApi implements PullRequestApi {
             }),
             await this.getTasks(pr),
         ]);
+
+        //TODO: The task promise needs to be removed from here; it's inefficient and in the new PR view it will not be needed
+        //however, it can not be removed until all old PR logic is removed.
         const [commentResp, tasks] = await commentsAndTaskPromise;
         let { data } = commentResp;
 
