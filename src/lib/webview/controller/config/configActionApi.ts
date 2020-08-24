@@ -13,6 +13,7 @@ export interface ConfigActionApi {
     authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void>;
     authenticateCloud(site: SiteInfo, callback: string): Promise<void>;
     clearAuth(site: DetailedSiteInfo): Promise<void>;
+    saveCode(code: string): Promise<void>;
     openJsonSettingsFile(target: ConfigTarget): Promise<void>;
     fetchJqlOptions: (site: DetailedSiteInfo) => Promise<JQLAutocompleteData>;
     fetchJqlSuggestions: (

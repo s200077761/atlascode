@@ -44,6 +44,7 @@ export interface ConfigInitMessage {
     target: ConfigTarget;
     section?: ConfigSection;
     subSection?: ConfigSubSection;
+    useNewAuth: boolean;
 }
 
 export const emptyConfigInitMessage: ConfigInitMessage = {
@@ -55,6 +56,7 @@ export const emptyConfigInitMessage: ConfigInitMessage = {
     showTunnelOption: false,
     target: ConfigTarget.User,
     section: ConfigSection.Jira,
+    useNewAuth: false,
 };
 
 export interface ConfigUpdateMessage {

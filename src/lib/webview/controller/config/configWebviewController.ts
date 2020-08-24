@@ -23,6 +23,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
     private _isRefreshing: boolean;
     private _settingsUrl: string;
     private _initialSection?: SectionChangeMessage;
+    private _useNewAuth: boolean;
 
     constructor(
         messagePoster: MessagePoster,
@@ -31,6 +32,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         logger: Logger,
         analytics: AnalyticsApi,
         settingsUrl: string,
+        useNewAuth: boolean,
         section?: SectionChangeMessage
     ) {
         this._messagePoster = messagePoster;
@@ -40,6 +42,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this._settingsUrl = settingsUrl;
         this._commonHandler = commonHandler;
         this._initialSection = section;
+        this._useNewAuth = useNewAuth;
     }
 
     public title(): string {
@@ -84,6 +87,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 showTunnelOption: this._api.shouldShowTunnelOption(),
                 config: cfg,
                 ...section,
+                useNewAuth: this._useNewAuth,
             });
 
             if (this._initialSection) {
@@ -139,6 +143,20 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             case ConfigActionType.Logout: {
                 this._api.clearAuth(msg.siteInfo);
                 this._analytics.fireLogoutButtonEvent(id);
+                break;
+            }
+            case ConfigActionType.SaveCode: {
+                try {
+                    await this._api.saveCode(msg.code);
+                    this._analytics.fireSaveManualCodeEvent(id);
+                } catch (e) {
+                    let err = new Error(`Error with manual code entry: ${e}`);
+                    this._logger.error(err);
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Adding access code failed'),
+                    });
+                }
                 break;
             }
             case ConfigActionType.SetTarget: {

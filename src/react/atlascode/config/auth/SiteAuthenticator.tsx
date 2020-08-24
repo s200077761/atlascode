@@ -6,18 +6,24 @@ import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { CloudAuthButton } from './CloudAuthButton';
 import { SiteList } from './SiteList';
 import { AuthDialogControllerContext } from './useAuthDialog';
+import { CodeEntryDialogControllerContext } from './useCodeEntryDialog';
 type SiteAuthenticatorProps = {
     product: Product;
     isRemote: boolean;
     sites: SiteWithAuthInfo[];
+    useNewAuth: boolean;
 };
 
 export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = memo(
-    ({ product, isRemote, sites }) => {
+    ({ product, isRemote, sites, useNewAuth }) => {
         const authDialogController = useContext(AuthDialogControllerContext);
         const openProductAuth = useCallback(() => {
             authDialogController.openDialog(product, undefined);
         }, [authDialogController, product]);
+        const codeEntryDialogController = useContext(CodeEntryDialogControllerContext);
+        const openCodeDialog = useCallback(() => {
+            codeEntryDialogController.openDialog(product);
+        }, [codeEntryDialogController, product]);
 
         const handleEdit = useCallback(
             (swa: SiteWithAuthInfo) => {
@@ -60,6 +66,15 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                                             {`Add Custom ${product.name} Site`}
                                         </Button>
                                     </Grid>
+                                    {useNewAuth ? (
+                                        <Grid item>
+                                            <Button color="primary" startIcon={<DomainIcon />} onClick={openCodeDialog}>
+                                                {`Manually Add ${product.name} Code`}
+                                            </Button>
+                                        </Grid>
+                                    ) : (
+                                        <div />
+                                    )}
                                 </Grid>
                             </Grid>
                             <Grid item>
