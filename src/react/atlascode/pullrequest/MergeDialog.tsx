@@ -255,45 +255,49 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                     <MergeChecks prData={prData} />
                     <Box marginTop={5} />
                     <Grid container spacing={1} direction="column" alignItems="flex-start">
-                        <Grid item container direction="column">
-                            <Grid item>
-                                <TextField
-                                    select
-                                    value={mergeStrategy}
-                                    onChange={handleMergeStrategyChange}
-                                    fullWidth
-                                    size="small"
-                                    label="Merge Strategy"
-                                >
-                                    <MenuItem
-                                        key={emptyMergeStrategy.label}
-                                        //@ts-ignore
-                                        value={emptyMergeStrategy}
-                                        disabled
+                        <Grid item>
+                            <Grid container direction="column">
+                                <Grid item>
+                                    <TextField
+                                        select
+                                        value={mergeStrategy}
+                                        onChange={handleMergeStrategyChange}
+                                        fullWidth
+                                        size="small"
+                                        label="Merge Strategy"
                                     >
-                                        Select a merge strategy
-                                    </MenuItem>
-                                    {mergeStrategies.map((strategy) => (
-                                        //@ts-ignore
-                                        <MenuItem key={strategy.label} value={strategy}>
-                                            {strategy.label}
+                                        <MenuItem
+                                            key={emptyMergeStrategy.label}
+                                            //@ts-ignore
+                                            value={emptyMergeStrategy}
+                                            disabled
+                                        >
+                                            Select a merge strategy
                                         </MenuItem>
-                                    ))}
-                                </TextField>
+                                        {mergeStrategies.map((strategy) => (
+                                            //@ts-ignore
+                                            <MenuItem key={strategy.label} value={strategy}>
+                                                {strategy.label}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                </Grid>
                             </Grid>
                         </Grid>
-                        <Grid item container direction="column">
-                            <Grid item>
-                                <InlineTextEditor
-                                    fullWidth
-                                    multiline
-                                    rows={5}
-                                    defaultValue={commitMessage}
-                                    onSave={handleCommitMessageChange}
-                                    placeholder={'Enter commit message'}
-                                    saveDisabled={isEmptyCommitMessage}
-                                    label={'Commit Message'}
-                                />
+                        <Grid item>
+                            <Grid container direction="column">
+                                <Grid item>
+                                    <InlineTextEditor
+                                        fullWidth
+                                        multiline
+                                        rows={5}
+                                        defaultValue={commitMessage}
+                                        onSave={handleCommitMessageChange}
+                                        placeholder={'Enter commit message'}
+                                        saveDisabled={isEmptyCommitMessage}
+                                        label={'Commit Message'}
+                                    />
+                                </Grid>
                             </Grid>
                         </Grid>
                         <Grid item>

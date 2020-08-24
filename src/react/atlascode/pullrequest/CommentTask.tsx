@@ -52,50 +52,62 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
 
     return (
         <React.Fragment>
-            {!isEditing && (
-                <Grid item container xs spacing={1} direction="row" alignItems="flex-start">
+            {!isEditing ? (
+                <Grid container spacing={1} direction="row" alignItems="flex-start">
                     <Checkbox
                         color={'primary'}
                         checked={task.isComplete}
                         onChange={handleMarkTaskComplete}
                         disabled={isLoading}
                     />
-                    <Grid container item xs direction={'column'}>
-                        <Typography variant="body1">{task.content}</Typography>
-                        <Grid item container direction={'row'}>
-                            <Grid item hidden={!task.editable}>
-                                <Button color={'primary'} onClick={handleEditPressed} disabled={isLoading}>
-                                    Edit
-                                </Button>
-                            </Grid>
-                            <Grid item hidden={!task.deletable}>
-                                <Button color={'primary'} onClick={handleDelete} disabled={isLoading}>
-                                    Delete
-                                </Button>
+                    <Grid item>
+                        <Grid container direction={'column'}>
+                            <Typography variant="body1">{task.content}</Typography>
+                            <Grid item>
+                                <Grid container direction={'row'}>
+                                    <Grid item hidden={!task.editable}>
+                                        <Button color={'primary'} onClick={handleEditPressed} disabled={isLoading}>
+                                            Edit
+                                        </Button>
+                                    </Grid>
+                                    <Grid item hidden={!task.deletable}>
+                                        <Button color={'primary'} onClick={handleDelete} disabled={isLoading}>
+                                            Delete
+                                        </Button>
+                                    </Grid>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </Grid>
                 </Grid>
-            )}
-            {isEditing && (
-                <Grid item container xs spacing={1} direction="row" alignItems="flex-start">
+            ) : (
+                <Grid container spacing={1} direction="row" alignItems="flex-start">
                     <Checkbox color={'primary'} disabled />
-                    <Grid container item xs direction={'column'}>
-                        <TextField size="small" value={taskContent} onChange={handleTaskContentChange} name="content" />
-                        <Grid item container direction={'row'}>
+                    <Grid item xs>
+                        <Grid container direction={'column'}>
+                            <TextField
+                                size="small"
+                                value={taskContent}
+                                onChange={handleTaskContentChange}
+                                name="content"
+                            />
                             <Grid item>
-                                <Button
-                                    color={'primary'}
-                                    onClick={handleSave}
-                                    disabled={taskContent.trim() === '' || isLoading}
-                                >
-                                    Save
-                                </Button>
-                            </Grid>
-                            <Grid item>
-                                <Button color={'primary'} onClick={handleCancel} disabled={isLoading}>
-                                    Cancel
-                                </Button>
+                                <Grid container direction={'row'}>
+                                    <Grid item>
+                                        <Button
+                                            color={'primary'}
+                                            onClick={handleSave}
+                                            disabled={taskContent.trim() === '' || isLoading}
+                                        >
+                                            Save
+                                        </Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button color={'primary'} onClick={handleCancel} disabled={isLoading}>
+                                            Cancel
+                                        </Button>
+                                    </Grid>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </Grid>

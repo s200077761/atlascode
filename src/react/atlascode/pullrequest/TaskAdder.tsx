@@ -28,30 +28,34 @@ export const TaskAdder: React.FunctionComponent<TaskAdderProps> = ({ addTask, ha
     );
 
     return (
-        <Grid item container xs zeroMinWidth spacing={1} direction="row" alignItems="flex-start">
+        <Grid container spacing={1} direction="row" alignItems="flex-start">
             <Checkbox color={'primary'} disabled />
-            <Grid container item xs zeroMinWidth direction={'column'}>
-                <TextField
-                    size="small"
-                    value={taskContent}
-                    onChange={handleTaskContentChange}
-                    name="content"
-                    autoComplete={'off'}
-                />
-                <Grid item container direction={'row'}>
+            <Grid item xs>
+                <Grid container direction={'column'}>
+                    <TextField
+                        size="small"
+                        value={taskContent}
+                        onChange={handleTaskContentChange}
+                        name="content"
+                        autoComplete={'off'}
+                    />
                     <Grid item>
-                        <Button
-                            color={'primary'}
-                            onClick={handleSave}
-                            disabled={taskContent.trim() === '' || isLoading}
-                        >
-                            Save
-                        </Button>
-                    </Grid>
-                    <Grid item>
-                        <Button color={'primary'} onClick={handleCancelClicked} disabled={isLoading}>
-                            Cancel
-                        </Button>
+                        <Grid container direction={'row'}>
+                            <Grid item>
+                                <Button
+                                    color={'primary'}
+                                    onClick={handleSave}
+                                    disabled={taskContent.trim() === '' || isLoading}
+                                >
+                                    Save
+                                </Button>
+                            </Grid>
+                            <Grid item>
+                                <Button color={'primary'} onClick={handleCancelClicked} disabled={isLoading}>
+                                    Cancel
+                                </Button>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>

@@ -1,4 +1,4 @@
-import { Box, Button, Grid } from '@material-ui/core';
+import { Button, Grid } from '@material-ui/core';
 import React, { useCallback, useContext, useState } from 'react';
 import { Task } from '../../../bitbucket/model';
 import { CommentTask } from './CommentTask';
@@ -33,13 +33,15 @@ export const PageTaskList: React.FunctionComponent<PageTaskListProps> = ({ tasks
     return (
         <Grid container spacing={1} direction="column" justify="center">
             {tasks.map((task) => (
-                <CommentTask key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
+                <Grid key={task.id} item>
+                    <CommentTask task={task} onEdit={onEdit} onDelete={onDelete} />
+                </Grid>
             ))}
-            <Box hidden={!isCreatingTask}>
+            {isCreatingTask && (
                 <Grid item>
                     <TaskAdder handleCancel={handleCancelTask} addTask={handleAddTask} />
                 </Grid>
-            </Box>
+            )}
 
             <Grid item>
                 <Button
