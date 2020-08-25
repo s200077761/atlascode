@@ -13,6 +13,7 @@ import {
     MergeStrategy,
     PullRequest,
     Reviewer,
+    Task,
     User,
 } from '../../../bitbucket/model';
 
@@ -21,6 +22,10 @@ export enum PullRequestDetailsMessageType {
     Update = 'update',
     FetchUsersResponse = 'fetchUsersResponse',
     PostCommentResponse = 'postCommentResponse',
+    EditCommentResponse = 'editCommentResponse',
+    AddTaskResponse = 'addTaskResponse',
+    EditTaskResponse = 'editTaskResponse',
+    DeleteTaskResponse = 'deleteTaskResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateCommits = 'updateCommits',
@@ -33,6 +38,7 @@ export enum PullRequestDetailsMessageType {
     UpdateMergeStrategies = 'updateMergeStrategies',
     UpdateRelatedJiraIssues = 'updateRelatedJiraIssues',
     UpdateRelatedBitbucketIssues = 'updateRelatedBitbucketIssues',
+    UpdateTasks = 'updateTasks',
 }
 
 export type PullRequestDetailsMessage =
@@ -49,6 +55,7 @@ export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.UpdateBuildStatuses, PullRequestDetailsBuildStatusesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateMergeStrategies, PullRequestDetailsMergeStrategiesMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateRelatedJiraIssues, PullRequestDetailsRelatedJiraIssuesMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateTasks, PullRequestDetailsTasksMessage>
     | ReducerAction<
           PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
           PullRequestDetailsRelatedBitbucketIssuesMessage
@@ -56,7 +63,11 @@ export type PullRequestDetailsMessage =
 export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
-    | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.EditCommentResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.AddTaskResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.EditTaskResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.DeleteTaskResponse, VoidResponseMessage>;
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
@@ -64,6 +75,7 @@ export interface PullRequestDetailsInitMessage {
     currentUser: User;
     currentBranchName: string;
     comments: Comment[];
+    tasks: Task[];
     fileDiffs: FileDiff[];
     mergeStrategies: MergeStrategy[];
     buildStatuses: BuildStatus[];
@@ -126,6 +138,11 @@ export interface PullRequestDetailsRelatedBitbucketIssuesMessage {
     relatedIssues: BitbucketIssue[];
 }
 
+export interface PullRequestDetailsTasksMessage {
+    tasks: Task[];
+    comments: Comment[];
+}
+
 export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage = {
     pr: emptyPullRequest,
     commits: [],
@@ -137,4 +154,5 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
     buildStatuses: [],
     relatedJiraIssues: [],
     relatedBitbucketIssues: [],
+    tasks: [],
 };

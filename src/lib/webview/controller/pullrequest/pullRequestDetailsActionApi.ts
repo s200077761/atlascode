@@ -12,6 +12,7 @@ import {
     MergeStrategy,
     PullRequest,
     Reviewer,
+    Task,
     User,
 } from '../../../../bitbucket/model';
 
@@ -27,7 +28,8 @@ export interface PullRequestDetailsActionApi {
     checkout(pr: PullRequest): Promise<string>;
     getCurrentBranchName(pr: PullRequest): string;
     getComments(pr: PullRequest): Promise<Comment[]>;
-    postComment(comment: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]>;
+    postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]>;
+    editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]>;
     deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]>;
     getFileDiffs(pr: PullRequest): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }>;
     openDiffViewForFile(pr: PullRequest, fileChange: FileChange, comments: Comment[]): Promise<void>;
@@ -48,4 +50,21 @@ export interface PullRequestDetailsActionApi {
     ): Promise<PullRequest>;
     openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
     openBitbucketIssue(issue: BitbucketIssue): Promise<void>;
+    getTasks(pr: PullRequest): Promise<Task[]>;
+
+    createTask(
+        tasks: Task[],
+        comments: Comment[],
+        pr: PullRequest,
+        content: string,
+        commentId?: string
+    ): Promise<{ tasks: Task[]; comments: Comment[] }>;
+
+    editTask(
+        tasks: Task[],
+        comments: Comment[],
+        pr: PullRequest,
+        task: Task
+    ): Promise<{ tasks: Task[]; comments: Comment[] }>;
+    deleteTask(pr: PullRequest, task: Task): Promise<{ tasks: Task[]; comments: Comment[] }>;
 }
