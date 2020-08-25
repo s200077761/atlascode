@@ -47,9 +47,7 @@ export const BitbucketTransitionMenu: React.FC<BitbucketTransitionMenuProps> = (
             </TableCell>
             <TableCell className={classes.tableCell}>
                 <Typography>
-                    <Typography>
-                        <strong>#{issue.data.id}</strong>: {issue.data.title}
-                    </Typography>
+                    <strong>#{issue.data.id}</strong>: {issue.data.title}
                 </Typography>
             </TableCell>
             <TableCell className={classes.tableCell}>
