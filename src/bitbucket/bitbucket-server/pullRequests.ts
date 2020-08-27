@@ -445,6 +445,9 @@ export class ServerPullRequestApi implements PullRequestApi {
             ),
             await this.getTasks(pr),
         ]);
+
+        //TODO: The task promise needs to be removed from here; it's inefficient and in the new PR view it will not be needed
+        //however, it can not be removed until all old PR logic is removed.
         const [commentResp, tasks] = await commentsAndTaskPromise;
         let { data } = commentResp;
 

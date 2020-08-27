@@ -28,6 +28,7 @@ import { DiffList } from './DiffList';
 import { MergeDialog } from './MergeDialog';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { NestedCommentList } from './NestedCommentList';
+import { PageTaskList } from './PageTaskList';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { RelatedBitbucketIssues } from './RelatedBitbucketIssues';
 import { RelatedJiraIssues } from './RelatedJiraIssues';
@@ -243,6 +244,21 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                     <Grid item>
                         <BasicPanel title={'Commits'} subtitle={`${state.commits.length} commits`} isDefaultExpanded>
                             <Commits commits={state.commits} />
+                        </BasicPanel>
+                    </Grid>
+                    <Grid item>
+                        <BasicPanel
+                            title={'Tasks'}
+                            subtitle={`${state.tasks.filter((task) => task.isComplete).length} of ${
+                                state.tasks.length
+                            } complete`}
+                            isDefaultExpanded
+                        >
+                            <PageTaskList
+                                tasks={state.tasks}
+                                onEdit={controller.editTask}
+                                onDelete={controller.deleteTask}
+                            />
                         </BasicPanel>
                     </Grid>
                     <Grid item>
