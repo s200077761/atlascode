@@ -5,6 +5,7 @@ import {
     Box,
     Breadcrumbs,
     Button,
+    CircularProgress,
     Container,
     Divider,
     Grid,
@@ -72,33 +73,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         );
     };
 
-    const handleUpdateReviewers = useCallback(
-        (newReviewers: User[]) => {
-            controller.updateReviewers(newReviewers);
-        },
-        [controller]
-    );
-
-    const handleSummaryChange = useCallback(
-        (text: string) => {
-            controller.updateSummary(text);
-        },
-        [controller]
-    );
-
-    const handleTitleChange = useCallback(
-        (text: string) => {
-            controller.updateTitle(text);
-        },
-        [controller]
-    );
-
-    const handlePostComment = useCallback(
-        async (rawText: string) => {
-            await controller.postComment(rawText);
-        },
-        [controller]
-    );
+    const isSomethingLoading = useCallback(() => {
+        for (const [, value] of Object.entries(state.loadState)) {
+            if (value) {
+                return true;
+            }
+        }
+        return false;
+    }, [state.loadState]);
 
     useEffect(() => {
         const foundCurrentUser = state.pr.data.participants.find(
@@ -115,7 +97,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <AppBar position="relative">
                     <Toolbar>
                         <Box flexGrow={1}>
-                            <InlineTextEditorWrapper title={state.pr.data.title} onSave={handleTitleChange} />
+                            <InlineTextEditorWrapper title={state.pr.data.title} onSave={controller.updateTitle} />
                         </Box>
 
                         <Box marginLeft={1}>
@@ -138,7 +120,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
-                        <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                        <RefreshButton loading={isSomethingLoading()} onClick={controller.refresh} />
                     </Toolbar>
                 </AppBar>
                 <Grid container spacing={1} direction="row">
@@ -153,13 +135,15 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             rawSummary={state.pr.data.rawSummary}
                                             htmlSummary={state.pr.data.htmlSummary}
                                             fetchUsers={handleFetchUsers}
-                                            summaryChange={handleSummaryChange}
+                                            summaryChange={controller.updateSummary}
                                         />
                                     </Grid>
                                     <Grid item>
                                         <BasicPanel
                                             title={'Related Jira Issues'}
                                             subtitle={`${state.relatedJiraIssues.length} issues`}
+                                            isLoading={state.loadState.relatedJiraIssues}
+                                            hideCondition={state.relatedJiraIssues.length === 0}
                                         >
                                             <RelatedJiraIssues
                                                 relatedIssues={state.relatedJiraIssues}
@@ -171,6 +155,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         <BasicPanel
                                             title={'Related Bitbucket Issues'}
                                             subtitle={`${state.relatedBitbucketIssues.length} issues`}
+                                            isLoading={state.loadState.relatedBitbucketIssues}
+                                            hideCondition={state.relatedBitbucketIssues.length === 0}
                                         >
                                             <RelatedBitbucketIssues
                                                 relatedIssues={state.relatedBitbucketIssues}
@@ -183,6 +169,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Commits'}
                                             subtitle={`${state.commits.length} commits`}
                                             isDefaultExpanded
+                                            isLoading={state.loadState.commits}
                                         >
                                             <Commits commits={state.commits} />
                                         </BasicPanel>
@@ -194,6 +181,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 state.tasks.length
                                             } complete`}
                                             isDefaultExpanded
+                                            isLoading={state.loadState.tasks}
                                         >
                                             <PageTaskList
                                                 tasks={state.tasks}
@@ -207,6 +195,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Files Changed'}
                                             subtitle={'Click on file names to open diff in editor'}
                                             isDefaultExpanded
+                                            isLoading={state.loadState.diffs}
                                         >
                                             <DiffList
                                                 fileDiffs={state.fileDiffs}
@@ -215,7 +204,11 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </BasicPanel>
                                     </Grid>
                                     <Grid item>
-                                        <BasicPanel title={'Comments'} isDefaultExpanded>
+                                        <BasicPanel
+                                            title={'Comments'}
+                                            isDefaultExpanded
+                                            isLoading={state.loadState.comments}
+                                        >
                                             <Grid container spacing={2} direction="column">
                                                 <Grid item>
                                                     <NestedCommentList
@@ -227,7 +220,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 <Grid item>
                                                     <CommentForm
                                                         currentUser={state.currentUser}
-                                                        onSave={handlePostComment}
+                                                        onSave={controller.postComment}
                                                     />
                                                 </Grid>
                                             </Grid>
@@ -266,6 +259,13 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     relatedJiraIssues={state.relatedJiraIssues}
                                                     relatedBitbucketIssues={state.relatedBitbucketIssues}
                                                     mergeStrategies={state.mergeStrategies}
+                                                    loadState={{
+                                                        basicData: state.loadState.basicData,
+                                                        commits: state.loadState.commits,
+                                                        mergeStrategies: state.loadState.mergeStrategies,
+                                                        relatedJiraIssues: state.loadState.relatedJiraIssues,
+                                                        relatedBitbucketIssues: state.loadState.relatedBitbucketIssues,
+                                                    }}
                                                     merge={controller.merge}
                                                 />
                                             </Grid>
@@ -281,12 +281,17 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 <Typography variant="body1">Author:</Typography>
                                             </Grid>
                                             <Grid item>
-                                                <Tooltip title={state.pr.data.author.displayName}>
-                                                    <Avatar
-                                                        alt={state.pr.data.author.displayName}
-                                                        src={state.pr.data.author.avatarUrl}
-                                                    />
-                                                </Tooltip>
+                                                <Box hidden={state.loadState.basicData}>
+                                                    <Tooltip title={state.pr.data.author.displayName}>
+                                                        <Avatar
+                                                            alt={state.pr.data.author.displayName}
+                                                            src={state.pr.data.author.avatarUrl}
+                                                        />
+                                                    </Tooltip>
+                                                </Box>
+                                                <Box hidden={!state.loadState.basicData}>
+                                                    <CircularProgress />
+                                                </Box>
                                             </Grid>
                                         </Grid>
                                     </Grid>
@@ -303,7 +308,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 <Reviewers
                                                     site={state.pr.site}
                                                     participants={state.pr.data.participants}
-                                                    onUpdateReviewers={handleUpdateReviewers}
+                                                    onUpdateReviewers={controller.updateReviewers}
+                                                    isLoading={state.loadState.basicData}
                                                 />
                                             </Grid>
                                         </Grid>
@@ -321,6 +327,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     source={state.pr.data.source}
                                                     destination={state.pr.data.destination}
                                                     author={state.pr.data.author}
+                                                    isLoading={state.loadState.basicData}
                                                 />
                                             </Grid>
                                         </Grid>
@@ -329,24 +336,29 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         <Divider />
                                     </Grid>
                                     <Grid item>
-                                        <Breadcrumbs aria-label="breadcrumb">
-                                            <Link color="textSecondary" href={state.pr.data.destination!.repo.url}>
-                                                {state.pr.data.destination!.repo.displayName}
-                                            </Link>
-                                            <Link
-                                                color="textSecondary"
-                                                href={`${state.pr.data.destination!.repo.url}/pull-requests`}
-                                            >
-                                                {'Pull request'}
-                                            </Link>
-                                            <Link
-                                                color="textPrimary"
-                                                href={state.pr.data.url}
-                                                //TODO: onCopy={handleCopyLink}
-                                            >
-                                                {`Pull request #${state.pr.data.id}`}
-                                            </Link>
-                                        </Breadcrumbs>
+                                        <Box hidden={state.loadState.basicData}>
+                                            <Breadcrumbs aria-label="breadcrumb">
+                                                <Link color="textSecondary" href={state.pr.data.destination!.repo.url}>
+                                                    {state.pr.data.destination!.repo.displayName}
+                                                </Link>
+                                                <Link
+                                                    color="textSecondary"
+                                                    href={`${state.pr.data.destination!.repo.url}/pull-requests`}
+                                                >
+                                                    {'Pull request'}
+                                                </Link>
+                                                <Link
+                                                    color="textPrimary"
+                                                    href={state.pr.data.url}
+                                                    //TODO: onCopy={handleCopyLink}
+                                                >
+                                                    {`Pull request #${state.pr.data.id}`}
+                                                </Link>
+                                            </Breadcrumbs>
+                                        </Box>
+                                        <Box hidden={!state.loadState.basicData}>
+                                            <CircularProgress />
+                                        </Box>
                                     </Grid>
                                 </Grid>
                             </Box>

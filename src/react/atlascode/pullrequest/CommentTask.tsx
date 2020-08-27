@@ -1,4 +1,4 @@
-import { Button, Checkbox, Grid, TextField, Typography } from '@material-ui/core';
+import { Box, Button, Checkbox, CircularProgress, Grid, TextField, Typography } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Task } from '../../../bitbucket/model';
 
@@ -19,7 +19,6 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
     const handleSave = useCallback(async () => {
         setIsLoading(true);
         await onEdit({ ...task, content: taskContent });
-        setIsLoading(false);
         setIsEditing(false);
     }, [taskContent, task, onEdit]);
 
@@ -30,13 +29,11 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
     const handleDelete = useCallback(async () => {
         setIsLoading(true);
         await onDelete(task);
-        setIsLoading(false);
     }, [task, onDelete]);
 
     const handleMarkTaskComplete = useCallback(async () => {
         setIsLoading(true);
         await onEdit({ ...task, isComplete: !task.isComplete });
-        setIsLoading(false);
     }, [task, onEdit]);
 
     const handleTaskContentChange = useCallback(
@@ -48,11 +45,12 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
 
     useEffect(() => {
         setTaskContent(task.content);
-    }, [task.content]);
+        setIsLoading(false);
+    }, [task]);
 
     return (
         <React.Fragment>
-            {!isEditing ? (
+            <Box hidden={isEditing}>
                 <Grid container spacing={1} direction="row" alignItems="flex-start">
                     <Checkbox
                         color={'primary'}
@@ -62,7 +60,7 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
                     />
                     <Grid item>
                         <Grid container direction={'column'}>
-                            <Typography variant="body1">{task.content}</Typography>
+                            {isLoading ? <CircularProgress /> : <Typography variant="body1">{task.content}</Typography>}
                             <Grid item>
                                 <Grid container direction={'row'}>
                                     <Grid item hidden={!task.editable}>
@@ -80,17 +78,22 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
                         </Grid>
                     </Grid>
                 </Grid>
-            ) : (
+            </Box>
+            <Box hidden={!isEditing}>
                 <Grid container spacing={1} direction="row" alignItems="flex-start">
                     <Checkbox color={'primary'} disabled />
                     <Grid item xs>
                         <Grid container direction={'column'}>
-                            <TextField
-                                size="small"
-                                value={taskContent}
-                                onChange={handleTaskContentChange}
-                                name="content"
-                            />
+                            {isLoading ? (
+                                <CircularProgress />
+                            ) : (
+                                <TextField
+                                    size="small"
+                                    value={taskContent}
+                                    onChange={handleTaskContentChange}
+                                    name="content"
+                                />
+                            )}
                             <Grid item>
                                 <Grid container direction={'row'}>
                                     <Grid item>
@@ -112,7 +115,7 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
                         </Grid>
                     </Grid>
                 </Grid>
-            )}
+            </Box>
         </React.Fragment>
     );
 };

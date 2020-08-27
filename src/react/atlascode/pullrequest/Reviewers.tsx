@@ -6,24 +6,27 @@ import { BitbucketSite, Reviewer, User } from '../../../bitbucket/model';
 import { AddReviewers } from './AddReviewers';
 type ReviewersProps = {
     site: BitbucketSite;
-    onUpdateReviewers: (reviewers: User[]) => void;
+    onUpdateReviewers: (reviewers: User[]) => Promise<void>;
     participants: Reviewer[];
+    isLoading: boolean;
 };
-export const Reviewers: React.FunctionComponent<ReviewersProps> = ({ site, onUpdateReviewers, participants }) => {
+export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
+    site,
+    onUpdateReviewers,
+    participants,
+    isLoading,
+}) => {
     const [activeParticipants, setActiveParticipants] = useState<Reviewer[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isFetchingReviewer, setIsFetchingReviewers] = useState<boolean>(false);
 
     const handleUpdateReviewers = useCallback(
         async (newReviewers: User[]) => {
-            setIsLoading(true);
-            onUpdateReviewers(newReviewers);
+            setIsFetchingReviewers(true);
+            await onUpdateReviewers(newReviewers);
+            setIsFetchingReviewers(false);
         },
         [onUpdateReviewers]
     );
-
-    useEffect(() => {
-        setIsLoading(false);
-    }, [participants]);
 
     useEffect(() => {
         setActiveParticipants(
@@ -35,38 +38,43 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({ site, onUpd
 
     return (
         <Grid container direction="row" spacing={2} alignItems={'center'}>
-            <Grid item>
-                {activeParticipants.length === 0 ? (
-                    <Typography variant="body2">No reviewers!</Typography>
-                ) : (
-                    <AvatarGroup max={5}>
-                        {activeParticipants.map((participant) => (
-                            <Badge
-                                style={{ borderWidth: '0px' }}
-                                overlap="circle"
-                                anchorOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
-                                invisible={participant.status !== 'APPROVED'}
-                                key={participant.accountId}
-                                badgeContent={
-                                    <Tooltip title="Approved">
-                                        <Box bgcolor={'white'} borderRadius={'100%'}>
-                                            <CheckCircleIcon fontSize={'small'} htmlColor={'#07b82b'} />
-                                        </Box>
+            {isLoading || isFetchingReviewer ? (
+                <Grid item>
+                    <CircularProgress />
+                </Grid>
+            ) : (
+                <Grid item>
+                    {activeParticipants.length === 0 ? (
+                        <Typography variant="body2">No reviewers!</Typography>
+                    ) : (
+                        <AvatarGroup max={5}>
+                            {activeParticipants.map((participant) => (
+                                <Badge
+                                    style={{ borderWidth: '0px' }}
+                                    overlap="circle"
+                                    anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    invisible={participant.status !== 'APPROVED'}
+                                    key={participant.accountId}
+                                    badgeContent={
+                                        <Tooltip title="Approved">
+                                            <Box bgcolor={'white'} borderRadius={'100%'}>
+                                                <CheckCircleIcon fontSize={'small'} htmlColor={'#07b82b'} />
+                                            </Box>
+                                        </Tooltip>
+                                    }
+                                >
+                                    <Tooltip title={participant.displayName}>
+                                        <Avatar alt={participant.displayName} src={participant.avatarUrl} />
                                     </Tooltip>
-                                }
-                            >
-                                <Tooltip title={participant.displayName}>
-                                    <Avatar alt={participant.displayName} src={participant.avatarUrl} />
-                                </Tooltip>
-                            </Badge>
-                        ))}
-                    </AvatarGroup>
-                )}
-                {isLoading && <CircularProgress color="inherit" size={20} />}
-            </Grid>
+                                </Badge>
+                            ))}
+                        </AvatarGroup>
+                    )}
+                </Grid>
+            )}
 
             <Grid item>
                 <AddReviewers site={site} reviewers={activeParticipants} updateReviewers={handleUpdateReviewers} />

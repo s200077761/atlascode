@@ -6,7 +6,7 @@ import { NestedComment } from './NestedComment';
 type NestedCommentListProps = {
     comments: Comment[];
     currentUser: User;
-    onDelete: (comment: Comment) => void;
+    onDelete: (comment: Comment) => Promise<void>;
 };
 export const NestedCommentList: React.FunctionComponent<NestedCommentListProps> = ({
     comments,

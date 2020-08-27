@@ -46,13 +46,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private pageComments: Comment[];
     private inlineComments: Comment[];
     private tasks: Task[];
-    private fileDiffs: FileDiff[];
     private diffsToChangesMap: Map<string, FileChange>;
-    private buildStatuses: BuildStatus[];
-    private mergeStrategies: MergeStrategy[];
-    private relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
-    private relatedBitbucketIssues: BitbucketIssue[];
-    private currentBranchName: string;
 
     constructor(
         pr: PullRequest,
@@ -115,9 +109,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 pr: this.pr,
                 currentUser: await this.getCurrentUser(),
                 currentBranchName: this.api.getCurrentBranchName(this.pr),
-                comments: [],
-                tasks: [],
-                fileDiffs: [],
             });
 
             //Launch several independent, async processes
@@ -205,20 +196,16 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
 
             //Now we wait for all remaining promises in 2 batches. The reason for this is that some of
             //these promises are older than others, meaning they're more likely to have finished.
-            [this.buildStatuses, this.mergeStrategies] = await Promise.all([
+            await Promise.all([
                 buildStatusPromise,
                 mergeStrategiesPromise,
-            ]);
-            let diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> };
-            [this.relatedJiraIssues, this.relatedBitbucketIssues, this.tasks, diffsAndChanges] = await Promise.all([
                 relatedJiraIssuesPromise,
                 relatedBitbucketIssuesPromise,
-                tasksPromise,
-                diffPromise,
             ]);
+            let diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> };
+            [this.tasks, diffsAndChanges] = await Promise.all([tasksPromise, diffPromise]);
 
             //File diff data needs to be split up
-            this.fileDiffs = diffsAndChanges.fileDiffs;
             this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
@@ -281,6 +268,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error fetching users'),
+                    });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateReviewersResponse,
                     });
                 }
                 break;
@@ -369,14 +360,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         type: PullRequestDetailsMessageType.UpdateComments,
                         comments: this.pageComments,
                     });
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.PostCommentResponse,
-                    });
                 } catch (e) {
                     this.logger.error(new Error(`error adding comment: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error adding comment'),
+                    });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.PostCommentResponse,
                     });
                 }
                 break;
@@ -394,14 +386,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         type: PullRequestDetailsMessageType.UpdateComments,
                         comments: this.pageComments,
                     });
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.EditCommentResponse,
-                    });
                 } catch (e) {
                     this.logger.error(new Error(`error editing comment: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error editing comment'),
+                    });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.EditCommentResponse,
                     });
                 }
                 break;
@@ -422,6 +415,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error deleting comment'),
                     });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.DeleteCommentResponse,
+                    });
                 }
                 break;
             }
@@ -441,14 +438,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         tasks: this.tasks,
                         comments: this.pageComments,
                     });
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.AddTaskResponse,
-                    });
                 } catch (e) {
                     this.logger.error(new Error(`error adding task: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error adding task'),
+                    });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.AddTaskResponse,
                     });
                 }
                 break;
@@ -468,14 +466,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         tasks: this.tasks,
                         comments: this.pageComments,
                     });
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.EditTaskResponse,
-                    });
                 } catch (e) {
                     this.logger.error(new Error(`error editing task: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error editing task'),
+                    });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.EditTaskResponse,
                     });
                 }
                 break;
@@ -490,14 +489,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         tasks: this.tasks,
                         comments: this.pageComments,
                     });
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.DeleteTaskResponse,
-                    });
                 } catch (e) {
                     this.logger.error(new Error(`error deleting task: ${e}`));
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error deleting task'),
+                    });
+                } finally {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.DeleteTaskResponse,
                     });
                 }
                 break;
@@ -532,31 +532,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         msg.issues
                     );
                     this.pr = { ...this.pr, ...updatedPullRequest };
-
-                    this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(
-                        this.pr,
-                        this.commits,
-                        this.pageComments
-                    );
-                    this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(
-                        this.pr,
-                        this.commits,
-                        this.pageComments
-                    );
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.Init,
-                        pr: this.pr,
-                        commits: this.commits,
-                        comments: this.pageComments,
-                        tasks: this.tasks,
-                        currentUser: await this.getCurrentUser(),
-                        currentBranchName: this.currentBranchName,
-                        fileDiffs: this.fileDiffs,
-                        mergeStrategies: this.mergeStrategies,
-                        buildStatuses: this.buildStatuses,
-                        relatedJiraIssues: this.relatedJiraIssues,
-                        relatedBitbucketIssues: this.relatedBitbucketIssues,
-                    });
+                    this.update();
                 } catch (e) {
                     this.logger.error(new Error(`error merging pull request: ${e}`));
                     this.postMessage({
