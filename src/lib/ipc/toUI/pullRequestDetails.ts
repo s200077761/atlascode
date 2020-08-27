@@ -22,6 +22,7 @@ export enum PullRequestDetailsMessageType {
     Update = 'update',
     FetchUsersResponse = 'fetchUsersResponse',
     PostCommentResponse = 'postCommentResponse',
+    EditCommentResponse = 'editCommentResponse',
     AddTaskResponse = 'addTaskResponse',
     EditTaskResponse = 'editTaskResponse',
     DeleteTaskResponse = 'deleteTaskResponse',
@@ -63,6 +64,7 @@ export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.FetchUsersResponse, FetchUsersResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
     | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.EditCommentResponse, VoidResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.AddTaskResponse, VoidResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.EditTaskResponse, VoidResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.DeleteTaskResponse, VoidResponseMessage>;

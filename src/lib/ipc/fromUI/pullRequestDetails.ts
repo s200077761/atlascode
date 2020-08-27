@@ -21,6 +21,7 @@ export enum PullRequestDetailsActionType {
     UpdateApprovalStatus = 'updateApprovalStatus',
     CheckoutBranch = 'checkoutBranch',
     PostComment = 'postComment',
+    EditComment = 'editComment',
     DeleteComment = 'deleteComment',
     AddTask = 'addTask',
     EditTask = 'editTask',
@@ -38,6 +39,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.UpdateReviewers, UpdateReviewersAction>
     | ReducerAction<PullRequestDetailsActionType.UpdateApprovalStatus, UpdateApprovalStatusAction>
     | ReducerAction<PullRequestDetailsActionType.PostComment, PostCommentAction>
+    | ReducerAction<PullRequestDetailsActionType.EditComment, EditCommentAction>
     | ReducerAction<PullRequestDetailsActionType.DeleteComment, DeleteCommentAction>
     | ReducerAction<PullRequestDetailsActionType.AddTask, AddTaskAction>
     | ReducerAction<PullRequestDetailsActionType.EditTask, EditTaskAction>
@@ -74,6 +76,11 @@ export interface UpdateApprovalStatusAction {
 export interface PostCommentAction {
     rawText: string;
     parentId?: string;
+}
+
+export interface EditCommentAction {
+    rawContent: string;
+    commentId: string;
 }
 
 export interface DeleteCommentAction {

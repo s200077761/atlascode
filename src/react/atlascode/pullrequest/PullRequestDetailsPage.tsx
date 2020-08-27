@@ -151,69 +151,79 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <Grid container spacing={3} direction="column" justify="center">
                     <ErrorDisplay />
 
-                    <Grid item container direction="row" justify={'space-between'}>
-                        <Grid item xs={6} md={6} lg={4} container spacing={2} direction="column" justify="space-evenly">
-                            <Grid item container spacing={2} direction="row" alignItems={'center'}>
-                                <Grid item>
-                                    <Typography variant="body1">Author:</Typography>
+                    <Grid item>
+                        <Grid container direction="row" justify={'space-between'}>
+                            <Grid item>
+                                <Grid container spacing={2} direction="column" justify="space-evenly">
+                                    <Grid item>
+                                        <Grid container spacing={2} direction="row" alignItems={'center'}>
+                                            <Grid item>
+                                                <Typography variant="body1">Author:</Typography>
+                                            </Grid>
+                                            <Grid item>
+                                                <Tooltip title={state.pr.data.author.displayName}>
+                                                    <Avatar
+                                                        alt={state.pr.data.author.displayName}
+                                                        src={state.pr.data.author.avatarUrl}
+                                                    />
+                                                </Tooltip>
+                                            </Grid>
+                                            <Grid item>
+                                                <BranchInfo
+                                                    source={state.pr.data.source}
+                                                    destination={state.pr.data.destination}
+                                                    author={state.pr.data.author}
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
+
+                                    <Grid item>
+                                        <Divider />
+                                    </Grid>
+                                    <Grid item>
+                                        <Grid container spacing={3} direction="row" alignItems={'center'}>
+                                            <Grid item>
+                                                <Typography variant="body1">Reviewers:</Typography>
+                                            </Grid>
+                                            <Grid item>
+                                                <Reviewers
+                                                    site={state.pr.site}
+                                                    participants={state.pr.data.participants}
+                                                    onUpdateReviewers={handleUpdateReviewers}
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
                                 </Grid>
-                                <Grid item>
-                                    <Tooltip title={state.pr.data.author.displayName}>
-                                        <Avatar
-                                            alt={state.pr.data.author.displayName}
-                                            src={state.pr.data.author.avatarUrl}
-                                        />
-                                    </Tooltip>
-                                </Grid>
-                                <Grid item>
-                                    <BranchInfo
-                                        source={state.pr.data.source}
-                                        destination={state.pr.data.destination}
-                                        author={state.pr.data.author}
-                                    />
-                                </Grid>
+                            </Grid>
+
+                            <Grid item>
+                                <Button
+                                    color="primary"
+                                    disabled={state.pr.data.source.branchName === state.currentBranchName}
+                                    onClick={controller.checkoutBranch}
+                                >
+                                    <Typography variant="button" noWrap>
+                                        {state.pr.data.source.branchName === state.currentBranchName
+                                            ? 'Source branch checked out'
+                                            : 'Checkout source branch'}
+                                    </Typography>
+                                </Button>
                             </Grid>
                             <Grid item>
-                                <Divider />
+                                <MergeDialog
+                                    prData={state.pr.data}
+                                    commits={state.commits}
+                                    relatedJiraIssues={state.relatedJiraIssues}
+                                    relatedBitbucketIssues={state.relatedBitbucketIssues}
+                                    mergeStrategies={state.mergeStrategies}
+                                    merge={controller.merge}
+                                />
                             </Grid>
-                            <Grid item container spacing={3} direction="row" alignItems={'center'}>
-                                <Grid item>
-                                    <Typography variant="body1">Reviewers:</Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Reviewers
-                                        site={state.pr.site}
-                                        participants={state.pr.data.participants}
-                                        onUpdateReviewers={handleUpdateReviewers}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Grid>
-
-                        <Grid item>
-                            <Button
-                                color="primary"
-                                disabled={state.pr.data.source.branchName === state.currentBranchName}
-                                onClick={controller.checkoutBranch}
-                            >
-                                <Typography variant="button" noWrap>
-                                    {state.pr.data.source.branchName === state.currentBranchName
-                                        ? 'Source branch checked out'
-                                        : 'Checkout source branch'}
-                                </Typography>
-                            </Button>
-                        </Grid>
-                        <Grid item>
-                            <MergeDialog
-                                prData={state.pr.data}
-                                commits={state.commits}
-                                relatedJiraIssues={state.relatedJiraIssues}
-                                relatedBitbucketIssues={state.relatedBitbucketIssues}
-                                mergeStrategies={state.mergeStrategies}
-                                merge={controller.merge}
-                            />
                         </Grid>
                     </Grid>
+
                     <Grid item>
                         <SummaryPanel
                             rawSummary={state.pr.data.rawSummary}

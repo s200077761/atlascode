@@ -332,6 +332,31 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 break;
             }
 
+            case PullRequestDetailsActionType.EditComment: {
+                try {
+                    this.pageComments = await this.api.editComment(
+                        this.pageComments,
+                        this.pr,
+                        msg.rawContent,
+                        msg.commentId
+                    );
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateComments,
+                        comments: this.pageComments,
+                    });
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.EditCommentResponse,
+                    });
+                } catch (e) {
+                    this.logger.error(new Error(`error editing comment: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error editing comment'),
+                    });
+                }
+                break;
+            }
+
             case PullRequestDetailsActionType.DeleteComment: {
                 try {
                     const allComments = await this.api.deleteComment(this.pr, msg.comment);

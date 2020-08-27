@@ -10,9 +10,11 @@ type CommentTaskListProps = {
 };
 export const CommentTaskList: React.FunctionComponent<CommentTaskListProps> = ({ tasks, onEdit, onDelete }) => {
     return (
-        <Grid item container spacing={1} direction="column" justify="center">
+        <Grid container spacing={1} direction="column" justify="center">
             {tasks.map((task) => (
-                <CommentTask key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
+                <Grid key={task.id} item>
+                    <CommentTask task={task} onEdit={onEdit} onDelete={onDelete} />
+                </Grid>
             ))}
         </Grid>
     );
