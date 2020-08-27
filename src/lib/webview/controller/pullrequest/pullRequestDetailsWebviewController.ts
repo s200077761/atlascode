@@ -99,6 +99,15 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 return;
             }
             this.isRefreshing = true;
+
+            /* The page state is loaded in chunks (comments, commits, tasks, etc).
+             * Some of these chunks rely on others (e.g. tasks rely on comments), but others do not.
+             * Therefore, we can break the data-gathering process into parts. Many of these parts can
+             * be ran concurrently with promises, and then only data that relies on this new data
+             * needs to wait. The hope is to shave significant time off the PR load processes.
+             */
+
+            //Gather some basic data about the PR to use in future calls
             this.pr = await this.api.getPR(this.pr);
             this.postMessage({
                 ...emptyPullRequestDetailsInitMessage,
@@ -111,65 +120,106 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 fileDiffs: [],
             });
 
-            //TODO: run these promises concurrently
-            //TODO: order matters! Try to optimize these calls later
-            this.commits = await this.api.updateCommits(this.pr);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateCommits,
-                commits: this.commits,
+            //Launch several independent, async processes
+            //Comments, commits, build statuses, and merge strategies
+            const allCommentsPromise = this.api.getComments(this.pr).then((allComments: Comment[]) => {
+                const [pageComments, inlineComments] = this.splitComments(allComments);
+                this.postMessage({
+                    type: PullRequestDetailsMessageType.UpdateComments,
+                    comments: pageComments,
+                });
+                return [pageComments, inlineComments];
             });
+            const commitPromise = this.api.updateCommits(this.pr).then((commits: Commit[]) => {
+                this.postMessage({
+                    type: PullRequestDetailsMessageType.UpdateCommits,
+                    commits: commits,
+                });
+                return commits;
+            });
+            const buildStatusPromise = this.api.updateBuildStatuses(this.pr).then((buildStatuses: BuildStatus[]) => {
+                this.postMessage({
+                    type: PullRequestDetailsMessageType.UpdateBuildStatuses,
+                    buildStatuses: buildStatuses,
+                });
+                return buildStatuses;
+            });
+            const mergeStrategiesPromise = this.api
+                .updateMergeStrategies(this.pr)
+                .then((mergeStrategies: MergeStrategy[]) => {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateMergeStrategies,
+                        mergeStrategies: mergeStrategies,
+                    });
+                    return mergeStrategies;
+                });
 
-            this.buildStatuses = await this.api.updateBuildStatuses(this.pr);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateBuildStatuses,
-                buildStatuses: this.buildStatuses,
-            });
-
-            this.mergeStrategies = await this.api.updateMergeStrategies(this.pr);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateMergeStrategies,
-                mergeStrategies: this.mergeStrategies,
-            });
-
-            const allComments = await this.api.getComments(this.pr);
-            [this.pageComments, this.inlineComments] = this.splitComments(allComments);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateComments,
-                comments: this.pageComments,
-            });
+            //We wait for the comment promise because tasks require them
+            //Diffs technically do not, but diffs don't know which comment belong to which file
+            //until comment data is returned, so better to wait on diffs until comments are done.
+            [this.pageComments, this.inlineComments] = await allCommentsPromise;
 
             //TODO: This should actually return comments too because it should assign comments
             //their corresponding tasks
-            this.tasks = await this.api.getTasks(this.pr);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateTasks,
-                comments: this.pageComments,
-                tasks: this.tasks,
+            const tasksPromise = this.api.getTasks(this.pr).then((tasks: Task[]) => {
+                this.postMessage({
+                    type: PullRequestDetailsMessageType.UpdateTasks,
+                    comments: this.pageComments, //TODO: This should be a function and comments should be an argument
+                    tasks: tasks,
+                });
+                return tasks;
             });
+            const diffPromise = this.api
+                .getFileDiffs(this.pr)
+                .then((diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }) => {
+                    const fileDiffs = diffsAndChanges.fileDiffs;
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateFileDiffs,
+                        fileDiffs: fileDiffs,
+                    });
+                    return diffsAndChanges;
+                });
 
-            const diffsAndChanges = await this.api.getFileDiffs(this.pr);
-            this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
+            //In order to get related issues, we need comments and commits. We already have comments,
+            //so now we wait for commits. These two promises can be launched concurrently.
+            this.commits = await commitPromise;
+            const relatedJiraIssuesPromise = this.api
+                .fetchRelatedJiraIssues(this.pr, this.commits, this.pageComments)
+                .then((relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[]) => {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateRelatedJiraIssues,
+                        relatedIssues: relatedJiraIssues,
+                    });
+                    return relatedJiraIssues;
+                });
+
+            const relatedBitbucketIssuesPromise = this.api
+                .fetchRelatedBitbucketIssues(this.pr, this.commits, this.pageComments)
+                .then((relatedBitbucketIssues: BitbucketIssue[]) => {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
+                        relatedIssues: relatedBitbucketIssues,
+                    });
+                    return relatedBitbucketIssues;
+                });
+
+            //Now we wait for all remaining promises in 2 batches. The reason for this is that some of
+            //these promises are older than others, meaning they're more likely to have finished.
+            [this.buildStatuses, this.mergeStrategies] = await Promise.all([
+                buildStatusPromise,
+                mergeStrategiesPromise,
+            ]);
+            let diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> };
+            [this.relatedJiraIssues, this.relatedBitbucketIssues, this.tasks, diffsAndChanges] = await Promise.all([
+                relatedJiraIssuesPromise,
+                relatedBitbucketIssuesPromise,
+                tasksPromise,
+                diffPromise,
+            ]);
+
+            //File diff data needs to be split up
             this.fileDiffs = diffsAndChanges.fileDiffs;
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateFileDiffs,
-                fileDiffs: this.fileDiffs,
-            });
-
-            this.relatedJiraIssues = await this.api.fetchRelatedJiraIssues(this.pr, this.commits, this.pageComments);
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateRelatedJiraIssues,
-                relatedIssues: this.relatedJiraIssues,
-            });
-
-            this.relatedBitbucketIssues = await this.api.fetchRelatedBitbucketIssues(
-                this.pr,
-                this.commits,
-                this.pageComments
-            );
-            this.postMessage({
-                type: PullRequestDetailsMessageType.UpdateRelatedBitbucketIssues,
-                relatedIssues: this.relatedBitbucketIssues,
-            });
+            this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
             this.logger.error(err);
