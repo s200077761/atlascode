@@ -70,7 +70,10 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             const pr = await client.pullrequests.getById(site, parseInt(prId));
 
             const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
-            Container.pullRequestViewManager.createOrShow({ ...pr, workspaceRepo: wsRepo });
+            Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, {
+                ...pr,
+                workspaceRepo: wsRepo,
+            });
             this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'pullRequest');
         } catch (e) {
             Logger.debug('error opening pull request:', e);
