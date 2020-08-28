@@ -26,7 +26,7 @@ export const useCodeEntryDialog = () => {
     }, []);
 
     const codeEntryDialogController = useMemo(() => {
-        return { close, openDialog };
+        return { close: close, openDialog };
     }, [close, openDialog]);
 
     return {

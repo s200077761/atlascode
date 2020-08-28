@@ -1,4 +1,5 @@
 import { Box, Button, Grid, Typography } from '@material-ui/core';
+import CloudIcon from '@material-ui/icons/Cloud';
 import DomainIcon from '@material-ui/icons/Domain';
 import React, { memo, useCallback, useContext } from 'react';
 import { Product } from '../../../../atlclients/authInfo';
@@ -66,14 +67,12 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                                             {`Add Custom ${product.name} Site`}
                                         </Button>
                                     </Grid>
-                                    {useNewAuth ? (
+                                    {useNewAuth && (
                                         <Grid item>
-                                            <Button color="primary" startIcon={<DomainIcon />} onClick={openCodeDialog}>
+                                            <Button color="primary" startIcon={<CloudIcon />} onClick={openCodeDialog}>
                                                 {`Manually Add ${product.name} Code`}
                                             </Button>
                                         </Grid>
-                                    ) : (
-                                        <div />
                                     )}
                                 </Grid>
                             </Grid>

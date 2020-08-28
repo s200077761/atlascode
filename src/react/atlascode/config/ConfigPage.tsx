@@ -325,7 +325,6 @@ const ConfigPage: React.FunctionComponent = () => {
                         doClose={codeEntryDialogController.close}
                         open={codeEntryDialogOpen}
                         save={controller.saveCode}
-                        onExited={() => {}}
                     />
                 </CodeEntryDialogControllerContext.Provider>
             </AuthDialogControllerContext.Provider>
