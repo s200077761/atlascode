@@ -64,7 +64,7 @@ export const CodeEntryDialog: React.FunctionComponent<CodeEntryDialogProps> = me
                 <DialogContent>
                     <DialogContentText>
                         {`Add ${product.name} Site`} - If your sites were not automatically added after being redirected
-                        you can manually past the access code here.
+                        you can manually paste the access code here.
                     </DialogContentText>
                     <Grid container direction="column" spacing={2}>
                         <Grid item>
