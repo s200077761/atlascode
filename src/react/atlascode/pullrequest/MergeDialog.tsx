@@ -3,6 +3,7 @@ import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -43,6 +44,13 @@ type MergeDialogProps = {
     relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
     relatedBitbucketIssues: BitbucketIssue[];
     mergeStrategies: MergeStrategy[];
+    loadState: {
+        basicData: boolean;
+        commits: boolean;
+        mergeStrategies: boolean;
+        relatedJiraIssues: boolean;
+        relatedBitbucketIssues: boolean;
+    };
     merge: (
         mergeStrategy: MergeStrategy,
         commitMessage: string,
@@ -57,6 +65,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     relatedJiraIssues,
     relatedBitbucketIssues,
     mergeStrategies,
+    loadState,
     merge,
 }) => {
     const classes = useStyles();
@@ -236,11 +245,22 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
 
     return (
         <Box>
-            <Button color={'primary'} onClick={handleOpen} disabled={prData.state !== 'OPEN' || isMerging}>
-                <Typography variant={'button'} noWrap>
-                    {prData.state === 'OPEN' ? 'Merge' : 'Merged'}
-                </Typography>
-            </Button>
+            <Box hidden={loadState.basicData}>
+                <Button
+                    color={'primary'}
+                    variant={'contained'}
+                    onClick={handleOpen}
+                    disabled={prData.state !== 'OPEN' || isMerging}
+                >
+                    <Typography variant={'button'} noWrap>
+                        {prData.state === 'OPEN' ? 'Merge' : 'Merged'}
+                    </Typography>
+                </Button>
+            </Box>
+            <Box hidden={!loadState.basicData}>
+                <CircularProgress />
+            </Box>
+
             <Dialog
                 open={dialogOpen}
                 onClose={handleClose}
@@ -256,71 +276,88 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
                     <Box marginTop={5} />
                     <Grid container spacing={1} direction="column" alignItems="stretch">
                         <Grid item>
-                            <TextField
-                                select
-                                value={mergeStrategy}
-                                onChange={handleMergeStrategyChange}
-                                fullWidth
-                                size="small"
-                                label="Merge Strategy"
-                            >
-                                <MenuItem
-                                    key={emptyMergeStrategy.label}
-                                    //@ts-ignore
-                                    value={emptyMergeStrategy}
-                                    disabled
+                            <Box hidden={loadState.mergeStrategies}>
+                                <TextField
+                                    select
+                                    value={mergeStrategy}
+                                    onChange={handleMergeStrategyChange}
+                                    fullWidth
+                                    size="small"
+                                    label="Merge Strategy"
                                 >
-                                    Select a merge strategy
-                                </MenuItem>
-                                {mergeStrategies.map((strategy) => (
-                                    //@ts-ignore
-                                    <MenuItem key={strategy.label} value={strategy}>
-                                        {strategy.label}
+                                    <MenuItem
+                                        key={emptyMergeStrategy.label}
+                                        //@ts-ignore
+                                        value={emptyMergeStrategy}
+                                        disabled
+                                    >
+                                        Select a merge strategy
                                     </MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item>
-                            <InlineTextEditor
-                                fullWidth
-                                multiline
-                                rows={5}
-                                defaultValue={commitMessage}
-                                onSave={handleCommitMessageChange}
-                                placeholder={'Enter commit message'}
-                                saveDisabled={isEmptyCommitMessage}
-                                label={'Commit Message'}
-                            />
-                        </Grid>
-                        <Grid item>
-                            <Box
-                                marginTop={3}
-                                hidden={!(transitionedJiraIssues.length > 0 || transitionedBitbucketIssues.length > 0)}
-                            >
-                                <Typography variant="h5">Transition issues</Typography>
+                                    {mergeStrategies.map((strategy) => (
+                                        //@ts-ignore
+                                        <MenuItem key={strategy.label} value={strategy}>
+                                            {strategy.label}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
                             </Box>
-                            <TableContainer>
-                                <Table size="small" aria-label="issues to transition">
-                                    <TableBody className={classes.table}>
-                                        {transitionedJiraIssues.map((issue) => (
-                                            <JiraTransitionMenu
-                                                issue={issue}
-                                                handleIssueTransition={handleJiraIssueTransition}
-                                                onShouldTransitionChange={handleShouldTransitionChangeJira}
-                                                key={issue.key}
-                                            />
-                                        ))}
-                                        {transitionedBitbucketIssues.map((issue) => (
-                                            <BitbucketTransitionMenu
-                                                issue={issue}
-                                                handleIssueTransition={handleBitbucketIssueTransition}
-                                                onShouldTransitionChange={handleShouldTransitionChangeBitbucket}
-                                                key={issue.data.id}
-                                            />
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                            <Box hidden={!loadState.mergeStrategies}>
+                                <CircularProgress />
+                            </Box>
+                        </Grid>
+                        <Grid item>
+                            <Box hidden={!loadState.commits}>
+                                <CircularProgress />
+                            </Box>
+                            <Box hidden={loadState.commits}>
+                                <InlineTextEditor
+                                    fullWidth
+                                    multiline
+                                    rows={5}
+                                    defaultValue={commitMessage}
+                                    onSave={handleCommitMessageChange}
+                                    placeholder={'Enter commit message'}
+                                    saveDisabled={isEmptyCommitMessage}
+                                    label={'Commit Message'}
+                                />
+                            </Box>
+                        </Grid>
+                        <Grid item>
+                            <Box hidden={!loadState.relatedJiraIssues && !loadState.relatedBitbucketIssues}>
+                                <CircularProgress />
+                            </Box>
+                            <Box hidden={loadState.relatedJiraIssues || loadState.relatedBitbucketIssues}>
+                                <Box
+                                    marginTop={3}
+                                    hidden={
+                                        !(transitionedJiraIssues.length > 0 || transitionedBitbucketIssues.length > 0)
+                                    }
+                                >
+                                    <Typography variant="h5">Transition issues</Typography>
+                                </Box>
+                                <TableContainer>
+                                    <Table size="small" aria-label="issues to transition">
+                                        <TableBody className={classes.table}>
+                                            {transitionedJiraIssues.map((issue) => (
+                                                <JiraTransitionMenu
+                                                    issue={issue}
+                                                    handleIssueTransition={handleJiraIssueTransition}
+                                                    onShouldTransitionChange={handleShouldTransitionChangeJira}
+                                                    key={issue.key}
+                                                />
+                                            ))}
+                                            {transitionedBitbucketIssues.map((issue) => (
+                                                <BitbucketTransitionMenu
+                                                    issue={issue}
+                                                    handleIssueTransition={handleBitbucketIssueTransition}
+                                                    onShouldTransitionChange={handleShouldTransitionChangeBitbucket}
+                                                    key={issue.data.id}
+                                                />
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </Box>
                         </Grid>
                         <Grid item>
                             <ToggleWithLabel

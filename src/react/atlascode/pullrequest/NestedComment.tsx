@@ -1,6 +1,6 @@
-import { Avatar, Box, Button, Grid, Typography } from '@material-ui/core';
+import { Avatar, Box, Button, CircularProgress, Grid, Typography } from '@material-ui/core';
 import { format } from 'date-fns';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Comment, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
 import { CommentTaskList } from './CommentTaskList';
@@ -11,12 +11,13 @@ import { TaskAdder } from './TaskAdder';
 type NestedCommentProps = {
     comment: Comment;
     currentUser: User;
-    onDelete: (comment: Comment) => void;
+    onDelete: (comment: Comment) => Promise<void>;
 };
 export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ comment, currentUser, onDelete }) => {
     const [isReplying, setIsReplying] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const controller = useContext(PullRequestDetailsControllerContext);
 
     const handleReplyPressed = useCallback(() => {
@@ -53,7 +54,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
 
     const handleEdit = useCallback(
         async (content: string) => {
-            controller.editComment(content, comment.id);
+            await controller.editComment(content, comment.id);
             setIsEditing(false);
         },
         [controller, comment.id]
@@ -67,13 +68,18 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
         setIsReplying(false);
     }, []);
 
-    const handleDelete = useCallback(() => {
-        onDelete(comment);
+    const handleDelete = useCallback(async () => {
+        setIsLoading(true);
+        await onDelete(comment);
     }, [comment, onDelete]);
+
+    useEffect(() => {
+        setIsLoading(false);
+    }, [comment]);
 
     return (
         <React.Fragment>
-            {!isEditing && (
+            <Box hidden={isEditing}>
                 <Grid container spacing={1} direction="row" alignItems="flex-start">
                     <Grid item>
                         <Avatar src={comment.user.avatarUrl} alt={comment.user.displayName} />
@@ -88,7 +94,12 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
                                 </Typography>
                             </Grid>
 
-                            <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
+                            <Box hidden={!isLoading}>
+                                <CircularProgress />
+                            </Box>
+                            <Box hidden={isLoading}>
+                                <Typography dangerouslySetInnerHTML={{ __html: comment.htmlContent }} />
+                            </Box>
                             <Grid item>
                                 <Grid container direction={'row'}>
                                     <Grid item>
@@ -122,8 +133,8 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
                         </Grid>
                     </Grid>
                 </Grid>
-            )}
-            {isEditing && (
+            </Box>
+            <Box hidden={!isEditing}>
                 <Grid item>
                     <CommentForm
                         initialContent={comment.rawContent}
@@ -132,31 +143,31 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
                         onCancel={handleCancelEdit}
                     />
                 </Grid>
-            )}
-            {isCreatingTask && (
+            </Box>
+            <Box hidden={!isCreatingTask}>
                 <Grid item>
                     <TaskAdder handleCancel={handleCancelTask} addTask={handleAddTask} />
                 </Grid>
-            )}
+            </Box>
 
             <Grid item>
                 <CommentTaskList tasks={comment.tasks} onEdit={controller.editTask} onDelete={controller.deleteTask} />
             </Grid>
-            {isReplying && (
+            <Box hidden={!isReplying}>
                 <Grid item>
                     <Box marginLeft={5}>
                         <CommentForm currentUser={currentUser} onSave={handleSave} onCancel={handleCancel} />
                     </Box>
                 </Grid>
-            )}
+            </Box>
 
-            {comment.children.length > 0 && (
+            <Box hidden={comment.children.length === 0}>
                 <Grid item>
                     <Box marginLeft={5}>
                         <NestedCommentList comments={comment.children} currentUser={currentUser} onDelete={onDelete} />
                     </Box>
                 </Grid>
-            )}
+            </Box>
         </React.Fragment>
     );
 };

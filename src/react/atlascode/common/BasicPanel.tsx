@@ -1,4 +1,4 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
+import { Box, CircularProgress, ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
 import { PanelTitle } from '../common/PanelTitle';
@@ -7,10 +7,12 @@ type BasicPanelProps = {
     title: string;
     subtitle?: string;
     isDefaultExpanded?: boolean;
+    hideCondition?: boolean;
+    isLoading: boolean;
 };
 
 export const BasicPanel: React.FunctionComponent<BasicPanelProps> = memo(
-    ({ title, subtitle, isDefaultExpanded, children }) => {
+    ({ title, subtitle, isDefaultExpanded, isLoading, hideCondition, children }) => {
         const [internalExpanded, setInternalExpanded] = useState<boolean>(!!isDefaultExpanded);
 
         const expansionHandler = useCallback((event: React.ChangeEvent<{}>, expanded: boolean) => {
@@ -18,13 +20,15 @@ export const BasicPanel: React.FunctionComponent<BasicPanelProps> = memo(
         }, []);
 
         return (
-            <ExpansionPanel square={false} expanded={internalExpanded} onChange={expansionHandler}>
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                    <PanelTitle>{title}</PanelTitle>
-                    <PanelSubtitle>{subtitle ?? ''}</PanelSubtitle>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>{children}</ExpansionPanelDetails>
-            </ExpansionPanel>
+            <Box hidden={!isLoading && hideCondition}>
+                <ExpansionPanel square={false} expanded={internalExpanded} onChange={expansionHandler}>
+                    <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                        <PanelTitle>{title}</PanelTitle>
+                        <PanelSubtitle>{subtitle ?? ''}</PanelSubtitle>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails>{isLoading ? <CircularProgress /> : children}</ExpansionPanelDetails>
+                </ExpansionPanel>
+            </Box>
         );
     }
 );

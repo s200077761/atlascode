@@ -46,12 +46,12 @@ export interface PullRequestDetailsControllerApi {
     fetchUsers: (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => Promise<User[]>;
     updateSummary: (text: string) => void;
     updateTitle: (text: string) => void;
-    updateReviewers: (newReviewers: User[]) => void;
+    updateReviewers: (newReviewers: User[]) => Promise<void>;
     updateApprovalStatus: (status: ApprovalStatus) => void;
     checkoutBranch: () => void;
     postComment: (rawText: string, parentId?: string) => Promise<void>;
     editComment: (rawContent: string, commentId: string) => Promise<void>;
-    deleteComment: (comment: Comment) => void;
+    deleteComment: (comment: Comment) => Promise<void>;
     addTask: (content: string, parentId?: string) => Promise<void>;
     editTask: (task: Task) => Promise<void>;
     deleteTask: (task: Task) => Promise<void>;
@@ -79,12 +79,12 @@ export const emptyApi: PullRequestDetailsControllerApi = {
         return;
     },
     updateTitle: async (text: string) => {},
-    updateReviewers: (newReviewers: User[]) => {},
+    updateReviewers: async (newReviewers: User[]) => {},
     updateApprovalStatus: (status: ApprovalStatus) => {},
     checkoutBranch: () => {},
     postComment: async (rawText: string, parentId?: string) => {},
     editComment: async (rawContent: string, commentId: string) => {},
-    deleteComment: (comment: Comment) => {},
+    deleteComment: async (comment: Comment) => {},
     addTask: async (content: string, parentId?: string) => {},
     editTask: async (task: Task) => {},
     deleteTask: async (task: Task) => {},
@@ -102,13 +102,10 @@ export const emptyApi: PullRequestDetailsControllerApi = {
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
 
-export interface PullRequestDetailsState extends PullRequestDetailsInitMessage {
-    isSomethingLoading: boolean;
-}
+export interface PullRequestDetailsState extends PullRequestDetailsInitMessage {}
 
 const emptyState: PullRequestDetailsState = {
     ...emptyPullRequestDetailsInitMessage,
-    isSomethingLoading: false,
 };
 
 export enum PullRequestDetailsUIActionType {
@@ -169,7 +166,7 @@ function pullRequestDetailsReducer(
             const newstate = {
                 ...state,
                 ...action.data,
-                isSomethingLoading: false,
+                loadState: { ...action.data.loadState, basicData: false },
                 isErrorBannerOpen: false,
                 errorDetails: undefined,
             };
@@ -189,21 +186,18 @@ function pullRequestDetailsReducer(
                         rawSummary: action.data.rawSummary,
                     },
                 },
-                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.UpdateTitle: {
             return {
                 ...state,
                 pr: { ...state.pr, data: { ...state.pr.data, title: action.data.title } },
-                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.UpdateReviewers: {
             return {
                 ...state,
                 pr: { ...state.pr, data: { ...state.pr.data, participants: action.data.reviewers } },
-                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.UpdateApprovalStatus: {
@@ -220,42 +214,54 @@ function pullRequestDetailsReducer(
             return {
                 ...state,
                 pr: { ...state.pr, data: { ...state.pr.data, participants: updatedParticipants } },
-                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.CheckoutBranch: {
             return {
                 ...state,
                 currentBranchName: action.data.branchName,
-                isSomethingLoading: false,
             };
         }
         case PullRequestDetailsUIActionType.UpdateCommits: {
-            return { ...state, commits: action.data.commits, isSomethingLoading: false };
+            return { ...state, commits: action.data.commits, loadState: { ...state.loadState, commits: false } };
         }
         case PullRequestDetailsUIActionType.UpdateComments: {
-            return { ...state, comments: action.data.comments, isSomethingLoading: false };
+            return { ...state, comments: action.data.comments, loadState: { ...state.loadState, comments: false } };
         }
         case PullRequestDetailsUIActionType.UpdateTasks: {
-            return { ...state, comments: action.data.comments, tasks: action.data.tasks, isSomethingLoading: false };
-        }
-        case PullRequestDetailsUIActionType.UpdateCommits: {
-            return { ...state, commits: action.data.commits };
+            return {
+                ...state,
+                comments: action.data.comments,
+                tasks: action.data.tasks,
+                loadState: { ...state.loadState, tasks: false },
+            };
         }
         case PullRequestDetailsUIActionType.UpdateFileDiffs: {
-            return { ...state, fileDiffs: action.data.fileDiffs };
+            return { ...state, fileDiffs: action.data.fileDiffs, loadState: { ...state.loadState, diffs: false } };
         }
         case PullRequestDetailsUIActionType.UpdateBuildStatuses: {
             return { ...state, buildStatuses: action.data.buildStatuses };
         }
         case PullRequestDetailsUIActionType.UpdateMergeStrategies: {
-            return { ...state, mergeStrategies: action.data.mergeStrategies };
+            return {
+                ...state,
+                mergeStrategies: action.data.mergeStrategies,
+                loadState: { ...state.loadState, mergeStrategies: false },
+            };
         }
         case PullRequestDetailsUIActionType.UpdateRelatedJiraIssues: {
-            return { ...state, relatedJiraIssues: action.data.relatedIssues };
+            return {
+                ...state,
+                relatedJiraIssues: action.data.relatedIssues,
+                loadState: { ...state.loadState, relatedJiraIssues: false },
+            };
         }
         case PullRequestDetailsUIActionType.UpdateRelatedBitbucketIssues: {
-            return { ...state, relatedBitbucketIssues: action.data.relatedIssues };
+            return {
+                ...state,
+                relatedBitbucketIssues: action.data.relatedIssues,
+                loadState: { ...state.loadState, relatedBitbucketIssues: false },
+            };
         }
         default:
             return defaultStateGuard(state, action);
@@ -400,11 +406,26 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     );
 
     const updateReviewers = useCallback(
-        (newReviewers: User[]) => {
-            dispatch({ type: PullRequestDetailsUIActionType.Loading });
-            postMessage({ type: PullRequestDetailsActionType.UpdateReviewers, reviewers: newReviewers });
+        (newReviewers: User[]): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.UpdateReviewers,
+                                reviewers: newReviewers,
+                            },
+                            PullRequestDetailsMessageType.UpdateReviewersResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
         },
-        [postMessage]
+        [postMessagePromise]
     );
 
     const updateApprovalStatus = useCallback(
@@ -469,11 +490,26 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     );
 
     const deleteComment = useCallback(
-        (comment: Comment) => {
-            dispatch({ type: PullRequestDetailsUIActionType.Loading });
-            postMessage({ type: PullRequestDetailsActionType.DeleteComment, comment: comment });
+        (comment: Comment): Promise<void> => {
+            return new Promise<void>((resolve, reject) => {
+                (async () => {
+                    try {
+                        await postMessagePromise(
+                            {
+                                type: PullRequestDetailsActionType.DeleteComment,
+                                comment: comment,
+                            },
+                            PullRequestDetailsMessageType.DeleteCommentResponse,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                })();
+            });
         },
-        [postMessage]
+        [postMessagePromise]
     );
 
     const addTask = useCallback(

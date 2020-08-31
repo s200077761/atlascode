@@ -1,5 +1,4 @@
 import { Box, Button, Typography } from '@material-ui/core';
-import BuildIcon from '@material-ui/icons/Build';
 import React, { useCallback } from 'react';
 import { ApprovalStatus } from '../../../bitbucket/model';
 
@@ -16,11 +15,7 @@ export const NeedsWorkButton: React.FunctionComponent<NeedsWorkButtonProps> = ({
 
     return (
         <Box hidden={hidden}>
-            <Button
-                color={'primary'}
-                onClick={handleOnApprove}
-                startIcon={<BuildIcon htmlColor={status === 'NEEDS_WORK' ? '#FFCC00' : 'gray'} />}
-            >
+            <Button color={'primary'} variant={'contained'} onClick={handleOnApprove}>
                 <Typography variant={'button'} noWrap>
                     {status === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}
                 </Typography>
