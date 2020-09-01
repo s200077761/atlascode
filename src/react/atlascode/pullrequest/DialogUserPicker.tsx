@@ -36,7 +36,7 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
     const debouncedUserFetcher = useConstant(() =>
         AwesomeDebouncePromise(
             async (site: BitbucketSite, query: string, abortSignal?: AbortSignal): Promise<User[]> => {
-                return await controller.fetchUsers(site, query /*, abortSignal */);
+                return await controller.fetchUsers(site, query, abortSignal);
             },
             300,
             { leading: false }

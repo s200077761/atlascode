@@ -62,17 +62,13 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const [state, controller] = usePullRequestDetailsController();
     const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
 
-    const handleFetchUsers = async (input: string, abortSignal?: AbortSignal): Promise<any> => {
-        AwesomeDebouncePromise(
-            async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
-                //TODO: Fix this this
-                //return await controller.fetchUsers(input, abortSignal);
-                return [];
-            },
-            300,
-            { leading: false }
-        );
-    };
+    const handleFetchUsers = AwesomeDebouncePromise(
+        async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
+            return await controller.fetchUsers(state.pr.site, input, abortSignal);
+        },
+        300,
+        { leading: false }
+    );
 
     const isSomethingLoading = useCallback(() => {
         for (const [, value] of Object.entries(state.loadState)) {
@@ -215,12 +211,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     <NestedCommentList
                                                         comments={state.comments}
                                                         currentUser={state.currentUser}
+                                                        fetchUsers={handleFetchUsers}
                                                         onDelete={controller.deleteComment}
                                                     />
                                                 </Grid>
                                                 <Grid item>
                                                     <CommentForm
                                                         currentUser={state.currentUser}
+                                                        fetchUsers={handleFetchUsers}
                                                         onSave={controller.postComment}
                                                     />
                                                 </Grid>
@@ -338,7 +336,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                     </Grid>
                                     <Grid item>
                                         <BasicPanel
-                                            /*isLoading={state.loadState.buildStatuses}*/ isLoading={false}
+                                            isLoading={state.loadState.buildStatuses}
                                             isDefaultExpanded
                                             hideCondition={state.buildStatuses.length === 0}
                                             title={`${
