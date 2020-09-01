@@ -1,4 +1,4 @@
-import { Button, Grid } from '@material-ui/core';
+import { Button, Grid, Typography } from '@material-ui/core';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import ScheduleIcon from '@material-ui/icons/Schedule';
@@ -29,7 +29,7 @@ export const PRBuildStatus: React.FunctionComponent<PRBuildStatusProps> = ({ bui
                                 : errorIcon
                         }
                     >
-                        {status.name}
+                        <Typography variant={'button'}>{status.name}</Typography>
                     </Button>
                 </Grid>
             ))}

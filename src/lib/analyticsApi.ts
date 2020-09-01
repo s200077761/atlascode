@@ -21,6 +21,7 @@ export interface AnalyticsApi {
     fireBBIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void>;
     firePrCreatedEvent(site: DetailedSiteInfo): Promise<void>;
     firePrCommentEvent(site: DetailedSiteInfo): Promise<void>;
+    firePrTaskEvent(site: DetailedSiteInfo, commentId?: string): Promise<void>;
     firePrCheckoutEvent(site: DetailedSiteInfo): Promise<void>;
     firePrApproveEvent(site: DetailedSiteInfo): Promise<void>;
     firePrMergeEvent(site: DetailedSiteInfo): Promise<void>;

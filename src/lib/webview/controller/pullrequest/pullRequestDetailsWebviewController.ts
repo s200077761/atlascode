@@ -314,6 +314,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
 
             case PullRequestDetailsActionType.UpdateApprovalStatus: {
                 try {
+                    this.analytics.firePrApproveEvent(this.pr.site.details);
                     const status: ApprovalStatus = await this.api.updateApprovalStatus(this.pr, msg.status);
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateApprovalStatus,
@@ -424,6 +425,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             }
             case PullRequestDetailsActionType.AddTask: {
                 try {
+                    this.analytics.firePrTaskEvent(this.pr.site.details, msg.commentId);
                     const { tasks, comments } = await this.api.createTask(
                         this.tasks,
                         [...this.pageComments, ...this.inlineComments],
