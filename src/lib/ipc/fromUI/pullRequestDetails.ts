@@ -5,6 +5,7 @@ import {
     ApprovalStatus,
     BitbucketIssue,
     BitbucketSite,
+    BuildStatus,
     Comment,
     FileDiff,
     MergeStrategy,
@@ -30,6 +31,7 @@ export enum PullRequestDetailsActionType {
     Merge = 'merge',
     OpenJiraIssue = 'openJiraIssue',
     OpenBitbucketIssue = 'openBitbucketIssue',
+    OpenBuildStatus = 'openBuildStatus',
 }
 
 export type PullRequestDetailsAction =
@@ -49,6 +51,7 @@ export type PullRequestDetailsAction =
     | ReducerAction<PullRequestDetailsActionType.Merge, MergeAction>
     | ReducerAction<PullRequestDetailsActionType.OpenJiraIssue, OpenJiraIssueAction>
     | ReducerAction<PullRequestDetailsActionType.OpenBitbucketIssue, OpenBitbucketIssueAction>
+    | ReducerAction<PullRequestDetailsActionType.OpenBuildStatus, OpenBuildStatusAction>
     | CommonAction;
 
 export interface FetchUsersRequestAction {
@@ -117,4 +120,8 @@ export interface OpenJiraIssueAction {
 
 export interface OpenBitbucketIssueAction {
     issue: BitbucketIssue;
+}
+
+export interface OpenBuildStatusAction {
+    buildStatus: BuildStatus;
 }

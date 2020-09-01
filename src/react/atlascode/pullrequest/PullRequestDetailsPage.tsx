@@ -25,6 +25,7 @@ import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
+import { PRBuildStatus } from './BuildStatus';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { InlineTextEditorWrapper } from './InlineTextEditorWrapper';
@@ -331,6 +332,27 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 />
                                             </Grid>
                                         </Grid>
+                                    </Grid>
+                                    <Grid item>
+                                        <Divider />
+                                    </Grid>
+                                    <Grid item>
+                                        <BasicPanel
+                                            /*isLoading={state.loadState.buildStatuses}*/ isLoading={false}
+                                            isDefaultExpanded
+                                            hideCondition={state.buildStatuses.length === 0}
+                                            title={`${
+                                                state.buildStatuses.filter((status) => status.state === 'SUCCESSFUL')
+                                                    .length
+                                            } of ${state.buildStatuses.length} build${
+                                                state.buildStatuses.length > 0 ? 's' : ''
+                                            } passed`}
+                                        >
+                                            <PRBuildStatus
+                                                buildStatuses={state.buildStatuses}
+                                                openBuildStatus={controller.openBuildStatus}
+                                            />
+                                        </BasicPanel>
                                     </Grid>
                                     <Grid item>
                                         <Divider />

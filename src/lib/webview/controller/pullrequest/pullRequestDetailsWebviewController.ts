@@ -564,6 +564,18 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
 
+            case PullRequestDetailsActionType.OpenBuildStatus:
+                try {
+                    await this.api.openBuildStatus(this.pr, msg.buildStatus);
+                } catch (e) {
+                    this.logger.error(new Error(`error opening build status: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening build status'),
+                    });
+                }
+                break;
+
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:
             case CommonActionType.ExternalLink:

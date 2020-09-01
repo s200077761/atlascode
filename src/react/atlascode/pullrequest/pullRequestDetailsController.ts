@@ -7,6 +7,7 @@ import {
     ApprovalStatus,
     BitbucketIssue,
     BitbucketSite,
+    BuildStatus,
     Comment,
     FileDiff,
     MergeStrategy,
@@ -65,6 +66,7 @@ export interface PullRequestDetailsControllerApi {
     ) => void;
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     openBitbucketIssue: (issue: BitbucketIssue) => void;
+    openBuildStatus: (buildStatus: BuildStatus) => void;
 }
 
 export const emptyApi: PullRequestDetailsControllerApi = {
@@ -98,6 +100,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
 
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => {},
     openBitbucketIssue: (issue: BitbucketIssue) => {},
+    openBuildStatus: (buildStatus: BuildStatus) => {},
 };
 
 export const PullRequestDetailsControllerContext = React.createContext(emptyApi);
@@ -240,7 +243,11 @@ function pullRequestDetailsReducer(
             return { ...state, fileDiffs: action.data.fileDiffs, loadState: { ...state.loadState, diffs: false } };
         }
         case PullRequestDetailsUIActionType.UpdateBuildStatuses: {
-            return { ...state, buildStatuses: action.data.buildStatuses };
+            return {
+                ...state,
+                buildStatuses: action.data.buildStatuses,
+                loadState: { ...state.loadState, buildStatuses: false },
+            };
         }
         case PullRequestDetailsUIActionType.UpdateMergeStrategies: {
             return {
@@ -626,6 +633,16 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         [postMessage]
     );
 
+    const openBuildStatus = useCallback(
+        (buildStatus: BuildStatus) => {
+            postMessage({
+                type: PullRequestDetailsActionType.OpenBuildStatus,
+                buildStatus: buildStatus,
+            });
+        },
+        [postMessage]
+    );
+
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {
         return {
             postMessage: postMessage,
@@ -646,6 +663,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             merge: merge,
             openJiraIssue: openJiraIssue,
             openBitbucketIssue: openBitbucketIssue,
+            openBuildStatus: openBuildStatus,
         };
     }, [
         postMessage,
@@ -666,6 +684,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         merge,
         openJiraIssue,
         openBitbucketIssue,
+        openBuildStatus,
     ]);
 
     return [state, controllerApi];

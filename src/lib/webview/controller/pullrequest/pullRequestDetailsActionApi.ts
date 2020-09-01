@@ -50,6 +50,8 @@ export interface PullRequestDetailsActionApi {
     ): Promise<PullRequest>;
     openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
     openBitbucketIssue(issue: BitbucketIssue): Promise<void>;
+
+    openBuildStatus(pr: PullRequest, status: BuildStatus): Promise<void>;
     getTasks(pr: PullRequest): Promise<Task[]>;
 
     createTask(

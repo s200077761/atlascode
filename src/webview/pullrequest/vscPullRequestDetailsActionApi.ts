@@ -328,6 +328,22 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         await vscode.commands.executeCommand(Commands.ShowBitbucketIssue, issue);
     }
 
+    async openBuildStatus(pr: PullRequest, status: BuildStatus) {
+        if (status.url.includes('bitbucket.org') || status.url.includes('bb-inf.net')) {
+            const pipelineUUID = status.url.substring(status.url.lastIndexOf('/') + 1);
+            const bbApi = await clientForSite(pr.site);
+            const pipeline = await bbApi.pipelines?.getPipeline(pr.site, pipelineUUID);
+
+            if (pipeline) {
+                vscode.commands.executeCommand(Commands.ShowPipeline, pipeline);
+            } else {
+                vscode.env.openExternal(vscode.Uri.parse(status.url));
+            }
+        } else {
+            vscode.env.openExternal(vscode.Uri.parse(status.url));
+        }
+    }
+
     async getTasks(pr: PullRequest) {
         const bbApi = await clientForSite(pr.site);
         return await bbApi.pullrequests.getTasks(pr);
