@@ -41,9 +41,12 @@ const useStyles = makeStyles(
             title: {
                 flexGrow: 0,
                 marginRight: theme.spacing(3),
+                whiteSpace: 'nowrap',
             },
             targetSelectLabel: {
+                marginLeft: theme.spacing(1),
                 marginRight: theme.spacing(1),
+                whiteSpace: 'nowrap',
             },
             grow: {
                 flexGrow: 1,
@@ -180,6 +183,8 @@ const ConfigPage: React.FunctionComponent = () => {
                                     onChange={handleTabChange}
                                     aria-label="simple tabs example"
                                     indicatorColor="primary"
+                                    variant="scrollable"
+                                    scrollButtons="on"
                                 >
                                     <Tab
                                         id="simple-tab-0"
@@ -220,7 +225,7 @@ const ConfigPage: React.FunctionComponent = () => {
                                 </Tabs>
                                 <div className={classes.grow} />
                                 <Typography variant="subtitle1" classes={{ root: classes.targetSelectLabel }}>
-                                    save settings to:{' '}
+                                    Save settings to:{' '}
                                 </Typography>
                                 <ToggleButtonGroup
                                     color="primary"
