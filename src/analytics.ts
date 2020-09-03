@@ -425,6 +425,22 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function saveManualCodeEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'saveCodeButton',
+            source: source,
+        },
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
 export async function configureJQLButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,

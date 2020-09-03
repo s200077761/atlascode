@@ -14,10 +14,11 @@ type AuthPanelProps = CommonSubpanelProps & {
     sites: SiteWithAuthInfo[];
     product: Product;
     section: ConfigSection;
+    useNewAuth: boolean;
 };
 
 export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
-    ({ visible, expanded, onSubsectionChange, isRemote, sites, product, section }) => {
+    ({ visible, expanded, onSubsectionChange, isRemote, sites, product, section, useNewAuth }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
         const expansionHandler = useCallback(
@@ -48,7 +49,7 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
                     <PanelSubtitle>authenticate with {product.name} instances</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <SiteAuthenticator product={product} isRemote={isRemote} sites={sites} />
+                    <SiteAuthenticator product={product} isRemote={isRemote} sites={sites} useNewAuth={useNewAuth} />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );

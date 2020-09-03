@@ -41,6 +41,7 @@ import {
     prMergeEvent,
     prPaginationEvent,
     prUrlCopiedEvent,
+    saveManualCodeEvent,
     startIssueCreationEvent,
     upgradedEvent,
     viewScreenEvent,
@@ -309,6 +310,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async fireLogoutButtonEvent(source: string): Promise<void> {
         return logoutButtonEvent(source).then((e) => {
+            this._analyticsClient.sendUIEvent(e);
+        });
+    }
+
+    public async fireSaveManualCodeEvent(source: string): Promise<void> {
+        return saveManualCodeEvent(source).then((e) => {
             this._analyticsClient.sendUIEvent(e);
         });
     }
