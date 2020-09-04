@@ -72,12 +72,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     };
 
     const isSomethingLoading = useCallback(() => {
-        for (const [, value] of Object.entries(state.loadState)) {
-            if (value) {
-                return true;
-            }
-        }
-        return false;
+        return Object.entries(state.loadState).some(
+            (entry) => entry[1] /* Second index is the value in the key/value pair */
+        );
     }, [state.loadState]);
 
     const taskTitle = useCallback(() => {
@@ -112,8 +109,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             </Typography>
                         </Box>
 
-                        {/*TODO: both of these buttons need to be hidden before basic state is loaded*/}
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <NeedsWorkButton
                                 hidden={
                                     state.pr.site.details.isCloud ||
@@ -123,7 +119,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <ApproveButton
                                 hidden={
                                     !state.pr.site.details.isCloud &&
@@ -133,7 +129,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <MergeDialog
                                 prData={state.pr.data}
                                 commits={state.commits}
@@ -214,7 +210,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Related Jira Issues'}
                                             subtitle={`${state.relatedJiraIssues.length} issues`}
                                             isLoading={state.loadState.relatedJiraIssues}
-                                            hideCondition={state.relatedJiraIssues.length === 0}
+                                            hidden={state.relatedJiraIssues.length === 0}
                                         >
                                             <RelatedJiraIssues
                                                 relatedIssues={state.relatedJiraIssues}
@@ -227,7 +223,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Related Bitbucket Issues'}
                                             subtitle={`${state.relatedBitbucketIssues.length} issues`}
                                             isLoading={state.loadState.relatedBitbucketIssues}
-                                            hideCondition={state.relatedBitbucketIssues.length === 0}
+                                            hidden={state.relatedBitbucketIssues.length === 0}
                                         >
                                             <RelatedBitbucketIssues
                                                 relatedIssues={state.relatedBitbucketIssues}
