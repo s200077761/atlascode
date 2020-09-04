@@ -32,7 +32,7 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
     return (
         <>
             <Fade in={visible}>
-                <div hidden={!visible || config['bitbucket.enabled']}>enable jira features to see settings</div>
+                <div hidden={!visible || config['bitbucket.enabled']}>Enable Bitbucket features to see settings</div>
             </Fade>
 
             <Fade in={visible}>
