@@ -7,12 +7,12 @@ type BasicPanelProps = {
     title: string;
     subtitle?: string;
     isDefaultExpanded?: boolean;
-    hideCondition?: boolean;
+    hidden?: boolean;
     isLoading: boolean;
 };
 
 export const BasicPanel: React.FunctionComponent<BasicPanelProps> = memo(
-    ({ title, subtitle, isDefaultExpanded, isLoading, hideCondition, children }) => {
+    ({ title, subtitle, isDefaultExpanded, isLoading, hidden, children }) => {
         const [internalExpanded, setInternalExpanded] = useState<boolean>(!!isDefaultExpanded);
 
         const expansionHandler = useCallback((event: React.ChangeEvent<{}>, expanded: boolean) => {
@@ -20,7 +20,7 @@ export const BasicPanel: React.FunctionComponent<BasicPanelProps> = memo(
         }, []);
 
         return (
-            <Box hidden={!isLoading && hideCondition}>
+            <Box hidden={!isLoading && hidden}>
                 <ExpansionPanel square={false} expanded={internalExpanded} onChange={expansionHandler}>
                     <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
                         <PanelTitle>{title}</PanelTitle>

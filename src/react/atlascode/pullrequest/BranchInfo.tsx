@@ -1,4 +1,4 @@
-import { Chip, CircularProgress, Grid } from '@material-ui/core';
+import { Chip, CircularProgress, Grid, Tooltip } from '@material-ui/core';
 import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
 import * as React from 'react';
 import { Repo, User } from '../../../bitbucket/model';
@@ -24,15 +24,21 @@ export const BranchInfo: React.FunctionComponent<BranchInfoProps> = ({ source, d
     return isLoading ? (
         <CircularProgress />
     ) : (
-        <Grid container spacing={1} direction={'row'} justify="space-evenly" alignItems="center">
+        <Grid container spacing={1} direction={'row'} justify="flex-start" alignItems="center" wrap={'wrap'}>
             <Grid item>
-                <Chip clickable color="primary" label={sourceBranch} />
+                <Tooltip title={sourceBranch}>
+                    <Chip clickable color="primary" label={sourceBranch} size={'small'} />
+                </Tooltip>
             </Grid>
+
             <Grid item>
                 <ArrowRightAltIcon />
             </Grid>
+
             <Grid item>
-                <Chip clickable color="primary" label={targetBranch} />
+                <Tooltip title={targetBranch}>
+                    <Chip clickable color="primary" label={targetBranch} size={'small'} />
+                </Tooltip>
             </Grid>
         </Grid>
     );

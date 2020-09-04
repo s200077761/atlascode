@@ -1,4 +1,5 @@
 import { Disposable, Uri } from 'vscode';
+import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
@@ -55,6 +56,7 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
             Logger.Instance,
             this._analytics,
             this._settingsUrl,
+            configuration.get<boolean>('useNewAuth'),
             factoryData
         );
 

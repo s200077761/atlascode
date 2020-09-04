@@ -5,6 +5,7 @@ import { WorkspaceRepo } from './bitbucket/model';
 import { Commands } from './commands';
 import { Container } from './container';
 import { AnalyticsApi } from './lib/analyticsApi';
+import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
 
 const ExtensionId = 'atlassian.atlascode';
@@ -66,19 +67,39 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
 
             const prUrlPath = Uri.parse(prUrl).path;
             const prId = prUrlPath.slice(prUrlPath.lastIndexOf('/') + 1);
-            const client = await clientForHostname('bitbucket.org')!;
-            const pr = await client.pullrequests.getById(site, parseInt(prId));
 
-            const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
-            Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, {
-                ...pr,
-                workspaceRepo: wsRepo,
-            });
+            try {
+                const client = await clientForHostname('bitbucket.org');
+                const pr = await client.pullrequests.getById(site, parseInt(prId));
+                const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
+                Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, {
+                    ...pr,
+                    workspaceRepo: wsRepo,
+                });
+            } catch {
+                this.showLoginMessage();
+            }
             this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'pullRequest');
         } catch (e) {
             Logger.debug('error opening pull request:', e);
             window.showErrorMessage('Error opening pull request (check log for details)');
         }
+    }
+
+    private showLoginMessage() {
+        window
+            .showInformationMessage(
+                'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
+                'Open settings'
+            )
+            .then((userChoice) => {
+                if (userChoice === 'Open settings') {
+                    Container.settingsWebviewFactory.createOrShow({
+                        section: ConfigSection.Bitbucket,
+                        subSection: ConfigSubSection.Auth,
+                    });
+                }
+            });
     }
 
     private async handleCloneRepository(uri: Uri) {

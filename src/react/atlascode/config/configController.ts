@@ -32,6 +32,7 @@ export interface ConfigControllerApi {
     openLink: (linkId: KnownLinkID) => void;
     login: (site: SiteInfo, auth: AuthInfo) => void;
     logout: (site: DetailedSiteInfo) => void;
+    saveCode: (code: string) => void;
     fetchJqlOptions: (site: DetailedSiteInfo) => Promise<JqlAutocompleteRestData>;
     fetchJqlSuggestions: (
         site: DetailedSiteInfo,
@@ -74,6 +75,9 @@ export const emptyApi: ConfigControllerApi = {
         return;
     },
     logout: (site: DetailedSiteInfo) => {
+        return;
+    },
+    saveCode: (code: string) => {
         return;
     },
     fetchJqlOptions: (site: DetailedSiteInfo): Promise<JqlAutocompleteRestData> => {
@@ -316,6 +320,14 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         [postMessage]
     );
 
+    const saveCode = useCallback(
+        (code: string) => {
+            dispatch({ type: ConfigUIActionType.Loading });
+            postMessage({ type: ConfigActionType.SaveCode, code: code });
+        },
+        [postMessage]
+    );
+
     const fetchJqlOptions = useCallback(
         (site: DetailedSiteInfo): Promise<JqlAutocompleteRestData> => {
             return new Promise<JqlAutocompleteRestData>((resolve, reject) => {
@@ -498,6 +510,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             openLink: openLink,
             login: login,
             logout: logout,
+            saveCode: saveCode,
             fetchJqlSuggestions: fetchJqlSuggestions,
             fetchJqlOptions: fetchJqlOptions,
             fetchFilterSearchResults: fetchFilterSearchResults,
@@ -511,6 +524,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         handleConfigChange,
         login,
         logout,
+        saveCode,
         openLink,
         postMessage,
         sendRefresh,
