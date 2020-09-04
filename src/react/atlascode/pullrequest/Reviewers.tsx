@@ -22,8 +22,12 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
     const handleUpdateReviewers = useCallback(
         async (newReviewers: User[]) => {
             setIsFetchingReviewers(true);
-            await onUpdateReviewers(newReviewers);
-            setIsFetchingReviewers(false);
+
+            try {
+                await onUpdateReviewers(newReviewers);
+            } finally {
+                setIsFetchingReviewers(false);
+            }
         },
         [onUpdateReviewers]
     );

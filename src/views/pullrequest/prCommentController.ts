@@ -1,4 +1,4 @@
-import { prCommentEvent, prTaskEvent, fileCheckoutEvent } from 'src/analytics';
+import { fileCheckoutEvent, prCommentEvent, prTaskEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from 'uuid';
 import vscode, { commands, CommentThread, MarkdownString } from 'vscode';
@@ -431,14 +431,29 @@ export class PullRequestCommentController implements vscode.Disposable {
         const { site, prId, prHref, commentThreadId, inline, lineType } = this.getDataForAddingComment(reply.thread);
 
         const bbApi = await clientForSite(site);
-        const data = await bbApi.pullrequests.postComment(site, prId, reply.text, commentThreadId, inline, lineType);
+        const newComment = await bbApi.pullrequests.postComment(
+            site,
+            prId,
+            reply.text,
+            commentThreadId,
+            inline,
+            lineType
+        );
         prCommentEvent(site.details).then((e) => {
             Container.analyticsClient.sendTrackEvent(e);
         });
 
-        const comments = [...reply.thread.comments, await this.createVSCodeComment(site, data.id!, data, prHref, prId)];
+        const comments = [
+            ...reply.thread.comments,
+            await this.createVSCodeComment(site, newComment.id, newComment, prHref, prId),
+        ];
 
-        await this.createOrUpdateThread(commentThreadId!, reply.thread.uri, reply.thread.range, comments);
+        await this.createOrUpdateThread(
+            commentThreadId || newComment.id,
+            reply.thread.uri,
+            reply.thread.range,
+            comments
+        );
         reply.thread.dispose();
     }
 

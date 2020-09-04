@@ -1,13 +1,11 @@
-import { RefreshButton } from '@atlassianlabs/guipi-core-components';
+import { InlineTextEditor, RefreshButton } from '@atlassianlabs/guipi-core-components';
 import {
     AppBar,
     Avatar,
     Box,
-    Breadcrumbs,
     Button,
     CircularProgress,
     Container,
-    Divider,
     Grid,
     Link,
     makeStyles,
@@ -18,6 +16,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
+import format from 'date-fns/format';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
@@ -28,7 +27,6 @@ import { BranchInfo } from './BranchInfo';
 import { PRBuildStatus } from './BuildStatus';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
-import { InlineTextEditorWrapper } from './InlineTextEditorWrapper';
 import { MergeDialog } from './MergeDialog';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { NestedCommentList } from './NestedCommentList';
@@ -71,13 +69,16 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     );
 
     const isSomethingLoading = useCallback(() => {
-        for (const [, value] of Object.entries(state.loadState)) {
-            if (value) {
-                return true;
-            }
-        }
-        return false;
+        return Object.entries(state.loadState).some(
+            (entry) => entry[1] /* Second index is the value in the key/value pair */
+        );
     }, [state.loadState]);
+
+    const taskTitle = useCallback(() => {
+        const numTasks = state.tasks.length;
+        const numCompletedTasks = state.tasks.filter((task) => task.isComplete).length;
+        return numTasks === 0 ? '0 tasks' : `${numCompletedTasks} of ${numTasks} complete`;
+    }, [state.tasks]);
 
     useEffect(() => {
         const foundCurrentUser = state.pr.data.participants.find(
@@ -94,10 +95,18 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <AppBar position="relative">
                     <Toolbar>
                         <Box flexGrow={1}>
-                            <InlineTextEditorWrapper title={state.pr.data.title} onSave={controller.updateTitle} />
+                            <Typography variant={'h3'}>
+                                <Link
+                                    color="textPrimary"
+                                    href={state.pr.data.url}
+                                    //TODO: onCopy={handleCopyLink}
+                                >
+                                    {`Pull request #${state.pr.data.id}`}
+                                </Link>
+                            </Typography>
                         </Box>
 
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <NeedsWorkButton
                                 hidden={
                                     state.pr.site.details.isCloud ||
@@ -107,7 +116,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <ApproveButton
                                 hidden={
                                     !state.pr.site.details.isCloud &&
@@ -117,12 +126,70 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
+                            <MergeDialog
+                                prData={state.pr.data}
+                                commits={state.commits}
+                                relatedJiraIssues={state.relatedJiraIssues}
+                                relatedBitbucketIssues={state.relatedBitbucketIssues}
+                                mergeStrategies={state.mergeStrategies}
+                                loadState={{
+                                    basicData: state.loadState.basicData,
+                                    commits: state.loadState.commits,
+                                    mergeStrategies: state.loadState.mergeStrategies,
+                                    relatedJiraIssues: state.loadState.relatedJiraIssues,
+                                    relatedBitbucketIssues: state.loadState.relatedBitbucketIssues,
+                                }}
+                                merge={controller.merge}
+                            />
+                        </Box>
                         <RefreshButton loading={isSomethingLoading()} onClick={controller.refresh} />
                     </Toolbar>
                 </AppBar>
-                <Grid container spacing={1} direction="row">
+                <Box marginTop={1} />
+                <Grid container spacing={1} direction="row" wrap="wrap-reverse">
                     <Grid item xs={12} md={9} lg={9} xl={9}>
                         <Paper className={classes.paper100}>
+                            <Box margin={2} /* TODO: add loading state to this */>
+                                <Grid container direction={'column'} spacing={1}>
+                                    <Grid item>
+                                        <InlineTextEditor
+                                            fullWidth
+                                            defaultValue={state.pr.data.title}
+                                            onSave={controller.updateTitle}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <Grid container direction="row" spacing={2} justify={'space-between'}>
+                                            <Grid item>
+                                                <BranchInfo
+                                                    source={state.pr.data.source}
+                                                    destination={state.pr.data.destination}
+                                                    author={state.pr.data.author}
+                                                    isLoading={state.loadState.basicData}
+                                                />
+                                            </Grid>
+
+                                            <Grid item>
+                                                <Button
+                                                    disabled={
+                                                        state.pr.data.source.branchName === state.currentBranchName
+                                                    }
+                                                    variant={'contained'}
+                                                    onClick={controller.checkoutBranch}
+                                                >
+                                                    <Typography variant="button" noWrap>
+                                                        {state.pr.data.source.branchName === state.currentBranchName
+                                                            ? 'Source branch checked out'
+                                                            : 'Checkout source branch'}
+                                                    </Typography>
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+
                             <Box margin={2}>
                                 <Grid container spacing={3} direction="column" justify="center">
                                     <ErrorDisplay />
@@ -140,7 +207,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Related Jira Issues'}
                                             subtitle={`${state.relatedJiraIssues.length} issues`}
                                             isLoading={state.loadState.relatedJiraIssues}
-                                            hideCondition={state.relatedJiraIssues.length === 0}
+                                            hidden={state.relatedJiraIssues.length === 0}
                                         >
                                             <RelatedJiraIssues
                                                 relatedIssues={state.relatedJiraIssues}
@@ -153,7 +220,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Related Bitbucket Issues'}
                                             subtitle={`${state.relatedBitbucketIssues.length} issues`}
                                             isLoading={state.loadState.relatedBitbucketIssues}
-                                            hideCondition={state.relatedBitbucketIssues.length === 0}
+                                            hidden={state.relatedBitbucketIssues.length === 0}
                                         >
                                             <RelatedBitbucketIssues
                                                 relatedIssues={state.relatedBitbucketIssues}
@@ -174,9 +241,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                     <Grid item>
                                         <BasicPanel
                                             title={'Tasks'}
-                                            subtitle={`${state.tasks.filter((task) => task.isComplete).length} of ${
-                                                state.tasks.length
-                                            } complete`}
+                                            subtitle={taskTitle()}
                                             isDefaultExpanded
                                             isLoading={state.loadState.tasks}
                                         >
@@ -232,113 +297,72 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                     <Grid item xs={12} md={3} lg={3} xl={3}>
                         <Paper className={classes.paperOverflow}>
                             <Box margin={2}>
-                                <Grid container spacing={2} direction={'column'}>
+                                <Grid container spacing={1} direction={'column'}>
                                     <Grid item>
-                                        <Grid container spacing={1} direction={'row'}>
-                                            <Grid item>
-                                                <Button
-                                                    color="primary"
-                                                    disabled={
-                                                        state.pr.data.source.branchName === state.currentBranchName
-                                                    }
-                                                    variant={'contained'}
-                                                    onClick={controller.checkoutBranch}
-                                                >
-                                                    <Typography variant="button" noWrap>
-                                                        {state.pr.data.source.branchName === state.currentBranchName
-                                                            ? 'Source branch checked out'
-                                                            : 'Checkout source branch'}
-                                                    </Typography>
-                                                </Button>
-                                            </Grid>
-                                            <Grid item>
-                                                <MergeDialog
-                                                    prData={state.pr.data}
-                                                    commits={state.commits}
-                                                    relatedJiraIssues={state.relatedJiraIssues}
-                                                    relatedBitbucketIssues={state.relatedBitbucketIssues}
-                                                    mergeStrategies={state.mergeStrategies}
-                                                    loadState={{
-                                                        basicData: state.loadState.basicData,
-                                                        commits: state.loadState.commits,
-                                                        mergeStrategies: state.loadState.mergeStrategies,
-                                                        relatedJiraIssues: state.loadState.relatedJiraIssues,
-                                                        relatedBitbucketIssues: state.loadState.relatedBitbucketIssues,
-                                                    }}
-                                                    merge={controller.merge}
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                    <Grid item>
-                                        <Divider />
-                                    </Grid>
-
-                                    <Grid item>
-                                        <Grid container spacing={3} direction="row" alignItems={'center'}>
-                                            <Grid item>
-                                                <Typography variant="body1">Author:</Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                <Box hidden={state.loadState.basicData}>
+                                        <Typography variant="h6">
+                                            <strong>Author</strong>
+                                        </Typography>
+                                        <Box hidden={state.loadState.basicData}>
+                                            <Grid container spacing={1} direction="row" alignItems="center">
+                                                <Grid item>
+                                                    {' '}
                                                     <Tooltip title={state.pr.data.author.displayName}>
                                                         <Avatar
                                                             alt={state.pr.data.author.displayName}
                                                             src={state.pr.data.author.avatarUrl}
                                                         />
                                                     </Tooltip>
-                                                </Box>
-                                                <Box hidden={!state.loadState.basicData}>
-                                                    <CircularProgress />
-                                                </Box>
+                                                </Grid>
+
+                                                <Grid item>
+                                                    <Typography>{state.pr.data.author.displayName}</Typography>
+                                                </Grid>
                                             </Grid>
-                                        </Grid>
+                                        </Box>
+                                        <Box hidden={!state.loadState.basicData}>
+                                            <CircularProgress />
+                                        </Box>
                                     </Grid>
 
                                     <Grid item>
-                                        <Divider />
+                                        <Typography variant="h6">
+                                            <strong>Reviewers</strong>
+                                        </Typography>
+                                        <Box marginLeft={2} marginTop={1}>
+                                            <Reviewers
+                                                site={state.pr.site}
+                                                participants={state.pr.data.participants}
+                                                onUpdateReviewers={controller.updateReviewers}
+                                                isLoading={state.loadState.basicData}
+                                            />
+                                        </Box>
                                     </Grid>
+
                                     <Grid item>
-                                        <Grid container spacing={3} direction="row" alignItems={'center'}>
-                                            <Grid item>
-                                                <Typography variant="body1">Reviewers:</Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                <Reviewers
-                                                    site={state.pr.site}
-                                                    participants={state.pr.data.participants}
-                                                    onUpdateReviewers={controller.updateReviewers}
-                                                    isLoading={state.loadState.basicData}
-                                                />
-                                            </Grid>
-                                        </Grid>
+                                        <Typography variant="h6">
+                                            <strong>Created</strong>
+                                        </Typography>
+                                        <Tooltip title={state.pr.data.ts || 'unknown'}>
+                                            <Typography>{format(state.pr.data.ts, 'YYYY-MM-DD h:mm A')}</Typography>
+                                        </Tooltip>
                                     </Grid>
+
                                     <Grid item>
-                                        <Divider />
+                                        <Typography variant="h6">
+                                            <strong>Updated</strong>
+                                        </Typography>
+                                        <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
+                                            <Typography>
+                                                {format(state.pr.data.updatedTs, 'YYYY-MM-DD h:mm A')}
+                                            </Typography>
+                                        </Tooltip>
                                     </Grid>
-                                    <Grid item>
-                                        <Grid container spacing={3} direction="row" alignItems={'center'}>
-                                            <Grid item>
-                                                <Typography variant="body1">Branch:</Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                <BranchInfo
-                                                    source={state.pr.data.source}
-                                                    destination={state.pr.data.destination}
-                                                    author={state.pr.data.author}
-                                                    isLoading={state.loadState.basicData}
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                    <Grid item>
-                                        <Divider />
-                                    </Grid>
+
                                     <Grid item>
                                         <BasicPanel
                                             isLoading={state.loadState.buildStatuses}
                                             isDefaultExpanded
-                                            hideCondition={state.buildStatuses.length === 0}
+                                            hidden={state.buildStatuses.length === 0}
                                             title={`${
                                                 state.buildStatuses.filter((status) => status.state === 'SUCCESSFUL')
                                                     .length
@@ -351,34 +375,6 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 openBuildStatus={controller.openBuildStatus}
                                             />
                                         </BasicPanel>
-                                    </Grid>
-                                    <Grid item>
-                                        <Divider />
-                                    </Grid>
-                                    <Grid item>
-                                        <Box hidden={state.loadState.basicData}>
-                                            <Breadcrumbs aria-label="breadcrumb">
-                                                <Link color="textSecondary" href={state.pr.data.destination!.repo.url}>
-                                                    {state.pr.data.destination!.repo.displayName}
-                                                </Link>
-                                                <Link
-                                                    color="textSecondary"
-                                                    href={`${state.pr.data.destination!.repo.url}/pull-requests`}
-                                                >
-                                                    {'Pull request'}
-                                                </Link>
-                                                <Link
-                                                    color="textPrimary"
-                                                    href={state.pr.data.url}
-                                                    //TODO: onCopy={handleCopyLink}
-                                                >
-                                                    {`Pull request #${state.pr.data.id}`}
-                                                </Link>
-                                            </Breadcrumbs>
-                                        </Box>
-                                        <Box hidden={!state.loadState.basicData}>
-                                            <CircularProgress />
-                                        </Box>
                                     </Grid>
                                 </Grid>
                             </Box>

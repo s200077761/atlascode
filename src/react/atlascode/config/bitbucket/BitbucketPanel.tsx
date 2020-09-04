@@ -17,6 +17,7 @@ type BitbucketPanelProps = CommonPanelProps & {
     sites: SiteWithAuthInfo[];
     isRemote: boolean;
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
+    useNewAuth: boolean;
 };
 
 export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
@@ -26,11 +27,12 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
     config,
     sites,
     isRemote,
+    useNewAuth,
 }) => {
     return (
         <>
             <Fade in={visible}>
-                <div hidden={!visible || config['bitbucket.enabled']}>enable jira features to see settings</div>
+                <div hidden={!visible || config['bitbucket.enabled']}>Enable Bitbucket features to see settings</div>
             </Fade>
 
             <Fade in={visible}>
@@ -45,6 +47,7 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 sites={sites}
                                 product={ProductBitbucket}
                                 section={ConfigSection.Bitbucket}
+                                useNewAuth={useNewAuth}
                             />
                         </Grid>
                         <Grid item>

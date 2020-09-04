@@ -118,10 +118,10 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose} color="primary">
+                <Button onClick={handleClose} color="default" variant={'contained'}>
                     Cancel
                 </Button>
-                <Button onClick={handleSubmitReviewers} color="primary">
+                <Button onClick={handleSubmitReviewers} color="primary" variant={'contained'}>
                     Ok
                 </Button>
             </DialogActions>

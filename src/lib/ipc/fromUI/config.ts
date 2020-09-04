@@ -6,6 +6,7 @@ import { CommonAction } from './common';
 export enum ConfigActionType {
     Login = 'login',
     Logout = 'logout',
+    SaveCode = 'saveCode',
     SaveSettings = 'saveSettings',
     OpenJSON = 'openJson',
     JQLOptionsRequest = 'jqlOptionsRequest',
@@ -22,6 +23,7 @@ export enum ConfigActionType {
 export type ConfigAction =
     | ReducerAction<ConfigActionType.Login, LoginAuthAction>
     | ReducerAction<ConfigActionType.Logout, LogoutAuthAction>
+    | ReducerAction<ConfigActionType.SaveCode, SaveCodeAction>
     | ReducerAction<ConfigActionType.SaveSettings, SaveSettingsAction>
     | ReducerAction<ConfigActionType.OpenJSON, OpenJsonAction>
     | ReducerAction<ConfigActionType.JQLOptionsRequest, JQLOptionsRequestAction>
@@ -45,6 +47,10 @@ export interface LoginAuthAction extends AuthAction {
 
 export interface LogoutAuthAction extends AuthAction {
     siteInfo: DetailedSiteInfo;
+}
+
+export interface SaveCodeAction {
+    code: string;
 }
 
 export interface SaveSettingsAction {

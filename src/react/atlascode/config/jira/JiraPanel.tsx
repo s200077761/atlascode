@@ -16,6 +16,7 @@ type JiraPanelProps = CommonPanelProps & {
     sites: SiteWithAuthInfo[];
     isRemote: boolean;
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
+    useNewAuth: boolean;
 };
 
 export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
@@ -25,6 +26,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     config,
     sites,
     isRemote,
+    useNewAuth,
 }) => {
     const siteInfos = useMemo(() => {
         return sites.map((swa) => {
@@ -35,7 +37,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
     return (
         <>
             <Fade in={visible}>
-                <div hidden={!visible || config['jira.enabled']}>enable jira features to see settings</div>
+                <div hidden={!visible || config['jira.enabled']}>Enable Jira features to see settings</div>
             </Fade>
 
             <Fade in={visible}>
@@ -50,6 +52,7 @@ export const JiraPanel: React.FunctionComponent<JiraPanelProps> = ({
                                 sites={sites}
                                 product={ProductJira}
                                 section={ConfigSection.Jira}
+                                useNewAuth={useNewAuth}
                             />
                         </Grid>
                         <Grid item>

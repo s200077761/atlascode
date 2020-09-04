@@ -30,6 +30,8 @@ import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
 import { FocusEventActions } from '../ExplorerFocusManager';
 
+const accessCodeSeparator = '::';
+
 export class VSCConfigActionApi implements ConfigActionApi {
     private _analyticsApi: AnalyticsApi;
     private _cancelMan: CancellationManager;
@@ -49,6 +51,15 @@ export class VSCConfigActionApi implements ConfigActionApi {
     public async clearAuth(site: DetailedSiteInfo): Promise<void> {
         await Container.clientManager.removeClient(site);
         Container.siteManager.removeSite(site);
+    }
+
+    public async saveCode(combinedCode: string): Promise<void> {
+        const loginManager = Container.loginManager;
+        const pieces = combinedCode.split(accessCodeSeparator);
+        if (pieces.length !== 2) {
+            throw new Error('Improperly formatted access code.');
+        }
+        loginManager.exchangeCodeForTokens(pieces[0], pieces[1]);
     }
 
     public async fetchJqlOptions(site: DetailedSiteInfo): Promise<JQLAutocompleteData> {
