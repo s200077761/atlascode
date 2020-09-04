@@ -1,3 +1,14 @@
+## What's New in 2.7.1
+
+### Improvements
+
+-   Added better handling of deep links for non-authenticated users
+-   Fixed typos in settings page and made top bar scrollable
+
+### Bugs fixed
+
+-   Comments in PR diff view no longer show up twice when the page is reloaded
+
 ## What's New in 2.7.0
 
 ### Improvements

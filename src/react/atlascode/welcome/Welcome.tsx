@@ -83,6 +83,23 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.7.1 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Added better handling of deep links for non-authenticated users</li>
+                                                <li>Fixed typos in settings page and made top bar scrollable</li>
+                                            </ul>
+                                        </section>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Comments in PR diff view no longer show up twice when the page is
+                                                    reloaded
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.7.0 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
