@@ -236,7 +236,12 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
 
     return (
         <Box>
-            <Button color={'primary'} onClick={handleOpen} disabled={prData.state !== 'OPEN' || isMerging}>
+            <Button
+                color={'primary'}
+                variant={'contained'}
+                onClick={handleOpen}
+                disabled={prData.state !== 'OPEN' || isMerging}
+            >
                 <Typography variant={'button'} noWrap>
                     {prData.state === 'OPEN' ? 'Merge' : 'Merged'}
                 </Typography>

@@ -17,9 +17,10 @@ export const NeedsWorkButton: React.FunctionComponent<NeedsWorkButtonProps> = ({
     return (
         <Box hidden={hidden}>
             <Button
+                startIcon={<BuildIcon htmlColor={'rgb(244, 174, 61)'} />}
                 color={'primary'}
+                variant={'contained'}
                 onClick={handleOnApprove}
-                startIcon={<BuildIcon htmlColor={status === 'NEEDS_WORK' ? '#FFCC00' : 'gray'} />}
             >
                 <Typography variant={'button'} noWrap>
                     {status === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}

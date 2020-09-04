@@ -78,48 +78,50 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
     }, [props.users]);
 
     return (
-        <Dialog open={props.hidden} onClose={handleClose} aria-labelledby="reviewers-dialog-title">
+        <Dialog
+            fullWidth
+            maxWidth={'sm'}
+            open={props.hidden}
+            onClose={handleClose}
+            aria-labelledby="reviewers-dialog-title"
+        >
             <DialogTitle>
                 <Typography variant="h4">Select Reviewers</Typography>
             </DialogTitle>
             <DialogContent>
-                <Grid container spacing={1} direction="row" alignItems="center">
-                    <Grid item xs={9}>
-                        <Autocomplete
-                            multiple
-                            filterSelectedOptions
-                            size="medium"
-                            disableClearable
-                            open={selectOpen}
-                            onOpen={() => setSelectOpen(true)}
-                            onClose={() => setSelectOpen(false)}
-                            options={fetchUsers.result || props.defaultUsers}
-                            getOptionLabel={(option) => option?.displayName || ''}
-                            getOptionSelected={(option, value) => option.accountId === value.accountId}
-                            value={localUsers}
-                            onInputChange={handleInputChange}
-                            onChange={handleLocalChange}
-                            loading={fetchUsers.loading}
-                            renderInput={(params) => <TextField {...params} label="Reviewers" />}
-                            renderOption={(option) => (
-                                <Grid container spacing={1} direction="row" alignItems="center">
-                                    <Grid item>
-                                        <Avatar src={option?.avatarUrl} />
-                                    </Grid>
-                                    <Grid item>
-                                        <Typography>{option?.displayName}</Typography>
-                                    </Grid>
-                                </Grid>
-                            )}
-                        />
-                    </Grid>
-                </Grid>
+                <Autocomplete
+                    multiple
+                    filterSelectedOptions
+                    size="medium"
+                    disableClearable
+                    open={selectOpen}
+                    onOpen={() => setSelectOpen(true)}
+                    onClose={() => setSelectOpen(false)}
+                    options={fetchUsers.result || props.defaultUsers}
+                    getOptionLabel={(option) => option?.displayName || ''}
+                    getOptionSelected={(option, value) => option.accountId === value.accountId}
+                    value={localUsers}
+                    onInputChange={handleInputChange}
+                    onChange={handleLocalChange}
+                    loading={fetchUsers.loading}
+                    renderInput={(params) => <TextField {...params} label="Reviewers" />}
+                    renderOption={(option) => (
+                        <Grid container spacing={1} direction="row" alignItems="center">
+                            <Grid item>
+                                <Avatar src={option?.avatarUrl} />
+                            </Grid>
+                            <Grid item>
+                                <Typography>{option?.displayName}</Typography>
+                            </Grid>
+                        </Grid>
+                    )}
+                />
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose} color="primary">
+                <Button onClick={handleClose} color="default" variant={'contained'}>
                     Cancel
                 </Button>
-                <Button onClick={handleSubmitReviewers} color="primary">
+                <Button onClick={handleSubmitReviewers} color="primary" variant={'contained'}>
                     Ok
                 </Button>
             </DialogActions>
