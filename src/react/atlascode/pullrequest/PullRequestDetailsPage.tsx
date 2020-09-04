@@ -4,6 +4,7 @@ import {
     Avatar,
     Box,
     Button,
+    CircularProgress,
     Container,
     Grid,
     Link,
@@ -70,33 +71,11 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         );
     };
 
-    const handleUpdateReviewers = useCallback(
-        (newReviewers: User[]) => {
-            controller.updateReviewers(newReviewers);
-        },
-        [controller]
-    );
-
-    const handleSummaryChange = useCallback(
-        (text: string) => {
-            controller.updateSummary(text);
-        },
-        [controller]
-    );
-
-    const handleTitleChange = useCallback(
-        (text: string) => {
-            controller.updateTitle(text);
-        },
-        [controller]
-    );
-
-    const handlePostComment = useCallback(
-        async (rawText: string) => {
-            await controller.postComment(rawText);
-        },
-        [controller]
-    );
+    const isSomethingLoading = useCallback(() => {
+        return Object.entries(state.loadState).some(
+            (entry) => entry[1] /* Second index is the value in the key/value pair */
+        );
+    }, [state.loadState]);
 
     const taskTitle = useCallback(() => {
         const numTasks = state.tasks.length;
@@ -130,8 +109,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                             </Typography>
                         </Box>
 
-                        {/*TODO: both of these buttons need to be hidden before basic state is loaded*/}
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <NeedsWorkButton
                                 hidden={
                                     state.pr.site.details.isCloud ||
@@ -141,7 +119,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <ApproveButton
                                 hidden={
                                     !state.pr.site.details.isCloud &&
@@ -151,17 +129,24 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                 onApprove={controller.updateApprovalStatus}
                             />
                         </Box>
-                        <Box marginLeft={1}>
+                        <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <MergeDialog
                                 prData={state.pr.data}
                                 commits={state.commits}
                                 relatedJiraIssues={state.relatedJiraIssues}
                                 relatedBitbucketIssues={state.relatedBitbucketIssues}
                                 mergeStrategies={state.mergeStrategies}
+                                loadState={{
+                                    basicData: state.loadState.basicData,
+                                    commits: state.loadState.commits,
+                                    mergeStrategies: state.loadState.mergeStrategies,
+                                    relatedJiraIssues: state.loadState.relatedJiraIssues,
+                                    relatedBitbucketIssues: state.loadState.relatedBitbucketIssues,
+                                }}
                                 merge={controller.merge}
                             />
                         </Box>
-                        <RefreshButton loading={state.isSomethingLoading} onClick={controller.refresh} />
+                        <RefreshButton loading={isSomethingLoading()} onClick={controller.refresh} />
                     </Toolbar>
                 </AppBar>
                 <Box marginTop={1} />
@@ -174,7 +159,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         <InlineTextEditor
                                             fullWidth
                                             defaultValue={state.pr.data.title}
-                                            onSave={handleTitleChange}
+                                            onSave={controller.updateTitle}
                                         />
                                     </Grid>
                                     <Grid item>
@@ -184,6 +169,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     source={state.pr.data.source}
                                                     destination={state.pr.data.destination}
                                                     author={state.pr.data.author}
+                                                    isLoading={state.loadState.basicData}
                                                 />
                                             </Grid>
 
@@ -216,13 +202,15 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             rawSummary={state.pr.data.rawSummary}
                                             htmlSummary={state.pr.data.htmlSummary}
                                             fetchUsers={handleFetchUsers}
-                                            summaryChange={handleSummaryChange}
+                                            summaryChange={controller.updateSummary}
                                         />
                                     </Grid>
                                     <Grid item>
                                         <BasicPanel
                                             title={'Related Jira Issues'}
                                             subtitle={`${state.relatedJiraIssues.length} issues`}
+                                            isLoading={state.loadState.relatedJiraIssues}
+                                            hidden={state.relatedJiraIssues.length === 0}
                                         >
                                             <RelatedJiraIssues
                                                 relatedIssues={state.relatedJiraIssues}
@@ -234,6 +222,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         <BasicPanel
                                             title={'Related Bitbucket Issues'}
                                             subtitle={`${state.relatedBitbucketIssues.length} issues`}
+                                            isLoading={state.loadState.relatedBitbucketIssues}
+                                            hidden={state.relatedBitbucketIssues.length === 0}
                                         >
                                             <RelatedBitbucketIssues
                                                 relatedIssues={state.relatedBitbucketIssues}
@@ -246,12 +236,18 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Commits'}
                                             subtitle={`${state.commits.length} commits`}
                                             isDefaultExpanded
+                                            isLoading={state.loadState.commits}
                                         >
                                             <Commits commits={state.commits} />
                                         </BasicPanel>
                                     </Grid>
                                     <Grid item>
-                                        <BasicPanel title={'Tasks'} subtitle={taskTitle()} isDefaultExpanded>
+                                        <BasicPanel
+                                            title={'Tasks'}
+                                            subtitle={taskTitle()}
+                                            isDefaultExpanded
+                                            isLoading={state.loadState.tasks}
+                                        >
                                             <PageTaskList
                                                 tasks={state.tasks}
                                                 onEdit={controller.editTask}
@@ -264,6 +260,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             title={'Files Changed'}
                                             subtitle={'Click on file names to open diff in editor'}
                                             isDefaultExpanded
+                                            isLoading={state.loadState.diffs}
                                         >
                                             <DiffList
                                                 fileDiffs={state.fileDiffs}
@@ -272,7 +269,11 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </BasicPanel>
                                     </Grid>
                                     <Grid item>
-                                        <BasicPanel title={'Comments'} isDefaultExpanded>
+                                        <BasicPanel
+                                            title={'Comments'}
+                                            isDefaultExpanded
+                                            isLoading={state.loadState.comments}
+                                        >
                                             <Grid container spacing={2} direction="column">
                                                 <Grid item>
                                                     <NestedCommentList
@@ -284,7 +285,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 <Grid item>
                                                     <CommentForm
                                                         currentUser={state.currentUser}
-                                                        onSave={handlePostComment}
+                                                        onSave={controller.postComment}
                                                     />
                                                 </Grid>
                                             </Grid>
@@ -302,19 +303,26 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         <Typography variant="h6">
                                             <strong>Author</strong>
                                         </Typography>
-                                        <Grid container spacing={1} direction="row" alignItems="center">
-                                            <Grid item>
-                                                <Tooltip title={state.pr.data.author.displayName}>
-                                                    <Avatar
-                                                        alt={state.pr.data.author.displayName}
-                                                        src={state.pr.data.author.avatarUrl}
-                                                    />
-                                                </Tooltip>
+                                        <Box hidden={state.loadState.basicData}>
+                                            <Grid container spacing={1} direction="row" alignItems="center">
+                                                <Grid item>
+                                                    {' '}
+                                                    <Tooltip title={state.pr.data.author.displayName}>
+                                                        <Avatar
+                                                            alt={state.pr.data.author.displayName}
+                                                            src={state.pr.data.author.avatarUrl}
+                                                        />
+                                                    </Tooltip>
+                                                </Grid>
+
+                                                <Grid item>
+                                                    <Typography>{state.pr.data.author.displayName}</Typography>
+                                                </Grid>
                                             </Grid>
-                                            <Grid item>
-                                                <Typography>{state.pr.data.author.displayName}</Typography>
-                                            </Grid>
-                                        </Grid>
+                                        </Box>
+                                        <Box hidden={!state.loadState.basicData}>
+                                            <CircularProgress />
+                                        </Box>
                                     </Grid>
 
                                     <Grid item>
@@ -325,7 +333,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             <Reviewers
                                                 site={state.pr.site}
                                                 participants={state.pr.data.participants}
-                                                onUpdateReviewers={handleUpdateReviewers}
+                                                onUpdateReviewers={controller.updateReviewers}
+                                                isLoading={state.loadState.basicData}
                                             />
                                         </Box>
                                     </Grid>

@@ -23,9 +23,11 @@ export enum PullRequestDetailsMessageType {
     FetchUsersResponse = 'fetchUsersResponse',
     PostCommentResponse = 'postCommentResponse',
     EditCommentResponse = 'editCommentResponse',
+    DeleteCommentResponse = 'deleteCommentResponse',
     AddTaskResponse = 'addTaskResponse',
     EditTaskResponse = 'editTaskResponse',
     DeleteTaskResponse = 'deleteTaskResponse',
+    UpdateReviewersResponse = 'updateReviewersResponse',
     UpdateSummary = 'updateSummary',
     UpdateTitle = 'updateTitle',
     UpdateCommits = 'updateCommits',
@@ -65,9 +67,11 @@ export type PullRequestDetailsResponse =
     | ReducerAction<PullRequestDetailsMessageType.UpdateFileDiffs, PullRequestDetailsFileDiffsMessage>
     | ReducerAction<PullRequestDetailsMessageType.PostCommentResponse, VoidResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.EditCommentResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.DeleteCommentResponse, VoidResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.AddTaskResponse, VoidResponseMessage>
     | ReducerAction<PullRequestDetailsMessageType.EditTaskResponse, VoidResponseMessage>
-    | ReducerAction<PullRequestDetailsMessageType.DeleteTaskResponse, VoidResponseMessage>;
+    | ReducerAction<PullRequestDetailsMessageType.DeleteTaskResponse, VoidResponseMessage>
+    | ReducerAction<PullRequestDetailsMessageType.UpdateReviewersResponse, VoidResponseMessage>;
 
 export interface PullRequestDetailsInitMessage {
     pr: PullRequest;
@@ -81,6 +85,16 @@ export interface PullRequestDetailsInitMessage {
     buildStatuses: BuildStatus[];
     relatedJiraIssues: MinimalIssue<DetailedSiteInfo>[];
     relatedBitbucketIssues: BitbucketIssue[];
+    loadState: {
+        basicData: boolean;
+        comments: boolean;
+        commits: boolean;
+        tasks: boolean;
+        relatedJiraIssues: boolean;
+        relatedBitbucketIssues: boolean;
+        diffs: boolean;
+        mergeStrategies: boolean;
+    };
 }
 
 export interface FetchUsersResponseMessage {
@@ -155,4 +169,15 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
     relatedJiraIssues: [],
     relatedBitbucketIssues: [],
     tasks: [],
+    //True indicates this particular component is still loading
+    loadState: {
+        basicData: true,
+        comments: true,
+        commits: true,
+        tasks: true,
+        relatedJiraIssues: true,
+        relatedBitbucketIssues: true,
+        diffs: true,
+        mergeStrategies: true,
+    },
 };
