@@ -101,7 +101,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                     href={state.pr.data.url}
                                     //TODO: onCopy={handleCopyLink}
                                 >
-                                    {`Pull request #${state.pr.data.id}`}
+                                    {`${state.pr.data.destination!.repo.displayName}: Pull request #${
+                                        state.pr.data.id
+                                    }`}
                                 </Link>
                             </Typography>
                         </Box>
@@ -162,12 +164,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                     <Grid item>
                                         <Grid container direction="row" spacing={2} justify={'space-between'}>
                                             <Grid item>
-                                                <BranchInfo
-                                                    source={state.pr.data.source}
-                                                    destination={state.pr.data.destination}
-                                                    author={state.pr.data.author}
-                                                    isLoading={state.loadState.basicData}
-                                                />
+                                                <Box marginLeft={2}>
+                                                    <BranchInfo
+                                                        source={state.pr.data.source}
+                                                        destination={state.pr.data.destination}
+                                                        author={state.pr.data.author}
+                                                        isLoading={state.loadState.basicData}
+                                                    />
+                                                </Box>
                                             </Grid>
 
                                             <Grid item>
@@ -175,8 +179,8 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     disabled={
                                                         state.pr.data.source.branchName === state.currentBranchName
                                                     }
-                                                    variant={'contained'}
                                                     onClick={controller.checkoutBranch}
+                                                    color={'primary'}
                                                 >
                                                     <Typography variant="button" noWrap>
                                                         {state.pr.data.source.branchName === state.currentBranchName
