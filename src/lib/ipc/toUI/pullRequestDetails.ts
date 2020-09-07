@@ -94,6 +94,7 @@ export interface PullRequestDetailsInitMessage {
         relatedBitbucketIssues: boolean;
         diffs: boolean;
         mergeStrategies: boolean;
+        buildStatuses: boolean;
     };
 }
 
@@ -179,5 +180,6 @@ export const emptyPullRequestDetailsInitMessage: PullRequestDetailsInitMessage =
         relatedBitbucketIssues: true,
         diffs: true,
         mergeStrategies: true,
+        buildStatuses: true,
     },
 };

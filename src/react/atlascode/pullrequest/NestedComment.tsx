@@ -11,9 +11,15 @@ import { TaskAdder } from './TaskAdder';
 type NestedCommentProps = {
     comment: Comment;
     currentUser: User;
+    fetchUsers: (input: string) => Promise<User[]>;
     onDelete: (comment: Comment) => Promise<void>;
 };
-export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ comment, currentUser, onDelete }) => {
+export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
+    comment,
+    currentUser,
+    fetchUsers,
+    onDelete,
+}) => {
     const [isReplying, setIsReplying] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -141,6 +147,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
                         currentUser={currentUser}
                         onSave={handleEdit}
                         onCancel={handleCancelEdit}
+                        fetchUsers={fetchUsers}
                     />
                 </Grid>
             </Box>
@@ -156,7 +163,12 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
             <Box hidden={!isReplying}>
                 <Grid item>
                     <Box marginLeft={5}>
-                        <CommentForm currentUser={currentUser} onSave={handleSave} onCancel={handleCancel} />
+                        <CommentForm
+                            currentUser={currentUser}
+                            onSave={handleSave}
+                            onCancel={handleCancel}
+                            fetchUsers={fetchUsers}
+                        />
                     </Box>
                 </Grid>
             </Box>
@@ -164,7 +176,12 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({ com
             <Box hidden={comment.children.length === 0}>
                 <Grid item>
                     <Box marginLeft={5}>
-                        <NestedCommentList comments={comment.children} currentUser={currentUser} onDelete={onDelete} />
+                        <NestedCommentList
+                            comments={comment.children}
+                            currentUser={currentUser}
+                            onDelete={onDelete}
+                            fetchUsers={fetchUsers}
+                        />
                     </Box>
                 </Grid>
             </Box>

@@ -314,6 +314,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
 
             case PullRequestDetailsActionType.UpdateApprovalStatus: {
                 try {
+                    this.analytics.firePrApproveEvent(this.pr.site.details);
                     const status: ApprovalStatus = await this.api.updateApprovalStatus(this.pr, msg.status);
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateApprovalStatus,
@@ -424,6 +425,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             }
             case PullRequestDetailsActionType.AddTask: {
                 try {
+                    this.analytics.firePrTaskEvent(this.pr.site.details, msg.commentId);
                     const { tasks, comments } = await this.api.createTask(
                         this.tasks,
                         [...this.pageComments, ...this.inlineComments],
@@ -560,6 +562,18 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     this.postMessage({
                         type: CommonMessageType.Error,
                         reason: formatError(e, 'Error opening jira issue'),
+                    });
+                }
+                break;
+
+            case PullRequestDetailsActionType.OpenBuildStatus:
+                try {
+                    await this.api.openBuildStatus(this.pr, msg.buildStatus);
+                } catch (e) {
+                    this.logger.error(new Error(`error opening build status: ${e}`));
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: formatError(e, 'Error opening build status'),
                     });
                 }
                 break;

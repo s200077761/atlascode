@@ -40,6 +40,7 @@ import {
     prCreatedEvent,
     prMergeEvent,
     prPaginationEvent,
+    prTaskEvent,
     prUrlCopiedEvent,
     saveManualCodeEvent,
     startIssueCreationEvent,
@@ -178,6 +179,12 @@ export class VSCAnalyticsApi implements AnalyticsApi {
 
     public async firePrCommentEvent(site: DetailedSiteInfo): Promise<void> {
         return prCommentEvent(site).then((e) => {
+            this._analyticsClient.sendTrackEvent(e);
+        });
+    }
+
+    public async firePrTaskEvent(site: DetailedSiteInfo, commentId?: string): Promise<void> {
+        return prTaskEvent(site, commentId ? 'comment' : 'prlevel').then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }

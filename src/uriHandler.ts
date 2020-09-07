@@ -72,10 +72,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
                 const client = await clientForHostname('bitbucket.org');
                 const pr = await client.pullrequests.getById(site, parseInt(prId));
                 const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
-                Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, {
-                    ...pr,
-                    workspaceRepo: wsRepo,
-                });
+                Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, { ...pr, workspaceRepo: wsRepo });
             } catch {
                 this.showLoginMessage();
             }

@@ -1,12 +1,13 @@
 import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { memo, useCallback, useState } from 'react';
+import { User } from '../../../bitbucket/model';
 import { PanelTitle } from '../common/PanelTitle';
 import InlineRenderedTextEditor from './InlineRenderedTextEditor';
 type SummaryPanelProps = {
     rawSummary: string;
     htmlSummary: string;
-    fetchUsers: (input: string) => Promise<any[]>;
+    fetchUsers: (input: string) => Promise<User[]>;
     summaryChange: (text: string) => void;
 };
 

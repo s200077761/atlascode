@@ -24,6 +24,7 @@ import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
+import { PRBuildStatus } from './BuildStatus';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { MergeDialog } from './MergeDialog';
@@ -59,17 +60,13 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
     const [state, controller] = usePullRequestDetailsController();
     const [currentUserApprovalStatus, setCurrentUserApprovalStatus] = useState<ApprovalStatus>('UNAPPROVED');
 
-    const handleFetchUsers = async (input: string, abortSignal?: AbortSignal): Promise<any> => {
-        AwesomeDebouncePromise(
-            async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
-                //TODO: Fix this this
-                //return await controller.fetchUsers(input, abortSignal);
-                return [];
-            },
-            300,
-            { leading: false }
-        );
-    };
+    const handleFetchUsers = AwesomeDebouncePromise(
+        async (input: string, abortSignal?: AbortSignal): Promise<User[]> => {
+            return await controller.fetchUsers(state.pr.site, input, abortSignal);
+        },
+        300,
+        { leading: false }
+    );
 
     const isSomethingLoading = useCallback(() => {
         return Object.entries(state.loadState).some(
@@ -279,12 +276,14 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                     <NestedCommentList
                                                         comments={state.comments}
                                                         currentUser={state.currentUser}
+                                                        fetchUsers={handleFetchUsers}
                                                         onDelete={controller.deleteComment}
                                                     />
                                                 </Grid>
                                                 <Grid item>
                                                     <CommentForm
                                                         currentUser={state.currentUser}
+                                                        fetchUsers={handleFetchUsers}
                                                         onSave={controller.postComment}
                                                     />
                                                 </Grid>
@@ -347,6 +346,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             <Typography>{format(state.pr.data.ts, 'YYYY-MM-DD h:mm A')}</Typography>
                                         </Tooltip>
                                     </Grid>
+
                                     <Grid item>
                                         <Typography variant="h6">
                                             <strong>Updated</strong>
@@ -356,6 +356,25 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 {format(state.pr.data.updatedTs, 'YYYY-MM-DD h:mm A')}
                                             </Typography>
                                         </Tooltip>
+                                    </Grid>
+
+                                    <Grid item>
+                                        <BasicPanel
+                                            isLoading={state.loadState.buildStatuses}
+                                            isDefaultExpanded
+                                            hidden={state.buildStatuses.length === 0}
+                                            title={`${
+                                                state.buildStatuses.filter((status) => status.state === 'SUCCESSFUL')
+                                                    .length
+                                            } of ${state.buildStatuses.length} build${
+                                                state.buildStatuses.length > 0 ? 's' : ''
+                                            } passed`}
+                                        >
+                                            <PRBuildStatus
+                                                buildStatuses={state.buildStatuses}
+                                                openBuildStatus={controller.openBuildStatus}
+                                            />
+                                        </BasicPanel>
                                     </Grid>
                                 </Grid>
                             </Box>
