@@ -1,5 +1,5 @@
 import { Button, Checkbox, CircularProgress, Grid, TextField } from '@material-ui/core';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 type TaskAdderProps = {
     addTask: (content: string) => Promise<void>;
@@ -11,7 +11,12 @@ export const TaskAdder: React.FunctionComponent<TaskAdderProps> = ({ addTask, ha
 
     const handleSave = useCallback(async () => {
         setIsLoading(true);
-        await addTask(taskContent);
+        try {
+            await addTask(taskContent);
+        } finally {
+            setTaskContent('');
+            setIsLoading(false);
+        }
     }, [taskContent, addTask]);
 
     const handleCancelClicked = useCallback(() => {
@@ -24,11 +29,6 @@ export const TaskAdder: React.FunctionComponent<TaskAdderProps> = ({ addTask, ha
         },
         [setTaskContent]
     );
-
-    useEffect(() => {
-        setTaskContent('');
-        setIsLoading(false);
-    }, []);
 
     return (
         <Grid container spacing={1} direction="row" alignItems="flex-start">

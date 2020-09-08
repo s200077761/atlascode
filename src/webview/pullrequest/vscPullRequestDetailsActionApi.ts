@@ -132,37 +132,63 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return scm.state.HEAD?.name ?? '';
     }
 
-    //Warning: This method has side effects
-    private addToCommentHierarchy(comments: Comment[], commentToAdd: Comment): boolean {
-        for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === commentToAdd.parentId) {
-                comments[i].children.push(commentToAdd);
-                return true;
-            } else if (this.addToCommentHierarchy(comments[i].children, commentToAdd)) {
-                return true;
+    private addToCommentHierarchy(comments: Comment[], commentToAdd: Comment): [Comment[], boolean] {
+        for (const comment of comments) {
+            if (comment.id === commentToAdd.parentId) {
+                return [
+                    [
+                        ...comments.map((c) => {
+                            return c.id === comment.id
+                                ? { ...comment, children: [...comment.children, commentToAdd] }
+                                : c;
+                        }),
+                    ],
+                    true,
+                ];
+            } else {
+                const [children, success] = this.addToCommentHierarchy(comment.children, commentToAdd);
+                if (success) {
+                    return [
+                        [
+                            ...comments.map((c) => {
+                                return c.id === comment.id ? { ...comment, children: children } : c;
+                            }),
+                        ],
+                        success,
+                    ];
+                }
             }
         }
-        return false;
+        return [comments.slice(), false];
     }
 
     private replaceCommentInHierarchy(comments: Comment[], updatedComment: Comment): [Comment[], boolean] {
         for (const comment of comments) {
             if (comment.id === updatedComment.id) {
                 return [
+                    //When the API returns a comment for the edit comment endpoint, it does not contain children or tasks (these are properties we maintain)
+                    //Therefore, we must be careful to carry over these properties. Note that it is not sufficient generalize with ...c, ...updatedComment,
+                    //because these properties are defined but empty in updatedComment, so they will be overwritten as empty.
                     comments.map((c) =>
                         c.id === updatedComment.id ? { ...updatedComment, children: c.children, tasks: c.tasks } : c
                     ),
                     true,
                 ];
             } else {
-                let success = false;
-                [comment.children, success] = this.replaceCommentInHierarchy(comment.children, updatedComment);
+                const [children, success] = this.replaceCommentInHierarchy(comment.children, updatedComment);
                 if (success) {
-                    return [comments, success];
+                    return [
+                        [
+                            ...comments.map((c) => {
+                                return c.id === comment.id ? { ...comment, children: children } : c;
+                            }),
+                        ],
+                        success,
+                    ];
                 }
             }
         }
-        return [comments, false];
+        return [comments.slice(), false];
     }
 
     async getComments(pr: PullRequest): Promise<Comment[]> {
@@ -174,18 +200,12 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         const newComment: Comment = await bbApi.pullrequests.postComment(pr.site, pr.data.id, rawText, parentId);
-
-        const updatedComments = comments.slice();
-        if (newComment.parentId) {
-            const success = this.addToCommentHierarchy(updatedComments, newComment);
-            if (!success) {
-                return await this.getComments(pr);
-            }
-        } else {
-            updatedComments.push(newComment);
+        if (parentId) {
+            const [updatedComments, success] = this.addToCommentHierarchy(comments, newComment);
+            return success ? updatedComments : await this.getComments(pr);
         }
 
-        return updatedComments;
+        return [...comments, newComment];
     }
 
     async editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]> {
@@ -357,53 +377,79 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         commentId?: string
     ): Promise<{ tasks: Task[]; comments: Comment[] }> {
         const bbApi = await clientForSite(pr.site);
-        const task = await bbApi.pullrequests.postTask(pr.site, pr.data.id, content, commentId);
-        //TODO: add analytics events
+        const newTask = await bbApi.pullrequests.postTask(pr.site, pr.data.id, content, commentId);
+        const newTasks = [...tasks.slice(), newTask];
+
         //If the task belongs to a comment, add the task to the comment list
-        const newTasks = tasks.slice();
-        newTasks.push(task);
         if (commentId) {
-            const updatedComments = comments.slice();
-            if (this.addTaskToCommentHierarchy(updatedComments, task)) {
-                return { tasks: newTasks, comments: comments };
-            } else {
-                //TODO: Currently gettings comments also fetches tasks and ties them together; this is very inefficient because it means
-                //you need to get tasks again for non-comment tasks. This needs to be changed, but doing so will break existing PR code since it
-                //depends on the PullRequestApi. For now, it's ok to assume this.getComments() will fill comments with tasks, but in the future
-                //this assumption will be wrong.
-                return { tasks: newTasks, comments: await this.getComments(pr) };
-            }
+            const [updatedComments, success] = this.addTaskToCommentHierarchy(comments, newTask);
+            //TODO: Currently gettings comments also fetches tasks and ties them together; this is very inefficient because it means
+            //you need to get tasks again for non-comment tasks. This needs to be changed, but doing so will break existing PR code since it
+            //depends on the PullRequestApi. For now, it's ok to assume this.getComments() will fill comments with tasks, but in the future
+            //this assumption will be wrong.
+            return success
+                ? { tasks: newTasks, comments: updatedComments }
+                : { tasks: newTasks, comments: await this.getComments(pr) };
         }
         return { tasks: newTasks, comments: comments };
     }
 
-    //Warning: This method has side effects
-    private addTaskToCommentHierarchy(comments: Comment[], task: Task): boolean {
-        for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === task.commentId) {
-                comments[i].tasks.push(task);
-                return true;
-            } else if (this.addTaskToCommentHierarchy(comments[i].children, task)) {
-                return true;
+    private addTaskToCommentHierarchy(comments: Comment[], task: Task): [Comment[], boolean] {
+        for (const comment of comments) {
+            if (comment.id === task.commentId) {
+                return [
+                    comments.map((c: Comment) => {
+                        return c.id === comment.id ? { ...comment, tasks: [...comment.tasks, task] } : c;
+                    }),
+                    true,
+                ];
+            } else {
+                const [children, success] = this.addTaskToCommentHierarchy(comment.children, task);
+                if (success) {
+                    return [
+                        [
+                            ...comments.map((c) => {
+                                return c.id === comment.id ? { ...comment, children: children } : c;
+                            }),
+                        ],
+                        success,
+                    ];
+                }
             }
         }
-        return false;
+        return [comments.slice(), false];
     }
 
     private replaceTaskInTaskList(tasks: Task[], task: Task) {
         return tasks.map((t) => (t.id === task.id ? task : t));
     }
 
-    private replaceTaskInCommentHierarchy(comments: Comment[], task: Task): boolean {
-        for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === task.commentId) {
-                comments[i].tasks = this.replaceTaskInTaskList(comments[i].tasks, task);
-                return true;
-            } else if (this.replaceTaskInCommentHierarchy(comments[i].children, task)) {
-                return true;
+    private replaceTaskInCommentHierarchy(comments: Comment[], task: Task): [Comment[], boolean] {
+        for (const comment of comments) {
+            if (comment.id === task.commentId) {
+                return [
+                    comments.map((c: Comment) => {
+                        return c.id === comment.id
+                            ? { ...comment, tasks: this.replaceTaskInTaskList(comment.tasks, task) }
+                            : c;
+                    }),
+                    true,
+                ];
+            } else {
+                const [children, success] = this.replaceTaskInCommentHierarchy(comment.children, task);
+                if (success) {
+                    return [
+                        [
+                            ...comments.map((c) => {
+                                return c.id === comment.id ? { ...comment, children: children } : c;
+                            }),
+                        ],
+                        success,
+                    ];
+                }
             }
         }
-        return false;
+        return [comments.slice(), false];
     }
 
     async editTask(tasks: Task[], comments: Comment[], pr: PullRequest, task: Task) {
@@ -411,9 +457,12 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         const newTask = await bbApi.pullrequests.editTask(pr.site, pr.data.id, task);
         const newTasks = this.replaceTaskInTaskList(tasks, newTask);
         if (newTask.commentId) {
-            const newComments = comments.slice();
-            this.replaceTaskInCommentHierarchy(newComments, task);
-            return { tasks: newTasks, comments: newComments };
+            const [updatedComments, success] = this.replaceTaskInCommentHierarchy(comments, task);
+
+            //TODO: in the future this won't work because the getComments endpoint won't be fetching tasks, so we need a replacement.
+            return success
+                ? { tasks: newTasks, comments: updatedComments }
+                : { tasks: newTasks, comments: await this.getComments(pr) };
         }
         return { tasks: newTasks, comments: comments };
     }
