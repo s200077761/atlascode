@@ -16,7 +16,7 @@ export interface DiffViewArgs {
     };
 }
 
-export async function getInlineComments(allComments: Comment[]): Promise<Map<string, Comment[][]>> {
+export function getInlineComments(allComments: Comment[]): Map<string, Comment[][]> {
     const inlineComments = allComments.filter((c) => c.inline && c.inline.path);
     const threads: Map<string, Comment[][]> = new Map();
     inlineComments.forEach((val) => {
@@ -67,8 +67,7 @@ export async function getArgsForDiffView(
 
     let fileDisplayName = '';
     const comments: Comment[][] = [];
-
-    const commentsMap = await getInlineComments(allComments.data);
+    const commentsMap = getInlineComments(allComments.data);
 
     if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
         fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;

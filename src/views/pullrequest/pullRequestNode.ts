@@ -11,12 +11,14 @@ import {
     PaginatedComments,
     PaginatedPullRequests,
     PullRequest,
+    Task,
     User,
 } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
+import { addTasksToCommentHierarchy } from '../../webview/common/pullRequestHelperActions';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
@@ -111,16 +113,17 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             bbApi.pullrequests.getChangedFiles(this.pr),
             bbApi.pullrequests.getCommits(this.pr),
             bbApi.pullrequests.getComments(this.pr),
+            bbApi.pullrequests.getTasks(this.pr),
         ]);
 
         return promises.then(
             async (result) => {
-                let [fileChanges, commits, allComments] = result;
+                let [fileChanges, commits, allComments, tasks] = result;
 
                 const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
                 children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
                 children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
-                children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
+                children.push(...(await this.createFileChangesNodes(allComments, fileChanges, tasks)));
                 return children;
             },
             (reason) => {
@@ -203,11 +206,13 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     private async createFileChangesNodes(
         allComments: PaginatedComments,
-        fileChanges: FileChange[]
+        fileChanges: FileChange[],
+        tasks: Task[]
     ): Promise<AbstractBaseNode[]> {
         const allDiffData = await Promise.all(
             fileChanges.map(async (fileChange) => {
-                return await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
+                const commentsWithTasks = { ...allComments, data: addTasksToCommentHierarchy(allComments.data, tasks) }; //Comments need to be infused with tasks now because they are gathered separately
+                return await getArgsForDiffView(commentsWithTasks, fileChange, this.pr, this.commentController);
             })
         );
 

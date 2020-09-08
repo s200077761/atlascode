@@ -398,18 +398,12 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
-
-        const commentsAndTaskPromise = Promise.all([
-            this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`, {
+        let { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
+            {
                 pagelen: maxItemsSupported.comments,
-            }),
-            await this.getTasks(pr),
-        ]);
-
-        //TODO: The task promise needs to be removed from here; it's inefficient and in the new PR view it will not be needed
-        //however, it can not be removed until all old PR logic is removed.
-        const [commentResp, tasks] = await commentsAndTaskPromise;
-        let { data } = commentResp;
+            }
+        );
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -440,17 +434,6 @@ export class CloudPullRequestApi implements PullRequestApi {
         const convertedComments = await Promise.all(
             comments.map((commentData) => this.convertDataToComment(commentData, pr.site))
         );
-
-        let commentIdMap = new Map<string, number>();
-        for (let i = 0; i < convertedComments.length; i++) {
-            commentIdMap.set(convertedComments[i].id, i);
-        }
-        for (const task of tasks) {
-            if (task.commentId) {
-                const commentIndex = commentIdMap.get(task.commentId) as number;
-                convertedComments[commentIndex].tasks.push(task);
-            }
-        }
 
         const nestedComments = this.toNestedList(convertedComments);
         const visibleComments = nestedComments.filter((comment) => this.shouldDisplayComment(comment));

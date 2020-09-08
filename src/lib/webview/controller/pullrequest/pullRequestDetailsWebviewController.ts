@@ -150,16 +150,16 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             //until comment data is returned, so better to wait on diffs until comments are done.
             [this.pageComments, this.inlineComments] = await allCommentsPromise;
 
-            //TODO: This should actually return comments too because it should assign comments
-            //their corresponding tasks
-            const tasksPromise = this.api.getTasks(this.pr).then((tasks: Task[]) => {
-                this.postMessage({
-                    type: PullRequestDetailsMessageType.UpdateTasks,
-                    comments: this.pageComments, //TODO: This should be a function and comments should be an argument
-                    tasks: tasks,
+            const tasksPromise = this.api
+                .getTasks(this.pr, this.pageComments, this.inlineComments)
+                .then((tasksAndComments) => {
+                    this.postMessage({
+                        type: PullRequestDetailsMessageType.UpdateTasks,
+                        comments: tasksAndComments.pageComments,
+                        tasks: tasksAndComments.tasks,
+                    });
+                    return tasksAndComments;
                 });
-                return tasks;
-            });
             const diffPromise = this.api
                 .getFileDiffs(this.pr)
                 .then((diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }) => {
@@ -202,8 +202,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 relatedJiraIssuesPromise,
                 relatedBitbucketIssuesPromise,
             ]);
-            let diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> };
-            [this.tasks, diffsAndChanges] = await Promise.all([tasksPromise, diffPromise]);
+            const [tasksAndComments, diffsAndChanges] = await Promise.all([tasksPromise, diffPromise]);
+            this.pageComments = tasksAndComments.pageComments;
+            this.inlineComments = tasksAndComments.inlineComments;
+            this.tasks = tasksAndComments.tasks;
 
             //File diff data needs to be split up
             this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;

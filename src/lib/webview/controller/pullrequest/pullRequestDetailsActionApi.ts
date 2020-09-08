@@ -52,7 +52,11 @@ export interface PullRequestDetailsActionApi {
     openBitbucketIssue(issue: BitbucketIssue): Promise<void>;
 
     openBuildStatus(pr: PullRequest, status: BuildStatus): Promise<void>;
-    getTasks(pr: PullRequest): Promise<Task[]>;
+    getTasks(
+        pr: PullRequest,
+        pageComments: Comment[],
+        inlineComments: Comment[]
+    ): Promise<{ tasks: Task[]; pageComments: Comment[]; inlineComments: Comment[] }>;
 
     createTask(
         tasks: Task[],
