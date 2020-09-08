@@ -44,6 +44,7 @@ import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 export interface PullRequestDetailsControllerApi {
     postMessage: PostMessageFunc<PullRequestDetailsAction>;
     refresh: () => void;
+    copyLink: (url: string) => void;
     fetchUsers: (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => Promise<User[]>;
     updateSummary: (text: string) => void;
     updateTitle: (text: string) => void;
@@ -76,6 +77,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
     refresh: (): void => {
         return;
     },
+    copyLink: () => {},
     fetchUsers: async (site: BitbucketSite, query: string, abortSignal?: AbortSignal) => [],
     updateSummary: async (text: string) => {
         return;
@@ -356,6 +358,11 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         dispatch({ type: PullRequestDetailsUIActionType.Loading });
         postMessage({ type: CommonActionType.Refresh });
     }, [postMessage]);
+
+    const copyLink = useCallback(
+        (url: string) => postMessage({ type: CommonActionType.CopyLink, linkType: 'pullRequest', url }),
+        [postMessage]
+    );
 
     const fetchUsers = useCallback(
         (site: BitbucketSite, query: string, abortSignal?: AbortSignal): Promise<User[]> => {
@@ -647,6 +654,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
         return {
             postMessage: postMessage,
             refresh: sendRefresh,
+            copyLink: copyLink,
             fetchUsers: fetchUsers,
             updateSummary: updateSummary,
             updateTitle: updateTitle,
@@ -668,6 +676,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
     }, [
         postMessage,
         sendRefresh,
+        copyLink,
         fetchUsers,
         updateSummary,
         updateTitle,

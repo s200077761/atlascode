@@ -274,7 +274,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                     handled = true;
                     const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
                     await env.clipboard.writeText(linkUrl);
-                    issueUrlCopiedEvent(this._issue.siteDetails.id).then((e) => {
+                    issueUrlCopiedEvent().then((e) => {
                         Container.analyticsClient.sendTrackEvent(e);
                     });
                     break;

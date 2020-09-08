@@ -578,6 +578,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 }
                 break;
 
+            case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.SubmitFeedback:
             case CommonActionType.ExternalLink:

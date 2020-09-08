@@ -21,6 +21,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
 import CommentForm from '../common/CommentForm';
+import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
@@ -96,16 +97,16 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                     <Toolbar>
                         <Box flexGrow={1}>
                             <Typography variant={'h3'}>
-                                <Link
-                                    color="textPrimary"
-                                    href={state.pr.data.url}
-                                    //TODO: onCopy={handleCopyLink}
-                                >
+                                <Link color="textPrimary" href={state.pr.data.url}>
                                     {`Pull request #${state.pr.data.id}`}
                                 </Link>
                             </Typography>
                         </Box>
-
+                        <CopyLinkButton
+                            tooltip="Copy link to pull request"
+                            url={state.pr.data.url}
+                            onClick={controller.copyLink}
+                        />
                         <Box marginLeft={1} hidden={state.loadState.basicData}>
                             <NeedsWorkButton
                                 hidden={

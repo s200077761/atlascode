@@ -3,19 +3,19 @@ import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { BitbucketSite } from '../../../../bitbucket/model';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
+import { CreateBitbucketIssueAction, CreateBitbucketIssueActionType } from '../../../ipc/fromUI/createBitbucketIssue';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
+import {
+    CreateBitbucketIssueMessage,
+    CreateBitbucketIssueMessageType,
+    CreateBitbucketIssueResponse,
+} from '../../../ipc/toUI/createBitbucketIssue';
 import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
 import { CreateBitbucketIssueActionApi } from './createbitbucketIssueActionApi';
-import {
-    CreateBitbucketIssueMessageType,
-    CreateBitbucketIssueMessage,
-    CreateBitbucketIssueResponse,
-} from '../../../ipc/toUI/createBitbucketIssue';
-import { CreateBitbucketIssueActionType, CreateBitbucketIssueAction } from '../../../ipc/fromUI/createBitbucketIssue';
 
 export class CreateBitbucketIssueWebviewController implements WebviewController<BitbucketSite> {
     private isRefreshing: boolean;
@@ -107,6 +107,7 @@ export class CreateBitbucketIssueWebviewController implements WebviewController<
                 break;
             }
 
+            case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.Cancel:
             case CommonActionType.SubmitFeedback:

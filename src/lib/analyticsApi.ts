@@ -9,7 +9,7 @@ export interface AnalyticsApi {
     fireLoggedOutEvent(site: DetailedSiteInfo): Promise<void>;
     fireIssueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;
     fireIssueTransitionedEvent(site: DetailedSiteInfo, issueKey: string): Promise<void>;
-    fireIssueUrlCopiedEvent(tenantId: string): Promise<void>;
+    fireIssueUrlCopiedEvent(): Promise<void>;
     fireIssueCommentEvent(site: DetailedSiteInfo): Promise<void>;
     fireIssueWorkStartedEvent(site: DetailedSiteInfo): Promise<void>;
     fireIssueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<void>;
