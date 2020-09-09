@@ -1,11 +1,11 @@
+import TurnDownService from 'turndown';
 import * as vscode from 'vscode';
 import { HoverProvider } from 'vscode';
-import TurnDownService from 'turndown';
-import { Commands } from '../../commands';
 import { viewScreenEvent } from '../../analytics';
+import { Commands } from '../../commands';
 import { Container } from '../../container';
-import { IssueKeyRegEx } from '../../jira/issueKeyParser';
 import { issueForKey } from '../../jira/issueForKey';
+import { IssueKeyRegEx } from '../../jira/issueKeyParser';
 
 export class IssueHoverProvider implements HoverProvider {
     async provideHover(doc: vscode.TextDocument, position: vscode.Position) {
@@ -35,9 +35,9 @@ export class IssueHoverProvider implements HoverProvider {
             : '*No description*';
 
         const header = `| ![](${issue.issuetype.iconUrl})                        | ${key}: ${summaryText} |
-       | -                                                      | -                      |
-       | ![](${issue.priority.iconUrl.replace('.svg', '.png')}) | ${issue.priority.name} |
-       |                                                        | ${statusText}          |`;
+| -                                                      | -                      |
+| ![](${issue.priority.iconUrl.replace('.svg', '.png')}) | ${issue.priority.name} |
+|                                                        | ${statusText}          |`;
 
         let text = [];
         text.push(new vscode.MarkdownString(header));

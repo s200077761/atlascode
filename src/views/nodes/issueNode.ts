@@ -25,7 +25,7 @@ export class IssueNode extends AbstractBaseNode {
         treeItem.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [this.issue] };
         treeItem.iconPath = vscode.Uri.parse(this.issue.issuetype.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;
-        treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}`;
+        treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}\n\n${this.issue.priority.name}    |    ${this.issue.status.name}`;
         treeItem.resourceUri = vscode.Uri.parse(`${this.issue.siteDetails.baseLinkUrl}/browse/${this.issue.key}`);
         return treeItem;
     }
