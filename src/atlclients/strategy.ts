@@ -1,6 +1,6 @@
 import { OAuthProvider } from './authInfo';
 
-const authServer = 'https://atlascode-oauth-service.ap-southeast-2.dev.atl-paas.net/';
+const authServer = 'https://atlascode-oauth-service.services.atlassian.com/';
 
 export const JiraProdStrategy = {
     clientID: 'UV2010EkKxO7GZ7zxZ8Swm9Rn4M5K0Eh',
