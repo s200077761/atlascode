@@ -284,10 +284,6 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 dispatch({ type: PullRequestDetailsUIActionType.Init, data: message });
                 break;
             }
-            case PullRequestDetailsMessageType.Update: {
-                //FILL THIS IN
-                break;
-            }
             case PullRequestDetailsMessageType.UpdateSummary: {
                 dispatch({ type: PullRequestDetailsUIActionType.UpdateSummary, data: message });
                 break;

@@ -19,7 +19,6 @@ import {
 
 export enum PullRequestDetailsMessageType {
     Init = 'init',
-    Update = 'update',
     FetchUsersResponse = 'fetchUsersResponse',
     PostCommentResponse = 'postCommentResponse',
     EditCommentResponse = 'editCommentResponse',
@@ -45,7 +44,6 @@ export enum PullRequestDetailsMessageType {
 
 export type PullRequestDetailsMessage =
     | ReducerAction<PullRequestDetailsMessageType.Init, PullRequestDetailsInitMessage>
-    | ReducerAction<PullRequestDetailsMessageType.Update, PullRequestDetailsInitMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateSummary, PullRequestDetailsSummaryMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateTitle, PullRequestDetailsTitleMessage>
     | ReducerAction<PullRequestDetailsMessageType.UpdateCommits, PullRequestDetailsCommitsMessage>

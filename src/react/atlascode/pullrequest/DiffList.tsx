@@ -12,7 +12,6 @@ import {
     Tooltip,
     Typography,
 } from '@material-ui/core';
-import InsertCommentIcon from '@material-ui/icons/InsertComment';
 import clsx from 'clsx';
 import React from 'react';
 import { FileDiff, FileStatus } from '../../../bitbucket/model';
@@ -141,7 +140,7 @@ export const DiffList: React.FunctionComponent<{
                             <TableCell className={classes.tableCell}>
                                 <Box hidden={!row.hasComments}>
                                     <Tooltip title={'contains comments'}>
-                                        <InsertCommentIcon />
+                                        <Typography>💬</Typography>
                                     </Tooltip>
                                 </Box>
                             </TableCell>

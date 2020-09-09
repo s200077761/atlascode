@@ -24,13 +24,13 @@ import CommentForm from '../common/CommentForm';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
 import { BranchInfo } from './BranchInfo';
-import { PRBuildStatus } from './BuildStatus';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
 import { MergeDialog } from './MergeDialog';
 import { NeedsWorkButton } from './NeedsWorkButton';
 import { NestedCommentList } from './NestedCommentList';
 import { PageTaskList } from './PageTaskList';
+import { PRBuildStatus } from './PRBuildStatus';
 import { PullRequestDetailsControllerContext, usePullRequestDetailsController } from './pullRequestDetailsController';
 import { RelatedBitbucketIssues } from './RelatedBitbucketIssues';
 import { RelatedJiraIssues } from './RelatedJiraIssues';
@@ -152,7 +152,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                 <Grid container spacing={1} direction="row" wrap="wrap-reverse">
                     <Grid item xs={12} md={9} lg={9} xl={9}>
                         <Paper className={classes.paper100}>
-                            <Box margin={2} /* TODO: add loading state to this */>
+                            <Box margin={2}>
                                 <Grid container direction={'column'} spacing={1}>
                                     <Grid item>
                                         <InlineTextEditor
