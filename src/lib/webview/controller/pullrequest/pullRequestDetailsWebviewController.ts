@@ -8,7 +8,6 @@ import {
     BuildStatus,
     Comment,
     Commit,
-    FileChange,
     FileDiff,
     MergeStrategy,
     PullRequest,
@@ -46,7 +45,6 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
     private pageComments: Comment[];
     private inlineComments: Comment[];
     private tasks: Task[];
-    private diffsToChangesMap: Map<string, FileChange>;
 
     constructor(
         pr: PullRequest,
@@ -160,16 +158,14 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                     });
                     return tasksAndComments;
                 });
-            const diffPromise = this.api
-                .getFileDiffs(this.pr)
-                .then((diffsAndChanges: { fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }) => {
-                    const fileDiffs = diffsAndChanges.fileDiffs;
-                    this.postMessage({
-                        type: PullRequestDetailsMessageType.UpdateFileDiffs,
-                        fileDiffs: fileDiffs,
-                    });
-                    return diffsAndChanges;
+
+            //This one is fire and forget because nothing depends on this
+            this.api.getFileDiffs(this.pr).then((fileDiffs: FileDiff[]) => {
+                this.postMessage({
+                    type: PullRequestDetailsMessageType.UpdateFileDiffs,
+                    fileDiffs: fileDiffs,
                 });
+            });
 
             //In order to get related issues, we need comments and commits. We already have comments,
             //so now we wait for commits. These two promises can be launched concurrently.
@@ -202,13 +198,10 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 relatedJiraIssuesPromise,
                 relatedBitbucketIssuesPromise,
             ]);
-            const [tasksAndComments, diffsAndChanges] = await Promise.all([tasksPromise, diffPromise]);
+            const tasksAndComments = await tasksPromise;
             this.pageComments = tasksAndComments.pageComments;
             this.inlineComments = tasksAndComments.inlineComments;
             this.tasks = tasksAndComments.tasks;
-
-            //File diff data needs to be split up
-            this.diffsToChangesMap = diffsAndChanges.diffsToChangesMap;
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
             this.logger.error(err);
@@ -508,14 +501,8 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
             }
             case PullRequestDetailsActionType.OpenDiffRequest:
                 try {
-                    //Find a matching FileChange for the corresponding FileDiff. This will not be necessary once these two types are unified.
-                    const fileChange = this.diffsToChangesMap.get(msg.fileDiff.file);
-                    if (fileChange) {
-                        //Inline comments are passed in to avoid refetching them.
-                        await this.api.openDiffViewForFile(this.pr, fileChange, this.inlineComments);
-                    } else {
-                        throw Error('No corresponding FileChange object for FileDiff');
-                    }
+                    //Inline comments are passed in to avoid refetching them.
+                    await this.api.openDiffViewForFile(this.pr, msg.fileDiff, this.inlineComments);
                 } catch (e) {
                     this.logger.error(new Error(`error opening diff: ${e}`));
                     this.postMessage({

@@ -4,6 +4,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Logger } from '../../logger';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
+import { getFileNameFromPaths } from '../../views/pullrequest/diffViewHelper';
 import { HTTPClient } from '../httpClient';
 import {
     ApprovalStatus,
@@ -12,7 +13,7 @@ import {
     Comment,
     Commit,
     CreatePullRequestData,
-    FileChange,
+    FileDiff,
     FileStatus,
     MergeStrategy,
     PaginatedComments,
@@ -182,7 +183,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
+    async getChangedFiles(pr: PullRequest): Promise<FileDiff[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
@@ -201,11 +202,12 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         return accumulatedDiffStats.map((diffStat) => ({
+            file: getFileNameFromPaths(diffStat.old?.path, diffStat.new?.path),
             linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
             linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: this.mapStatusWordsToFileStatus(diffStat.status!),
-            oldPath: diffStat.old ? diffStat.old.path! : undefined,
-            newPath: diffStat.new ? diffStat.new.path! : undefined,
+            oldPath: diffStat.old?.path,
+            newPath: diffStat.new?.path,
             hunkMeta: {
                 oldPathAdditions: [],
                 oldPathDeletions: [],

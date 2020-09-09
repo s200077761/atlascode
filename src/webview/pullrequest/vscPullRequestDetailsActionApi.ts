@@ -12,7 +12,6 @@ import {
     BuildStatus,
     Comment,
     Commit,
-    FileChange,
     FileDiff,
     isBitbucketIssue,
     MergeStrategy,
@@ -29,7 +28,7 @@ import { transitionIssue } from '../../jira/transitionIssue';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
 import { Logger } from '../../logger';
-import { convertFileChangeToFileDiff, getArgsForDiffView } from '../../views/pullrequest/diffViewHelper';
+import { getArgsForDiffView } from '../../views/pullrequest/diffViewHelper';
 import { addSourceRemoteIfNeeded } from '../../views/pullrequest/gitActions';
 import {
     addTasksToCommentHierarchy,
@@ -170,31 +169,15 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return await this.getComments(pr);
     }
 
-    //The difference between FileDiff and FileChange is documented in their model definitions
-    async getFileDiffs(
-        pr: PullRequest
-    ): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }> {
+    async getFileDiffs(pr: PullRequest): Promise<FileDiff[]> {
         const bbApi = await clientForSite(pr.site);
-        const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
-
-        const diffsToChangesMap = new Map<string, FileChange>();
-        const fileDiffs: FileDiff[] = [];
-        fileChanges.forEach((fileChange) => {
-            const fileDiff = convertFileChangeToFileDiff(fileChange);
-            fileDiffs.push(fileDiff);
-            diffsToChangesMap.set(fileDiff.file, fileChange);
-        });
-
-        return {
-            fileDiffs: fileDiffs,
-            diffsToChangesMap: diffsToChangesMap,
-        };
+        return await bbApi.pullrequests.getChangedFiles(pr);
     }
 
-    async openDiffViewForFile(pr: PullRequest, fileChange: FileChange, comments: Comment[]): Promise<void> {
+    async openDiffViewForFile(pr: PullRequest, fileDiff: FileDiff, comments: Comment[]): Promise<void> {
         const diffViewArgs = await getArgsForDiffView(
             { data: comments },
-            fileChange,
+            fileDiff,
             pr,
             Container.bitbucketContext.prCommentController
         );

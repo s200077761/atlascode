@@ -1,6 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Task } from '../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileDiff, Task } from '../bitbucket/model';
 import { Action } from './messaging';
 
 export interface CreateTask extends Action {
@@ -161,7 +161,7 @@ export function isOpenBuildStatus(a: Action): a is OpenBuildStatusAction {
 
 export interface OpenDiffViewAction extends Action {
     action: 'openDiffView';
-    fileChange: FileChange;
+    fileChange: FileDiff;
 }
 
 export function isOpenDiffView(a: Action): a is OpenDiffViewAction {

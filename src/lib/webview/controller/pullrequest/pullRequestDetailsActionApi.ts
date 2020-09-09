@@ -7,7 +7,6 @@ import {
     BuildStatus,
     Comment,
     Commit,
-    FileChange,
     FileDiff,
     MergeStrategy,
     PullRequest,
@@ -31,8 +30,8 @@ export interface PullRequestDetailsActionApi {
     postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]>;
     editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]>;
     deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]>;
-    getFileDiffs(pr: PullRequest): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }>;
-    openDiffViewForFile(pr: PullRequest, fileChange: FileChange, comments: Comment[]): Promise<void>;
+    getFileDiffs(pr: PullRequest): Promise<FileDiff[]>;
+    openDiffViewForFile(pr: PullRequest, fileDiff: FileDiff, comments: Comment[]): Promise<void>;
     updateBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     updateMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     fetchRelatedJiraIssues(
