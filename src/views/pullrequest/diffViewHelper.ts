@@ -65,19 +65,16 @@ export async function getArgsForDiffView(
     const lhsFilePath = fileDiff.oldPath;
     const rhsFilePath = fileDiff.newPath;
 
-    let fileDisplayName = '';
+    let fileDisplayName = getFileNameFromPaths(lhsFilePath, rhsFilePath);
     const comments: Comment[][] = [];
     const commentsMap = getInlineComments(allComments.data);
 
     if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
-        fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
         comments.push(...(commentsMap.get(lhsFilePath) || []));
         comments.push(...(commentsMap.get(rhsFilePath) || []));
     } else if (rhsFilePath) {
-        fileDisplayName = rhsFilePath;
         comments.push(...(commentsMap.get(rhsFilePath) || []));
     } else if (lhsFilePath) {
-        fileDisplayName = lhsFilePath;
         comments.push(...(commentsMap.get(lhsFilePath) || []));
     }
 

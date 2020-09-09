@@ -1,4 +1,4 @@
-import { Comment, Task } from '../../bitbucket/model';
+import { Comment, FileDiff, Task } from '../../bitbucket/model';
 
 export function addToCommentHierarchy(comments: Comment[], commentToAdd: Comment): [Comment[], boolean] {
     for (const comment of comments) {
@@ -122,4 +122,16 @@ export function replaceTaskInCommentHierarchy(comments: Comment[], task: Task): 
         }
     }
     return [comments.slice(), false];
+}
+
+export function fileDiffContainsComments(fileDiff: FileDiff, inlineComments: Comment[]) {
+    for (const comment of inlineComments) {
+        if (fileDiff.oldPath && comment.inline?.path === fileDiff.oldPath) {
+            return true;
+        }
+        if (fileDiff.newPath && comment.inline?.path === fileDiff.newPath) {
+            return true;
+        }
+    }
+    return false;
 }

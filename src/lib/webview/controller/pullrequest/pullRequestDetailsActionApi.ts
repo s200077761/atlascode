@@ -30,7 +30,7 @@ export interface PullRequestDetailsActionApi {
     postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]>;
     editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]>;
     deleteComment(pr: PullRequest, comment: Comment): Promise<Comment[]>;
-    getFileDiffs(pr: PullRequest): Promise<FileDiff[]>;
+    getFileDiffs(pr: PullRequest, inlineComments: Comment[]): Promise<FileDiff[]>;
     openDiffViewForFile(pr: PullRequest, fileDiff: FileDiff, comments: Comment[]): Promise<void>;
     updateBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     updateMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;

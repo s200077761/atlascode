@@ -189,6 +189,7 @@ export interface FileDiff {
     rhsQueryParams?: FileDiffQueryParams;
     oldPath?: string;
     newPath?: string;
+    hasComments?: boolean;
 
     hunkMeta?: {
         oldPathAdditions: number[];

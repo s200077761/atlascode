@@ -34,6 +34,7 @@ import {
     addTasksToCommentHierarchy,
     addTaskToCommentHierarchy,
     addToCommentHierarchy,
+    fileDiffContainsComments,
     replaceCommentInHierarchy,
     replaceTaskInCommentHierarchy,
     replaceTaskInTaskList,
@@ -169,9 +170,15 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return await this.getComments(pr);
     }
 
-    async getFileDiffs(pr: PullRequest): Promise<FileDiff[]> {
+    async getFileDiffs(pr: PullRequest, inlineComments: Comment[]): Promise<FileDiff[]> {
         const bbApi = await clientForSite(pr.site);
-        return await bbApi.pullrequests.getChangedFiles(pr);
+        const fileDiffs: FileDiff[] = await bbApi.pullrequests.getChangedFiles(pr);
+        fileDiffs.forEach((fileDiff) => {
+            if (fileDiffContainsComments(fileDiff, inlineComments)) {
+                fileDiff.hasComments = true;
+            }
+        });
+        return fileDiffs;
     }
 
     async openDiffViewForFile(pr: PullRequest, fileDiff: FileDiff, comments: Comment[]): Promise<void> {

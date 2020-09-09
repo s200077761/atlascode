@@ -1,4 +1,5 @@
 import {
+    Box,
     Chip,
     Link,
     makeStyles,
@@ -11,6 +12,7 @@ import {
     Tooltip,
     Typography,
 } from '@material-ui/core';
+import InsertCommentIcon from '@material-ui/icons/InsertComment';
 import clsx from 'clsx';
 import React from 'react';
 import { FileDiff, FileStatus } from '../../../bitbucket/model';
@@ -135,6 +137,13 @@ export const DiffList: React.FunctionComponent<{
                                 <Link href="#" onClick={() => props.openDiffHandler(row)}>
                                     <Typography>{row.file}</Typography>
                                 </Link>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <Box hidden={!row.hasComments}>
+                                    <Tooltip title={'contains comments'}>
+                                        <InsertCommentIcon />
+                                    </Tooltip>
+                                </Box>
                             </TableCell>
                         </TableRow>
                     ))}

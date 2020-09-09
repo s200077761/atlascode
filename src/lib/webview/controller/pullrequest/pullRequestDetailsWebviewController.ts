@@ -160,7 +160,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                 });
 
             //This one is fire and forget because nothing depends on this
-            this.api.getFileDiffs(this.pr).then((fileDiffs: FileDiff[]) => {
+            this.api.getFileDiffs(this.pr, this.inlineComments).then((fileDiffs: FileDiff[]) => {
                 this.postMessage({
                     type: PullRequestDetailsMessageType.UpdateFileDiffs,
                     fileDiffs: fileDiffs,
