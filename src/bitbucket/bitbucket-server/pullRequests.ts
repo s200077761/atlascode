@@ -1,5 +1,6 @@
 import { CancelToken } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Container } from '../../container';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
@@ -63,18 +64,23 @@ export class ServerPullRequestApi implements PullRequestApi {
         return { workspaceRepo, site, data: [], next: undefined };
     }
 
+    //Just in case some older version of BBServer doesn't support the 'name' property, this defaults to userId (which is actually the user slug)
+    //The reason for needing to fetch the current user and take the userName property is documented in the User model.
+    private async userName(workspaceRepo: WorkspaceRepo) {
+        const { userName } = await Container.bitbucketContext.currentUser(workspaceRepo.mainSiteRemote.site!);
+        return userName ?? workspaceRepo.mainSiteRemote.site!.details.userId; //userName should always be defined, but this is a little added safety
+    }
+
     async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(workspaceRepo, {
-            'username.1': currentUser,
+            'username.1': this.userName(workspaceRepo),
             'role.1': 'AUTHOR',
         });
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(workspaceRepo, {
-            'username.1': currentUser,
+            'username.1': this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
         });
     }
@@ -109,9 +115,8 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(workspaceRepo, {
-            'username.1': currentUser,
+            'username.1': this.userName(workspaceRepo),
         });
     }
 
@@ -798,6 +803,9 @@ export class ServerPullRequestApi implements PullRequestApi {
             accountId: input.slug!,
             displayName: input.displayName!,
             emailAddress: input.emailAddress,
+            //Try to get the name property, but if it doesn't exist for some reason, slug should work identically in 90% of cases
+            //the reason for this is documented in the User model definition.
+            userName: input.name ?? input.slug!,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
             avatarUrl: ServerPullRequestApi.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl),
             mention: `@${input.slug}`,
