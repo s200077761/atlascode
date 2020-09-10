@@ -911,20 +911,28 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                     if (isGetImage(msg)) {
                         handled = true;
                         try {
-                            if (this._issue.siteDetails.isCloud) {
+                            const baseApiUrl = new URL(
+                                this._issue.siteDetails.baseApiUrl.slice(
+                                    0,
+                                    this._issue.siteDetails.baseApiUrl.lastIndexOf('/rest')
+                                )
+                            );
+                            // Prefix base URL for a relative URL
+                            const href = msg.url.startsWith('/secure/attachment')
+                                ? new URL(baseApiUrl + msg.url)
+                                : new URL(msg.url);
+                            // Skip fetching external images (that do not belong to the site)
+                            if (href.hostname !== baseApiUrl.hostname) {
                                 this.postMessage({
                                     type: 'getImageDone',
                                     imgData: '',
                                     nonce: msg.nonce,
                                 });
                             }
-                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
-                            const baseUrl = new URL(this._issue.siteDetails.baseLinkUrl);
-                            const href = new URL(msg.url!, baseUrl);
-                            if (href.hostname !== baseUrl.hostname) {
-                                break;
-                            }
+
                             const url = href.toString();
+
+                            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                             const response = await client.transportFactory().get(url, {
                                 method: 'GET',
                                 headers: {
