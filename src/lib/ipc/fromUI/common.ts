@@ -11,6 +11,7 @@ export enum CommonActionType {
     Refresh = 'refresh',
     SubmitFeedback = 'submitFeedback',
     ExternalLink = 'externalLink',
+    CopyLink = 'copyLink',
     OpenJiraIssue = 'openJiraIssue',
     Cancel = 'cancelInFlight',
 }
@@ -23,6 +24,7 @@ export type CommonAction =
     | ReducerAction<CommonActionType.Refresh>
     | ReducerAction<CommonActionType.SubmitFeedback, SubmitFeedbackAction>
     | ReducerAction<CommonActionType.ExternalLink, ExternalLinkAction>
+    | ReducerAction<CommonActionType.CopyLink, CopyLinkAction>
     | ReducerAction<CommonActionType.OpenJiraIssue, OpenJiraIssueAction>
     | ReducerAction<CommonActionType.Cancel, CancelAction>;
 
@@ -38,6 +40,11 @@ export interface ExternalLinkAction {
     source: string;
     linkId: string;
     url?: string;
+}
+
+export interface CopyLinkAction {
+    linkType: 'jiraIssue' | 'pullRequest' | 'bbIssue';
+    url: string;
 }
 
 export interface OpenJiraIssueAction {

@@ -106,8 +106,8 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         });
     }
 
-    public async fireIssueUrlCopiedEvent(tenantId: string): Promise<void> {
-        return issueUrlCopiedEvent(tenantId).then((e) => {
+    public async fireIssueUrlCopiedEvent(): Promise<void> {
+        return issueUrlCopiedEvent().then((e) => {
             this._analyticsClient.sendTrackEvent(e);
         });
     }
