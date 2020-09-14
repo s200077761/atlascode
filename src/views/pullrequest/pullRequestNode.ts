@@ -6,17 +6,19 @@ import {
     BitbucketSite,
     Comment,
     Commit,
-    FileChange,
+    FileDiff,
     FileStatus,
     PaginatedComments,
     PaginatedPullRequests,
     PullRequest,
+    Task,
     User,
 } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
+import { addTasksToCommentHierarchy } from '../../webview/common/pullRequestHelperActions';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
@@ -111,16 +113,17 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             bbApi.pullrequests.getChangedFiles(this.pr),
             bbApi.pullrequests.getCommits(this.pr),
             bbApi.pullrequests.getComments(this.pr),
+            bbApi.pullrequests.getTasks(this.pr),
         ]);
 
         return promises.then(
             async (result) => {
-                let [fileChanges, commits, allComments] = result;
+                let [fileDiffs, commits, allComments, tasks] = result;
 
                 const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
                 children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
                 children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
-                children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
+                children.push(...(await this.createFileChangesNodes(allComments, fileDiffs, tasks)));
                 return children;
             },
             (reason) => {
@@ -203,11 +206,13 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     private async createFileChangesNodes(
         allComments: PaginatedComments,
-        fileChanges: FileChange[]
+        fileDiffs: FileDiff[],
+        tasks: Task[]
     ): Promise<AbstractBaseNode[]> {
         const allDiffData = await Promise.all(
-            fileChanges.map(async (fileChange) => {
-                return await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
+            fileDiffs.map(async (fileDiff) => {
+                const commentsWithTasks = { ...allComments, data: addTasksToCommentHierarchy(allComments.data, tasks) }; //Comments need to be infused with tasks now because they are gathered separately
+                return await getArgsForDiffView(commentsWithTasks, fileDiff, this.pr, this.commentController);
             })
         );
 
@@ -299,7 +304,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
 
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(`${itemData.prUrl}#chg-${itemData.fileDisplayName}`);
-        switch (itemData.fileChangeStatus) {
+        switch (itemData.fileDiffStatus) {
             case FileStatus.ADDED:
                 item.iconPath = Resources.icons.get('add-circle');
                 break;

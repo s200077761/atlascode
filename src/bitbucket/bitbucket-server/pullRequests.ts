@@ -2,6 +2,7 @@ import { CancelToken } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
+import { getFileNameFromPaths } from '../../views/pullrequest/diffViewHelper';
 import { clientForSite } from '../bbUtils';
 import { HTTPClient } from '../httpClient';
 import {
@@ -11,7 +12,7 @@ import {
     Comment,
     Commit,
     CreatePullRequestData,
-    FileChange,
+    FileDiff,
     FileStatus,
     MergeStrategy,
     PaginatedComments,
@@ -237,7 +238,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
+    async getChangedFiles(pr: PullRequest): Promise<FileDiff[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
@@ -268,7 +269,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             accumulatedDiffStats.push(...(data.diffs || []));
         }
 
-        const result: FileChange[] = accumulatedDiffStats.map((diffStat) => {
+        const result: FileDiff[] = accumulatedDiffStats.map((diffStat) => {
             let status: FileStatus = FileStatus.MODIFIED;
             if (!diffStat.source) {
                 status = FileStatus.ADDED;
@@ -324,11 +325,12 @@ export class ServerPullRequestApi implements PullRequestApi {
             });
 
             return {
+                file: getFileNameFromPaths(diffStat.source?.toString, diffStat.destination?.toString),
                 status: status,
                 linesAdded: sourceAdditions.size + destinationAdditions.size,
                 linesRemoved: sourceDeletions.size + destinationDeletions.size,
-                oldPath: diffStat.source ? diffStat.source.toString : undefined,
-                newPath: diffStat.destination ? diffStat.destination.toString : undefined,
+                oldPath: diffStat.source?.toString,
+                newPath: diffStat.destination?.toString,
                 hunkMeta: {
                     oldPathAdditions: Array.from(sourceAdditions),
                     oldPathDeletions: Array.from(sourceDeletions),
@@ -434,22 +436,13 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
-
-        const commentsAndTaskPromise = Promise.all([
-            await this.client.get(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                }
-            ),
-            await this.getTasks(pr),
-        ]);
-
-        //TODO: The task promise needs to be removed from here; it's inefficient and in the new PR view it will not be needed
-        //however, it can not be removed until all old PR logic is removed.
-        const [commentResp, tasks] = await commentsAndTaskPromise;
-        let { data } = commentResp;
+        let { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
+            {
+                markup: true,
+                avatarSize: 64,
+            }
+        );
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -483,20 +476,14 @@ export class ServerPullRequestApi implements PullRequestApi {
             data: (
                 await Promise.all(
                     activities.map((activity) =>
-                        this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks)
+                        this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor)
                     )
                 )
             )
                 .filter((comment) => this.shouldDisplayComment(comment))
                 .sort((a, b) => {
                     //Comment threads are not retrieved from the API by posting order, so that must be restored to display them properly
-                    if (a.ts > b.ts) {
-                        return 1;
-                    }
-                    if (a.ts < b.ts) {
-                        return -1;
-                    }
-                    return 0;
+                    return a.ts.localeCompare(b.ts);
                 }),
             next: undefined,
         };
@@ -516,27 +503,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         return hasUndeletedChild || !comment.deleted || comment.tasks.some((task) => !task.isComplete);
     }
 
-    private async toNestedCommentModel(
-        site: BitbucketSite,
-        comment: any,
-        commentAnchor: any,
-        tasks: Task[]
-    ): Promise<Comment> {
+    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
-        let tasksInComment: Task[] = [];
-        let tasksNotInComment: Task[] = [];
-        for (const task of tasks) {
-            if (task.commentId === commentModel.id) {
-                tasksInComment.push(task);
-            } else {
-                tasksNotInComment.push(task);
-            }
-        }
-        commentModel.tasks = tasksInComment;
         commentModel.children = await Promise.all(
-            (comment.comments || []).map((c: any) =>
-                this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)
-            )
+            (comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor))
         );
         return commentModel;
     }

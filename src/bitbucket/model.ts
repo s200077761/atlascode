@@ -179,18 +179,19 @@ export enum FileStatus {
     UNKNOWN = 'X',
 }
 
-//TODO: [VSCODE-1197] get rid of FileChange and FileDiff and replace them with a unified type. I don't even want to attempt this
-//until all the old PR logic is gone because this would break everything right now.
-
-//FileChange is a data structure more in line with what is returned by the API. Diffs returned by the bbServer API
-//necessary to open a diff view and some additional hunkMeta data.
-export type FileChange = {
+export interface FileDiff {
+    file?: string;
     status: FileStatus;
-    oldPath?: string;
-    newPath?: string;
     linesAdded: number;
     linesRemoved: number;
-    hunkMeta: {
+    similarity?: number;
+    lhsQueryParams?: FileDiffQueryParams;
+    rhsQueryParams?: FileDiffQueryParams;
+    oldPath?: string;
+    newPath?: string;
+    hasComments?: boolean;
+
+    hunkMeta?: {
         oldPathAdditions: number[];
         oldPathDeletions: number[];
         newPathAdditions: number[];
@@ -199,20 +200,6 @@ export type FileChange = {
         // NOT using Map here as Map does not serialize to JSON
         newPathContextMap: Object;
     };
-};
-
-//FileDiff is a data structure more useful for displaying the data as a diff list.
-export interface FileDiff {
-    file: string;
-    status: FileStatus;
-    linesAdded: number;
-    linesRemoved: number;
-    similarity?: number;
-    lhsQueryParams?: FileDiffQueryParams;
-    rhsQueryParams?: FileDiffQueryParams;
-    //TODO: remove fileChange from fileDiff. This can't be done right now because it will break
-    //the old PR webview, but FileDiff and FileChange should be distinct objects.
-    fileChange?: FileChange;
 }
 
 export type CreatePullRequestData = {
@@ -348,7 +335,7 @@ export interface PullRequestApi {
     getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest>;
     getById(site: BitbucketSite, prId: number): Promise<PullRequest>;
-    getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
+    getChangedFiles(pr: PullRequest): Promise<FileDiff[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
     editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment>;

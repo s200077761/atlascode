@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Comment, FileChange, FileDiff, FileStatus, PaginatedComments, PullRequest } from '../../bitbucket/model';
+import { Comment, FileDiff, FileStatus, PaginatedComments, PullRequest } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
@@ -11,12 +11,12 @@ export interface DiffViewArgs {
     fileDisplayData: {
         prUrl: string;
         fileDisplayName: string;
-        fileChangeStatus: FileStatus;
+        fileDiffStatus: FileStatus;
         numberOfComments: number;
     };
 }
 
-export async function getInlineComments(allComments: Comment[]): Promise<Map<string, Comment[][]>> {
+export function getInlineComments(allComments: Comment[]): Map<string, Comment[][]> {
     const inlineComments = allComments.filter((c) => c.inline && c.inline.path);
     const threads: Map<string, Comment[][]> = new Map();
     inlineComments.forEach((val) => {
@@ -39,7 +39,7 @@ function traverse(n: Comment): Comment[] {
 
 export async function getArgsForDiffView(
     allComments: PaginatedComments,
-    fileChange: FileChange,
+    fileDiff: FileDiff,
     pr: PullRequest,
     commentController: PullRequestCommentController
 ): Promise<DiffViewArgs> {
@@ -62,28 +62,24 @@ export async function getArgsForDiffView(
         Logger.debug('error getting merge base: ', e);
     }
 
-    const lhsFilePath = fileChange.oldPath;
-    const rhsFilePath = fileChange.newPath;
+    const lhsFilePath = fileDiff.oldPath;
+    const rhsFilePath = fileDiff.newPath;
 
-    let fileDisplayName = '';
+    let fileDisplayName = getFileNameFromPaths(lhsFilePath, rhsFilePath);
     const comments: Comment[][] = [];
-
-    const commentsMap = await getInlineComments(allComments.data);
+    const commentsMap = getInlineComments(allComments.data);
 
     if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
-        fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
         comments.push(...(commentsMap.get(lhsFilePath) || []));
         comments.push(...(commentsMap.get(rhsFilePath) || []));
     } else if (rhsFilePath) {
-        fileDisplayName = rhsFilePath;
         comments.push(...(commentsMap.get(rhsFilePath) || []));
     } else if (lhsFilePath) {
-        fileDisplayName = lhsFilePath;
         comments.push(...(commentsMap.get(lhsFilePath) || []));
     }
 
     //@ts-ignore
-    if (fileChange.status === 'merge conflict') {
+    if (fileDiff.status === 'merge conflict') {
         fileDisplayName = `⚠️ CONFLICTED: ${fileDisplayName}`;
     }
 
@@ -114,9 +110,9 @@ export async function getArgsForDiffView(
             commitHash: mergeBase,
             path: lhsFilePath,
             commentThreads: lhsCommentThreads,
-            addedLines: fileChange.hunkMeta.oldPathAdditions,
-            deletedLines: fileChange.hunkMeta.oldPathDeletions,
-            lineContextMap: fileChange.hunkMeta.newPathContextMap,
+            addedLines: fileDiff.hunkMeta!.oldPathAdditions,
+            deletedLines: fileDiff.hunkMeta!.oldPathDeletions,
+            lineContextMap: fileDiff.hunkMeta!.newPathContextMap,
         } as PRFileDiffQueryParams),
     };
     const rhsQueryParam = {
@@ -132,9 +128,9 @@ export async function getArgsForDiffView(
             commitHash: pr.data.source!.commitHash,
             path: rhsFilePath,
             commentThreads: rhsCommentThreads,
-            addedLines: fileChange.hunkMeta.newPathAdditions,
-            deletedLines: fileChange.hunkMeta.newPathDeletions,
-            lineContextMap: fileChange.hunkMeta.newPathContextMap,
+            addedLines: fileDiff.hunkMeta!.newPathAdditions,
+            deletedLines: fileDiff.hunkMeta!.newPathDeletions,
+            lineContextMap: fileDiff.hunkMeta!.newPathContextMap,
         } as PRFileDiffQueryParams),
     };
 
@@ -156,19 +152,9 @@ export async function getArgsForDiffView(
         fileDisplayData: {
             prUrl: pr.data.url,
             fileDisplayName: fileDisplayName,
-            fileChangeStatus: fileChange.status,
+            fileDiffStatus: fileDiff.status,
             numberOfComments: comments.length ? comments.length : 0,
         },
-    };
-}
-
-export function convertFileChangeToFileDiff(fileChange: FileChange): FileDiff {
-    return {
-        file: getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
-        status: fileChange.status,
-        linesAdded: fileChange.linesAdded,
-        linesRemoved: fileChange.linesRemoved,
-        fileChange: fileChange,
     };
 }
 

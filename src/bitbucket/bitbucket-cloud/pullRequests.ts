@@ -4,6 +4,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Logger } from '../../logger';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
+import { getFileNameFromPaths } from '../../views/pullrequest/diffViewHelper';
 import { HTTPClient } from '../httpClient';
 import {
     ApprovalStatus,
@@ -12,7 +13,7 @@ import {
     Comment,
     Commit,
     CreatePullRequestData,
-    FileChange,
+    FileDiff,
     FileStatus,
     MergeStrategy,
     PaginatedComments,
@@ -182,7 +183,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
+    async getChangedFiles(pr: PullRequest): Promise<FileDiff[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
@@ -201,11 +202,12 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         return accumulatedDiffStats.map((diffStat) => ({
+            file: getFileNameFromPaths(diffStat.old?.path, diffStat.new?.path),
             linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
             linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: this.mapStatusWordsToFileStatus(diffStat.status!),
-            oldPath: diffStat.old ? diffStat.old.path! : undefined,
-            newPath: diffStat.new ? diffStat.new.path! : undefined,
+            oldPath: diffStat.old?.path,
+            newPath: diffStat.new?.path,
             hunkMeta: {
                 oldPathAdditions: [],
                 oldPathDeletions: [],
@@ -398,18 +400,12 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
-
-        const commentsAndTaskPromise = Promise.all([
-            this.client.get(`/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`, {
+        let { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
+            {
                 pagelen: maxItemsSupported.comments,
-            }),
-            await this.getTasks(pr),
-        ]);
-
-        //TODO: The task promise needs to be removed from here; it's inefficient and in the new PR view it will not be needed
-        //however, it can not be removed until all old PR logic is removed.
-        const [commentResp, tasks] = await commentsAndTaskPromise;
-        let { data } = commentResp;
+            }
+        );
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -440,17 +436,6 @@ export class CloudPullRequestApi implements PullRequestApi {
         const convertedComments = await Promise.all(
             comments.map((commentData) => this.convertDataToComment(commentData, pr.site))
         );
-
-        let commentIdMap = new Map<string, number>();
-        for (let i = 0; i < convertedComments.length; i++) {
-            commentIdMap.set(convertedComments[i].id, i);
-        }
-        for (const task of tasks) {
-            if (task.commentId) {
-                const commentIndex = commentIdMap.get(task.commentId) as number;
-                convertedComments[commentIndex].tasks.push(task);
-            }
-        }
 
         const nestedComments = this.toNestedList(convertedComments);
         const visibleComments = nestedComments.filter((comment) => this.shouldDisplayComment(comment));

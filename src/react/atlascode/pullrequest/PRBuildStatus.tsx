@@ -21,6 +21,7 @@ export const PRBuildStatus: React.FunctionComponent<PRBuildStatusProps> = ({ bui
                 <Grid item key={status.url}>
                     <Button
                         onClick={() => openBuildStatus(status)}
+                        color={'primary'}
                         startIcon={
                             status.state === 'INPROGRESS'
                                 ? inprogressIcon

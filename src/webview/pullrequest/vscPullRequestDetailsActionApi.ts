@@ -12,7 +12,6 @@ import {
     BuildStatus,
     Comment,
     Commit,
-    FileChange,
     FileDiff,
     isBitbucketIssue,
     MergeStrategy,
@@ -29,8 +28,17 @@ import { transitionIssue } from '../../jira/transitionIssue';
 import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
 import { Logger } from '../../logger';
-import { convertFileChangeToFileDiff, getArgsForDiffView } from '../../views/pullrequest/diffViewHelper';
+import { getArgsForDiffView } from '../../views/pullrequest/diffViewHelper';
 import { addSourceRemoteIfNeeded } from '../../views/pullrequest/gitActions';
+import {
+    addTasksToCommentHierarchy,
+    addTaskToCommentHierarchy,
+    addToCommentHierarchy,
+    fileDiffContainsComments,
+    replaceCommentInHierarchy,
+    replaceTaskInCommentHierarchy,
+    replaceTaskInTaskList,
+} from '../common/pullRequestHelperActions';
 
 export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionApi {
     constructor(private cancellationManager: CancellationManager) {}
@@ -132,39 +140,6 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return scm.state.HEAD?.name ?? '';
     }
 
-    //Warning: This method has side effects
-    private addToCommentHierarchy(comments: Comment[], commentToAdd: Comment): boolean {
-        for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === commentToAdd.parentId) {
-                comments[i].children.push(commentToAdd);
-                return true;
-            } else if (this.addToCommentHierarchy(comments[i].children, commentToAdd)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private replaceCommentInHierarchy(comments: Comment[], updatedComment: Comment): [Comment[], boolean] {
-        for (const comment of comments) {
-            if (comment.id === updatedComment.id) {
-                return [
-                    comments.map((c) =>
-                        c.id === updatedComment.id ? { ...updatedComment, children: c.children, tasks: c.tasks } : c
-                    ),
-                    true,
-                ];
-            } else {
-                let success = false;
-                [comment.children, success] = this.replaceCommentInHierarchy(comment.children, updatedComment);
-                if (success) {
-                    return [comments, success];
-                }
-            }
-        }
-        return [comments, false];
-    }
-
     async getComments(pr: PullRequest): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         const paginatedComments = await bbApi.pullrequests.getComments(pr);
@@ -174,24 +149,18 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         const newComment: Comment = await bbApi.pullrequests.postComment(pr.site, pr.data.id, rawText, parentId);
-
-        const updatedComments = comments.slice();
-        if (newComment.parentId) {
-            const success = this.addToCommentHierarchy(updatedComments, newComment);
-            if (!success) {
-                return await this.getComments(pr);
-            }
-        } else {
-            updatedComments.push(newComment);
+        if (parentId) {
+            const [updatedComments, success] = addToCommentHierarchy(comments, newComment);
+            return success ? updatedComments : await this.getComments(pr);
         }
 
-        return updatedComments;
+        return [...comments, newComment];
     }
 
     async editComment(comments: Comment[], pr: PullRequest, content: string, commentId: string): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
         const newComment: Comment = await bbApi.pullrequests.editComment(pr.site, pr.data.id, content, commentId);
-        const [updatedComments, success] = this.replaceCommentInHierarchy(comments, newComment);
+        const [updatedComments, success] = replaceCommentInHierarchy(comments, newComment);
         return success ? updatedComments : await this.getComments(pr);
     }
 
@@ -201,31 +170,21 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         return await this.getComments(pr);
     }
 
-    //The difference between FileDiff and FileChange is documented in their model definitions
-    async getFileDiffs(
-        pr: PullRequest
-    ): Promise<{ fileDiffs: FileDiff[]; diffsToChangesMap: Map<string, FileChange> }> {
+    async getFileDiffs(pr: PullRequest, inlineComments: Comment[]): Promise<FileDiff[]> {
         const bbApi = await clientForSite(pr.site);
-        const fileChanges = await bbApi.pullrequests.getChangedFiles(pr);
-
-        const diffsToChangesMap = new Map<string, FileChange>();
-        const fileDiffs: FileDiff[] = [];
-        fileChanges.forEach((fileChange) => {
-            const fileDiff = convertFileChangeToFileDiff(fileChange);
-            fileDiffs.push(fileDiff);
-            diffsToChangesMap.set(fileDiff.file, fileChange);
+        const fileDiffs: FileDiff[] = await bbApi.pullrequests.getChangedFiles(pr);
+        fileDiffs.forEach((fileDiff) => {
+            if (fileDiffContainsComments(fileDiff, inlineComments)) {
+                fileDiff.hasComments = true;
+            }
         });
-
-        return {
-            fileDiffs: fileDiffs,
-            diffsToChangesMap: diffsToChangesMap,
-        };
+        return fileDiffs;
     }
 
-    async openDiffViewForFile(pr: PullRequest, fileChange: FileChange, comments: Comment[]): Promise<void> {
+    async openDiffViewForFile(pr: PullRequest, fileDiff: FileDiff, comments: Comment[]): Promise<void> {
         const diffViewArgs = await getArgsForDiffView(
-            { data: comments }, //Needs to be converted to PaginatedComment type
-            fileChange,
+            { data: comments },
+            fileDiff,
             pr,
             Container.bitbucketContext.prCommentController
         );
@@ -344,9 +303,18 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         }
     }
 
-    async getTasks(pr: PullRequest) {
+    async getTasks(
+        pr: PullRequest,
+        pageComments: Comment[],
+        inlineComments: Comment[]
+    ): Promise<{ tasks: Task[]; pageComments: Comment[]; inlineComments: Comment[] }> {
         const bbApi = await clientForSite(pr.site);
-        return await bbApi.pullrequests.getTasks(pr);
+        const tasks = await bbApi.pullrequests.getTasks(pr);
+        return {
+            tasks: tasks,
+            pageComments: addTasksToCommentHierarchy(pageComments, tasks),
+            inlineComments: addTasksToCommentHierarchy(inlineComments, tasks),
+        };
     }
 
     async createTask(
@@ -357,63 +325,24 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         commentId?: string
     ): Promise<{ tasks: Task[]; comments: Comment[] }> {
         const bbApi = await clientForSite(pr.site);
-        const task = await bbApi.pullrequests.postTask(pr.site, pr.data.id, content, commentId);
-        //TODO: add analytics events
+        const newTask = await bbApi.pullrequests.postTask(pr.site, pr.data.id, content, commentId);
+        const newTasks = [...tasks.slice(), newTask];
+
         //If the task belongs to a comment, add the task to the comment list
-        const newTasks = tasks.slice();
-        newTasks.push(task);
         if (commentId) {
-            const updatedComments = comments.slice();
-            if (this.addTaskToCommentHierarchy(updatedComments, task)) {
-                return { tasks: newTasks, comments: comments };
-            } else {
-                //TODO: Currently gettings comments also fetches tasks and ties them together; this is very inefficient because it means
-                //you need to get tasks again for non-comment tasks. This needs to be changed, but doing so will break existing PR code since it
-                //depends on the PullRequestApi. For now, it's ok to assume this.getComments() will fill comments with tasks, but in the future
-                //this assumption will be wrong.
-                return { tasks: newTasks, comments: await this.getComments(pr) };
-            }
+            const [updatedComments] = addTaskToCommentHierarchy(comments, newTask);
+            return { tasks: newTasks, comments: updatedComments };
         }
         return { tasks: newTasks, comments: comments };
-    }
-
-    //Warning: This method has side effects
-    private addTaskToCommentHierarchy(comments: Comment[], task: Task): boolean {
-        for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === task.commentId) {
-                comments[i].tasks.push(task);
-                return true;
-            } else if (this.addTaskToCommentHierarchy(comments[i].children, task)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private replaceTaskInTaskList(tasks: Task[], task: Task) {
-        return tasks.map((t) => (t.id === task.id ? task : t));
-    }
-
-    private replaceTaskInCommentHierarchy(comments: Comment[], task: Task): boolean {
-        for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === task.commentId) {
-                comments[i].tasks = this.replaceTaskInTaskList(comments[i].tasks, task);
-                return true;
-            } else if (this.replaceTaskInCommentHierarchy(comments[i].children, task)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     async editTask(tasks: Task[], comments: Comment[], pr: PullRequest, task: Task) {
         const bbApi = await clientForSite(pr.site);
         const newTask = await bbApi.pullrequests.editTask(pr.site, pr.data.id, task);
-        const newTasks = this.replaceTaskInTaskList(tasks, newTask);
+        const newTasks = replaceTaskInTaskList(tasks, newTask);
         if (newTask.commentId) {
-            const newComments = comments.slice();
-            this.replaceTaskInCommentHierarchy(newComments, task);
-            return { tasks: newTasks, comments: newComments };
+            const [updatedComments] = replaceTaskInCommentHierarchy(comments, task);
+            return { tasks: newTasks, comments: updatedComments };
         }
         return { tasks: newTasks, comments: comments };
     }
@@ -422,8 +351,10 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.deleteTask(pr.site, pr.data.id, task);
 
-        //TODO: This can almost certainly be converted to local deletion rather than
-        //refetching comments.
-        return { tasks: await this.getTasks(pr), comments: await this.getComments(pr) };
+        //TODO: This can almost certainly be converted to local deletion rather than refetching comments.
+        //However it's kind of complicated because of the logic associated with hiding deleted comments, so I'll leave this alone for now.
+        const comments = await this.getComments(pr);
+        const commentsAndTasks = await this.getTasks(pr, comments, []);
+        return { tasks: commentsAndTasks.tasks, comments: commentsAndTasks.pageComments };
     }
 }

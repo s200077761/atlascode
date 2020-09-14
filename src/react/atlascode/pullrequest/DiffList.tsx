@@ -1,4 +1,5 @@
 import {
+    Box,
     Chip,
     Link,
     makeStyles,
@@ -135,6 +136,13 @@ export const DiffList: React.FunctionComponent<{
                                 <Link href="#" onClick={() => props.openDiffHandler(row)}>
                                     <Typography>{row.file}</Typography>
                                 </Link>
+                            </TableCell>
+                            <TableCell className={classes.tableCell}>
+                                <Box hidden={!row.hasComments}>
+                                    <Tooltip title={'contains comments'}>
+                                        <Typography>💬</Typography>
+                                    </Tooltip>
+                                </Box>
                             </TableCell>
                         </TableRow>
                     ))}
