@@ -13,7 +13,7 @@ export enum WebViewID {
     ConfigWebview = 'atlascodeSettings',
     OnboardingWebview = 'atlascodeOnboardingScreen',
     WelcomeWebview = 'atlascodeWelcomeScreen',
-    StartWork = 'startWork',
+    StartWork = 'startWorkOnIssueScreen',
     PullRequestDetailsWebview = 'pullRequestDetailsScreen',
     CreatePullRequest = 'createPullRequestScreen',
 }

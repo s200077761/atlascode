@@ -31,6 +31,7 @@ import StarBorder from '@material-ui/icons/StarBorder';
 import { format } from 'date-fns';
 import React, { useCallback } from 'react';
 import CommentForm from '../common/CommentForm';
+import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { BitbucketIssueControllerContext, useBitbucketIssueController } from './bitbucketIssueController';
@@ -128,6 +129,11 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                             {state.issue.data.title}
                         </Typography>
                         <Box className={classes.grow} />
+                        <CopyLinkButton
+                            tooltip="Copy link to issue"
+                            url={state.issue.data.links?.html?.href}
+                            onClick={controller.copyLink}
+                        />
                         <Box marginRight={1} hidden={!state.showJiraButton}>
                             <Tooltip title="Create Jira issue">
                                 <IconButton aria-label="create Jira issue" onClick={controller.createJiraIssue}>

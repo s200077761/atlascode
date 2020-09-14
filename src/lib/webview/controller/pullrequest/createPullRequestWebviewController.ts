@@ -172,6 +172,8 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     });
                 }
                 break;
+
+            case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
             case CommonActionType.ExternalLink:
             case CommonActionType.Cancel:

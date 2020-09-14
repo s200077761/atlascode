@@ -25,6 +25,7 @@ export interface BitbucketIssueControllerApi {
     postMessage: PostMessageFunc<BitbucketIssueAction>;
     refresh: () => void;
     openLink: (linkId: KnownLinkID) => void;
+    copyLink: (url: string) => void;
     updateStatus: (status: string) => Promise<string>;
     postComment: (content: string) => Promise<Comment>;
     fetchUsers: (query: string, abortSignal?: AbortSignal) => Promise<User[]>;
@@ -38,6 +39,7 @@ export const emptyApi: BitbucketIssueControllerApi = {
     postMessage: () => {},
     refresh: () => {},
     openLink: () => {},
+    copyLink: () => {},
     updateStatus: async (status: string) => status,
     postComment: async (content: string) => emptyComment,
     fetchUsers: async (query: string, abortSignal?: AbortSignal) => [],
@@ -267,6 +269,11 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         postMessage({ type: BitbucketIssueActionType.CreateJiraIssue });
     }, [postMessage]);
 
+    const copyLink = useCallback(
+        (url: string) => postMessage({ type: CommonActionType.CopyLink, linkType: 'bbIssue', url }),
+        [postMessage]
+    );
+
     const sendRefresh = useCallback((): void => {
         dispatch({ type: BitbucketIssueUIActionType.Loading });
         postMessage({ type: CommonActionType.Refresh });
@@ -287,6 +294,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
             postMessage: postMessage,
             refresh: sendRefresh,
             openLink,
+            copyLink,
             updateStatus,
             postComment,
             fetchUsers,
@@ -297,6 +305,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
         };
     }, [
         openLink,
+        copyLink,
         postMessage,
         sendRefresh,
         updateStatus,

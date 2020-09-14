@@ -76,6 +76,24 @@ export class VSCCommonMessageHandler implements CommonActionMessageHandler {
                 }
                 break;
             }
+            case CommonActionType.CopyLink: {
+                env.clipboard.writeText(msg.url);
+                switch (msg.linkType) {
+                    case 'jiraIssue': {
+                        this._analytics.fireIssueUrlCopiedEvent();
+                        break;
+                    }
+                    case 'pullRequest': {
+                        this._analytics.firePrUrlCopiedEvent();
+                        break;
+                    }
+                    case 'bbIssue': {
+                        this._analytics.fireBBIssueUrlCopiedEvent();
+                        break;
+                    }
+                }
+                break;
+            }
             case CommonActionType.SubmitFeedback: {
                 submitFeedback(msg.feedback);
                 break;

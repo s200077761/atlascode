@@ -88,8 +88,8 @@ export async function issueTransitionedEvent(site: DetailedSiteInfo, issueKey: s
     return instanceTrackEvent(site, 'transitioned', 'issue', { actionSubjectId: issueKey });
 }
 
-export async function issueUrlCopiedEvent(tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'copied', 'issueUrl');
+export async function issueUrlCopiedEvent(): Promise<TrackEvent> {
+    return trackEvent('copied', 'issueUrl');
 }
 
 export async function issueCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
