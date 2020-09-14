@@ -31,6 +31,12 @@ export const emptyBitbucketSite = {
 export type User = {
     accountId: string;
     displayName: string;
+    /* userName property saves the 'name' field returned by BBServer. Before we were setting the userId (accountId) for BBServer to be the
+     * user slug. Most of the time we only need the slug, but when filtering by user name (such as when fetching specific PRs) we actually
+     * need the 'name' property. In most cases they are they same, but when the userName contains special characters such as username@example.com,
+     * the slug replaces special characters with underscores (username_example.com) which fails the search. NOTE: THIS FIELD IS ONLY VALID FOR BBSERVER
+     */
+    userName?: string;
     emailAddress?: string;
     url: string;
     avatarUrl: string;

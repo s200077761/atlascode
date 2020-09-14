@@ -68,6 +68,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             accountId: accountId,
             avatarUrl: avatarUrl,
             emailAddress: undefined,
+            userName: undefined,
             displayName: displayName,
             url: url,
             mention: mention,
