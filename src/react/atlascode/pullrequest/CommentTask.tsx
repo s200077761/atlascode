@@ -51,13 +51,16 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
     return (
         <React.Fragment>
             <Box hidden={isEditing}>
-                <Grid container spacing={1} direction="row" alignItems="flex-start">
-                    <Checkbox
-                        color={'primary'}
-                        checked={task.isComplete}
-                        onChange={handleMarkTaskComplete}
-                        disabled={isLoading}
-                    />
+                <Grid container spacing={1} direction="row" alignItems="baseline">
+                    <Grid item>
+                        <Checkbox
+                            color={'primary'}
+                            checked={task.isComplete}
+                            onChange={handleMarkTaskComplete}
+                            disabled={isLoading}
+                        />
+                    </Grid>
+
                     <Grid item>
                         <Grid container direction={'column'}>
                             {isLoading ? <CircularProgress /> : <Typography variant="body1">{task.content}</Typography>}
