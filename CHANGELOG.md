@@ -1,3 +1,18 @@
+## What's New in 2.8.0
+
+### Improvements
+
+-   Redesigned pull request webview UI and improved performance
+-   Show images in description and comments for Jira Cloud issues
+-   Markdown editor for pull request webview
+-   Added support for transitioning multiple issues when a pull request is merged
+-   Show priority and status in treeview tooltip for Jira issues
+-   Files with comments are indicated with an icon in pull request webviews
+
+### Bugs fixed
+
+-   Fixed pull request filters failing for some Bitbucket Server users
+
 ## What's New in 2.7.1
 
 ### Improvements
