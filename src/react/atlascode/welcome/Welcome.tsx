@@ -83,6 +83,32 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.8.0 🎉</h3>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Redesigned pull request webview UI and improved performance</li>
+                                                <li>Show images in description and comments for Jira Cloud issues</li>
+                                                <li>Markdown editor for pull request webview</li>
+                                                <li>
+                                                    Added support for transitioning multiple issues when a pull request
+                                                    is merged
+                                                </li>
+                                                <li>Show priority and status in treeview tooltip for Jira issues</li>
+                                                <li>
+                                                    Files with comments are indicated with an icon in pull request
+                                                    webviews
+                                                </li>
+                                            </ul>
+                                        </section>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed pull request filters failing for some Bitbucket Server users
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.7.1 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
