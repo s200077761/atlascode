@@ -83,6 +83,13 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.8.1 🎉</h3>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>Fixed bug that caused Bitbucket Server users to not see PRs</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.8.0 🎉</h3>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
