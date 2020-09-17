@@ -1,3 +1,9 @@
+## What's New in 2.8.1
+
+### Bugs fixed
+
+-   Fixed bug that caused Bitbucket Server users to not see PRs
+
 ## What's New in 2.8.0
 
 ### Improvements

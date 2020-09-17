@@ -488,7 +488,18 @@ export class ServerPullRequestApi implements PullRequestApi {
                 .filter((comment) => this.shouldDisplayComment(comment))
                 .sort((a, b) => {
                     //Comment threads are not retrieved from the API by posting order, so that must be restored to display them properly
-                    return a.ts.localeCompare(b.ts);
+
+                    try {
+                        if (a.ts < b.ts) {
+                            return -1;
+                        } else if (a.ts === b.ts) {
+                            return 0;
+                        } else {
+                            return 1;
+                        }
+                    } catch (e) {
+                        return a.ts!! ? 1 : -1;
+                    }
                 }),
             next: undefined,
         };
