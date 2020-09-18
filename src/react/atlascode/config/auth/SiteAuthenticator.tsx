@@ -36,7 +36,7 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
         return (
             <Box flexGrow={1}>
                 <Grid container direction="column" spacing={2}>
-                    <Grid item hidden={isRemote === false}>
+                    <Grid item hidden={isRemote === false || useNewAuth}>
                         <Typography>
                             <Box component="span" fontWeight="fontWeightBold">
                                 ⚠️ Authentication cannot be done while running remotely
@@ -47,14 +47,14 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                             when running locally <em>will</em> be accessible during remote development.
                         </Typography>
                     </Grid>
-                    <Grid item style={{ cursor: isRemote ? 'not-allowed' : 'default' }}>
+                    <Grid item style={{ cursor: isRemote && !useNewAuth ? 'not-allowed' : 'default' }}>
                         <Grid
                             container
                             direction="column"
                             spacing={2}
                             style={{
-                                pointerEvents: isRemote ? 'none' : 'inherit',
-                                opacity: isRemote ? 0.6 : 'inherit',
+                                pointerEvents: isRemote && !useNewAuth ? 'none' : 'inherit',
+                                opacity: isRemote && !useNewAuth ? 0.6 : 'inherit',
                             }}
                         >
                             <Grid item>
