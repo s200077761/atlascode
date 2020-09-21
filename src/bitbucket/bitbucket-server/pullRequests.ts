@@ -74,14 +74,14 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
-            'username.1': this.userName(workspaceRepo),
+            'username.1': await this.userName(workspaceRepo),
             'role.1': 'AUTHOR',
         });
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
-            'username.1': this.userName(workspaceRepo),
+            'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
         });
     }
@@ -117,7 +117,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(workspaceRepo, {
-            'username.1': this.userName(workspaceRepo),
+            'username.1': await this.userName(workspaceRepo),
         });
     }
 
