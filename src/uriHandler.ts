@@ -156,7 +156,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
     private async finalizeAuthentication(uri: Uri) {
         const query = new URLSearchParams(uri.query);
         const code = query.get('code') ?? '';
-        const state = query.get('state') ?? '';
+        const state = query.get('xstate') ?? ''; // xstate is used to avoid overwriting the state param used by codespaces
         this.loginManager.exchangeCodeForTokens(state, code);
     }
 
