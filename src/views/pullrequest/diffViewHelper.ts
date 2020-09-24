@@ -1,10 +1,25 @@
+import path from 'path';
 import * as vscode from 'vscode';
-import { Comment, FileDiff, FileStatus, PaginatedComments, PullRequest } from '../../bitbucket/model';
+import {
+    BitbucketSite,
+    Comment,
+    FileDiff,
+    FileStatus,
+    PaginatedComments,
+    PullRequest,
+    Task,
+    User,
+} from '../../bitbucket/model';
+import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { Logger } from '../../logger';
+import { addTasksToCommentHierarchy } from '../../webview/common/pullRequestHelperActions';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
+import { DirectoryNode } from '../nodes/directoryNode';
+import { PullRequestFilesNode } from '../nodes/pullRequestFilesNode';
+import { SimpleNode } from '../nodes/simpleNode';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCommentController } from './prCommentController';
-import { PRFileDiffQueryParams } from './pullRequestNode';
 
 export interface DiffViewArgs {
     diffArgs: any[];
@@ -14,6 +29,33 @@ export interface DiffViewArgs {
         fileDiffStatus: FileStatus;
         numberOfComments: number;
     };
+}
+
+export interface PRDirectory {
+    name: string;
+    files: DiffViewArgs[];
+    subdirs: Map<string, PRDirectory>;
+}
+
+export interface FileDiffQueryParams {
+    lhs: boolean;
+    repoUri: string;
+    branchName: string;
+    commitHash: string;
+    isCommitLevelDiff?: boolean;
+    path: string;
+}
+
+export interface PRFileDiffQueryParams extends FileDiffQueryParams {
+    site: BitbucketSite;
+    repoHref: string;
+    prHref: string;
+    prId: string;
+    participants: User[];
+    commentThreads: Comment[][];
+    addedLines: number[];
+    deletedLines: number[];
+    lineContextMap: Object;
 }
 
 export function getInlineComments(allComments: Comment[]): Map<string, Comment[][]> {
@@ -41,7 +83,8 @@ export async function getArgsForDiffView(
     allComments: PaginatedComments,
     fileDiff: FileDiff,
     pr: PullRequest,
-    commentController: PullRequestCommentController
+    commentController: PullRequestCommentController,
+    commitRange?: { lhs: string; rhs: string }
 ): Promise<DiffViewArgs> {
     const remotePrefix = pr.workspaceRepo ? `${pr.workspaceRepo.mainSiteRemote.remote.name}/` : '';
     // Use merge base to diff from common ancestor of source and destination.
@@ -107,7 +150,8 @@ export async function getArgsForDiffView(
             participants: pr.data.participants,
             repoUri: repoUri,
             branchName: pr.data.destination!.branchName,
-            commitHash: mergeBase,
+            commitHash: commitRange ? commitRange.lhs : mergeBase,
+            isCommitLevelDiff: !!commitRange,
             path: lhsFilePath,
             commentThreads: lhsCommentThreads,
             addedLines: fileDiff.hunkMeta!.oldPathAdditions,
@@ -125,7 +169,8 @@ export async function getArgsForDiffView(
             participants: pr.data.participants,
             repoUri: repoUri,
             branchName: pr.data.source!.branchName,
-            commitHash: pr.data.source!.commitHash,
+            commitHash: commitRange ? commitRange.rhs : pr.data.source!.commitHash,
+            isCommitLevelDiff: !!commitRange,
             path: rhsFilePath,
             commentThreads: rhsCommentThreads,
             addedLines: fileDiff.hunkMeta!.newPathAdditions,
@@ -201,4 +246,96 @@ export function mergePaths(oldPath: string, newPath: string): string {
 
     //It was convenient to work with an array, but we actually need a string
     return oldPathArray.join('/');
+}
+
+export async function createFileChangesNodes(
+    pr: PullRequest,
+    allComments: PaginatedComments,
+    fileDiffs: FileDiff[],
+    tasks: Task[],
+    commitRange?: { lhs: string; rhs: string }
+): Promise<AbstractBaseNode[]> {
+    const allDiffData = await Promise.all(
+        fileDiffs.map(async (fileDiff) => {
+            const commentsWithTasks = { ...allComments, data: addTasksToCommentHierarchy(allComments.data, tasks) }; //Comments need to be infused with tasks now because they are gathered separately
+            return await getArgsForDiffView(
+                commentsWithTasks,
+                fileDiff,
+                pr,
+                Container.bitbucketContext.prCommentController,
+                commitRange
+            );
+        })
+    );
+
+    if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
+        //Create a dummy root directory data structure to hold the files
+        let rootDirectory: PRDirectory = {
+            name: '',
+            files: [],
+            subdirs: new Map<string, PRDirectory>(),
+        };
+        allDiffData.forEach((diffData) => createdNestedFileStructure(diffData, rootDirectory));
+        flattenFileStructure(rootDirectory);
+
+        //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
+        let directoryNodes: DirectoryNode[] = Array.from(
+            rootDirectory.subdirs.values(),
+            (subdir) => new DirectoryNode(subdir)
+        );
+        let childNodes: AbstractBaseNode[] = rootDirectory.files.map(
+            (diffViewArg) => new PullRequestFilesNode(diffViewArg)
+        );
+        return childNodes.concat(directoryNodes);
+    }
+
+    const result: AbstractBaseNode[] = [];
+    result.push(...allDiffData.map((diffData) => new PullRequestFilesNode(diffData)));
+    if (allComments.next) {
+        result.push(
+            new SimpleNode(
+                '⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'
+            )
+        );
+    }
+    return result;
+}
+
+export function createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDirectory) {
+    const baseName = path.basename(diffViewData.fileDisplayData.fileDisplayName);
+    const dirName = path.dirname(diffViewData.fileDisplayData.fileDisplayName);
+    //If we just have a file, the dirName will be '.', but we don't want to tuck that in the '.' directory, so there's a ternary operation to deal with that
+    const splitFileName = [...(dirName === '.' ? [] : dirName.split('/')), baseName];
+    let currentDirectory = directory;
+    for (let i = 0; i < splitFileName.length; i++) {
+        if (i === splitFileName.length - 1) {
+            currentDirectory.files.push(diffViewData); //The last name in the path is the name of the file, so we've reached the end of the file tree
+        } else {
+            //Traverse the file tree, and if a folder doesn't exist, add it
+            if (!currentDirectory.subdirs.has(splitFileName[i])) {
+                currentDirectory.subdirs.set(splitFileName[i], {
+                    name: splitFileName[i],
+                    files: [],
+                    subdirs: new Map<string, PRDirectory>(),
+                });
+            }
+            currentDirectory = currentDirectory.subdirs.get(splitFileName[i])!;
+        }
+    }
+}
+
+//Directories that contain only one child which is also a directory should be flattened. E.g A > B > C > D.txt => A/B/C/D.txt
+export function flattenFileStructure(directory: PRDirectory) {
+    // Keep flattening until there's nothing left to flatten, and only then move on to children.
+    // The initial input is a dummy root directory with empty string as the name, which is ignored to maintain it as the root node.
+    while (directory.name !== '' && directory.subdirs.size === 1 && directory.files.length === 0) {
+        const currentFolderName: string = directory.name;
+        const childDirectory = directory.subdirs.values().next().value;
+        directory.name = `${currentFolderName}/${childDirectory.name ? childDirectory.name : ''}`;
+        directory.subdirs = childDirectory.subdirs;
+        directory.files = childDirectory.files;
+    }
+    for (const [, subdir] of directory.subdirs) {
+        flattenFileStructure(subdir);
+    }
 }

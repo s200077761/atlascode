@@ -1,8 +1,8 @@
 import { CancelToken } from 'axios';
-import { FileDiffQueryParams } from 'src/views/pullrequest/pullRequestNode';
 import { DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { Remote, Repository } from '../typings/git';
+import { FileDiffQueryParams } from '../views/pullrequest/diffViewHelper';
 import { BitbucketIssuesApiImpl } from './bitbucket-cloud/bbIssues';
 
 export type BitbucketSite = {
@@ -101,6 +101,7 @@ export type Comment = {
     };
     children: Comment[];
     tasks: Task[];
+    commitHash?: string;
 };
 
 export const emptyUser = {
@@ -160,6 +161,7 @@ export type Commit = {
     url: string;
     htmlSummary: string;
     rawSummary: string;
+    parentHashes?: string[];
 };
 
 export type BuildStatus = {
@@ -341,11 +343,17 @@ export interface PullRequestApi {
     getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest>;
     getById(site: BitbucketSite, prId: number): Promise<PullRequest>;
-    getChangedFiles(pr: PullRequest): Promise<FileDiff[]>;
+    getChangedFiles(pr: PullRequest, spec?: string): Promise<FileDiff[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
-    getComments(pr: PullRequest): Promise<PaginatedComments>;
-    editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment>;
-    deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void>;
+    getComments(pr: PullRequest, commitHash?: string): Promise<PaginatedComments>;
+    editComment(
+        site: BitbucketSite,
+        prId: string,
+        content: string,
+        commentId: string,
+        commitHash?: string
+    ): Promise<Comment>;
+    deleteComment(site: BitbucketSite, prId: string, commentId: string, commitHash?: string): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getTasks(pr: PullRequest): Promise<Task[]>;
@@ -370,8 +378,9 @@ export interface PullRequestApi {
         site: BitbucketSite,
         prId: string,
         text: string,
-        parentCommentId?: string,
+        parentCommentId: string,
         inline?: { from?: number; to?: number; path: string },
+        commitHash?: string,
         lineMeta?: 'ADDED' | 'REMOVED'
     ): Promise<Comment>;
     getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;

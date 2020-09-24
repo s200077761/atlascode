@@ -20,7 +20,7 @@ import { getCachedIssue } from '../../jira/fetchIssue';
 import { issueForKey } from '../../jira/issueForKey';
 import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { AuthStatusBar } from '../authStatusBar';
-import { PRFileDiffQueryParams } from '../pullrequest/pullRequestNode';
+import { PRFileDiffQueryParams } from '../pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 
 export class JiraActiveIssueStatusBar implements Disposable {

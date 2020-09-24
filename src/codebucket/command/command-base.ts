@@ -1,10 +1,10 @@
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { Backend } from '../backend/backend';
-import { Shell } from '../../util/shell';
-import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 import slash from 'slash';
+import * as vscode from 'vscode';
+import { Shell } from '../../util/shell';
+import { FileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
+import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
+import { Backend } from '../backend/backend';
 
 export abstract class CommandBase {
     /**

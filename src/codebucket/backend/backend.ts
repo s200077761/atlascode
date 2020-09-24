@@ -2,7 +2,7 @@ import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { Shell } from '../../util/shell';
-import { PRFileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
+import { PRFileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 import { CommandBase } from '../command/command-base';
 import { BitbucketCloudSite } from '../hosts/bitbucket-cloud';
