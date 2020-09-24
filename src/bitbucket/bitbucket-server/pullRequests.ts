@@ -434,7 +434,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                 text: content,
                 version: data.version,
             },
-            {}
+            {
+                markup: true,
+                avatarSize: 64,
+            }
         );
         return this.convertDataToComment(site, res.data);
     }
@@ -673,7 +676,11 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const { data } = await this.client.put(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}`,
-            prBody
+            prBody,
+            {
+                markup: true,
+                avatarSize: 64,
+            }
         );
 
         return ServerPullRequestApi.toPullRequestModel(data, 0, pr.site, pr.workspaceRepo);
@@ -707,12 +714,14 @@ export class ServerPullRequestApi implements PullRequestApi {
                 ? {}
                 : { autoSubject: false, strategyId: mergeStrategy, message: commitMessage };
 
-        const {
-            data,
-        } = await this.client.post(
+        const { data } = await this.client.post(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/merge`,
             body,
-            { version: pr.data.version }
+            {
+                version: pr.data.version,
+                markup: true,
+                avatarSize: 64,
+            }
         );
 
         const taskCount = await this.getTaskCount(pr.site, pr.data.id);
