@@ -42,6 +42,7 @@ export interface FileDiffQueryParams {
     repoUri: string;
     branchName: string;
     commitHash: string;
+    rhsCommitHash: string;
     isCommitLevelDiff?: boolean;
     path: string;
 }
@@ -151,6 +152,7 @@ export async function getArgsForDiffView(
             repoUri: repoUri,
             branchName: pr.data.destination!.branchName,
             commitHash: commitRange ? commitRange.lhs : mergeBase,
+            rhsCommitHash: commitRange ? commitRange.rhs : pr.data.source!.commitHash,
             isCommitLevelDiff: !!commitRange,
             path: lhsFilePath,
             commentThreads: lhsCommentThreads,
@@ -170,6 +172,7 @@ export async function getArgsForDiffView(
             repoUri: repoUri,
             branchName: pr.data.source!.branchName,
             commitHash: commitRange ? commitRange.rhs : pr.data.source!.commitHash,
+            rhsCommitHash: commitRange ? commitRange.rhs : pr.data.source!.commitHash,
             isCommitLevelDiff: !!commitRange,
             path: rhsFilePath,
             commentThreads: rhsCommentThreads,

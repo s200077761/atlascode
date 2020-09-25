@@ -356,7 +356,7 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     getDataForAddingComment(thread: CommentThread) {
-        const {
+        let {
             site,
             prHref,
             prId,
@@ -365,6 +365,8 @@ export class PullRequestCommentController implements vscode.Disposable {
             addedLines,
             deletedLines,
             lineContextMap,
+            commitHash,
+            rhsCommitHash,
             isCommitLevelDiff,
         } = JSON.parse(thread.uri.query) as PRFileDiffQueryParams;
 
@@ -391,8 +393,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             lineType = 'REMOVED';
         }
 
-        const commitHash = (thread.comments[0] as PullRequestComment).commitHash;
-        return { site, prId, prHref, commentThreadId, inline, lineType, commitHash, isCommitLevelDiff };
+        return { site, prId, prHref, commentThreadId, inline, lineType, commitHash, rhsCommitHash, isCommitLevelDiff };
     }
 
     async addReplyToComment(comments: readonly vscode.Comment[], commentData: PullRequestComment) {
@@ -400,7 +401,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             return [];
         }
 
-        const { inline, lineType, commentThreadId, commitHash, isCommitLevelDiff } = this.getDataForAddingComment(
+        const { inline, lineType, commentThreadId, rhsCommitHash, isCommitLevelDiff } = this.getDataForAddingComment(
             commentData.parent
         );
 
@@ -411,7 +412,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             commentData.body.toString(),
             commentData.parentCommentId ?? '',
             inline,
-            isCommitLevelDiff ? commitHash : undefined,
+            isCommitLevelDiff ? rhsCommitHash : undefined,
             lineType
         );
 
@@ -449,7 +450,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             commentThreadId,
             inline,
             lineType,
-            commitHash,
+            rhsCommitHash,
             isCommitLevelDiff,
         } = this.getDataForAddingComment(reply.thread);
 
@@ -460,7 +461,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             reply.text,
             commentThreadId ?? '',
             inline,
-            isCommitLevelDiff ? commitHash : undefined,
+            isCommitLevelDiff ? rhsCommitHash : undefined,
             lineType
         );
         prCommentEvent(site.details).then((e) => {
