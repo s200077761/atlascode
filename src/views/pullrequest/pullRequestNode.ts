@@ -81,7 +81,12 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                 let [fileDiffs, commits, allComments, tasks] = result;
 
                 const children: AbstractBaseNode[] = [new DescriptionNode(this.pr, this)];
-                children.push(new CommitSectionNode(this.pr, commits));
+
+                //Only enable commit-level review nodes for BB Cloud (at least for now)
+                if (this.pr.site.details.isCloud) {
+                    children.push(new CommitSectionNode(this.pr, commits));
+                }
+
                 children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
                 children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
                 children.push(...(await createFileChangesNodes(this.pr, allComments, fileDiffs, tasks)));
