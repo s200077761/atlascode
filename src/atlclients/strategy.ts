@@ -24,7 +24,7 @@ export const JiraStagingStrategy = {
     tokenURL: 'https://auth.stg.atlassian.com/oauth/token',
     profileURL: 'https://api.stg.atlassian.com/me',
     accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
-    callbackURL: authServer + OAuthProvider.JiraCloudStaging,
+    callbackURL: 'https://atlascode-oauth-service.ap-southeast-2.dev.atl-paas.net/' + OAuthProvider.JiraCloudStaging,
     scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     authParams: {
         audience: 'api.stg.atlassian.com',

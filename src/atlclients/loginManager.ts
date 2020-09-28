@@ -68,7 +68,7 @@ export class LoginManager {
             // dance meaning it will be included in the redirect to our auth service. We decode the uri in the auth
             // service and redirect from there. That redirect is then handled by `exchangeCodesForTokens()`. Additinally
             // state needs to be unique to correlate incoming responses with outgoing requests so a UUID is included.
-            const rawState = `${v4()}::${callableUri}`;
+            const rawState = `${v4()}::${callableUri.toString(true)}`;
 
             // The UUID / redirect URI combination is base64 encoded to prevent any issues with URL encoding.
             const state = new Buffer(rawState).toString('base64');
@@ -108,6 +108,7 @@ export class LoginManager {
                 }
             } catch (e) {
                 Logger.error(e, 'Error while exchanging bearer token for access token.');
+                vscode.window.showErrorMessage(`There was an error fetching access tokens': ${e}`);
             }
         }
     }
