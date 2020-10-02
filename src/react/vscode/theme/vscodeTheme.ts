@@ -94,6 +94,16 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
                     color: vscStyles.dropdownForeground,
                 },
             },
+            MuiFormLabel: {
+                root: {
+                    color: vscStyles.inputPlaceholderForeground,
+                },
+            },
+            MuiOutlinedInput: {
+                notchedOutline: {
+                    borderColor: vscStyles.editorWidgetBorder,
+                },
+            },
             MuiLink: {
                 root: {
                     color: vscStyles.textLinkForeground,
