@@ -21,7 +21,7 @@ export class CommitNode extends AbstractBaseNode {
             vscode.TreeItemCollapsibleState.Collapsed
         );
         item.description = this.commit.message;
-        item.tooltip = 'See changed files';
+        item.tooltip = this.commit.message;
         item.resourceUri = vscode.Uri.parse(this.commit.url);
         return item;
     }
@@ -29,7 +29,7 @@ export class CommitNode extends AbstractBaseNode {
     async fetchDataAndProcessChildren(): Promise<AbstractBaseNode[] | [SimpleNode]> {
         try {
             const bbApi = await clientForSite(this.pr.site);
-            const diffs = await bbApi.pullrequests.getChangedFiles(this.pr, `${this.commit.hash}`);
+            const diffs = await bbApi.pullrequests.getChangedFiles(this.pr, this.commit.hash);
             const paginatedComments = await bbApi.pullrequests.getComments(this.pr, this.commit.hash);
 
             //TODO: pass tasks if commit-level tasks exist

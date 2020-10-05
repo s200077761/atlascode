@@ -187,7 +187,6 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getChangedFiles(pr: PullRequest, spec?: string): Promise<FileDiff[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        //If a commit hash or other spec is provided, the API url is different
         const diffUrl = spec
             ? `/repositories/${ownerSlug}/${repoSlug}/diffstat/${spec}`
             : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`;
@@ -274,7 +273,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = site;
 
         const urlString = commitHash
-            ? `https://bitbucket.org/!api/2.0/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments/${commentId}`
+            ? `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments/${commentId}`
             : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`;
         await this.client.delete(urlString, {});
     }
@@ -289,7 +288,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = site;
 
         const urlString = commitHash
-            ? `https://bitbucket.org/!api/2.0/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments/${commentId}`
+            ? `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments/${commentId}`
             : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`;
         const { data } = await this.client.put(urlString, {
             content: {
