@@ -1,4 +1,13 @@
+## What's New in 2.8.3
+
+### Bugs fixed
+
+-   Create PR view now displays correcting in when using high contrast theme
+-   Fixed issue with markdown rendering after editing a PR comment
+
 ## What's New in 2.8.2
+
+### Bugs fixed
 
 -   Fixed more of the bug that caused Bitbucket Server users to not see PRs
 
