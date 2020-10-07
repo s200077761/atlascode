@@ -83,6 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h3>🎉 What's New in 2.8.3 🎉</h3>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Create PR view now displays correctly when using high contrast theme
+                                                </li>
+                                                <li>Fixed issue with markdown rendering after editing a PR comment</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.8.2 🎉</h3>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
