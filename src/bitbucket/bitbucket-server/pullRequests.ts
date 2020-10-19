@@ -732,8 +732,9 @@ export class ServerPullRequestApi implements PullRequestApi {
         site: BitbucketSite,
         prId: string,
         text: string,
-        parentCommentId?: string,
+        parentCommentId: string,
         inline?: { from?: number; to?: number; path: string },
+        commentHash?: string,
         lineMeta?: 'ADDED' | 'REMOVED'
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
@@ -741,7 +742,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { data } = await this.client.post(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments`,
             {
-                parent: parentCommentId ? { id: parentCommentId } : undefined,
+                parent: parentCommentId !== '' ? { id: parentCommentId } : undefined,
                 text: text,
                 anchor: inline
                     ? {

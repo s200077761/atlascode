@@ -16,7 +16,7 @@ import { CreatePullRequestActionApi } from '../../lib/webview/controller/pullreq
 import { Logger } from '../../logger';
 import { Branch, Commit as GitCommit, RefType } from '../../typings/git';
 import { Shell } from '../../util/shell';
-import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
+import { FileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 
 export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi {

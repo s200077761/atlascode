@@ -148,7 +148,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
 
     async postComment(comments: Comment[], pr: PullRequest, rawText: string, parentId?: string): Promise<Comment[]> {
         const bbApi = await clientForSite(pr.site);
-        const newComment: Comment = await bbApi.pullrequests.postComment(pr.site, pr.data.id, rawText, parentId);
+        const newComment: Comment = await bbApi.pullrequests.postComment(pr.site, pr.data.id, rawText, parentId ?? '');
         if (parentId) {
             const [updatedComments, success] = addToCommentHierarchy(comments, newComment);
             return success ? updatedComments : await this.getComments(pr);

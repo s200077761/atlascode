@@ -184,12 +184,13 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<FileDiff[]> {
+    async getChangedFiles(pr: PullRequest, spec?: string): Promise<FileDiff[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`
-        );
+        const diffUrl = spec
+            ? `/repositories/${ownerSlug}/${repoSlug}/diffstat/${spec}`
+            : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`;
+        let { data } = await this.client.get(diffUrl);
 
         if (!data.values) {
             return [];
@@ -264,31 +265,38 @@ export class CloudPullRequestApi implements PullRequestApi {
             htmlSummary: commit.summary ? commit.summary.html! : undefined,
             rawSummary: commit.summary ? commit.summary.raw! : undefined,
             author: CloudPullRequestApi.toUserModel(commit.author!.user!),
+            parentHashes: commit.parents.map((parent: any) => parent.hash),
         }));
     }
 
-    async deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void> {
+    async deleteComment(site: BitbucketSite, prId: string, commentId: string, commitHash?: string): Promise<void> {
         const { ownerSlug, repoSlug } = site;
 
-        await this.client.delete(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`,
-            {}
-        );
+        const urlString = commitHash
+            ? `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments/${commentId}`
+            : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`;
+        await this.client.delete(urlString, {});
     }
 
-    async editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment> {
+    async editComment(
+        site: BitbucketSite,
+        prId: string,
+        content: string,
+        commentId: string,
+        commitHash?: string
+    ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.put(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`,
-            {
-                content: {
-                    raw: content,
-                },
-            }
-        );
+        const urlString = commitHash
+            ? `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments/${commentId}`
+            : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`;
+        const { data } = await this.client.put(urlString, {
+            content: {
+                raw: content,
+            },
+        });
 
-        return this.convertDataToComment(data, site);
+        return this.convertDataToComment(data, site, commitHash);
     }
 
     async getTasks(pr: PullRequest): Promise<Task[]> {
@@ -399,14 +407,15 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async getComments(pr: PullRequest): Promise<PaginatedComments> {
+    async getComments(pr: PullRequest, commitHash?: string): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
-        let { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
-            {
-                pagelen: maxItemsSupported.comments,
-            }
-        );
+
+        const urlString = commitHash
+            ? `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments`
+            : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`;
+        let { data } = await this.client.get(urlString, {
+            pagelen: maxItemsSupported.comments,
+        });
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -435,7 +444,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
 
         const convertedComments = await Promise.all(
-            comments.map((commentData) => this.convertDataToComment(commentData, pr.site))
+            comments.map((commentData) => this.convertDataToComment(commentData, pr.site, commitHash))
         );
 
         const nestedComments = this.toNestedList(convertedComments);
@@ -722,22 +731,24 @@ export class CloudPullRequestApi implements PullRequestApi {
         site: BitbucketSite,
         prId: string,
         text: string,
-        parentCommentId?: string,
-        inline?: { from?: number; to?: number; path: string }
+        parentCommentId: string,
+        inline?: { from?: number; to?: number; path: string },
+        commitHash?: string
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
-        const { data } = await this.client.post(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments`,
-            {
-                parent: parentCommentId ? { id: parentCommentId } : undefined,
-                content: {
-                    raw: text,
-                },
-                inline: inline,
-            }
-        );
 
-        return this.convertDataToComment(data, site);
+        const urlString = commitHash
+            ? `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/comments`
+            : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments`;
+        const { data } = await this.client.post(urlString, {
+            parent: parentCommentId !== '' ? { id: parentCommentId } : undefined,
+            content: {
+                raw: text,
+            },
+            inline: inline,
+        });
+
+        return this.convertDataToComment(data, site, commitHash);
     }
 
     async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
@@ -756,7 +767,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return data;
     }
 
-    private convertDataToComment(data: any, site: BitbucketSite): Comment {
+    private convertDataToComment(data: any, site: BitbucketSite, commitHash?: string): Comment {
         const commentBelongsToUser: boolean = data && data.user && data.user.account_id === site.details.userId;
 
         return {
@@ -773,6 +784,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             user: data.user ? CloudPullRequestApi.toUserModel(data.user) : UnknownUser,
             children: [],
             tasks: [],
+            commitHash: commitHash,
         };
     }
 

@@ -8,8 +8,8 @@ import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
+import { PRFileDiffQueryParams } from './diffViewHelper';
 import { checkout } from './gitActions';
-import { PRFileDiffQueryParams } from './pullRequestNode';
 
 const turndownService = new TurndownService();
 
@@ -62,6 +62,7 @@ interface PullRequestComment extends vscode.Comment {
 
     //This stores the content in the comment when 'edit' is clicked, so that the state can be restored if cancel is clicked
     editModeContent: MarkdownString | string;
+    commitHash?: string;
 }
 
 interface PullRequestTask extends vscode.Comment {
@@ -282,7 +283,8 @@ export class PullRequestCommentController implements vscode.Disposable {
                         comment.site,
                         comment.prId,
                         comment.body.toString(),
-                        comment.id
+                        comment.id,
+                        comment.commitHash
                     );
 
                     //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
@@ -354,9 +356,19 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     getDataForAddingComment(thread: CommentThread) {
-        const { site, prHref, prId, path, lhs, addedLines, deletedLines, lineContextMap } = JSON.parse(
-            thread.uri.query
-        ) as PRFileDiffQueryParams;
+        let {
+            site,
+            prHref,
+            prId,
+            path,
+            lhs,
+            addedLines,
+            deletedLines,
+            lineContextMap,
+            commitHash,
+            rhsCommitHash,
+            isCommitLevelDiff,
+        } = JSON.parse(thread.uri.query) as PRFileDiffQueryParams;
 
         const commentThreadId =
             thread.comments.length === 0 ? undefined : (thread.comments[0] as PullRequestComment).prCommentThreadId;
@@ -381,7 +393,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             lineType = 'REMOVED';
         }
 
-        return { site, prId, prHref, commentThreadId, inline, lineType };
+        return { site, prId, prHref, commentThreadId, inline, lineType, commitHash, rhsCommitHash, isCommitLevelDiff };
     }
 
     async addReplyToComment(comments: readonly vscode.Comment[], commentData: PullRequestComment) {
@@ -389,15 +401,18 @@ export class PullRequestCommentController implements vscode.Disposable {
             return [];
         }
 
-        const { inline, lineType, commentThreadId } = this.getDataForAddingComment(commentData.parent);
+        const { inline, lineType, commentThreadId, rhsCommitHash, isCommitLevelDiff } = this.getDataForAddingComment(
+            commentData.parent
+        );
 
         const bbApi = await clientForSite(commentData.site);
         const newComment = await bbApi.pullrequests.postComment(
             commentData.site,
             commentData.prId,
             commentData.body.toString(),
-            commentData.parentCommentId,
+            commentData.parentCommentId ?? '',
             inline,
+            isCommitLevelDiff ? rhsCommitHash : undefined,
             lineType
         );
 
@@ -428,15 +443,25 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     async addComment(reply: vscode.CommentReply) {
-        const { site, prId, prHref, commentThreadId, inline, lineType } = this.getDataForAddingComment(reply.thread);
+        const {
+            site,
+            prId,
+            prHref,
+            commentThreadId,
+            inline,
+            lineType,
+            rhsCommitHash,
+            isCommitLevelDiff,
+        } = this.getDataForAddingComment(reply.thread);
 
         const bbApi = await clientForSite(site);
         const newComment = await bbApi.pullrequests.postComment(
             site,
             prId,
             reply.text,
-            commentThreadId,
+            commentThreadId ?? '',
             inline,
+            isCommitLevelDiff ? rhsCommitHash : undefined,
             lineType
         );
         prCommentEvent(site.details).then((e) => {
@@ -673,7 +698,8 @@ export class PullRequestCommentController implements vscode.Disposable {
                     commentData.site,
                     commentData.prId,
                     commentData.body.toString(),
-                    commentData.id
+                    commentData.id,
+                    commentData.commitHash
                 );
 
                 //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
@@ -703,7 +729,12 @@ export class PullRequestCommentController implements vscode.Disposable {
         const commentThreadId = commentData.prCommentThreadId;
         if (commentThreadId && commentData.parent) {
             const bbApi = await clientForSite(commentData.site);
-            await bbApi.pullrequests.deleteComment(commentData.site, commentData.prId, commentData.id);
+            await bbApi.pullrequests.deleteComment(
+                commentData.site,
+                commentData.prId,
+                commentData.id,
+                commentData.commitHash
+            );
 
             let comments = commentData.parent.comments.filter(
                 (comment: PullRequestComment) => comment.id !== commentData.id
@@ -904,7 +935,10 @@ export class PullRequestCommentController implements vscode.Disposable {
         prHref: string,
         prId: string
     ): Promise<PullRequestComment> {
-        const contextValues = ['canAddReply', 'canAddTask'];
+        const contextValues = ['canAddReply'];
+        if (!comment.commitHash) {
+            contextValues.push('canAddTask');
+        }
         if (comment.editable) {
             contextValues.push('canEdit');
         }
@@ -929,6 +963,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             saveChangesContext: SaveContexts.EDITINGCOMMENT,
             tasks: comment.tasks,
             editModeContent: '',
+            commitHash: comment.commitHash,
         };
     }
 
