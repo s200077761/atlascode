@@ -283,7 +283,14 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                     {...({ ref: viewHost } as any)}
                 />
                 <Box hidden={enableRichTextEditor} minHeight="8em">
-                    <TextField multiline fullWidth rows={4} value={content} onChange={handlePlainTextChange} />
+                    <TextField
+                        multiline
+                        fullWidth
+                        rows={4}
+                        rowsMax={20}
+                        value={content}
+                        onChange={handlePlainTextChange}
+                    />
                 </Box>
             </Grid>
             <Grid item>

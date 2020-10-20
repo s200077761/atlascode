@@ -373,6 +373,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             fullWidth
                                             multiline
                                             rows={4}
+                                            rowsMax={20}
                                             label="Summary"
                                             name="summary"
                                             value={summary}
