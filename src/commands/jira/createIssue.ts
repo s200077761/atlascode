@@ -1,10 +1,10 @@
 import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 import { startIssueCreationEvent } from '../../analytics';
+import { ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketIssue, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { BBData, CommentData } from '../../webviews/createIssueWebview';
-import { ProductJira } from '../../atlclients/authInfo';
 
 export interface TodoIssueData {
     summary: string;
@@ -75,14 +75,7 @@ function annotateComment(data: CommentData) {
 async function updateBBIssue(data: BBData) {
     const bbApi = await clientForSite(data.bbIssue.site);
     await bbApi.issues!.postComment(data.bbIssue, `Linked to ${data.issueKey}`);
-
-    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.site);
-    if (comps && Array.isArray(comps)) {
-        const injiraComp = comps.find((comp) => comp.name === 'triaged');
-        if (injiraComp && data.bbIssue.data.component !== injiraComp) {
-            await bbApi.issues!.postNewComponent(data.bbIssue, injiraComp.name!);
-        }
-    }
+    await bbApi.issues!.postChange(data.bbIssue, 'open');
 }
 
 function descriptionForUri(uri: Uri) {
