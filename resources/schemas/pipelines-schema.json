@@ -206,6 +206,9 @@
                     },
                     "minItems": 1
                 },
+                "clone": {
+                    "$ref": "#/definitions/clone"
+                },
                 "services": {
                     "type": "array",
                     "description": "Services enabled for the step",
@@ -399,6 +402,11 @@
                         }
                     ],
                     "default": 50
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Enables cloning of the repository",
+                    "default": true
                 },
                 "lfs": {
                     "type": "boolean",
