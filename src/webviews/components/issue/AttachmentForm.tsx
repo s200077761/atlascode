@@ -47,7 +47,7 @@ interface FileWithPreview extends FileWithPath {
     isImage: boolean;
 }
 
-const previewableTypes: string[] = ['image/gif', 'image/jpeg', 'image/png', 'image/webp'];
+export const previewableTypes: string[] = ['image/gif', 'image/jpeg', 'image/png', 'image/webp'];
 
 type ActionType = {
     type: 'addFiles' | 'removeFile' | 'reset';
