@@ -499,8 +499,24 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         <div className="ac-vpadding">
                             <label className="ac-field-label">{this.state.fields['attachment'].name}</label>
                             <AttachmentList
+                                baseLinkUrl={this.state.siteDetails.baseLinkUrl}
                                 onDelete={this.handleDeleteAttachment}
                                 attachments={this.state.fieldValues['attachment']}
+                                fetchImage={async (url: string) => {
+                                    const nonce = uuid.v4();
+                                    return (
+                                        await this.postMessageWithEventPromise(
+                                            {
+                                                action: 'getImage',
+                                                nonce: nonce,
+                                                url: url,
+                                            },
+                                            'getImageDone',
+                                            ConnectionTimeout,
+                                            nonce
+                                        )
+                                    ).imgData;
+                                }}
                             />
                         </div>
                     )}
