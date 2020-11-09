@@ -1,9 +1,12 @@
 import { commands, Disposable, env, QuickPickItem, Uri, UriHandler, window } from 'vscode';
+import { ProductJira } from './atlclients/authInfo';
 import { LoginManager } from './atlclients/loginManager';
 import { bitbucketSiteForRemote, clientForHostname } from './bitbucket/bbUtils';
 import { WorkspaceRepo } from './bitbucket/model';
 import { Commands } from './commands';
+import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { Container } from './container';
+import { fetchMinimalIssue } from './jira/fetchIssue';
 import { AnalyticsApi } from './lib/analyticsApi';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
@@ -48,6 +51,57 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.handleCloneRepository(uri);
         } else if (uri.path.endsWith('finalizeAuthentication')) {
             await this.finalizeAuthentication(uri);
+        } else if (uri.path.endsWith('startWorkOnJiraIssue')) {
+            await this.handleStartWorkOnJiraIssue(uri);
+        }
+    }
+
+    private async handleStartWorkOnJiraIssue(uri: Uri) {
+        try {
+            const query = new URLSearchParams(uri.query);
+            const siteBaseURL = query.get('site');
+            const issueKey = query.get('issueKey');
+            // const aaid = query.get('aaid'); aaid is not currently used for anything is included in the url and may be useful to have in the future
+
+            if (!siteBaseURL || !issueKey) {
+                throw new Error(`Cannot parse request URL from: ${query}`);
+            }
+
+            const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+            let site = jiraSitesAvailable.find(
+                (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL)
+            );
+            if (!site) {
+                window
+                    .showInformationMessage(
+                        `Cannot start work on ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
+                        'Open auth settings'
+                    )
+                    .then((userChoice) => {
+                        if (userChoice === 'Open auth settings') {
+                            Container.settingsWebviewFactory.createOrShow({
+                                section: ConfigSection.Jira,
+                                subSection: ConfigSubSection.Auth,
+                            });
+                        }
+                    });
+                throw new Error(`Could not find auth details for ${siteBaseURL}`);
+            } else {
+                let foundIssue = await Container.jiraExplorer.findIssue(issueKey);
+                if (!foundIssue && !(foundIssue = await fetchMinimalIssue(issueKey, site!))) {
+                    throw new Error(`Could not fetch issue: ${issueKey}`);
+                }
+
+                startWorkOnIssue(foundIssue);
+            }
+
+            this.analyticsApi.fireDeepLinkEvent(
+                decodeURIComponent(query.get('source') || 'unknown'),
+                'startWorkOnJiraIssue'
+            );
+        } catch (e) {
+            Logger.debug('error opening start work page:', e);
+            window.showErrorMessage('Error opening start work page (check log for details)');
         }
     }
 
