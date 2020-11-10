@@ -1,3 +1,15 @@
+## What's New in 2.8.4
+
+### Improvements
+
+-   Open Jira issue image attachments within VS Code
+-   Support commit-level diffs for pull requests
+-   Add missing clone config for steps in pipelines yaml validator
+
+### Bugs fixed
+
+-   Fixed summary editor size on the create pull request screen
+
 ## What's New in 2.8.3
 
 ### Bugs fixed

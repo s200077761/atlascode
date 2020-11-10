@@ -83,6 +83,21 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.8.4 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Open Jira issue image attachments within VS Code</li>
+                                                <li>Support commit-level diffs for pull requests</li>
+                                                <li>Add missing clone config for steps in pipelines yaml validator</li>
+                                            </ul>
+                                        </section>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>Fixed summary editor size on the create pull request screen</li>
+                                            </ul>
+                                        </section>
                                         <h3>🎉 What's New in 2.8.3 🎉</h3>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
