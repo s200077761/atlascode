@@ -96,7 +96,8 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
             var newEntry = Object.assign({}, entry, {
                 siteId: data.site,
                 name: data.name,
-                query: data.jql,
+                // [VSCODE-1282] Having to revert to jqlEntry as there's a bug with how default values are handled currently
+                query: data.jql || jqlEntry?.query,
             });
 
             onSave(newEntry);
