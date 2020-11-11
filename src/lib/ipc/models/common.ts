@@ -16,6 +16,7 @@ export enum WebViewID {
     StartWork = 'startWorkOnIssueScreen',
     PullRequestDetailsWebview = 'pullRequestDetailsScreen',
     CreatePullRequest = 'createPullRequestScreen',
+    CreateJiraIssueWebview = 'atlascodeCreateIssueScreen',
 }
 
 export enum KnownLinkID {
