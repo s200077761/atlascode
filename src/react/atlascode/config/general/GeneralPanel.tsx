@@ -1,4 +1,4 @@
-import { Fade, Grid } from '@material-ui/core';
+import { Box, Fade, Grid, makeStyles, Theme, Typography } from '@material-ui/core';
 import React from 'react';
 import { ConfigSubSection } from '../../../../lib/ipc/models/config';
 import { CommonPanelProps } from '../../common/commonPanelProps';
@@ -11,12 +11,24 @@ type GeneralPanelProps = CommonPanelProps & {
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
 };
 
+const useStyles = makeStyles(
+    (theme: Theme) =>
+        ({
+            root: {
+                fontSize: theme.typography.pxToRem(12),
+                fontStyle: 'italic',
+            },
+        } as const)
+);
+
 export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
     visible,
     selectedSubSections,
     onSubsectionChange,
     config,
 }) => {
+    const classes = useStyles();
+
     return (
         <>
             <Fade in={visible}>
@@ -52,7 +64,22 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
                                 charlesCertPath={config['charlesCertPath']}
                                 charlesDebugOnly={config['charlesDebugOnly']}
                             />
+                            <Box marginTop={5}>
+                                <Typography variant="subtitle1" className={classes.root}>
+                                    Note: This extension collects telemetry data, which is used to help understand how
+                                    to improve the product.
+                                </Typography>
+                                <Typography variant="subtitle1" className={classes.root}>
+                                    For example, this usage data helps to debug issues, such as slow start-up times, and
+                                    to prioritize new features.
+                                </Typography>
+                                <Typography variant="subtitle1" className={classes.root}>
+                                    If you don't wish to send usage data to Atlassian, you can set the
+                                    telemetry.enableTelemetry user setting to false, and restart VS Code.
+                                </Typography>
+                            </Box>
                         </Grid>
+                        <Grid item></Grid>
                     </Grid>
                 </div>
             </Fade>

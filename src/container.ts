@@ -1,4 +1,4 @@
-import { Disposable, env, ExtensionContext, UriHandler } from 'vscode';
+import { Disposable, env, ExtensionContext, UriHandler, workspace } from 'vscode';
 import { AnalyticsClient } from './analytics-node-client/src/index';
 import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
@@ -68,6 +68,7 @@ const ConfigTargetKey = 'configurationTarget';
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
         let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
+
         this._analyticsClient = new AnalyticsClient({
             origin: 'desktop',
             env: analyticsEnv,
@@ -75,6 +76,7 @@ export class Container {
             subproduct: 'atlascode',
             version: version,
             deviceId: env.machineId,
+            enable: this.getAnalyticsEnable(),
         });
 
         this._cancellationManager = new Map();
@@ -187,6 +189,10 @@ export class Container {
         context.subscriptions.push((this._helpExplorer = new HelpExplorer()));
     }
 
+    static getAnalyticsEnable(): boolean {
+        const telemetryConfig = workspace.getConfiguration('telemetry');
+        return telemetryConfig.get<boolean>('enableTelemetry', true);
+    }
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);

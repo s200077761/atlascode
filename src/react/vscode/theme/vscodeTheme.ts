@@ -11,8 +11,10 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
     const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
     const sideBarTitleForeground = isHighContrast ? '#ffffff' : vscStyles.sideBarTitleForeground;
-    const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.sideBarSectionHeaderBackground;
+    const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.tabInactiveBackground;
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
+
+    const bodyClass: string | null = body.getAttribute('class');
 
     // Icons don't always have a useful color in high-contrast
     const muiSvg = isHighContrast ? { root: { color: '#ffffff' } } : undefined;
@@ -38,6 +40,11 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             fontFamily: vscStyles.fontFamily,
         },
         overrides: {
+            MuiBottomNavigation: {
+                root: {
+                    borderTopColor: bodyClass || '',
+                },
+            },
             MuiIconButton: {
                 sizeSmall: {
                     // Adjust spacing to reach minimal touch target hitbox
