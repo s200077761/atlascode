@@ -35,6 +35,7 @@ export enum iconSet {
     PIPELINEFAILED = 'failed',
     PIPELINESTOPPED = 'stopped',
     PIPELINEPAUSED = 'paused',
+    TWITTERLOGOBLUE = 'twitterLogoBlue',
 }
 
 export function registerResources(vscodeContext: ExtensionContext) {
@@ -69,6 +70,10 @@ export function registerResources(vscodeContext: ExtensionContext) {
     Resources.icons.set(
         iconSet.ATLASSIANICON,
         Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'atlassian-icon.svg')))
+    );
+    Resources.icons.set(
+        iconSet.TWITTERLOGOBLUE,
+        Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'TwitterLogoBlue.svg')))
     );
     Resources.icons.set(iconSet.PULLREQUEST, {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'pullrequests.svg'))),
