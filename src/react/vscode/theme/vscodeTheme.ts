@@ -11,7 +11,7 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
     const buttonBackground = isHighContrast ? '#0088ff' : vscStyles.buttonBackground;
     const buttonHoverBackground = isHighContrast ? '#000000' : vscStyles.buttonHoverBackground;
     const sideBarTitleForeground = isHighContrast ? '#ffffff' : vscStyles.sideBarTitleForeground;
-    const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.sideBarSectionHeaderBackground;
+    const sideBarSectionHeaderBackground = isHighContrast ? '#000000' : vscStyles.tabInactiveBackground;
     const listActiveSelectionBackground = isHighContrast ? '#000000' : vscStyles.listActiveSelectionBackground;
 
     // Icons don't always have a useful color in high-contrast

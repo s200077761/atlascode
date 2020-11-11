@@ -8,6 +8,7 @@ export interface AnalyticsClientInit {
     flushAt?: number;
     flushInterval?: number;
     baseUrl?: string;
+    enable?: boolean;
     deviceId?: string;
 }
 
