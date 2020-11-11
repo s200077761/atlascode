@@ -1,3 +1,18 @@
+## What's New in 2.8.4
+
+### Improvements
+
+-   Open Jira issue image attachments within VS Code
+-   Support commit-level diffs for pull requests
+-   Add missing clone config for steps in pipelines yaml validator
+-   Atlassian Telemetry now respects telemetry.enableTelemetry flag in global settings
+
+### Bugs fixed
+
+-   Fixed summary editor size on the create pull request screen
+-   Fixed styling for expander headers
+-   Fixed JQL entry being erased when updating query name
+
 ## What's New in 2.8.3
 
 ### Bugs fixed
