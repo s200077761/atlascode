@@ -97,11 +97,13 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
 
     async updateReviewers(pr: PullRequest, newReviewers: User[]): Promise<Reviewer[]> {
         const bbApi = await clientForSite(pr.site);
+        //On BBServer, accountId is actually the userslug which replaces all special characters with underscore. This can break for user names that
+        //contain special characters (especially user names which are email addresses), so a separate unescaped userName property is stored
         const { data } = await bbApi.pullrequests.update(
             pr,
             pr.data.title,
             pr.data.rawSummary,
-            newReviewers.map((user) => user.accountId)
+            newReviewers.map((user) => (pr.site.details.isCloud ? user.accountId : user.userName ?? user.accountId))
         );
         return data.participants;
     }
