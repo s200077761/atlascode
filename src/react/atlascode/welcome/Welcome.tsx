@@ -101,6 +101,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                             <ul>
                                                 <li>Fixed summary editor size on the create pull request screen</li>
                                                 <li>Fixed styling for expander headers</li>
+                                                <li>Fixed JQL entry being erased when updating query name</li>
                                             </ul>
                                         </section>
                                         <h3>🎉 What's New in 2.8.3 🎉</h3>

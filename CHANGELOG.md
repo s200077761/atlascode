@@ -11,6 +11,7 @@
 
 -   Fixed summary editor size on the create pull request screen
 -   Fixed styling for expander headers
+-   Fixed JQL entry being erased when updating query name
 
 ## What's New in 2.8.3
 
