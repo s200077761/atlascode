@@ -15,6 +15,9 @@ const routes = {
     startWorkOnIssueScreen: React.lazy(() =>
         import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage')
     ),
+    atlascodeCreateIssueProblemsScreen: React.lazy(() =>
+        import(/* webpackChunkName: "atlascodeCreateIssueProblemsScreen" */ './issue/CreateIssueProblems')
+    ),
 };
 
 const view = document.getElementById('reactView') as HTMLElement;

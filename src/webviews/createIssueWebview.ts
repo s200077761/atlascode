@@ -494,6 +494,14 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                     }
                     break;
                 }
+                case 'openProblemReport': {
+                    handled = true;
+                    Container.createIssueProblemsWebview.createOrShow(
+                        undefined,
+                        this._siteDetails,
+                        this._currentProject
+                    );
+                }
                 default: {
                     break;
                 }
