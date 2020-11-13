@@ -1,5 +1,5 @@
 import { ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { Grid, makeStyles, Switch, Theme } from '@material-ui/core';
+import { Grid, makeStyles, Switch, Theme, Typography } from '@material-ui/core';
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { ConfigSection } from '../../../../lib/ipc/models/config';
 import { IntervalInput } from '../../common/IntervalInput';
@@ -105,15 +105,22 @@ export const BitbucketIssues: React.FunctionComponent<BitbucketIssuesProps> = me
                     />
                 </Grid>
                 <Grid item>
-                    <IntervalInput
-                        className={classes.indent}
-                        interval={refreshInterval}
-                        max={120}
-                        label="Refresh explorer every:"
-                        enabled={enabled}
-                        units="minutes"
-                        onChange={handleInterval}
-                    />
+                    <Grid container direction="row" spacing={1} alignItems="center">
+                        <Grid item>
+                            <IntervalInput
+                                className={classes.indent}
+                                interval={refreshInterval}
+                                max={120}
+                                label="Refresh explorer every:"
+                                enabled={enabled}
+                                units="minutes"
+                                onChange={handleInterval}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <Typography variant="subtitle2">(setting to 0 disables auto-refresh)</Typography>
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
         );
