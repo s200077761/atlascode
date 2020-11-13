@@ -121,6 +121,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                             <div>
                                                 <DateTimePicker
                                                     defaultValue={defaultDate}
+                                                    timeIsEditable
                                                     className="ac-select-container"
                                                     datePickerSelectProps={{
                                                         className: 'ac-select-container',
