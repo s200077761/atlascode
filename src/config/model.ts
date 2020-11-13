@@ -54,6 +54,7 @@ export interface JiraConfig {
     jqlList: JQLEntry[];
     todoIssues: TodoIssues;
     startWorkBranchTemplate: StartWorkBranchTemplate;
+    showCreateIssueProblems: boolean;
 }
 
 export type SiteIdAndProjectKey = {
@@ -256,6 +257,7 @@ export const emptyJiraConfig: JiraConfig = {
     jqlList: [],
     todoIssues: emptyTodoIssues,
     startWorkBranchTemplate: emptyStartWorkBranchTemplate,
+    showCreateIssueProblems: false,
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {

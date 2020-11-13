@@ -12,10 +12,20 @@ type GenDebugPanelProps = CommonSubpanelProps & {
     enableCharles: boolean;
     charlesCertPath: string;
     charlesDebugOnly: boolean;
+    showCreateIssueProblems: boolean;
 };
 
 export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
-    ({ visible, expanded, onSubsectionChange, enableCurl, enableCharles, charlesCertPath, charlesDebugOnly }) => {
+    ({
+        visible,
+        expanded,
+        onSubsectionChange,
+        enableCurl,
+        enableCharles,
+        charlesCertPath,
+        charlesDebugOnly,
+        showCreateIssueProblems,
+    }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
         const expansionHandler = useCallback(
@@ -51,6 +61,7 @@ export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
                         enableCharles={enableCharles}
                         charlesCertPath={charlesCertPath}
                         charlesDebugOnly={charlesDebugOnly}
+                        showCreateIssueProblems={showCreateIssueProblems}
                     />
                 </ExpansionPanelDetails>
             </ExpansionPanel>

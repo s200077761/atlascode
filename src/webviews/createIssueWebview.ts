@@ -274,7 +274,9 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                     this._selectedIssueTypeId
                 ] as CreateIssueData;
                 createData.type = 'update';
-                createData.transformerProblems = this._screenData.problems;
+                createData.transformerProblems = Container.config.jira.showCreateIssueProblems
+                    ? this._screenData.problems
+                    : {};
                 this.postMessage(createData);
             }
         } catch (e) {
@@ -307,7 +309,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
 
         const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
         createData.type = 'update';
-        createData.transformerProblems = this._screenData.problems;
+        createData.transformerProblems = Container.config.jira.showCreateIssueProblems ? this._screenData.problems : {};
         this.postMessage(createData);
     }
 

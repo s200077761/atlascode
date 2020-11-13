@@ -24,6 +24,7 @@ type DebugProps = {
     enableCharles: boolean;
     charlesCertPath: string;
     charlesDebugOnly: boolean;
+    showCreateIssueProblems: boolean;
 };
 
 const useStyles = makeStyles(
@@ -65,7 +66,7 @@ function toFileWithPath(f: File): FileWithPath {
     return f as FileWithPath;
 }
 export const Debug: React.FunctionComponent<DebugProps> = memo(
-    ({ enableCurl, enableCharles, charlesCertPath, charlesDebugOnly }) => {
+    ({ enableCurl, enableCharles, charlesCertPath, charlesDebugOnly, showCreateIssueProblems }) => {
         const controller = useContext(ConfigControllerContext);
 
         const classes = useStyles();
@@ -128,6 +129,23 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                             />
                         }
                         label="Output curl commands for every API call"
+                        spacing={1}
+                        variant="body1"
+                    />
+                </Grid>
+                <Grid item>
+                    <ToggleWithLabel
+                        control={
+                            <Switch
+                                size="small"
+                                color="primary"
+                                id="showCreateIssueProblems"
+                                value="jira.showCreateIssueProblems"
+                                checked={showCreateIssueProblems}
+                                onChange={handleCheckedChange}
+                            />
+                        }
+                        label="Show a link to view non-renderable fields on Jira create issue page"
                         spacing={1}
                         variant="body1"
                     />

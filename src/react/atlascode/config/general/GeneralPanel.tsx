@@ -63,6 +63,7 @@ export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({
                                 enableCharles={config['enableCharles']}
                                 charlesCertPath={config['charlesCertPath']}
                                 charlesDebugOnly={config['charlesDebugOnly']}
+                                showCreateIssueProblems={config['jira.showCreateIssueProblems']}
                             />
                             <Box marginTop={5}>
                                 <Typography variant="subtitle1" className={classes.root}>
