@@ -144,15 +144,22 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                     }
                     intervalItem={
                         <Grid item>
-                            <IntervalInput
-                                className={classes.indent}
-                                interval={refreshInterval}
-                                max={120}
-                                label="Refresh interval:"
-                                enabled={enabled}
-                                units="minutes"
-                                onChange={handleInterval}
-                            />
+                            <Grid container direction="row" spacing={1} alignItems="center">
+                                <Grid item>
+                                    <IntervalInput
+                                        className={classes.indent}
+                                        interval={refreshInterval}
+                                        max={120}
+                                        label="Refresh interval:"
+                                        enabled={enabled}
+                                        units="minutes"
+                                        onChange={handleInterval}
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <Typography variant="subtitle2">(setting to 0 disables auto-refresh)</Typography>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     }
                 />
