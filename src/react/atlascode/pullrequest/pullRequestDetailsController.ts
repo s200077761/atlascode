@@ -206,15 +206,26 @@ function pullRequestDetailsReducer(
             };
         }
         case PullRequestDetailsUIActionType.UpdateApprovalStatus: {
+            const currentUserId = state.currentUser.accountId;
             //Update the status of the current user and leave the rest unchanged
-            const updatedParticipants = state.pr.data.participants.map((participant: Reviewer) => {
-                return participant.accountId === state.currentUser.accountId
-                    ? {
-                          ...participant,
-                          status: action.data.status,
-                      }
-                    : participant;
-            });
+            const updatedParticipants: Reviewer[] =
+                state.pr.data.participants.find((item) => item.accountId === currentUserId) === undefined
+                    ? [
+                          ...state.pr.data.participants,
+                          {
+                              ...state.currentUser,
+                              status: action.data.status,
+                              role: 'PARTICIPANT',
+                          },
+                      ]
+                    : state.pr.data.participants.map((participant: Reviewer) => {
+                          return participant.accountId === state.currentUser.accountId
+                              ? {
+                                    ...participant,
+                                    status: action.data.status,
+                                }
+                              : participant;
+                      });
 
             return {
                 ...state,
