@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
+import { AuthInterceptor } from '../atlclients/authInterceptor';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
@@ -17,7 +18,8 @@ export class HTTPClient {
         private baseUrl: string,
         private authHeader: string,
         private agent: any,
-        private errorHandler: (errJson: AxiosResponse) => Promise<Error>
+        private errorHandler: (errJson: AxiosResponse) => Promise<Error>,
+        authInterceptor?: AuthInterceptor
     ) {
         this.transport = axios.create({
             timeout: ConnectionTimeout,
@@ -34,12 +36,20 @@ export class HTTPClient {
             addCurlLogging(this.transport);
         }
 
-        this.transport.interceptors.response.use(
-            (response) => response,
-            async (error) => {
-                return error.response ? Promise.reject(await this.errorHandler(error.response)) : Promise.reject(error);
-            }
-        );
+        // We need to be sure that the auth interceptor is the first one since the one created in
+        // this class will strip off the headers.
+        if (authInterceptor) {
+            authInterceptor.attachToAxios(this.transport).then(() => {
+                this.transport.interceptors.response.use(
+                    (response) => response,
+                    async (error) => {
+                        return error.response
+                            ? Promise.reject(await this.errorHandler(error.response))
+                            : Promise.reject(error);
+                    }
+                );
+            });
+        }
     }
 
     /**

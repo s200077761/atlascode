@@ -10,20 +10,21 @@ import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositorie
 import { ClientError, HTTPClient } from '../bitbucket/httpClient';
 import { BitbucketApi } from '../bitbucket/model';
 import { configuration } from '../config/configuration';
-//import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from '../constants';
 import { Container } from '../container';
 import {
+    basicJiraTransportFactory,
     getAgent,
     jiraCloudAuthProvider,
     jiraServerAuthProvider,
-    jiraTransportFactory,
+    oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap, Interval } from '../util/cachemap';
 import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo } from './authInfo';
+import { BasicInterceptor } from './basicInterceptor';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -111,11 +112,16 @@ export class ClientManager implements Disposable {
             let client: any = undefined;
 
             if (isOAuthInfo(info)) {
-                client = new JiraCloudClient(site, jiraTransportFactory, jiraCloudAuthProvider(info.access), getAgent);
+                client = new JiraCloudClient(
+                    site,
+                    oauthJiraTransportFactory(site),
+                    jiraCloudAuthProvider(info.access),
+                    getAgent
+                );
             } else if (isBasicAuthInfo(info)) {
                 client = new JiraServerClient(
                     site,
-                    jiraTransportFactory,
+                    basicJiraTransportFactory(site),
                     jiraServerAuthProvider(info.username, info.password),
                     getAgent
                 );
@@ -162,7 +168,8 @@ export class ClientManager implements Disposable {
                 }
 
                 return new ClientError(response.statusText, errString);
-            }
+            },
+            new BasicInterceptor(site, Container.credentialManager)
         );
     }
 

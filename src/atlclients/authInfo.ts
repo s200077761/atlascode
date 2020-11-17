@@ -60,8 +60,14 @@ export interface OAuthResponse {
     accessibleResources: Array<AccessibleResource>;
 }
 
+export enum AuthInfoState {
+    Valid,
+    Invalid,
+}
+
 export interface AuthInfo {
     user: UserInfo;
+    state: AuthInfoState;
 }
 
 export interface OAuthInfo extends AuthInfo {
@@ -170,12 +176,14 @@ export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
 
 export const emptyAuthInfo: AuthInfo = {
     user: emptyUserInfo,
+    state: AuthInfoState.Valid,
 };
 
 export const emptyBasicAuthInfo: BasicAuthInfo = {
     user: emptyUserInfo,
     username: '',
     password: '',
+    state: AuthInfoState.Valid,
 };
 
 export function isUpdateAuthEvent(a: AuthInfoEvent): a is UpdateAuthInfoEvent {

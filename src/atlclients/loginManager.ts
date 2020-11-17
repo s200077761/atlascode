@@ -12,6 +12,7 @@ import { ConnectionTimeout } from '../util/time';
 import {
     AccessibleResource,
     AuthInfo,
+    AuthInfoState,
     BasicAuthInfo,
     DetailedSiteInfo,
     isBasicAuthInfo,
@@ -119,6 +120,7 @@ export class LoginManager {
                 access: resp.access,
                 refresh: resp.refresh,
                 user: resp.user,
+                state: AuthInfoState.Valid,
             };
 
             const siteDetails = await this.getOAuthSiteDetails(

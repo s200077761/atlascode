@@ -1,7 +1,7 @@
 import { Button, Grid, lighten, makeStyles, Tooltip, Typography } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
 import React, { useCallback, useContext } from 'react';
-import { emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
+import { AuthInfoState, emptyUserInfo, Product, ProductJira } from '../../../atlclients/authInfo';
 import { OnboardingControllerContext } from './onboardingController';
 
 const useStyles = makeStyles((theme) => ({
@@ -48,7 +48,7 @@ export const AltCloudAuthButton: React.FunctionComponent<AltCloudAuthButtonProps
 
     const handleCloudProd = useCallback(() => {
         const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
-        controller.login({ host: hostname, product: product }, { user: emptyUserInfo });
+        controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
     }, [controller, product]);
 
     return (

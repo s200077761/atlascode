@@ -1,28 +1,29 @@
-import {
-    AuthInfo,
-    Product,
-    OAuthProvider,
-    ProductJira,
-    ProductBitbucket,
-    getSecretForAuthInfo,
-    emptyAuthInfo,
-    AuthInfoEvent,
-    AuthChangeType,
-    DetailedSiteInfo,
-    UpdateAuthInfoEvent,
-    RemoveAuthInfoEvent,
-    oauthProviderForSite,
-    isOAuthInfo,
-} from './authInfo';
-import { keychain } from '../util/keychain';
-import { window, Disposable, EventEmitter, Event, version } from 'vscode';
-import { Logger } from '../logger';
-import { setCommandContext, CommandContext } from '../constants';
-import { loggedOutEvent } from '../analytics';
-import { OAuthRefesher } from './oauthRefresher';
-import { AnalyticsClient } from '../analytics-node-client/src';
-import PQueue from 'p-queue';
 import crypto from 'crypto';
+import PQueue from 'p-queue';
+import { Disposable, Event, EventEmitter, version, window } from 'vscode';
+import { loggedOutEvent } from '../analytics';
+import { AnalyticsClient } from '../analytics-node-client/src';
+import { CommandContext, setCommandContext } from '../constants';
+import { Logger } from '../logger';
+import { keychain } from '../util/keychain';
+import {
+    AuthChangeType,
+    AuthInfo,
+    AuthInfoEvent,
+    AuthInfoState,
+    DetailedSiteInfo,
+    emptyAuthInfo,
+    getSecretForAuthInfo,
+    isOAuthInfo,
+    OAuthProvider,
+    oauthProviderForSite,
+    Product,
+    ProductBitbucket,
+    ProductJira,
+    RemoveAuthInfoEvent,
+    UpdateAuthInfoEvent,
+} from './authInfo';
+import { OAuthRefesher } from './oauthRefresher';
 
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
@@ -75,7 +76,8 @@ export class CredentialManager implements Disposable {
         const hasNewInfo =
             !oldInfo ||
             getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info) ||
-            oldInfo.user.id !== info.user.id;
+            oldInfo.user.id !== info.user.id ||
+            oldInfo.state !== info.state;
 
         if (hasNewInfo) {
             const cmdctx = this.commandContextFor(site.product);
@@ -103,19 +105,20 @@ export class CredentialManager implements Disposable {
 
         if (productAuths && productAuths.has(credentialId)) {
             foundInfo = productAuths.get(credentialId);
+            if (foundInfo) {
+                // clone the object so editing it and saving it back doesn't trip up equality checks
+                // in saveAuthInfo
+                foundInfo = Object.assign({}, foundInfo);
+            }
         }
 
         if (!foundInfo && keychain) {
             try {
-                let infoEntry = (await this.getJsonAuthInfoFromKeychain(productKey, credentialId)) || undefined;
-                if (infoEntry) {
-                    let info: AuthInfo = JSON.parse(infoEntry);
+                let infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
+                if (infoEntry && productAuths) {
+                    this._memStore.set(productKey, productAuths.set(credentialId, infoEntry));
 
-                    if (info && productAuths) {
-                        this._memStore.set(productKey, productAuths.set(credentialId, info));
-
-                        foundInfo = info;
-                    }
+                    foundInfo = infoEntry;
                 }
             } catch (e) {
                 Logger.info(`keychain error ${e}`);
@@ -202,11 +205,11 @@ export class CredentialManager implements Disposable {
         return wasKeyDeleted;
     }
 
-    private async getJsonAuthInfoFromKeychain(
+    private async getAuthInfoFromKeychain(
         productKey: string,
         credentialId: string,
         serviceName?: string
-    ): Promise<string | null> {
+    ): Promise<AuthInfo | undefined> {
         let svcName = keychainServiceNameV3;
 
         if (serviceName) {
@@ -222,7 +225,19 @@ export class CredentialManager implements Disposable {
             },
             { priority: Priority.Read }
         );
-        return authInfo;
+
+        if (!authInfo) {
+            return undefined;
+        }
+
+        let info: AuthInfo = JSON.parse(authInfo);
+
+        // When in doubt, assume credentials are valid
+        if (info.state === undefined) {
+            info.state = AuthInfoState.Valid;
+        }
+
+        return info;
     }
 
     /**
@@ -233,6 +248,7 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return undefined;
         }
+        Logger.debug(`refreshingAccessToken for ${site.baseApiUrl}`);
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
         let newAccessToken = undefined;

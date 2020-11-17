@@ -12,16 +12,18 @@ import {
     ListItemText,
     makeStyles,
     Theme,
+    Tooltip,
     Typography,
 } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DomainIcon from '@material-ui/icons/Domain';
 import EditIcon from '@material-ui/icons/Edit';
+import ErrorIcon from '@material-ui/icons/Error';
 import clsx from 'clsx';
 import React, { useContext } from 'react';
 import { uid } from 'react-uid';
-import { DetailedSiteInfo, Product } from '../../../../atlclients/authInfo';
+import { AuthInfoState, DetailedSiteInfo, Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useBorderBoxStyles } from '../../common/useBorderBoxStyles';
 import { ConfigControllerContext } from '../configController';
@@ -82,6 +84,13 @@ function generateListItems(
                     </ListItemAvatar>
                     <ListItemText primary={swa.site.name} />
                     <ListItemSecondaryAction>
+                        {swa.auth.state === AuthInfoState.Invalid && (
+                            <Tooltip title="Credential Error">
+                                <IconButton edge="end" aria-label="error" onClick={() => edit(swa)}>
+                                    <ErrorIcon fontSize="small" color="inherit" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                         {!swa.site.isCloud && (
                             <IconButton edge="end" aria-label="edit" onClick={() => edit(swa)}>
                                 <EditIcon fontSize="small" color="inherit" />
