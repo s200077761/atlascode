@@ -908,6 +908,12 @@
                     "description": "Custom prefixes for branch names on start work screen",
                     "scope": "window"
                 },
+                "atlascode.jira.showCreateIssueProblems": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show a link to view non-renderable fields on Jira create issue page",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.enabled": {
                     "type": "boolean",
                     "default": true,

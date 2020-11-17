@@ -57,6 +57,7 @@ import { VSCStartWorkActionApi } from './webview/startwork/vscStartWorkActionApi
 import { VSCStartWorkWebviewControllerFactory } from './webview/startwork/vscStartWorkWebviewControllerFactory';
 import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
+import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
@@ -92,6 +93,9 @@ export class Container {
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
+        context.subscriptions.push(
+            (this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath))
+        );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(
             (this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath))
@@ -343,6 +347,11 @@ export class Container {
     private static _createIssueWebview: CreateIssueWebview;
     static get createIssueWebview() {
         return this._createIssueWebview;
+    }
+
+    private static _createIssueProblemsWebview: CreateIssueProblemsWebview;
+    static get createIssueProblemsWebview() {
+        return this._createIssueProblemsWebview;
     }
 
     private static _startWorkOnIssueWebview: StartWorkOnIssueWebview;

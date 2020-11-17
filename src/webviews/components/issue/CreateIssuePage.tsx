@@ -382,6 +382,21 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     );
                                 }}
                             </Form>
+                            {this.state.transformerProblems && Object.keys(this.state.transformerProblems).length > 0 && (
+                                <div className="fade-in" style={{ marginTop: '20px' }}>
+                                    <span>non-renderable fields detected.</span>{' '}
+                                    <Button
+                                        className="ac-banner-link-button"
+                                        appearance="link"
+                                        spacing="none"
+                                        onClick={() => {
+                                            this.postMessage({ action: 'openProblemReport' });
+                                        }}
+                                    >
+                                        View a problem report
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </GridColumn>
                 </Grid>
