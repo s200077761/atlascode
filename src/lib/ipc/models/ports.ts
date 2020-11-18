@@ -8,4 +8,5 @@ export enum UIWSPort {
     PipelineSummary,
     PullRequestDetailsPage,
     CreatePullRequest,
+    CreateJiraIssuePage,
 }
