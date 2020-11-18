@@ -157,7 +157,7 @@ export class Container {
             this._analyticsApi
         );
 
-        const jiraIssueV2Webview = new SingleWebview<CreateJiraIssueInitMessage, CreateJiraIssueAction>(
+        const createJiraIssueV2WebviewFactory = new SingleWebview<CreateJiraIssueInitMessage, CreateJiraIssueAction>(
             context.extensionPath,
             new VSCCreateJiraIssueWebviewControllerFactory(
                 new VSCCreateJiraIssueActionImpl(),
@@ -172,7 +172,7 @@ export class Container {
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
-        context.subscriptions.push((this._createJiraIssueWebviewFactory = jiraIssueV2Webview));
+        context.subscriptions.push((this._createJiraIssueWebviewFactory = createJiraIssueV2WebviewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,

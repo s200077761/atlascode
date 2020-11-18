@@ -2,8 +2,11 @@ import { IssueType } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import { Avatar, Grid, MenuItem, TextField, Typography } from '@material-ui/core';
 import React from 'react';
-import { CreateJiraIssueUIAction, CreateJiraIssueUIActionType } from '../createJiraIssuePageController';
-import { IssueRenderer } from '../jira-issue-renderer/src/issueRenderer';
+import { IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
+import {
+    CreateJiraIssueUIAction,
+    CreateJiraIssueUIActionType,
+} from '../../atlascode/issue/createJiraIssuePageController';
 
 export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
     private _dispatch: React.Dispatch<CreateJiraIssueUIAction>;

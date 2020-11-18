@@ -1,5 +1,5 @@
 import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
+import { emptyIssueType, emptyProject, Project } from '@atlassianlabs/jira-pi-common-models';
 import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
 import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 
@@ -22,16 +22,7 @@ export const emptyCreateJiraIssueInitMessage: CreateJiraIssueInitMessage = {
     project: emptyProject,
     screenData: {
         issueTypes: [],
-        selectedIssueType: {
-            avatarId: -1,
-            description: 'empty',
-            iconUrl: '',
-            id: 'empty',
-            name: 'empty',
-            self: '',
-            subtask: false,
-            epic: false,
-        },
+        selectedIssueType: emptyIssueType,
         issueTypeUIs: {},
         problems: {},
     },

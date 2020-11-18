@@ -2,6 +2,7 @@ import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-cont
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { CreateIssueUIHelper } from '../../../lib/guipi/jira-issue-renderer/src';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { CreateJiraIssueAction, CreateJiraIssueActionType } from '../../../lib/ipc/fromUI/createJiraIssue';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
@@ -12,9 +13,8 @@ import {
     CreateJiraIssueResponse,
     emptyCreateJiraIssueInitMessage,
 } from '../../../lib/ipc/toUI/createJiraIssue';
+import { JiraIssueRenderer } from '../../guipi/jira-issue-renderer-mui/jiraIssueRenderer';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
-import { JiraIssueRenderer } from './jira-issue-renderer-mui/jiraIssueRenderer';
-import { CreateIssueUIHelper } from './jira-issue-renderer/src';
 
 export interface CreateJiraIssueControllerApi {
     postMessage: PostMessageFunc<CreateJiraIssueAction>;
