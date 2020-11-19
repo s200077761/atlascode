@@ -90,7 +90,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
     const [summary, setSummary] = useState(createdFromAtlascodeFooter);
     const [reviewers, setReviewers] = useState<User[]>([]);
     const [pushLocalChanges, setPushLocalChanges] = useState(true);
-    const [closeSourceBranch, setCloseSourceBranch] = useState(true);
+    const [closeSourceBranch, setCloseSourceBranch] = useState(false);
     const [transitionIssueEnabled, setTransitionIssueEnabled] = useState(false);
     const [transition, setTransition] = useState<Transition>(emptyTransition);
     const [submitState, setSubmitState] = useState<'initial' | 'submitting'>('initial');

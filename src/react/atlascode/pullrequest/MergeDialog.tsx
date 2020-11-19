@@ -237,6 +237,10 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     }, [prData.state]);
 
     useEffect(() => {
+        setCloseSourceBranch(prData.closeSourceBranch);
+    }, [prData.closeSourceBranch]);
+
+    useEffect(() => {
         if (mergeStrategy.value === emptyMergeStrategy.value) {
             const defaultMergeStrategy = mergeStrategies.find((strategy) => strategy.isDefault === true);
             setMergeStrategy(defaultMergeStrategy ?? emptyMergeStrategy);
