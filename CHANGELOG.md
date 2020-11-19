@@ -1,3 +1,18 @@
+## What's New in 2.8.5
+
+### Improvements
+
+-   Added messaging explaining how to disable auto-refresh
+-   Close source branch option behavior now matches that of the webpage
+-   Can now log work outside of traditional business hours
+
+### Bugs fixed
+
+-   No longer make repeated calls with invalid credentials on server instances
+-   Fixed bug that caused transitioned issues to revert to the backlog
+-   Fixed bug that could cause errors when adding reviewers to a pull request
+-   Fixed bug preventing the pull request view from updating if a user approves their own pull request
+
 ## What's New in 2.8.4
 
 ### Improvements
