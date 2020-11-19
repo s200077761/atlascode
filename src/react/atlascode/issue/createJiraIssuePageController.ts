@@ -1,4 +1,5 @@
 import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -7,12 +8,14 @@ import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { CreateJiraIssueAction, CreateJiraIssueActionType } from '../../../lib/ipc/fromUI/createJiraIssue';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import {
+    CreateIssueResponseMessage,
     CreateJiraIssueInitMessage,
     CreateJiraIssueMessage,
     CreateJiraIssueMessageType,
     CreateJiraIssueResponse,
     emptyCreateJiraIssueInitMessage,
 } from '../../../lib/ipc/toUI/createJiraIssue';
+import { ConnectionTimeout } from '../../../util/time';
 import { JiraIssueRenderer } from '../../guipi/jira-issue-renderer-mui/jiraIssueRenderer';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
 
@@ -20,6 +23,7 @@ export interface CreateJiraIssueControllerApi {
     postMessage: PostMessageFunc<CreateJiraIssueAction>;
     refresh: () => void;
     openLink: (linkId: KnownLinkID) => void;
+    createIssue: () => Promise<IssueKeyAndSite<DetailedSiteInfo>>;
     createIssueUIHelper?: CreateIssueUIHelper<DetailedSiteInfo, JSX.Element>;
 }
 
@@ -27,6 +31,7 @@ export const emptyApi: CreateJiraIssueControllerApi = {
     postMessage: () => {},
     refresh: () => {},
     openLink: () => {},
+    createIssue: () => Promise.reject('Not implemented'),
     createIssueUIHelper: undefined,
 };
 
@@ -115,9 +120,11 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         }
     }, []);
 
-    const [postMessage] = useMessagingApi<CreateJiraIssueAction, CreateJiraIssueMessage, CreateJiraIssueResponse>(
-        onMessageHandler
-    );
+    const [postMessage, postMessagePromise] = useMessagingApi<
+        CreateJiraIssueAction,
+        CreateJiraIssueMessage,
+        CreateJiraIssueResponse
+    >(onMessageHandler);
 
     const sendRefresh = useCallback((): void => {
         dispatch({ type: CreateJiraIssueUIActionType.Loading });
@@ -141,6 +148,27 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         state.screenData,
     ]);
 
+    const createIssue = useCallback((): Promise<IssueKeyAndSite<DetailedSiteInfo>> => {
+        return new Promise<IssueKeyAndSite<DetailedSiteInfo>>((resolve, reject) => {
+            (async () => {
+                try {
+                    const response = await postMessagePromise(
+                        {
+                            type: CreateJiraIssueActionType.CreateIssueRequest,
+                            site: state.site,
+                            issueData: state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues,
+                        },
+                        CreateJiraIssueMessageType.CreateIssueResponse,
+                        ConnectionTimeout
+                    );
+                    resolve((response as CreateIssueResponseMessage).createdIssue);
+                } catch (e) {
+                    reject(e);
+                }
+            })();
+        });
+    }, [postMessagePromise, state.screenData.issueTypeUIs, state.screenData.selectedIssueType.id, state.site]);
+
     React.useEffect(() => {
         postMessage({
             type: CreateJiraIssueActionType.GetCreateMeta,
@@ -155,9 +183,10 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             postMessage: postMessage,
             refresh: sendRefresh,
             openLink,
+            createIssue,
             createIssueUIHelper,
         };
-    }, [openLink, postMessage, sendRefresh, createIssueUIHelper]);
+    }, [openLink, postMessage, sendRefresh, createIssue, createIssueUIHelper]);
 
     return [state, controllerApi];
 }

@@ -1,5 +1,5 @@
-import { Project } from '@atlassianlabs/jira-pi-common-models';
-import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models';
+import { CreatedIssue, Project } from '@atlassianlabs/jira-pi-common-models';
+import { CreateMetaTransformerResult, FieldValues } from '@atlassianlabs/jira-pi-meta-models';
 import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 
 export interface CreateJiraIssueActionApi {
@@ -11,4 +11,5 @@ export interface CreateJiraIssueActionApi {
         project: Project;
         createMeta: CreateMetaTransformerResult<DetailedSiteInfo>;
     }>;
+    create(site: DetailedSiteInfo, issueData: FieldValues): Promise<CreatedIssue>;
 }
