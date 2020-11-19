@@ -83,6 +83,37 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.8.5 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Added messaging explaining how to disable auto-refresh</li>
+                                                <li>
+                                                    Close source branch option behavior now matches that of the webpage
+                                                </li>
+                                                <li>Can now log work outside of traditional business hours</li>
+                                            </ul>
+                                        </section>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    No longer make repeated calls with invalid credentials on server
+                                                    instances
+                                                </li>
+                                                <li>
+                                                    Fixed bug that caused transitioned issues to revert to the backlog
+                                                </li>
+                                                <li>
+                                                    Fixed bug that could cause errors when adding reviewers to a pull
+                                                    request
+                                                </li>
+                                                <li>
+                                                    Fixed bug preventing the pull request view from updating if a user
+                                                    approves their own pull request
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.8.4 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
