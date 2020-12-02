@@ -68,7 +68,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.handleStartWorkOnJiraIssue(uri);
         } else if (uri.path.endsWith('checkoutBranch')) {
             await this.handleCheckoutBranch(uri);
-        } else if (uri.path.endsWith('showIssue')) {
+        } else if (uri.path.endsWith('showJiraIssue')) {
             await this.handleShowJiraIssue(uri);
         }
     }
@@ -139,7 +139,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             if (!site) {
                 window
                     .showInformationMessage(
-                        `Cannot start work on ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
+                        `Cannot open ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
                         'Open auth settings'
                     )
                     .then((userChoice) => {
