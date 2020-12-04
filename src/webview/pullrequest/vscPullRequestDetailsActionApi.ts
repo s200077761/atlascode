@@ -29,7 +29,7 @@ import { CancellationManager } from '../../lib/cancellation';
 import { PullRequestDetailsActionApi } from '../../lib/webview/controller/pullrequest/pullRequestDetailsActionApi';
 import { Logger } from '../../logger';
 import { getArgsForDiffView } from '../../views/pullrequest/diffViewHelper';
-import { addSourceRemoteIfNeeded } from '../../views/pullrequest/gitActions';
+import { addSourceRemoteIfNeededForPR } from '../../views/pullrequest/gitActions';
 import {
     addTasksToCommentHierarchy,
     addTaskToCommentHierarchy,
@@ -127,7 +127,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             throw new Error('no workspace repo');
         }
 
-        await addSourceRemoteIfNeeded(pr);
+        await addSourceRemoteIfNeededForPR(pr);
 
         const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
         await scm.fetch();
