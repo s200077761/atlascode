@@ -10,6 +10,7 @@ import { fetchMinimalIssue } from './jira/fetchIssue';
 import { AnalyticsApi } from './lib/analyticsApi';
 import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
 import { Logger } from './logger';
+import { checkout } from './views/pullrequest/gitActions';
 
 const ExtensionId = 'atlassian.atlascode';
 //const pullRequestUrl = `${env.uriScheme}://${ExtensionId}/openPullRequest`;
@@ -53,6 +54,76 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.finalizeAuthentication(uri);
         } else if (uri.path.endsWith('startWorkOnJiraIssue')) {
             await this.handleStartWorkOnJiraIssue(uri);
+        } else if (uri.path.endsWith('checkoutBranch')) {
+            await this.handleCheckoutBranch(uri);
+        }
+    }
+
+    private async handleCheckoutBranch(uri: Uri) {
+        try {
+            const query = new URLSearchParams(uri.query);
+            const cloneUrl = decodeURIComponent(query.get('cloneUrl') || '');
+            const sourceCloneUrl = decodeURIComponent(query.get('sourceCloneUrl') || ''); //For branches originating from a forked repo
+            const ref = query.get('ref');
+            const refType = query.get('refType');
+
+            if (!ref || !cloneUrl || !refType) {
+                throw new Error(`Query params are missing data: ${query}`);
+            }
+
+            let wsRepo = this.findRepoInCurrentWorkspace(cloneUrl);
+            if (!wsRepo) {
+                window
+                    .showInformationMessage(
+                        `To checkout ref ${ref}: this repository must be cloned in this workspace`,
+                        'Clone Repo'
+                    )
+                    .then(async (userChoice) => {
+                        if (userChoice === 'Clone Repo') {
+                            await this.showCloneOptions(cloneUrl);
+                        }
+                    });
+
+                //try to find the repo again after cloning
+                wsRepo = this.findRepoInCurrentWorkspace(cloneUrl);
+                if (!wsRepo) {
+                    window
+                        .showInformationMessage(
+                            `Could not find repo in current workspace after attempting to clone. Are you authenticated with Bitbucket?`,
+                            'Open auth settings'
+                        )
+                        .then((userChoice) => {
+                            if (userChoice === 'Open auth settings') {
+                                Container.settingsWebviewFactory.createOrShow({
+                                    section: ConfigSection.Jira,
+                                    subSection: ConfigSubSection.Auth,
+                                });
+                            }
+                        });
+                    return;
+                }
+            }
+
+            if (!wsRepo.mainSiteRemote.site) {
+                //I think this means it's not a Bitbucket repo
+                throw new Error(
+                    `Could not tie ${wsRepo.mainSiteRemote.remote.name} to a BitbucketSite object. Is this a Bitbucket repo?`
+                );
+            }
+
+            //Checkout error-handling/messaging is already handled in checkout() function
+            await checkout(wsRepo, ref, sourceCloneUrl);
+
+            this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'checkoutBranch');
+
+            if (refType === 'branch') {
+                window.showInformationMessage(`Branch ${ref} successfully checked out`);
+            } else {
+                window.showInformationMessage(`${ref} successfully checked out`);
+            }
+        } catch (e) {
+            Logger.debug('error checkout out branch:', e);
+            window.showErrorMessage('Error checkout out branch (check log for details)');
         }
     }
 
@@ -188,7 +259,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         });
     }
 
-    private showCloneOptions(repoUrl: string) {
+    private async showCloneOptions(repoUrl: string) {
         const options: (QuickPickItem & { action: () => void })[] = [
             {
                 label: 'Clone a new copy',
@@ -204,7 +275,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             },
         ];
 
-        window.showQuickPick(options).then((selection) => selection?.action());
+        await window.showQuickPick(options).then((selection) => selection?.action());
     }
 
     private async finalizeAuthentication(uri: Uri) {
