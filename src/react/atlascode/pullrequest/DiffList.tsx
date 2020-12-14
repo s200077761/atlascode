@@ -133,7 +133,7 @@ export const DiffList: React.FunctionComponent<{
                                 </Tooltip>
                             </TableCell>
                             <TableCell className={classes.tableCell}>
-                                <Link href="#" onClick={() => props.openDiffHandler(row)}>
+                                <Link onClick={() => props.openDiffHandler(row)}>
                                     <Typography>{row.file}</Typography>
                                 </Link>
                             </TableCell>
