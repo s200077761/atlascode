@@ -1,5 +1,6 @@
 import { CancelToken } from 'axios';
 import PQueue from 'p-queue/dist';
+import { configuration } from '../../config/configuration';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Logger } from '../../logger';
 import { CacheMap } from '../../util/cachemap';
@@ -115,6 +116,10 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(workspaceRepo, {
             q: `state="OPEN" and reviewers.account_id="${accountID}"`,
         }).then((allPRs) => {
+            if (configuration.get<boolean>('bitbucket.explorer.showReviewedPullRequests')) {
+                return allPRs;
+            }
+
             allPRs.data = allPRs.data.filter((pr) => {
                 for (const reviewer of pr.data.participants) {
                     if (reviewer.accountId == accountID && reviewer.status != 'UNAPPROVED') {

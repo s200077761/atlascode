@@ -1287,6 +1287,12 @@
                     "description": "Show notifications when new pull requests are created",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.showReviewedPullRequests": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show pull requests that you have already left a review on when showing pull requests to be reviewed",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.contextMenus.enabled": {
                     "type": "boolean",
                     "default": true,

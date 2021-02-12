@@ -1,5 +1,6 @@
 import { CancelToken } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
@@ -83,7 +84,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.getList(workspaceRepo, {
             'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
-            'approved.1': false,
+            'approved.1': configuration.get<boolean>('bitbucket.explorer.showReviewedPullRequests'),
         });
     }
 
