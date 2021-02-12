@@ -83,6 +83,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.getList(workspaceRepo, {
             'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
+            'approved.1': false,
         });
     }
 

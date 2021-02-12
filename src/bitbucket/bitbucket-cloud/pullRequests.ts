@@ -110,8 +110,21 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        const accountID = workspaceRepo.mainSiteRemote.site!.details.userId;
+
         return this.getList(workspaceRepo, {
-            q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"`,
+            q: `state="OPEN" and reviewers.account_id="${accountID}"`,
+        }).then((allPRs) => {
+            allPRs.data = allPRs.data.filter((pr) => {
+                for (const reviewer of pr.data.participants) {
+                    if (reviewer.accountId == accountID && reviewer.status != 'UNAPPROVED') {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            return allPRs;
         });
     }
 
