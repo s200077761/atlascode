@@ -33,9 +33,11 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     constructor(private ctx: BitbucketContext) {
         super();
 
-        this._headerNode = new PullRequestHeaderNode(
-            configuration.get<PullRequestFilters>('bitbucket.explorer.defaultPullRequestFilter')
-        );
+        const defaultFilter =
+            configuration.get<PullRequestFilters>('bitbucket.explorer.defaultPullRequestFilter') ||
+            PullRequestFilters.Open;
+
+        this._headerNode = new PullRequestHeaderNode(defaultFilter);
 
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(
