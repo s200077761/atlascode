@@ -4,6 +4,7 @@ import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PaginatedPullRequests, WorkspaceRepo } from '../bitbucket/model';
+import { configuration } from '../config/configuration';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { BaseTreeDataProvider } from './Explorer';
@@ -11,12 +12,11 @@ import { GitContentProvider } from './gitContentProvider';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 import { SimpleNode } from './nodes/simpleNode';
-import { CreatePullRequestNode, PullRequestHeaderNode } from './pullrequest/headerNode';
+import { CreatePullRequestNode, PullRequestHeaderNode, PullRequestFilters } from './pullrequest/headerNode';
 import { DescriptionNode, PullRequestTitlesNode } from './pullrequest/pullRequestNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const createPRNode = new CreatePullRequestNode();
-const headerNode = new PullRequestHeaderNode('Showing open pull requests');
 const MAX_WORKSPACE_REPOS_TO_PRELOAD = 3;
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
@@ -25,16 +25,18 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     >();
     readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
-    private _fetcher: (wsRepo: WorkspaceRepo) => Promise<PaginatedPullRequests> = async (wsRepo: WorkspaceRepo) => {
-        const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
-        return await bbApi.pullrequests.getList(wsRepo);
-    };
+    private _headerNode: PullRequestHeaderNode;
 
     public static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;
 
     constructor(private ctx: BitbucketContext) {
         super();
+
+        this._headerNode = new PullRequestHeaderNode(
+            configuration.get<PullRequestFilters>('bitbucket.explorer.defaultPullRequestFilter')
+        );
+
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(
                 PullRequestNodeDataProvider.SCHEME,
@@ -47,43 +49,23 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 prPaginationEvent().then((e) => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
-                this._fetcher = async (wsRepo: WorkspaceRepo) => {
-                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
-                    return await bbApi.pullrequests.getList(wsRepo);
-                };
-                headerNode.description = 'Showing open pull requests';
+                this._headerNode.filterType = PullRequestFilters.Open;
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
-                this._fetcher = async (wsRepo: WorkspaceRepo) => {
-                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
-                    return await bbApi.pullrequests.getListCreatedByMe(wsRepo);
-                };
-                headerNode.description = 'Showing pull requests created by me';
+                this._headerNode.filterType = PullRequestFilters.CreatedByMe;
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
-                this._fetcher = async (wsRepo: WorkspaceRepo) => {
-                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
-                    return await bbApi.pullrequests.getListToReview(wsRepo);
-                };
-                headerNode.description = 'Showing pull requests to review';
+                this._headerNode.filterType = PullRequestFilters.ToReview;
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowMergedPullRequests, () => {
-                this._fetcher = async (wsRepo: WorkspaceRepo) => {
-                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
-                    return await bbApi.pullrequests.getListMerged(wsRepo);
-                };
-                headerNode.description = 'Showing merged pull requests';
+                this._headerNode.filterType = PullRequestFilters.Merged;
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowDeclinedPullRequests, () => {
-                this._fetcher = async (wsRepo: WorkspaceRepo) => {
-                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
-                    return await bbApi.pullrequests.getListDeclined(wsRepo);
-                };
-                headerNode.description = 'Showing declined pull requests';
+                this._headerNode.filterType = PullRequestFilters.Declined;
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketPullRequestFilters, () => {
@@ -135,7 +117,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 val.dispose();
                 this._childrenMap!.delete(key);
             } else {
-                val.fetcher = this._fetcher;
+                val.fetcher = (ws) => this.fetch(ws);
             }
         });
 
@@ -149,12 +131,29 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 : this._childrenMap!.set(
                       repoUri,
                       new RepositoriesNode(
-                          this._fetcher,
+                          (ws) => this.fetch(ws),
                           wsRepo,
                           workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD,
                           expand
                       )
                   );
+        }
+    }
+
+    async fetch(wsRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+
+        switch (this._headerNode.filterType) {
+            case PullRequestFilters.Open:
+                return await bbApi.pullrequests.getList(wsRepo);
+            case PullRequestFilters.CreatedByMe:
+                return await bbApi.pullrequests.getListCreatedByMe(wsRepo);
+            case PullRequestFilters.ToReview:
+                return await bbApi.pullrequests.getListToReview(wsRepo);
+            case PullRequestFilters.Merged:
+                return await bbApi.pullrequests.getListMerged(wsRepo);
+            case PullRequestFilters.Declined:
+                return await bbApi.pullrequests.getListDeclined(wsRepo);
         }
     }
 
@@ -249,7 +248,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
             this.updateChildren();
         }
 
-        return [createPRNode, headerNode, ...Array.from(this._childrenMap!.values())];
+        return [createPRNode, this._headerNode, ...Array.from(this._childrenMap!.values())];
     }
 
     dispose() {

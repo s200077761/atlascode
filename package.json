@@ -1293,6 +1293,26 @@
                     "description": "Show pull requests that you have already left a review on when showing pull requests to be reviewed",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.defaultPullRequestFilter": {
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "createdByMe",
+                        "toReview",
+                        "merged",
+                        "declined"
+                    ],
+                    "enumDescriptions": [
+                        "Show all open pull requests.",
+                        "Show pull requests created by me.",
+                        "Show pull requests to be reviewed.",
+                        "Show merged pull requests.",
+                        "Show declined pull requests."
+                    ],
+                    "default": "open",
+                    "description": "The default filter to use in the pull request explorer",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.contextMenus.enabled": {
                     "type": "boolean",
                     "default": true,
