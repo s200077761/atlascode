@@ -68,7 +68,7 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
         return 'bitbucket.issues.monitorEnabled';
     }
 
-    refreshConfiguation(): string {
+    refreshConfiguration(): string {
         return 'bitbucket.issues.refreshInterval';
     }
 
