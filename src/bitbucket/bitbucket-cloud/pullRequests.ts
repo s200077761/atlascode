@@ -122,7 +122,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
             allPRs.data = allPRs.data.filter((pr) => {
                 for (const reviewer of pr.data.participants) {
-                    if (reviewer.accountId == accountID && reviewer.status != 'UNAPPROVED') {
+                    if (reviewer.accountId === accountID && reviewer.status !== 'UNAPPROVED') {
                         return false;
                     }
                 }
