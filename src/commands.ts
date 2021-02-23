@@ -216,9 +216,9 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             openWorkbenchWorkspaceButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
             commands.executeCommand('workbench.action.openWorkspace');
         }),
-        commands.registerCommand(Commands.CloneRepository, (source: string, repoUrl?: string) => {
+        commands.registerCommand(Commands.CloneRepository, async (source: string, repoUrl?: string) => {
             cloneRepositoryButtonEvent(source).then((event) => Container.analyticsClient.sendUIEvent(event));
-            commands.executeCommand('git.clone', repoUrl);
+            await commands.executeCommand('git.clone', repoUrl);
         }),
         commands.registerCommand(Commands.DisableHelpExplorer, () => {
             configuration.updateEffective('helpExplorerEnabled', false, null, true);

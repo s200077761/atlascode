@@ -4,6 +4,7 @@ import { CredentialManager } from './atlclients/authStore';
 import { ClientManager } from './atlclients/clientManager';
 import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
+import { CheckoutHelper } from './bitbucket/checkoutHelper';
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { configuration, IConfig } from './config/configuration';
 import { PmfStats } from './feedback/pmfStats';
@@ -189,8 +190,9 @@ export class Container {
         this._pmfStats = new PmfStats(context);
 
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
+        this._bitbucketHelper = new CheckoutHelper(context.globalState);
         context.subscriptions.push(
-            (this._uriHandler = new AtlascodeUriHandler(this._loginManager, this._analyticsApi))
+            (this._uriHandler = new AtlascodeUriHandler(this._loginManager, this._analyticsApi, this._bitbucketHelper))
         );
 
         if (config.jira.explorer.enabled) {
@@ -212,6 +214,7 @@ export class Container {
         const telemetryConfig = workspace.getConfiguration('telemetry');
         return telemetryConfig.get<boolean>('enableTelemetry', true);
     }
+
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
@@ -247,6 +250,11 @@ export class Container {
             ))
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
+        // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes
+        // we'll fail. Wait a few seconds before trying to check out a branch.
+        setTimeout(() => {
+            this._bitbucketHelper.completeBranchCheckOut();
+        }, 2000);
     }
 
     static get machineId() {
@@ -467,5 +475,10 @@ export class Container {
     private static _pmfStats: PmfStats;
     static get pmfStats() {
         return this._pmfStats;
+    }
+
+    private static _bitbucketHelper: CheckoutHelper;
+    static get bitbucketHelper() {
+        return this._bitbucketHelper;
     }
 }
