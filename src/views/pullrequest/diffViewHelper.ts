@@ -240,15 +240,18 @@ export function mergePaths(oldPath: string, newPath: string): string {
 
     //If absolutely nothing is similar, don't bother with the curly brackets
     if (i === 0) {
-        return `${oldPath} → ${newPathArray}`;
+        return `${oldPath} → ${newPath}`;
     }
 
     //The loop stops when we hit a difference, which means the remainder of both arrays is the difference.
     //We want our new path string to end with "{oldPathEnding -> newPathEnding}""
-    oldPathArray.slice(0, i).push(`{${oldPathArray.slice(i).join('/')} → ${newPathArray.slice(i).join('/')}}`);
+    const mergedPathArray = [
+        ...oldPathArray.slice(0, i),
+        `{${oldPathArray.slice(i).join('/')} → ${newPathArray.slice(i).join('/')}}`,
+    ];
 
     //It was convenient to work with an array, but we actually need a string
-    return oldPathArray.join('/');
+    return mergedPathArray.join('/');
 }
 
 export async function createFileChangesNodes(
