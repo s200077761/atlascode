@@ -9,7 +9,7 @@ import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PRFileDiffQueryParams } from './diffViewHelper';
-import { checkout } from './gitActions';
+import { checkoutPRBranch } from './gitActions';
 
 const turndownService = new TurndownService();
 
@@ -215,7 +215,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
                 const bbApi = await clientForSite(site);
                 const pr = await bbApi.pullrequests.get(site, prId, wsRepo);
-                const checkoutSucceeded = await checkout(pr, pr.data.source.branchName);
+                const checkoutSucceeded = await checkoutPRBranch(pr, pr.data.source.branchName);
 
                 if (checkoutSucceeded) {
                     const pathURI = vscode.Uri.parse(`${wsRepo.rootUri}/${path}`);
