@@ -81,11 +81,14 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(workspaceRepo, {
+        let query = {
             'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
-            'approved.1': configuration.get<boolean>('bitbucket.explorer.showReviewedPullRequests'),
-        });
+        };
+        if (!configuration.get<boolean>('bitbucket.explorer.showReviewedPullRequests')) {
+            query['approved.1'] = false;
+        }
+        return this.getList(workspaceRepo, query);
     }
 
     async getListMerged(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
