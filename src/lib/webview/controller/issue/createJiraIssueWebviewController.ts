@@ -97,6 +97,18 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                     type: CreateJiraIssueMessageType.Init,
                     ...this.initData!,
                 });
+                break;
+            }
+            case CreateJiraIssueActionType.CreateIssueRequest: {
+                const createdIssue = await this.api.create(msg.site, msg.issueData);
+                this.postMessage({
+                    type: CreateJiraIssueMessageType.CreateIssueResponse,
+                    createdIssue: {
+                        siteDetails: msg.site,
+                        key: createdIssue.key,
+                    },
+                });
+                break;
             }
             case CommonActionType.Refresh: {
                 try {

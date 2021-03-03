@@ -1,6 +1,8 @@
 import {
     AppBar,
     Box,
+    Button,
+    CircularProgress,
     Container,
     Divider,
     Grid,
@@ -9,8 +11,9 @@ import {
     Theme,
     Toolbar,
     Typography,
+    useTheme,
 } from '@material-ui/core';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { CreateJiraIssueControllerContext, useCreateJiraIssuePageController } from './createJiraIssuePageController';
@@ -40,8 +43,20 @@ const useStyles = makeStyles(
 );
 
 const CreateJiraIssuePage: React.FunctionComponent = () => {
+    const theme = useTheme<Theme>();
     const classes = useStyles();
     const [state, controller] = useCreateJiraIssuePageController();
+
+    const [createInProgress, setCreateInProgress] = useState(false);
+
+    const handleCreate = useCallback(async () => {
+        setCreateInProgress(true);
+        try {
+            await controller.createIssue();
+        } finally {
+            setCreateInProgress(false);
+        }
+    }, [controller]);
 
     return (
         <CreateJiraIssueControllerContext.Provider value={controller}>
@@ -76,6 +91,25 @@ const CreateJiraIssuePage: React.FunctionComponent = () => {
                                         controller.createIssueUIHelper
                                             .getAdvancedFieldMarkup()
                                             .map((item) => <Grid item>{item}</Grid>)}
+
+                                    <Grid item>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleCreate}
+                                            disabled={createInProgress}
+                                            endIcon={
+                                                createInProgress ? (
+                                                    <CircularProgress
+                                                        color="inherit"
+                                                        size={theme.typography.fontSize}
+                                                    />
+                                                ) : null
+                                            }
+                                        >
+                                            Create
+                                        </Button>
+                                    </Grid>
                                 </Grid>
                             </Box>
                         </Paper>
