@@ -2,6 +2,7 @@ import { Disposable, env, Uri, UriHandler, window } from 'vscode';
 import { ProductJira } from './atlclients/authInfo';
 import { LoginManager } from './atlclients/loginManager';
 import { CheckoutHelper } from './bitbucket/checkoutHelper';
+import { showIssue } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { Container } from './container';
 import { fetchMinimalIssue } from './jira/fetchIssue';
@@ -40,6 +41,10 @@ export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`
  *      e.g. vscode://atlassian.atlascode/checkoutBranch?cloneUrl=git@bitbucket.org%3Aatlassianlabs%2Fatlascode.git&ref=VSCODE-1293-add-checkout-branch-deep-lin&refType=branch
  *      e.g. vscode://atlassian.atlascode/checkoutBranch?cloneUrl=git@bitbucket.org%3Aatlassianlabs%2Fatlascode.git&ref=2.7.0&refType=tag
  *      e.g. vscode://atlassian.atlascode/checkoutBranch?cloneUrl=git@bitbucket.org%3Aatlassianlabs%2Fatlascode.git&sourceCloneUrl=git@bitbucket.org%3Arundquist%2Fatlascode-fork-test.git&ref=VSCODE-1293-bravo&refType=branch
+ *  - showJiraIssue:
+ *      -- site: site for the jira issue
+ *      -- issueKey: issue key to show
+ *      e.g. vscode://atlassian.atlascode/showJiraIssue?site=https%3A%2F%2Fsome-test-site.atlassian.net&issueKey=VSCODE-1320
  */
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
@@ -67,6 +72,8 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.handleStartWorkOnJiraIssue(uri);
         } else if (uri.path.endsWith('checkoutBranch')) {
             await this.handleCheckoutBranch(uri);
+        } else if (uri.path.endsWith('showJiraIssue')) {
+            await this.handleShowJiraIssue(uri);
         }
     }
 
@@ -116,6 +123,51 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
         } catch (e) {
             Logger.debug('error opening start work page:', e);
             window.showErrorMessage('Error opening start work page (check log for details)');
+        }
+    }
+
+    private async handleShowJiraIssue(uri: Uri) {
+        try {
+            const query = new URLSearchParams(uri.query);
+            const siteBaseURL = query.get('site');
+            const issueKey = query.get('issueKey');
+
+            if (!siteBaseURL || !issueKey) {
+                throw new Error(`Cannot parse request URL from: ${query}`);
+            }
+
+            const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+            let site = jiraSitesAvailable.find(
+                (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL)
+            );
+            if (!site) {
+                window
+                    .showInformationMessage(
+                        `Cannot open ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
+                        'Open auth settings'
+                    )
+                    .then((userChoice) => {
+                        if (userChoice === 'Open auth settings') {
+                            Container.settingsWebviewFactory.createOrShow({
+                                section: ConfigSection.Jira,
+                                subSection: ConfigSubSection.Auth,
+                            });
+                        }
+                    });
+                throw new Error(`Could not find auth details for ${siteBaseURL}`);
+            } else {
+                let foundIssue = await Container.jiraExplorer.findIssue(issueKey);
+                if (!foundIssue && !(foundIssue = await fetchMinimalIssue(issueKey, site!))) {
+                    throw new Error(`Could not fetch issue: ${issueKey}`);
+                }
+
+                showIssue(foundIssue);
+            }
+
+            this.analyticsApi.fireDeepLinkEvent(decodeURIComponent(query.get('source') || 'unknown'), 'showJiraIssue');
+        } catch (e) {
+            Logger.debug('error opening issue page:', e);
+            window.showErrorMessage('Error opening issue page (check log for details)');
         }
     }
 
