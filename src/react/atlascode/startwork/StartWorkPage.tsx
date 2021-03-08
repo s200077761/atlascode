@@ -206,6 +206,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 .replace(/\W+/g, '-'),
             SUMMARY: state.issue.summary
                 .substring(0, 50)
+                .trim()
                 .toUpperCase()
                 .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
                 .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
