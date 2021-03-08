@@ -186,12 +186,28 @@ const StartWorkPage: React.FunctionComponent = () => {
 
     const buildBranchName = useCallback(() => {
         const view = {
-            prefix: branchType.prefix.replace(/ /g, '-'),
+            prefix: branchType.prefix.replace(/ /g, '-').toLowerCase(),
+            Prefix: branchType.prefix.replace(/ /g, '-'),
+            PREFIX: branchType.prefix.replace(/ /g, '-').toUpperCase(),
             issueKey: state.issue.key,
+            issuekey: state.issue.key.toLowerCase(),
             summary: state.issue.summary
                 .substring(0, 50)
                 .trim()
                 .toLowerCase()
+                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                .replace(/\W+/g, '-'),
+            Summary: state.issue.summary
+                .substring(0, 50)
+                .trim()
+                .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
+                .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
+                .replace(/\W+/g, '-'),
+            SUMMARY: state.issue.summary
+                .substring(0, 50)
+                .trim()
+                .toUpperCase()
                 .normalize('NFD') // Convert accented characters to two characters where the accent is separated out
                 .replace(/[\u0300-\u036f]/g, '') // Remove the separated accent marks
                 .replace(/\W+/g, '-'),
