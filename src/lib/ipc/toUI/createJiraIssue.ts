@@ -16,6 +16,7 @@ export type CreateJiraIssueResponse = {};
 
 export interface CreateJiraIssueInitMessage {
     site: DetailedSiteInfo;
+    sitesAvailable: DetailedSiteInfo[];
     project: Project;
     screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
 }
@@ -26,6 +27,7 @@ export interface CreateIssueResponseMessage {
 
 export const emptyCreateJiraIssueInitMessage: CreateJiraIssueInitMessage = {
     site: emptySiteInfo,
+    sitesAvailable: [],
     project: emptyProject,
     screenData: {
         issueTypes: [],

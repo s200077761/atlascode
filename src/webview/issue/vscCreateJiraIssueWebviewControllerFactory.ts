@@ -1,4 +1,5 @@
 import { Disposable, Uri } from 'vscode';
+import { ProductJira } from '../../atlclients/authInfo';
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { UIWSPort } from '../../lib/ipc/models/ports';
 import { CreateJiraIssueInitMessage } from '../../lib/ipc/toUI/createJiraIssue';
@@ -7,6 +8,7 @@ import { CreateJiraIssueActionApi } from '../../lib/webview/controller/issue/cre
 import { CreateJiraIssueWebviewController } from '../../lib/webview/controller/issue/createJiraIssueWebviewController';
 import { Logger } from '../../logger';
 import { iconSet, Resources } from '../../resources';
+import { SiteManager } from '../../siteManager';
 import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
@@ -15,6 +17,7 @@ export class VSCCreateJiraIssueWebviewControllerFactory
     constructor(
         private api: CreateJiraIssueActionApi,
         private commonHandler: CommonActionMessageHandler,
+        private siteManager: SiteManager,
         private analytics: AnalyticsApi
     ) {}
 
@@ -44,6 +47,7 @@ export class VSCCreateJiraIssueWebviewControllerFactory
             postMessage,
             this.api,
             this.commonHandler,
+            this.siteManager.getSitesAvailable(ProductJira),
             Logger.Instance,
             this.analytics,
             factoryData

@@ -24,6 +24,7 @@ export interface CreateJiraIssueControllerApi {
     refresh: () => void;
     openLink: (linkId: KnownLinkID) => void;
     createIssue: () => Promise<IssueKeyAndSite<DetailedSiteInfo>>;
+    selectSite: (siteId: string) => Promise<void>;
     createIssueUIHelper?: CreateIssueUIHelper<DetailedSiteInfo, JSX.Element>;
 }
 
@@ -32,6 +33,7 @@ export const emptyApi: CreateJiraIssueControllerApi = {
     refresh: () => {},
     openLink: () => {},
     createIssue: () => Promise.reject('Not implemented'),
+    selectSite: (siteId: string) => Promise.reject('Not implemented'),
     createIssueUIHelper: undefined,
 };
 
@@ -169,6 +171,29 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         });
     }, [postMessagePromise, state.screenData.issueTypeUIs, state.screenData.selectedIssueType.id, state.site]);
 
+    const selectSite = useCallback(
+        (siteId: string): Promise<void> => {
+            return new Promise((resolve, reject) => {
+                (async () => {
+                    const newSite = state.sitesAvailable.find((s) => s.id === siteId);
+                    if (newSite) {
+                        dispatch({ type: CreateJiraIssueUIActionType.Loading });
+                        await postMessagePromise(
+                            {
+                                type: CreateJiraIssueActionType.GetCreateMeta,
+                                site: newSite,
+                            },
+                            CreateJiraIssueMessageType.Init,
+                            ConnectionTimeout
+                        );
+                        resolve();
+                    }
+                })();
+            });
+        },
+        [state.sitesAvailable, postMessagePromise]
+    );
+
     React.useEffect(() => {
         postMessage({
             type: CreateJiraIssueActionType.GetCreateMeta,
@@ -184,9 +209,10 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             refresh: sendRefresh,
             openLink,
             createIssue,
+            selectSite,
             createIssueUIHelper,
         };
-    }, [openLink, postMessage, sendRefresh, createIssue, createIssueUIHelper]);
+    }, [openLink, postMessage, sendRefresh, createIssue, selectSite, createIssueUIHelper]);
 
     return [state, controllerApi];
 }

@@ -1,5 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-import { emptySiteInfo, ProductJira } from '../../../../atlclients/authInfo';
+import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { CreateJiraIssueAction, CreateJiraIssueActionType } from '../../../ipc/fromUI/createJiraIssue';
@@ -26,6 +26,7 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
         private messagePoster: MessagePoster,
         private api: CreateJiraIssueActionApi,
         private commonHandler: CommonActionMessageHandler,
+        private sitesAvailable: DetailedSiteInfo[],
         private logger: Logger,
         private analytics: AnalyticsApi,
         factoryData?: CreateJiraIssueInitMessage
@@ -56,6 +57,7 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 const screenData = await this.api.fetchCreateMeta(emptySiteInfo);
                 this.initData = {
                     site: screenData.site,
+                    sitesAvailable: this.sitesAvailable,
                     project: screenData.project,
                     screenData: screenData.createMeta,
                 };
@@ -89,6 +91,7 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 const screenData = await this.api.fetchCreateMeta(msg.site, msg.projectKey);
                 this.initData = {
                     site: screenData.site,
+                    sitesAvailable: this.sitesAvailable,
                     project: screenData.project,
                     screenData: screenData.createMeta,
                 };
