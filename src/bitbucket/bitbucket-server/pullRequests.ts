@@ -1,5 +1,6 @@
 import { CancelToken } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
@@ -80,10 +81,14 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
-        return this.getList(workspaceRepo, {
+        let query = {
             'username.1': await this.userName(workspaceRepo),
             'role.1': 'REVIEWER',
-        });
+        };
+        if (!configuration.get<boolean>('bitbucket.explorer.showReviewedPullRequests')) {
+            query['approved.1'] = false;
+        }
+        return this.getList(workspaceRepo, query);
     }
 
     async getListMerged(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
