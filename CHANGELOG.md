@@ -1,3 +1,15 @@
+## What's New in 2.8.6
+
+### Improvements
+
+-   Added URI handler to open specific Jira issue
+-   Added filter for unreviewed pull requests
+
+### Bugs fixed
+
+-   Fixed issue preventing the extension from correctly showing that file had been renamed
+-   Opening file from the pull request view no longer causes the pull request view to scroll back to the top of the page
+
 ## What's New in 2.8.5
 
 ### Improvements
