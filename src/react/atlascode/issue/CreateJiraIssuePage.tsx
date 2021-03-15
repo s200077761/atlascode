@@ -18,7 +18,6 @@ import {
     useTheme,
 } from '@material-ui/core';
 import React, { useCallback, useMemo, useState } from 'react';
-import { emptySiteInfo } from '../../../atlclients/authInfo';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { PMFDisplay } from '../common/pmf/PMFDisplay';
 import { CreateJiraIssueControllerContext, useCreateJiraIssuePageController } from './createJiraIssuePageController';
@@ -52,7 +51,6 @@ const CreateJiraIssuePage: React.FunctionComponent = () => {
     const classes = useStyles();
     const [state, controller] = useCreateJiraIssuePageController();
 
-    const [isLoading, setIsLoading] = useState(false);
     const [createInProgress, setCreateInProgress] = useState(false);
 
     const handleCreate = useCallback(async () => {
@@ -66,16 +64,10 @@ const CreateJiraIssuePage: React.FunctionComponent = () => {
 
     const handleSiteSelection = useCallback(
         async (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
-            setIsLoading(true);
             await controller.selectSite(event.target.value);
-            setIsLoading(false);
         },
         [controller]
     );
-
-    const isAnythingLoading = useMemo((): boolean => {
-        return state.site === emptySiteInfo || isLoading || state.isSomethingLoading;
-    }, [state.site, state.isSomethingLoading, isLoading]);
 
     const jiraFields = useMemo(() => {
         return (
@@ -155,7 +147,7 @@ const CreateJiraIssuePage: React.FunctionComponent = () => {
                                         </TextField>
                                     </Grid>
 
-                                    {isAnythingLoading ? <LinearProgress /> : jiraFields}
+                                    {state.isSomethingLoading ? <LinearProgress /> : jiraFields}
                                 </Grid>
                             </Box>
                         </Paper>
