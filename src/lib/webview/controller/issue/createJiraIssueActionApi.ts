@@ -12,4 +12,6 @@ export interface CreateJiraIssueActionApi {
         createMeta: CreateMetaTransformerResult<DetailedSiteInfo>;
     }>;
     create(site: DetailedSiteInfo, issueData: FieldValues): Promise<CreatedIssue>;
+
+    performAutoComplete(site: DetailedSiteInfo, autoCompleteQuery: string, url: string): Promise<any>;
 }

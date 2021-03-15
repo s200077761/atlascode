@@ -42,6 +42,11 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
         return await client.createIssue({ fields: fields });
     }
 
+    async performAutoComplete(site: DetailedSiteInfo, autoCompleteQuery: string, url: string): Promise<any> {
+        const client = await Container.clientManager.jiraClient(site);
+        return await client.getAutocompleteDataFromUrl(url + autoCompleteQuery);
+    }
+
     private formatCreatePayload(payload: FieldValues): [any, any, any, any] {
         let issuelinks: any = undefined;
         let attachments: any = undefined;

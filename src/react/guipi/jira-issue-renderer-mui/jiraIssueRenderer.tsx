@@ -1,6 +1,6 @@
 import { IssueType } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { Avatar, Grid, InputAdornment, MenuItem, TextField, Typography } from '@material-ui/core';
+import { Avatar, CircularProgress, Grid, InputAdornment, MenuItem, TextField, Typography } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import React from 'react';
 import { IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
@@ -34,7 +34,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 // })}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldUpdate,
+                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
                         fieldUI: field,
                         value: e.target.value,
                     });
@@ -63,7 +63,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 // })}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldUpdate,
+                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
                         fieldUI: field,
                         value: e.target.value,
                     });
@@ -81,7 +81,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 value={value?.id || ''}
                 onChange={(event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
                     this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldUpdate,
+                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
                         fieldUI: field,
                         value: options.find((option) => option.id === event.target.value),
                     });
@@ -155,11 +155,60 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 )}
                 onChange={(event: React.ChangeEvent, newValue: any) => {
                     this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldUpdate,
+                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
                         fieldUI: field,
                         value: newValue,
                     });
                 }}
+            />
+        );
+    }
+
+    public renderAutoCompleteInput(
+        field: SelectFieldUI,
+        options: any[],
+        onAutoComplete: (field: FieldUI, value: string) => void,
+        onSelect: (field: FieldUI, value: string) => void,
+        isWaiting = false,
+        isCreatable = true,
+        value?: any
+    ): JSX.Element {
+        return (
+            <Autocomplete
+                freeSolo={isCreatable}
+                onChange={(value: any, newValue: any) => {
+                    onSelect(field, newValue);
+                }}
+                filterOptions={(o, s) => o}
+                filterSelectedOptions={true}
+                value={value}
+                id={field.key}
+                options={options}
+                getOptionLabel={(option) => option.name}
+                renderOption={(option) => option.name}
+                groupBy={(option) => {
+                    return option.category ? option.category : '';
+                }}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        onChange={(event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
+                            onAutoComplete(field, event.target.value);
+                        }}
+                        label={field.name}
+                        margin="normal"
+                        variant="outlined"
+                        InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                                <React.Fragment>
+                                    {isWaiting ? <CircularProgress color="inherit" size={20} /> : null}
+                                    {params.InputProps.endAdornment}
+                                </React.Fragment>
+                            ),
+                        }}
+                    />
+                )}
             />
         );
     }
