@@ -167,6 +167,7 @@ export class Container {
             new VSCCreateJiraIssueWebviewControllerFactory(
                 new VSCCreateJiraIssueActionImpl(),
                 this._commonMessageHandler,
+                this._siteManager,
                 this._analyticsApi
             ),
             this._analyticsApi
