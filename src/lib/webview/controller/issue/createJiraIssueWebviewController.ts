@@ -102,6 +102,7 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
         }
 
         if (!Array.isArray(response) || response.length === 0) {
+            Logger.debug(`Couldn't figure out ${JSON.stringify(response)}`);
             return [];
         }
 
@@ -112,7 +113,6 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 return { ...i, name: i.displayName };
             });
         }
-        Logger.debug(`Couldn't figure out ${JSON.stringify(item)}`);
         return response as any[];
     }
 

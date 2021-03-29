@@ -258,23 +258,28 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             if (field.valueType !== ValueType.Project) {
                 return state.fieldState[field.key]?.value;
             }
-            const stateValue = state.fieldState[field.key]?.value;
-            if (!stateValue) {
-                return stateValue; // Probably returning a partial match
+
+            // Project is a bit more complicated because we save the last value used and re-use it
+            const fieldStateValue = state.fieldState[field.key]?.value;
+            if (!fieldStateValue) {
+                // User hasn't updated, just returning the original value
+                return state.project;
             }
 
-            if (stateValue.id) {
-                // If there's a saved state with an id (an actual project)
+            if (fieldStateValue.id) {
+                // If there's a saved state with an id (an actual project) return the screen data associated with the
+                // selected issue type
                 const fullOption = state.screenData.issueTypeUIs[
                     state.screenData.selectedIssueType.id
-                ].selectFieldOptions[field.key].find((p) => p.id === stateValue.id);
+                ].selectFieldOptions[field.key].find((p) => p.id === fieldStateValue.id);
 
                 if (fullOption) {
                     return fullOption;
                 }
             }
 
-            return state.project;
+            // If there's no id then it's a dummy value inserted while they user types
+            return fieldStateValue;
         },
         optionsForField: (field: FieldUI) => {
             // Make sure that the typed value is included in the options
