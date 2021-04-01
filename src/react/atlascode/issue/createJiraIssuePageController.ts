@@ -105,10 +105,16 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
             // Update the issue type if that's what the user is doing.
             const selectedIssueType =
                 action.fieldUI.key === 'issuetype' ? action.value : state.screenData.selectedIssueType;
-
             let newFieldState = { ...state.fieldState };
-            newFieldState[action.fieldUI.key] = { value: action.value, isLoading: false, options: [] };
-
+            if (action.value) {
+                newFieldState[action.fieldUI.key] = {
+                    value: action.value,
+                    isLoading: false,
+                    options: [],
+                };
+            } else {
+                delete newFieldState[action.fieldUI.key];
+            }
             const newState: CreateJiraIssueState = {
                 ...state,
                 fieldState: newFieldState,
@@ -142,9 +148,13 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
         // Called after user selects a new project (but before its meta has been fetched)
         case CreateJiraIssueUIActionType.ChangingProject: {
             let newFieldState = { ...state.fieldState };
-            newFieldState[action.fieldUI.key] = { value: action.value, isLoading: false };
-
-            return { ...state, project: action.value, fieldState: newFieldState, isChangingProject: true };
+            if (action.value) {
+                newFieldState[action.fieldUI.key] = { value: action.value, isLoading: false };
+                return { ...state, project: action.value, fieldState: newFieldState, isChangingProject: true };
+            } else {
+                delete newFieldState[action.fieldUI.key];
+                return { ...state, fieldState: newFieldState, isChangingProject: false };
+            }
         }
         // Called when the typed value in a field changes
         case CreateJiraIssueUIActionType.FieldStateUpdate: {
