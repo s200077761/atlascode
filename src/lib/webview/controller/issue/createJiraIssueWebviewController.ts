@@ -1,7 +1,7 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import debounce from 'lodash.debounce';
-import { DetailedSiteInfo, emptySiteInfo, ProductJira } from '../../../../atlclients/authInfo';
+import { DetailedSiteInfo, ProductJira } from '../../../../atlclients/authInfo';
 import { Logger } from '../../../../logger';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
@@ -59,16 +59,6 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 return;
             }
             this.isRefreshing = true;
-            if (this.initData && this.initData === emptyCreateJiraIssueInitMessage) {
-                const screenData = await this.api.fetchCreateMeta(emptySiteInfo);
-                this.initData = {
-                    site: screenData.site,
-                    sitesAvailable: this.sitesAvailable,
-                    project: screenData.project,
-                    screenData: screenData.createMeta,
-                };
-            }
-
             this.postMessage({
                 type: CreateJiraIssueMessageType.Init,
                 ...this.initData!,
@@ -146,7 +136,6 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                     project: screenData.project,
                     screenData: screenData.createMeta,
                 };
-
                 this.postMessage({
                     type: CreateJiraIssueMessageType.Init,
                     ...this.initData!,
@@ -161,21 +150,6 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                         siteDetails: msg.site,
                         key: createdIssue.key,
                     },
-                });
-                break;
-            }
-            case CreateJiraIssueActionType.SelectProject: {
-                const screenData = await this.api.fetchCreateMeta(msg.site, msg.projectKey.toUpperCase());
-                this.initData = {
-                    site: screenData.site,
-                    project: screenData.project,
-                    sitesAvailable: this.sitesAvailable,
-                    screenData: screenData.createMeta,
-                };
-
-                this.postMessage({
-                    type: CreateJiraIssueMessageType.Init,
-                    ...this.initData!,
                 });
                 break;
             }

@@ -1,4 +1,4 @@
-import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
@@ -76,7 +76,7 @@ export type CreateJiraIssueUIAction =
     | ReducerAction<CreateJiraIssueUIActionType.FieldOptionUpdate, { fieldUI: FieldUI; options: any[] }>
     | ReducerAction<CreateJiraIssueUIActionType.Loading, {}>
     | ReducerAction<CreateJiraIssueUIActionType.ChangingProject, { fieldUI: FieldUI; value: any }>
-    | ReducerAction<CreateJiraIssueUIActionType.FieldStateUpdate, { fieldUI: FieldUI; value: any }>; // XYZZY overlapping w/ FieldUpdate? Dumb name, regardless
+    | ReducerAction<CreateJiraIssueUIActionType.FieldStateUpdate, { fieldUI: FieldUI; value: any }>;
 
 export type JiraIssueChanges = { [key: string]: any };
 
@@ -144,7 +144,7 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
             let newFieldState = { ...state.fieldState };
             newFieldState[action.fieldUI.key] = { value: action.value, isLoading: false };
 
-            return { ...state, fieldState: newFieldState, isChangingProject: true };
+            return { ...state, project: action.value, fieldState: newFieldState, isChangingProject: true };
         }
         // Called when the typed value in a field changes
         case CreateJiraIssueUIActionType.FieldStateUpdate: {
@@ -177,9 +177,11 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
 
                 break;
             }
+            case CreateJiraIssueMessageType.CreateIssueResponse: {
+                break;
+            }
             default: {
-                // uncomment this if another action is added above
-                // defaultActionGuard(message);
+                defaultActionGuard(message);
             }
         }
     }, []);
@@ -211,11 +213,6 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         fieldDidUpdate: (field: FieldUI, value: any | undefined) => {
             if (field.key === ProjectKey) {
                 dispatch({ type: CreateJiraIssueUIActionType.ChangingProject, fieldUI: field, value: value });
-                postMessage({
-                    type: CreateJiraIssueActionType.SelectProject,
-                    site: state.site,
-                    projectKey: value.key,
-                });
             } else {
                 dispatch({
                     type: CreateJiraIssueUIActionType.FieldValueUpdate,
@@ -341,6 +338,18 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         },
         [state.sitesAvailable, postMessagePromise]
     );
+
+    React.useEffect(() => {
+        postMessage({
+            type: CreateJiraIssueActionType.GetCreateMeta,
+
+            site: state.site,
+
+            projectKey: state.project.key,
+        });
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.project.key, postMessage]);
 
     const controllerApi = useMemo<CreateJiraIssueControllerApi>((): CreateJiraIssueControllerApi => {
         return {

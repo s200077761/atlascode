@@ -16,7 +16,9 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
         project: Project;
         createMeta: CreateMetaTransformerResult<DetailedSiteInfo>;
     }> {
-        projectKey = projectKey ?? Container.config.jira.lastCreateSiteAndProject.projectKey ?? '';
+        if (!projectKey) {
+            projectKey = Container.config.jira.lastCreateSiteAndProject.projectKey ?? '';
+        }
         let siteDetails = site;
         if (site.id === emptySiteInfo.id) {
             const siteId = Container.config.jira.lastCreateSiteAndProject.siteId ?? '';

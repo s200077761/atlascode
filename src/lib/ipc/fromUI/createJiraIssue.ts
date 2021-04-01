@@ -6,14 +6,12 @@ import { CommonAction } from './common';
 export enum CreateJiraIssueActionType {
     GetCreateMeta = 'getCreateMeta',
     CreateIssueRequest = 'createIssueRequest',
-    SelectProject = 'selectProject',
     AutoCompleteQuery = 'autoCompleteQuery',
 }
 
 export type CreateJiraIssueAction =
     | ReducerAction<CreateJiraIssueActionType.GetCreateMeta, GetCreateMetaAction>
     | ReducerAction<CreateJiraIssueActionType.CreateIssueRequest, CreateIssueRequest>
-    | ReducerAction<CreateJiraIssueActionType.SelectProject, SelectProjectAction>
     | ReducerAction<CreateJiraIssueActionType.AutoCompleteQuery, AutoCompleteAction>
     | CommonAction;
 
@@ -25,11 +23,6 @@ export interface GetCreateMetaAction {
 export interface CreateIssueRequest {
     site: DetailedSiteInfo;
     issueData: FieldValues;
-}
-
-export interface SelectProjectAction {
-    site: DetailedSiteInfo;
-    projectKey: string;
 }
 
 export interface AutoCompleteAction {
