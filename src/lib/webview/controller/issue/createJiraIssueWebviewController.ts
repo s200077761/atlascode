@@ -1,4 +1,5 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { CreatedIssue } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
 import debounce from 'lodash.debounce';
 import { DetailedSiteInfo, ProductJira } from '../../../../atlclients/authInfo';
@@ -143,14 +144,31 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 break;
             }
             case CreateJiraIssueActionType.CreateIssueRequest: {
-                const createdIssue = await this.api.create(msg.site, msg.issueData);
-                this.postMessage({
-                    type: CreateJiraIssueMessageType.CreateIssueResponse,
-                    createdIssue: {
-                        siteDetails: msg.site,
-                        key: createdIssue.key,
-                    },
-                });
+                let createdIssue: CreatedIssue | undefined = undefined;
+                try {
+                    createdIssue = await this.api.create(msg.site, msg.issueData);
+                    this.postMessage({
+                        type: CreateJiraIssueMessageType.CreateIssueResponse,
+                        createdIssue: {
+                            siteDetails: msg.site,
+                            key: createdIssue.key,
+                        },
+                    });
+                } catch (e) {
+                    const data = await e.response.data;
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: `Failed to create issue - ${e.message} - ${JSON.stringify(data.errors)}`,
+                    });
+                    // Need to post a CreateIssueResponse to get the UI go back to normal state
+                    this.postMessage({
+                        type: CreateJiraIssueMessageType.CreateIssueResponse,
+                        createdIssue: {
+                            siteDetails: msg.site,
+                            key: '',
+                        },
+                    });
+                }
                 break;
             }
             case CreateJiraIssueActionType.AutoCompleteQuery: {
