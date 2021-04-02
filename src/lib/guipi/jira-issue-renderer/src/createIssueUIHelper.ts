@@ -8,18 +8,17 @@ import {
     UIType,
     ValueType,
 } from '@atlassianlabs/jira-pi-meta-models';
+import { IssueDelegate } from './issueDelegate';
 import { IssueRenderer } from './issueRenderer';
 
 export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
-    private _meta: CreateMetaTransformerResult<S>;
-    private _renderer: IssueRenderer<C>;
+    constructor(
+        private _meta: CreateMetaTransformerResult<S>,
+        private _renderer: IssueRenderer<C>,
+        private _delegate: IssueDelegate
+    ) {}
 
-    constructor(meta: CreateMetaTransformerResult<S>, renderer: IssueRenderer<C>) {
-        this._meta = meta;
-        this._renderer = renderer;
-    }
-
-    public getSortedFieldUIs(): [FieldUI[], FieldUI[]] {
+    private getSortedFieldUIs(): [FieldUI[], FieldUI[]] {
         if (!this._meta.issueTypeUIs[this._meta.selectedIssueType.id]) {
             return [[], []];
         }
@@ -30,10 +29,12 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
         const commonFields: FieldUI[] = [];
 
         orderedValues.forEach((field) => {
-            if (field.advanced) {
-                advancedFields.push(field);
-            } else {
-                commonFields.push(field);
+            if (!this._delegate.isFieldDisabled(field)) {
+                if (field.advanced) {
+                    advancedFields.push(field);
+                } else {
+                    commonFields.push(field);
+                }
             }
         });
 
@@ -41,9 +42,11 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
     }
 
     public getCommonFieldMarkup(): (C | undefined)[] {
-        const [common] = this.getSortedFieldUIs();
+        // Returning all fields for testing purposes?
+        let [common, advanced] = this.getSortedFieldUIs();
 
-        console.log(common.length);
+        common = common.concat(advanced);
+
         return common.map((fieldUI) => {
             return this.renderFieldUI(fieldUI);
         });
@@ -80,15 +83,9 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
             case UIType.Input: {
                 const inputField = fieldUI as InputFieldUI;
                 if (!inputField.isMultiline) {
-                    return this._renderer.renderTextInput(
-                        inputField,
-                        this._meta.issueTypeUIs[this._meta.selectedIssueType.id].fieldValues[fieldUI.key]
-                    );
+                    return this._renderer.renderTextInput(inputField, this._delegate.valueForField(fieldUI));
                 } else {
-                    return this._renderer.renderTextAreaInput(
-                        inputField,
-                        this._meta.issueTypeUIs[this._meta.selectedIssueType.id].fieldValues[fieldUI.key]
-                    );
+                    return this._renderer.renderTextAreaInput(inputField, this._delegate.valueForField(fieldUI));
                 }
             }
             case UIType.Select: {
@@ -99,11 +96,28 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                         this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key],
                         this._meta.issueTypeUIs[this._meta.selectedIssueType.id].fieldValues[fieldUI.key]
                     );
+                } else if (selectField.autoCompleteUrl) {
+                    let options =
+                        this._delegate.optionsForField(selectField) ??
+                        this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key];
+                    return this._renderer.renderAutoCompleteInput(
+                        selectField,
+                        options,
+                        (field: FieldUI, value: string) => {
+                            this._delegate.autocompleteRequest(field as SelectFieldUI, value);
+                        },
+                        (field: FieldUI, value: string) => {
+                            this._delegate.fieldDidUpdate(field, value);
+                        },
+                        this._delegate.isFieldWaiting(selectField),
+                        selectField.isCreateable,
+                        this._delegate.valueForField(selectField)
+                    );
                 }
                 return this._renderer.renderSelectInput(
                     selectField,
                     this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key],
-                    this._meta.issueTypeUIs[this._meta.selectedIssueType.id].fieldValues[fieldUI.key]
+                    this._delegate.valueForField(selectField)
                 );
             }
         }

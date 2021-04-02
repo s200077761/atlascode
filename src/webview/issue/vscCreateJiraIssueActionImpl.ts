@@ -16,7 +16,9 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
         project: Project;
         createMeta: CreateMetaTransformerResult<DetailedSiteInfo>;
     }> {
-        projectKey = projectKey ?? Container.config.jira.lastCreateSiteAndProject.projectKey ?? '';
+        if (!projectKey) {
+            projectKey = Container.config.jira.lastCreateSiteAndProject.projectKey ?? '';
+        }
         let siteDetails = site;
         if (site.id === emptySiteInfo.id) {
             const siteId = Container.config.jira.lastCreateSiteAndProject.siteId ?? '';
@@ -40,6 +42,11 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
         const client = await Container.clientManager.jiraClient(site);
         const [fields] = this.formatCreatePayload(issueData);
         return await client.createIssue({ fields: fields });
+    }
+
+    async performAutoComplete(site: DetailedSiteInfo, autoCompleteQuery: string, url: string): Promise<any> {
+        const client = await Container.clientManager.jiraClient(site);
+        return await client.getAutocompleteDataFromUrl(url + autoCompleteQuery);
     }
 
     private formatCreatePayload(payload: FieldValues): [any, any, any, any] {

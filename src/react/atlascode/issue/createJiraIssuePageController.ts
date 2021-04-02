@@ -1,6 +1,6 @@
-import { defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI, SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { CreateIssueUIHelper } from '../../../lib/guipi/jira-issue-renderer/src';
@@ -13,11 +13,14 @@ import {
     CreateJiraIssueMessage,
     CreateJiraIssueMessageType,
     CreateJiraIssueResponse,
+    CreateJiraIssueUpdateMessage,
     emptyCreateJiraIssueInitMessage,
 } from '../../../lib/ipc/toUI/createJiraIssue';
 import { ConnectionTimeout } from '../../../util/time';
 import { JiraIssueRenderer } from '../../guipi/jira-issue-renderer-mui/jiraIssueRenderer';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
+
+const ProjectKey = 'project';
 
 export interface CreateJiraIssueControllerApi {
     postMessage: PostMessageFunc<CreateJiraIssueAction>;
@@ -39,68 +42,125 @@ export const emptyApi: CreateJiraIssueControllerApi = {
 
 export const CreateJiraIssueControllerContext = React.createContext(emptyApi);
 
+type FieldState = {
+    value?: any;
+    isLoading?: boolean;
+    options?: any[];
+};
+
 export interface CreateJiraIssueState extends CreateJiraIssueInitMessage {
     isSomethingLoading: boolean;
+    isChangingProject: boolean;
+    fieldState: { [key: string]: FieldState };
 }
 
 const emptyState: CreateJiraIssueState = {
     ...emptyCreateJiraIssueInitMessage,
     isSomethingLoading: false,
+    isChangingProject: false,
+    fieldState: {},
 };
 
 export enum CreateJiraIssueUIActionType {
     Init = 'init',
-    FieldUpdate = 'fieldUpdate',
+    FieldValueUpdate = 'fieldUpdate',
+    FieldOptionUpdate = 'fieldOptionUpdate',
     Loading = 'loading',
+    ChangingProject = 'changingProject',
+    FieldStateUpdate = 'updatingField',
 }
 
 export type CreateJiraIssueUIAction =
     | ReducerAction<CreateJiraIssueUIActionType.Init, { data: CreateJiraIssueInitMessage }>
-    | ReducerAction<CreateJiraIssueUIActionType.FieldUpdate, { fieldUI: FieldUI; value: any }>
-    | ReducerAction<CreateJiraIssueUIActionType.Loading, {}>;
+    | ReducerAction<CreateJiraIssueUIActionType.FieldValueUpdate, { fieldUI: FieldUI; value: any }>
+    | ReducerAction<CreateJiraIssueUIActionType.FieldOptionUpdate, { fieldUI: FieldUI; options: any[] }>
+    | ReducerAction<CreateJiraIssueUIActionType.Loading, {}>
+    | ReducerAction<CreateJiraIssueUIActionType.ChangingProject, { fieldUI: FieldUI; value: any }>
+    | ReducerAction<CreateJiraIssueUIActionType.FieldStateUpdate, { fieldUI: FieldUI; value: any }>;
 
 export type JiraIssueChanges = { [key: string]: any };
 
+// Handle state changes generated from within this file (and, at least for now, the reducer)
 function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): CreateJiraIssueState {
     switch (action.type) {
+        // Proxied call from webviewController. Called more frequently than you'd think.
         case CreateJiraIssueUIActionType.Init: {
+            const newFieldState = { ...state.fieldState };
+            newFieldState[ProjectKey] = { value: action.data.project };
+
             const newstate = {
                 ...state,
                 ...action.data,
+                fieldState: newFieldState,
                 isSomethingLoading: false,
+                isChangingProject: false,
                 isErrorBannerOpen: false,
+                pendingRequests: {},
                 errorDetails: undefined,
             };
             return newstate;
         }
-        case CreateJiraIssueUIActionType.FieldUpdate: {
-            console.log(action);
-            console.log(state);
+        // Called when a value is selected for a field.
+        case CreateJiraIssueUIActionType.FieldValueUpdate: {
+            // Update the issue type if that's what the user is doing.
             const selectedIssueType =
                 action.fieldUI.key === 'issuetype' ? action.value : state.screenData.selectedIssueType;
+            let newFieldState = { ...state.fieldState };
+            if (action.value) {
+                newFieldState[action.fieldUI.key] = {
+                    value: action.value,
+                    isLoading: false,
+                    options: [],
+                };
+            } else {
+                delete newFieldState[action.fieldUI.key];
+            }
             const newState: CreateJiraIssueState = {
                 ...state,
+                fieldState: newFieldState,
                 screenData: {
                     ...state.screenData,
-                    issueTypeUIs: {
-                        ...state.screenData.issueTypeUIs,
-                        [selectedIssueType.id]: {
-                            ...state.screenData.issueTypeUIs[selectedIssueType.id],
-                            fieldValues: {
-                                ...state.screenData.issueTypeUIs[selectedIssueType.id].fieldValues,
-                                ...{ [action.fieldUI.key]: action.value },
-                            },
-                        },
-                    },
                     selectedIssueType: selectedIssueType,
                 },
             };
 
-            console.log(newState);
+            return newState;
+        }
+        // Called after getting autocomplete response.
+        case CreateJiraIssueUIActionType.FieldOptionUpdate: {
+            let newFieldState = { ...state.fieldState };
+            newFieldState[action.fieldUI.key] = {
+                ...newFieldState[action.fieldUI.key],
+                options: action.options,
+                isLoading: false,
+            };
+
+            const newState: CreateJiraIssueState = {
+                ...state,
+                fieldState: newFieldState,
+            };
+
             return newState;
         }
         case CreateJiraIssueUIActionType.Loading: {
-            return { ...state, ...{ isSomethingLoading: true } };
+            return { ...state, isSomethingLoading: true };
+        }
+        // Called after user selects a new project (but before its meta has been fetched)
+        case CreateJiraIssueUIActionType.ChangingProject: {
+            let newFieldState = { ...state.fieldState };
+            if (action.value) {
+                newFieldState[action.fieldUI.key] = { value: action.value, isLoading: false };
+                return { ...state, project: action.value, fieldState: newFieldState, isChangingProject: true };
+            } else {
+                delete newFieldState[action.fieldUI.key];
+                return { ...state, fieldState: newFieldState, isChangingProject: false };
+            }
+        }
+        // Called when the typed value in a field changes
+        case CreateJiraIssueUIActionType.FieldStateUpdate: {
+            const newFieldState = { ...state.fieldState };
+            newFieldState[action.fieldUI.key] = { value: action.value, isLoading: true };
+            return { ...state, fieldState: newFieldState };
         }
         default:
             return defaultStateGuard(state, action);
@@ -110,14 +170,28 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
 export function useCreateJiraIssuePageController(): [CreateJiraIssueState, CreateJiraIssueControllerApi] {
     const [state, dispatch] = useReducer(reducer, emptyState);
 
+    // Messages Received from the webviewController
     const onMessageHandler = useCallback((message: CreateJiraIssueMessage): void => {
         switch (message.type) {
             case CreateJiraIssueMessageType.Init: {
                 dispatch({ type: CreateJiraIssueUIActionType.Init, data: message });
+                break;
+            }
+            case CreateJiraIssueMessageType.Update: {
+                const updateMessage = message as CreateJiraIssueUpdateMessage;
+                dispatch({
+                    type: CreateJiraIssueUIActionType.FieldOptionUpdate,
+                    fieldUI: updateMessage.field,
+                    options: updateMessage.options,
+                });
+
+                break;
+            }
+            case CreateJiraIssueMessageType.CreateIssueResponse: {
+                break;
             }
             default: {
-                // uncomment this if another action is added above
-                // defaultActionGuard(message);
+                defaultActionGuard(message);
             }
         }
     }, []);
@@ -145,9 +219,90 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
 
     const renderer = React.useMemo(() => new JiraIssueRenderer(dispatch), [dispatch]);
 
-    const createIssueUIHelper = React.useMemo(() => new CreateIssueUIHelper(state.screenData, renderer), [
+    const delegate = {
+        fieldDidUpdate: (field: FieldUI, value: any | undefined) => {
+            if (field.key === ProjectKey) {
+                dispatch({ type: CreateJiraIssueUIActionType.ChangingProject, fieldUI: field, value: value });
+            } else {
+                dispatch({
+                    type: CreateJiraIssueUIActionType.FieldValueUpdate,
+                    fieldUI: field,
+                    value: value,
+                });
+            }
+        },
+        autocompleteRequest: (field: SelectFieldUI, autoCompleteQuery: string) => {
+            if (autoCompleteQuery === '') {
+                return;
+            }
+            dispatch({
+                type: CreateJiraIssueUIActionType.FieldStateUpdate,
+                fieldUI: field,
+                value: { key: '', name: autoCompleteQuery },
+            });
+            postMessage({
+                type: CreateJiraIssueActionType.AutoCompleteQuery,
+                site: state.site,
+                field: field,
+                autoCompleteQuery: autoCompleteQuery,
+                url: field.autoCompleteUrl,
+            });
+        },
+        isFieldWaiting: (field: FieldUI) => {
+            if (field.key === ProjectKey && state.isChangingProject) {
+                return true;
+            }
+
+            return !!state.fieldState[field.key]?.isLoading;
+        },
+        isFieldDisabled: (field: FieldUI) => {
+            if (field.key === ProjectKey) {
+                return false;
+            }
+            return state.isChangingProject;
+        },
+        valueForField: (field: FieldUI) => {
+            if (field.valueType !== ValueType.Project) {
+                return state.fieldState[field.key]?.value;
+            }
+
+            // Project is a bit more complicated because we save the last value used and re-use it
+            const fieldStateValue = state.fieldState[field.key]?.value;
+            if (!fieldStateValue) {
+                // User hasn't updated, just returning the original value
+                return state.project;
+            }
+
+            if (fieldStateValue.id) {
+                // If there's a saved state with an id (an actual project) return the screen data associated with the
+                // selected issue type
+                const fullOption = state.screenData.issueTypeUIs[
+                    state.screenData.selectedIssueType.id
+                ].selectFieldOptions[field.key].find((p) => p.id === fieldStateValue.id);
+
+                if (fullOption) {
+                    return fullOption;
+                }
+            }
+
+            // If there's no id then it's a dummy value inserted while they user types
+            return fieldStateValue;
+        },
+        optionsForField: (field: FieldUI) => {
+            // Make sure that the typed value is included in the options
+            const x = delegate.valueForField(field);
+            let y = state.fieldState[field.key]?.options ?? [];
+            if (x && x.key) {
+                y = [x, ...y];
+            }
+            return y;
+        },
+    };
+
+    const createIssueUIHelper = React.useMemo(() => new CreateIssueUIHelper(state.screenData, renderer, delegate), [
         renderer,
         state.screenData,
+        delegate,
     ]);
 
     const createIssue = useCallback((): Promise<IssueKeyAndSite<DetailedSiteInfo>> => {
@@ -197,11 +352,14 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
     React.useEffect(() => {
         postMessage({
             type: CreateJiraIssueActionType.GetCreateMeta,
+
             site: state.site,
+
             projectKey: state.project.key,
         });
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state.site.id, state.project.key, postMessage]);
+    }, [state.project.key, postMessage]);
 
     const controllerApi = useMemo<CreateJiraIssueControllerApi>((): CreateJiraIssueControllerApi => {
         return {
