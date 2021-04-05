@@ -1,5 +1,9 @@
 import { IssueType } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, InputFieldUI, SelectFieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI, InputFieldUI, OptionableFieldUI, SelectFieldUI } from '@atlassianlabs/jira-pi-meta-models';
+
+export type CheckboxValue = {
+    [id: string]: boolean;
+};
 
 export interface IssueRenderer<C> {
     renderTextInput: (field: InputFieldUI, onChange: (field: FieldUI, value: string) => void, value?: string) => C;
@@ -24,5 +28,10 @@ export interface IssueRenderer<C> {
         isWaiting: boolean,
         isCreatable: boolean,
         value?: any
+    ) => C;
+    renderCheckbox: (
+        field: OptionableFieldUI,
+        onChange: (field: FieldUI, value: CheckboxValue) => void,
+        value?: CheckboxValue
     ) => C;
 }

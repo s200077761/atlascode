@@ -1,9 +1,9 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { FieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { CreateIssueUIHelper } from '../../../lib/guipi/jira-issue-renderer/src';
+import { CheckboxValue, CreateIssueUIHelper } from '../../../lib/guipi/jira-issue-renderer/src';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { CreateJiraIssueAction, CreateJiraIssueActionType } from '../../../lib/ipc/fromUI/createJiraIssue';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
@@ -108,7 +108,7 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
             let newFieldState = { ...state.fieldState };
             if (action.value) {
                 newFieldState[action.fieldUI.key] = {
-                    value: valueForField(action.fieldUI, action.value),
+                    value: action.value,
                     isLoading: false,
                     options: [],
                 };
@@ -165,14 +165,6 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
         default:
             return defaultStateGuard(state, action);
     }
-}
-
-// Make sure anything that shouldn't be a string isn't a string.
-function valueForField(field: FieldUI, value: string): any {
-    if (field.valueType === ValueType.Number) {
-        return Number.parseFloat(value);
-    }
-    return value;
 }
 
 export function useCreateJiraIssuePageController(): [CreateJiraIssueState, CreateJiraIssueControllerApi] {
@@ -272,7 +264,6 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         valueForField: (field: FieldUI) => {
             if (field.valueType !== ValueType.Project) {
                 return (
-                    // XYZZY is issue type the only field that needs the fallback?
                     state.fieldState[field.key]?.value ??
                     state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues[field.key]
                 );
@@ -320,19 +311,41 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         delegate,
     ]);
 
+    const convertCheckboxData = useCallback((checkboxes: CheckboxValue): any[] => {
+        const checkedIds = [];
+        for (const [key, value] of Object.entries(checkboxes)) {
+            if (value) {
+                checkedIds.push({ id: key });
+            }
+        }
+        return checkedIds;
+    }, []);
+
+    const createIssueData = useCallback((): any => {
+        const issueTypeUi = state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id];
+        const payload = {};
+        for (const [k, v] of Object.entries(state.fieldState)) {
+            const field = issueTypeUi.fields[k];
+            if (field.valueType === ValueType.Number) {
+                payload[k] = Number.parseFloat(v.value);
+            } else if (field.uiType === UIType.Checkbox) {
+                payload[k] = convertCheckboxData(v.value);
+            } else {
+                payload[k] = v.value;
+            }
+        }
+        return payload;
+    }, [convertCheckboxData, state.fieldState, state.screenData.issueTypeUIs, state.screenData.selectedIssueType.id]);
+
     const createIssue = useCallback((): Promise<IssueKeyAndSite<DetailedSiteInfo>> => {
         return new Promise<IssueKeyAndSite<DetailedSiteInfo>>((resolve, reject) => {
             (async () => {
                 try {
-                    let payload = state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues;
-                    for (const [k, v] of Object.entries(state.fieldState)) {
-                        payload[k] = v.value;
-                    }
                     const response = await postMessagePromise(
                         {
                             type: CreateJiraIssueActionType.CreateIssueRequest,
                             site: state.site,
-                            issueData: payload,
+                            issueData: createIssueData(),
                         },
                         CreateJiraIssueMessageType.CreateIssueResponse,
                         ConnectionTimeout
@@ -343,13 +356,7 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
                 }
             })();
         });
-    }, [
-        postMessagePromise,
-        state.screenData.issueTypeUIs,
-        state.screenData.selectedIssueType.id,
-        state.site,
-        state.fieldState,
-    ]);
+    }, [postMessagePromise, createIssueData, state.site]);
 
     const selectSite = useCallback(
         (siteId: string): Promise<void> => {
