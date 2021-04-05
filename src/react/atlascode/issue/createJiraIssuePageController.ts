@@ -108,7 +108,7 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
             let newFieldState = { ...state.fieldState };
             if (action.value) {
                 newFieldState[action.fieldUI.key] = {
-                    value: action.value,
+                    value: valueForField(action.fieldUI, action.value),
                     isLoading: false,
                     options: [],
                 };
@@ -165,6 +165,14 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
         default:
             return defaultStateGuard(state, action);
     }
+}
+
+// Make sure anything that shouldn't be a string isn't a string.
+function valueForField(field: FieldUI, value: string): any {
+    if (field.valueType === ValueType.Number) {
+        return Number.parseFloat(value);
+    }
+    return value;
 }
 
 export function useCreateJiraIssuePageController(): [CreateJiraIssueState, CreateJiraIssueControllerApi] {

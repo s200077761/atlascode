@@ -15,6 +15,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
     ): JSX.Element {
         return (
             <TextField
+                type={this.normalizeType(field.valueType)}
                 required={field.required}
                 autoFocus
                 autoComplete="off"
@@ -92,6 +93,14 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
         );
     }
 
+    // For the most part Jira uses valid HTML input types. The exception is `string` which needs to become `text`.
+    private normalizeType(input: string): string {
+        if (input === ValueType.String) {
+            return 'text';
+        }
+        return input;
+    }
+
     public renderSelectInput(
         field: SelectFieldUI,
         options: any[],
@@ -109,7 +118,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 key={field.key}
                 multiple={field.isMulti}
                 options={options || []}
-                getOptionLabel={(option) => option.name}
+                getOptionLabel={(option) => option.name ?? option.value ?? ''}
                 getOptionSelected={(option, value) => option.id === value.id}
                 groupBy={(option) => option.groupLabel}
                 value={value || (field.isMulti ? [] : null)}
@@ -139,7 +148,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                             <Avatar style={{ height: '1em', width: '1em' }} variant="square" src={option.iconUrl} />
                         </Grid>
                         <Grid item>
-                            <Typography>{option.name}</Typography>
+                            <Typography>{option.name ?? option.value ?? ''}</Typography>
                         </Grid>
                     </Grid>
                 )}
