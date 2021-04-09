@@ -42,10 +42,7 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
     }
 
     public getCommonFieldMarkup(): (C | undefined)[] {
-        // Returning all fields for testing purposes?
-        let [common, advanced] = this.getSortedFieldUIs();
-
-        common = common.concat(advanced);
+        let [common] = this.getSortedFieldUIs();
 
         return common.map((fieldUI) => {
             return this.renderFieldUI(fieldUI);
@@ -59,12 +56,6 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
             return this.renderFieldUI(fieldUI);
         });
     }
-    // public async submitCreateIssue(): Promise<CreatedIssue> {
-    //     const createdIssue = await this._client.createIssue({
-    //         fields: this._meta.issueTypeUIs[this._meta.selectedIssueType.id].fieldValues,
-    //     });
-    //     return createdIssue;
-    // }
 
     protected sortFieldValues(fields: FieldUIs): FieldUI[] {
         return Object.values(fields).sort((left: FieldUI, right: FieldUI) => {
@@ -83,9 +74,17 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
             case UIType.Input: {
                 const inputField = fieldUI as InputFieldUI;
                 if (!inputField.isMultiline) {
-                    return this._renderer.renderTextInput(inputField, this._delegate.valueForField(fieldUI));
+                    return this._renderer.renderTextInput(
+                        inputField,
+                        this._delegate.fieldDidUpdate,
+                        this._delegate.valueForField(fieldUI)
+                    );
                 } else {
-                    return this._renderer.renderTextAreaInput(inputField, this._delegate.valueForField(fieldUI));
+                    return this._renderer.renderTextAreaInput(
+                        inputField,
+                        this._delegate.fieldDidUpdate,
+                        this._delegate.valueForField(fieldUI)
+                    );
                 }
             }
             case UIType.Select: {
@@ -94,7 +93,8 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                     return this._renderer.renderIssueTypeSelector(
                         selectField,
                         this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key],
-                        this._meta.issueTypeUIs[this._meta.selectedIssueType.id].fieldValues[fieldUI.key]
+                        this._delegate.fieldDidUpdate,
+                        this._delegate.valueForField(selectField)
                     );
                 } else if (selectField.autoCompleteUrl) {
                     let options =
@@ -106,9 +106,7 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                         (field: FieldUI, value: string) => {
                             this._delegate.autocompleteRequest(field as SelectFieldUI, value);
                         },
-                        (field: FieldUI, value: string) => {
-                            this._delegate.fieldDidUpdate(field, value);
-                        },
+                        this._delegate.fieldDidUpdate,
                         this._delegate.isFieldWaiting(selectField),
                         selectField.isCreateable,
                         this._delegate.valueForField(selectField)
@@ -116,7 +114,8 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                 }
                 return this._renderer.renderSelectInput(
                     selectField,
-                    this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key],
+                    this._delegate.optionsForField(selectField) ?? [],
+                    this._delegate.fieldDidUpdate,
                     this._delegate.valueForField(selectField)
                 );
             }

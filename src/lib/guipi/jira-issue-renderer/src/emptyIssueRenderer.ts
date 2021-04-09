@@ -3,10 +3,20 @@ import { FieldUI, InputFieldUI, SelectFieldUI } from '@atlassianlabs/jira-pi-met
 import { IssueRenderer } from '.';
 
 export const emptyIssueRenderer: IssueRenderer<any> = {
-    renderTextInput: (field: InputFieldUI, value?: string) => {},
-    renderTextAreaInput: (field: InputFieldUI, value?: string) => {},
-    renderIssueTypeSelector: (field: SelectFieldUI, options: IssueType[], value?: IssueType) => {},
-    renderSelectInput: (field: SelectFieldUI, options: any[], value?: any) => {},
+    renderTextInput: (field: InputFieldUI, onChange: (field: FieldUI, value: string) => void, value?: string) => {},
+    renderTextAreaInput: (field: InputFieldUI, onChange: (field: FieldUI, value: string) => void, value?: string) => {},
+    renderIssueTypeSelector: (
+        field: SelectFieldUI,
+        options: IssueType[],
+        onSelect: (field: FieldUI, value: string) => void,
+        value?: IssueType
+    ) => {},
+    renderSelectInput: (
+        field: SelectFieldUI,
+        options: any[],
+        onSelect: (field: FieldUI, value: string) => void,
+        value?: any
+    ) => {},
     renderAutoCompleteInput: (
         field: SelectFieldUI,
         options: any[],

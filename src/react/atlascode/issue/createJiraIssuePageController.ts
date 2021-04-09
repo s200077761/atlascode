@@ -108,7 +108,7 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
             let newFieldState = { ...state.fieldState };
             if (action.value) {
                 newFieldState[action.fieldUI.key] = {
-                    value: action.value,
+                    value: valueForField(action.fieldUI, action.value),
                     isLoading: false,
                     options: [],
                 };
@@ -167,6 +167,14 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
     }
 }
 
+// Make sure anything that shouldn't be a string isn't a string.
+function valueForField(field: FieldUI, value: string): any {
+    if (field.valueType === ValueType.Number) {
+        return Number.parseFloat(value);
+    }
+    return value;
+}
+
 export function useCreateJiraIssuePageController(): [CreateJiraIssueState, CreateJiraIssueControllerApi] {
     const [state, dispatch] = useReducer(reducer, emptyState);
 
@@ -217,7 +225,7 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         [postMessage]
     );
 
-    const renderer = React.useMemo(() => new JiraIssueRenderer(dispatch), [dispatch]);
+    const renderer = React.useMemo(() => new JiraIssueRenderer(), []);
 
     const delegate = {
         fieldDidUpdate: (field: FieldUI, value: any | undefined) => {
@@ -263,7 +271,11 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         },
         valueForField: (field: FieldUI) => {
             if (field.valueType !== ValueType.Project) {
-                return state.fieldState[field.key]?.value;
+                return (
+                    // XYZZY is issue type the only field that needs the fallback?
+                    state.fieldState[field.key]?.value ??
+                    state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues[field.key]
+                );
             }
 
             // Project is a bit more complicated because we save the last value used and re-use it
@@ -289,13 +301,16 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             return fieldStateValue;
         },
         optionsForField: (field: FieldUI) => {
-            // Make sure that the typed value is included in the options
-            const x = delegate.valueForField(field);
-            let y = state.fieldState[field.key]?.options ?? [];
-            if (x && x.key) {
-                y = [x, ...y];
+            if ((field as any).autoCompleteUrl) {
+                // Make sure that the typed value is included in the options
+                const x = delegate.valueForField(field);
+                let y = state.fieldState[field.key]?.options ?? [];
+                if (x && x.key) {
+                    y = [x, ...y];
+                }
+                return y;
             }
-            return y;
+            return state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].selectFieldOptions[field.key];
         },
     };
 
@@ -309,11 +324,15 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         return new Promise<IssueKeyAndSite<DetailedSiteInfo>>((resolve, reject) => {
             (async () => {
                 try {
+                    let payload = state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues;
+                    for (const [k, v] of Object.entries(state.fieldState)) {
+                        payload[k] = v.value;
+                    }
                     const response = await postMessagePromise(
                         {
                             type: CreateJiraIssueActionType.CreateIssueRequest,
                             site: state.site,
-                            issueData: state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues,
+                            issueData: payload,
                         },
                         CreateJiraIssueMessageType.CreateIssueResponse,
                         ConnectionTimeout
@@ -324,7 +343,13 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
                 }
             })();
         });
-    }, [postMessagePromise, state.screenData.issueTypeUIs, state.screenData.selectedIssueType.id, state.site]);
+    }, [
+        postMessagePromise,
+        state.screenData.issueTypeUIs,
+        state.screenData.selectedIssueType.id,
+        state.site,
+        state.fieldState,
+    ]);
 
     const selectSite = useCallback(
         (siteId: string): Promise<void> => {

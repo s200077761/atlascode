@@ -6,7 +6,7 @@ export interface IssueDelegate {
      * @param field - the FieldUI corresponding to the updated field
      * @param value - the new value for the field
      */
-    fieldDidUpdate(field: FieldUI, value: string): void;
+    fieldDidUpdate(field: FieldUI, value: any): void;
 
     /**
      * Called when the value typed in an autocomplete field is updated

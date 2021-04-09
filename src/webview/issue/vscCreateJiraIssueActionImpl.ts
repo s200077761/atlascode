@@ -6,6 +6,7 @@ import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { fetchCreateIssueUI } from '../../jira/fetchIssue';
 import { CreateJiraIssueActionApi } from '../../lib/webview/controller/issue/createJiraIssueActionApi';
+import { Logger } from '../../logger';
 
 export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
     async fetchCreateMeta(
@@ -41,6 +42,7 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
     async create(site: DetailedSiteInfo, issueData: FieldValues): Promise<CreatedIssue> {
         const client = await Container.clientManager.jiraClient(site);
         const [fields] = this.formatCreatePayload(issueData);
+        Logger.debug(`Creating Jira issue with fields: ${JSON.stringify(fields)}`);
         return await client.createIssue({ fields: fields });
     }
 

@@ -4,21 +4,18 @@ import { Avatar, CircularProgress, Grid, InputAdornment, MenuItem, TextField, Ty
 import { Autocomplete } from '@material-ui/lab';
 import React from 'react';
 import { IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
-import {
-    CreateJiraIssueUIAction,
-    CreateJiraIssueUIActionType,
-} from '../../atlascode/issue/createJiraIssuePageController';
 
 export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
-    private _dispatch: React.Dispatch<CreateJiraIssueUIAction>;
+    constructor() {}
 
-    constructor(dispatch: React.Dispatch<CreateJiraIssueUIAction>) {
-        this._dispatch = dispatch;
-    }
-
-    public renderTextInput(field: InputFieldUI, value?: string | undefined): JSX.Element {
+    public renderTextInput(
+        field: InputFieldUI,
+        onChange: (field: FieldUI, value: string) => void,
+        value?: string | undefined
+    ): JSX.Element {
         return (
             <TextField
+                type={this.normalizeType(field.valueType)}
                 required={field.required}
                 autoFocus
                 autoComplete="off"
@@ -28,22 +25,18 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 name={field.key}
                 label={field.name}
                 fullWidth
-                // inputRef={register({
-                //     required: 'Base URL is required',
-                //     validate: (value: string) => validateUrl('Base URL', value),
-                // })}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
-                        fieldUI: field,
-                        value: e.target.value,
-                    });
+                    onChange(field, e.target.value);
                 }}
             />
         );
     }
 
-    public renderTextAreaInput(field: InputFieldUI, value?: string | undefined): JSX.Element {
+    public renderTextAreaInput(
+        field: InputFieldUI,
+        onChange: (field: FieldUI, value: string) => void,
+        value?: string | undefined
+    ): JSX.Element {
         return (
             <TextField
                 required={field.required}
@@ -57,39 +50,32 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 fullWidth
                 multiline
                 rows={5}
-                // inputRef={register({
-                //     required: 'Base URL is required',
-                //     validate: (value: string) => validateUrl('Base URL', value),
-                // })}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
-                        fieldUI: field,
-                        value: e.target.value,
-                    });
+                    onChange(field, e.target.value);
                 }}
             />
         );
     }
 
-    public renderIssueTypeSelector(field: FieldUI, options: IssueType[], value?: IssueType | undefined): JSX.Element {
+    public renderIssueTypeSelector(
+        field: FieldUI,
+        options: IssueType[],
+        onSelect: (field: FieldUI, value: string) => void,
+        value?: IssueType | undefined
+    ): JSX.Element {
         return (
             <TextField
+                id={field.key}
+                key={field.key}
+                name={field.key}
+                label={field.name}
                 select
                 size="small"
                 margin="dense"
                 value={value?.id || ''}
                 onChange={(event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
-                    this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
-                        fieldUI: field,
-                        value: options.find((option) => option.id === event.target.value),
-                    });
+                    onSelect(field, options.find((option) => option.id === event.target.value) as any);
                 }}
-                id={field.key}
-                key={field.key}
-                name={field.key}
-                label={field.name}
             >
                 {options.map((option) => (
                     <MenuItem key={option.id} value={option.id}>
@@ -107,7 +93,20 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
         );
     }
 
-    public renderSelectInput(field: SelectFieldUI, options: any[], value?: any): JSX.Element {
+    // For the most part Jira uses valid HTML input types. The exception is `string` which needs to become `text`.
+    private normalizeType(input: string): string {
+        if (input === ValueType.String) {
+            return 'text';
+        }
+        return input;
+    }
+
+    public renderSelectInput(
+        field: SelectFieldUI,
+        options: any[],
+        onSelect: (field: FieldUI, value: string) => void,
+        value?: any
+    ): JSX.Element {
         // TODO Split each valueType to its own renderValueType method
         if (field.valueType === ValueType.Version) {
             options = options.flatMap((val) => val.options.map((opt: any) => ({ ...opt, groupLabel: val.label })));
@@ -119,7 +118,7 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                 key={field.key}
                 multiple={field.isMulti}
                 options={options || []}
-                getOptionLabel={(option) => option.name}
+                getOptionLabel={(option) => option.name ?? option.value ?? ''}
                 getOptionSelected={(option, value) => option.id === value.id}
                 groupBy={(option) => option.groupLabel}
                 value={value || (field.isMulti ? [] : null)}
@@ -149,16 +148,12 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                             <Avatar style={{ height: '1em', width: '1em' }} variant="square" src={option.iconUrl} />
                         </Grid>
                         <Grid item>
-                            <Typography>{option.name}</Typography>
+                            <Typography>{option.name ?? option.value ?? ''}</Typography>
                         </Grid>
                     </Grid>
                 )}
                 onChange={(event: React.ChangeEvent, newValue: any) => {
-                    this._dispatch({
-                        type: CreateJiraIssueUIActionType.FieldValueUpdate,
-                        fieldUI: field,
-                        value: newValue,
-                    });
+                    onSelect(field, newValue);
                 }}
             />
         );
