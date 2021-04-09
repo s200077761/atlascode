@@ -219,6 +219,11 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
 
     const renderer = React.useMemo(() => new JiraIssueRenderer(), []);
 
+    const selectedIssue = React.useMemo(() => state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id], [
+        state.screenData.selectedIssueType.id,
+        state.screenData.issueTypeUIs,
+    ]);
+
     const delegate = {
         fieldDidUpdate: (field: FieldUI, value: any | undefined) => {
             if (field.key === ProjectKey) {
@@ -262,11 +267,12 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             return state.isChangingProject;
         },
         valueForField: (field: FieldUI) => {
+            if (field.uiType === UIType.Radio) {
+                // If there's no value and no default for a radio control return "0" to select "None"
+                return state.fieldState[field.key]?.value ?? selectedIssue.fieldValues[field.key] ?? '0';
+            }
             if (field.valueType !== ValueType.Project) {
-                return (
-                    state.fieldState[field.key]?.value ??
-                    state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].fieldValues[field.key]
-                );
+                return state.fieldState[field.key]?.value ?? selectedIssue.fieldValues[field.key];
             }
 
             // Project is a bit more complicated because we save the last value used and re-use it
@@ -279,9 +285,7 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             if (fieldStateValue.id) {
                 // If there's a saved state with an id (an actual project) return the screen data associated with the
                 // selected issue type
-                const fullOption = state.screenData.issueTypeUIs[
-                    state.screenData.selectedIssueType.id
-                ].selectFieldOptions[field.key].find((p) => p.id === fieldStateValue.id);
+                const fullOption = selectedIssue.selectFieldOptions[field.key].find((p) => p.id === fieldStateValue.id);
 
                 if (fullOption) {
                     return fullOption;
@@ -301,7 +305,7 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
                 }
                 return y;
             }
-            return state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id].selectFieldOptions[field.key];
+            return selectedIssue.selectFieldOptions[field.key];
         },
     };
 
@@ -322,20 +326,23 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
     }, []);
 
     const createIssueData = useCallback((): any => {
-        const issueTypeUi = state.screenData.issueTypeUIs[state.screenData.selectedIssueType.id];
         const payload = {};
         for (const [k, v] of Object.entries(state.fieldState)) {
-            const field = issueTypeUi.fields[k];
+            const field = selectedIssue.fields[k];
             if (field.valueType === ValueType.Number) {
                 payload[k] = Number.parseFloat(v.value);
             } else if (field.uiType === UIType.Checkbox) {
                 payload[k] = convertCheckboxData(v.value);
+            } else if (field.uiType === UIType.Radio) {
+                if (v.value && v.value !== '0') {
+                    payload[k] = { id: v.value };
+                }
             } else {
                 payload[k] = v.value;
             }
         }
         return payload;
-    }, [convertCheckboxData, state.fieldState, state.screenData.issueTypeUIs, state.screenData.selectedIssueType.id]);
+    }, [convertCheckboxData, state.fieldState, selectedIssue]);
 
     const createIssue = useCallback((): Promise<IssueKeyAndSite<DetailedSiteInfo>> => {
         return new Promise<IssueKeyAndSite<DetailedSiteInfo>>((resolve, reject) => {

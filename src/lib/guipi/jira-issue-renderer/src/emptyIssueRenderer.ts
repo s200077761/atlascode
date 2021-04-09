@@ -30,4 +30,9 @@ export const emptyIssueRenderer: IssueRenderer<any> = {
         onChange: (field: FieldUI, value: CheckboxValue) => void,
         value?: CheckboxValue
     ) => {},
+    renderRadioSelect: (
+        field: OptionableFieldUI,
+        onChange: (field: FieldUI, value: String) => void,
+        value?: String
+    ) => {},
 };
