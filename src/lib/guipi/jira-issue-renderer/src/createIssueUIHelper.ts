@@ -4,6 +4,7 @@ import {
     FieldUI,
     FieldUIs,
     InputFieldUI,
+    OptionableFieldUI,
     SelectFieldUI,
     UIType,
     ValueType,
@@ -117,6 +118,14 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                     this._delegate.optionsForField(selectField) ?? [],
                     this._delegate.fieldDidUpdate,
                     this._delegate.valueForField(selectField)
+                );
+            }
+            case UIType.Checkbox: {
+                const checkboxField = fieldUI as OptionableFieldUI;
+                return this._renderer.renderCheckbox(
+                    checkboxField,
+                    this._delegate.fieldDidUpdate,
+                    this._delegate.valueForField(fieldUI)
                 );
             }
         }

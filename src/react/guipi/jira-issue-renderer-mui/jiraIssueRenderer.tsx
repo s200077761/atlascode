@@ -1,9 +1,21 @@
 import { IssueType } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, InputFieldUI, SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
-import { Avatar, CircularProgress, Grid, InputAdornment, MenuItem, TextField, Typography } from '@material-ui/core';
+import { FieldUI, InputFieldUI, OptionableFieldUI, SelectFieldUI, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import {
+    Avatar,
+    Checkbox,
+    CircularProgress,
+    FormControlLabel,
+    FormGroup,
+    FormLabel,
+    Grid,
+    InputAdornment,
+    MenuItem,
+    TextField,
+    Typography,
+} from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import React from 'react';
-import { IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
+import { CheckboxValue, IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
 
 export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
     constructor() {}
@@ -205,6 +217,40 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                     />
                 )}
             />
+        );
+    }
+
+    public renderCheckbox(
+        field: OptionableFieldUI,
+        onChange: (field: FieldUI, value: CheckboxValue) => void,
+        value?: CheckboxValue
+    ): JSX.Element {
+        return (
+            <FormGroup>
+                <FormLabel component="legend">{field.name}</FormLabel>
+                {field.allowedValues.map((checkbox: any) => {
+                    let checkboxState = false;
+                    if (value) {
+                        checkboxState = value[checkbox.id] ?? false;
+                    }
+                    return (
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    id={`${field.key}${checkbox.id}`}
+                                    checked={checkboxState}
+                                    onChange={(event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+                                        const v = value ? { ...value } : {};
+                                        v[checkbox.id] = checked;
+                                        onChange(field, v);
+                                    }}
+                                />
+                            }
+                            label={checkbox.value}
+                        />
+                    );
+                })}
+            </FormGroup>
         );
     }
 }
