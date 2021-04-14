@@ -32,7 +32,9 @@ export const emptyIssueRenderer: IssueRenderer<any> = {
     ) => {},
     renderRadioSelect: (
         field: OptionableFieldUI,
-        onChange: (field: FieldUI, value: String) => void,
-        value?: String
+        onChange: (field: FieldUI, value: string) => void,
+        value?: string
     ) => {},
+    renderDateField: (field: FieldUI, onChange: (field: FieldUI, value?: Date) => void, value?: Date) => {},
+    renderDateTimeField: (field: FieldUI, onChange: (field: FieldUI, value?: Date) => void, value?: Date) => {},
 };

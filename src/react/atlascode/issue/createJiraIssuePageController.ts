@@ -1,6 +1,7 @@
 import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, SelectFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models';
+import { format } from 'date-fns';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { CheckboxValue, CreateIssueUIHelper } from '../../../lib/guipi/jira-issue-renderer/src';
@@ -329,6 +330,13 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
         return checkedIds;
     }, []);
 
+    const convertDateTimeData = useCallback((date: Date, includeTime: boolean): string => {
+        if (includeTime) {
+            return format(date, 'YYYY-MM-DD[T]HH:mm:ssZ');
+        }
+        return format(date, 'YYYY-MM-DD');
+    }, []);
+
     const createIssueData = useCallback((): any => {
         // `issuetype` won't haven been set in `fieldState` if it hasn't changed. Use the value in
         // `screenData.selectedIssueType`.
@@ -345,12 +353,16 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
                 if (v.value && v.value !== '0') {
                     payload[k] = { id: v.value };
                 }
+            } else if (field.uiType === UIType.Date) {
+                payload[k] = convertDateTimeData(v.value, false);
+            } else if (field.uiType === UIType.DateTime) {
+                payload[k] = convertDateTimeData(v.value, true);
             } else {
                 payload[k] = v.value;
             }
         }
         return payload;
-    }, [convertCheckboxData, state.fieldState, selectedIssueData]);
+    }, [convertCheckboxData, convertDateTimeData, state.fieldState, selectedIssueData]);
 
     const createIssue = useCallback((): Promise<IssueKeyAndSite<DetailedSiteInfo>> => {
         return new Promise<IssueKeyAndSite<DetailedSiteInfo>>((resolve, reject) => {

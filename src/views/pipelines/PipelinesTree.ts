@@ -145,7 +145,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
             const filteredPipelines = this._pipelines.filter((pipeline) => shouldDisplay(pipeline.target));
             let nodes: AbstractBaseNode[] = [];
-            if (filtersActive && filteredPipelines.length === 0 && !this._morePages) {
+            if (filtersActive() && filteredPipelines.length === 0 && !this._morePages) {
                 nodes = [new SimpleNode(`No pipelines matching your filters`)];
             } else if (filtersActive() && filteredPipelines.length === 0) {
                 const firstPipeTime: string = this._pipelines[0].created_on;
