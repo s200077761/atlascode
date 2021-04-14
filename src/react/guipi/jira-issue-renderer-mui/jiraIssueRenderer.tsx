@@ -266,7 +266,9 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
 
         return (
             <FormControl component="fieldset">
-                <FormLabel component="legend">{field.name}</FormLabel>
+                <FormLabel component="legend" focused={false}>
+                    {field.name}
+                </FormLabel>
                 <RadioGroup
                     value={value}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>, value: string) => {
