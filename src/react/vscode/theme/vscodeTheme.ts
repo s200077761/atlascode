@@ -108,11 +108,19 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             },
             MuiCheckbox: {
                 colorSecondary: {
-                    color: vscStyles.buttonBackground,
                     '&$checked': {
                         color: vscStyles.buttonBackground,
                     },
-                    checked: {
+                },
+            },
+            MuiFormControl: {
+                root: {
+                    marginLeft: 2,
+                },
+            },
+            MuiRadio: {
+                colorSecondary: {
+                    '&$checked': {
                         color: vscStyles.buttonBackground,
                     },
                 },

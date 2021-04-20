@@ -4,12 +4,15 @@ import {
     Avatar,
     Checkbox,
     CircularProgress,
+    FormControl,
     FormControlLabel,
     FormGroup,
     FormLabel,
     Grid,
     InputAdornment,
     MenuItem,
+    Radio,
+    RadioGroup,
     TextField,
     Typography,
 } from '@material-ui/core';
@@ -251,6 +254,34 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                     );
                 })}
             </FormGroup>
+        );
+    }
+
+    public renderRadioSelect(
+        field: OptionableFieldUI,
+        onChange: (field: FieldUI, value: String) => void,
+        value?: String
+    ): JSX.Element {
+        const options = [{ id: '0', value: 'None' }, ...field.allowedValues];
+
+        return (
+            <FormControl component="fieldset">
+                <FormLabel component="legend" focused={false}>
+                    {field.name}
+                </FormLabel>
+                <RadioGroup
+                    value={value}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+                        onChange(field, value);
+                    }}
+                >
+                    {options.map((radioOption: any) => {
+                        return (
+                            <FormControlLabel value={radioOption.id} control={<Radio />} label={radioOption.value} />
+                        );
+                    })}
+                </RadioGroup>
+            </FormControl>
         );
     }
 }

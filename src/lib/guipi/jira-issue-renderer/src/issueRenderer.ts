@@ -34,4 +34,9 @@ export interface IssueRenderer<C> {
         onChange: (field: FieldUI, value: CheckboxValue) => void,
         value?: CheckboxValue
     ) => C;
+    renderRadioSelect: (
+        field: OptionableFieldUI,
+        onChange: (field: FieldUI, value: String) => void,
+        value?: String
+    ) => C;
 }

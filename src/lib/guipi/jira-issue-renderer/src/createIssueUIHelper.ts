@@ -128,6 +128,14 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                     this._delegate.valueForField(fieldUI)
                 );
             }
+            case UIType.Radio: {
+                const radioField = fieldUI as OptionableFieldUI;
+                return this._renderer.renderRadioSelect(
+                    radioField,
+                    this._delegate.fieldDidUpdate,
+                    this._delegate.valueForField(fieldUI)
+                );
+            }
         }
 
         return undefined;
