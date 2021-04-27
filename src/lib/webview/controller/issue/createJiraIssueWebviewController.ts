@@ -89,6 +89,17 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 response = response.results;
             } else if (response.values) {
                 response = response.values;
+            } else if (response.sections) {
+                // Issue link results
+                const results: any[] = [];
+                response.sections.forEach((s: any) => {
+                    const label = `${s.label} (${s.sub})`;
+                    s.issues.forEach((i: any) => {
+                        i.category = label;
+                        results.push(i);
+                    });
+                });
+                return results;
             }
         }
 

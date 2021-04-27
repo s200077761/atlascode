@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import React, { useCallback, useMemo, useReducer } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { CheckboxValue, CreateIssueUIHelper } from '../../../lib/guipi/jira-issue-renderer/src';
+import { FieldReference } from '../../../lib/guipi/jira-issue-renderer/src/issueDelegate';
 import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { CreateJiraIssueAction, CreateJiraIssueActionType } from '../../../lib/ipc/fromUI/createJiraIssue';
 import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
@@ -73,11 +74,11 @@ export enum CreateJiraIssueUIActionType {
 
 export type CreateJiraIssueUIAction =
     | ReducerAction<CreateJiraIssueUIActionType.Init, { data: CreateJiraIssueInitMessage }>
-    | ReducerAction<CreateJiraIssueUIActionType.FieldValueUpdate, { fieldUI: FieldUI; value: any }>
-    | ReducerAction<CreateJiraIssueUIActionType.FieldOptionUpdate, { fieldUI: FieldUI; options: any[] }>
+    | ReducerAction<CreateJiraIssueUIActionType.FieldValueUpdate, { fieldUI: FieldReference; value: any }>
+    | ReducerAction<CreateJiraIssueUIActionType.FieldOptionUpdate, { fieldUI: FieldReference; options: any[] }>
     | ReducerAction<CreateJiraIssueUIActionType.Loading, {}>
-    | ReducerAction<CreateJiraIssueUIActionType.ChangingProject, { fieldUI: FieldUI; value: any }>
-    | ReducerAction<CreateJiraIssueUIActionType.FieldStateUpdate, { fieldUI: FieldUI; value: any }>;
+    | ReducerAction<CreateJiraIssueUIActionType.ChangingProject, { fieldUI: FieldReference; value: any }>
+    | ReducerAction<CreateJiraIssueUIActionType.FieldStateUpdate, { fieldUI: FieldReference; value: any }>;
 
 export type JiraIssueChanges = { [key: string]: any };
 
@@ -107,14 +108,22 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
             const selectedIssueType =
                 action.fieldUI.key === 'issuetype' ? action.value : state.screenData.selectedIssueType;
             let newFieldState = { ...state.fieldState };
-            if (action.value) {
-                newFieldState[action.fieldUI.key] = {
-                    value: action.value,
-                    isLoading: false,
-                    options: [],
-                };
+            if (action.fieldUI.valueType === ValueType.IssueLinks) {
+                const index = action.fieldUI.index ?? '';
+                if (!newFieldState[action.fieldUI.key]) {
+                    newFieldState[action.fieldUI.key] = { value: {} };
+                }
+                newFieldState[action.fieldUI.key]['value'][index] = action.value;
             } else {
-                delete newFieldState[action.fieldUI.key];
+                if (action.value) {
+                    newFieldState[action.fieldUI.key] = {
+                        value: action.value,
+                        isLoading: false,
+                        options: [],
+                    };
+                } else {
+                    delete newFieldState[action.fieldUI.key];
+                }
             }
             const newState: CreateJiraIssueState = {
                 ...state,
@@ -159,8 +168,17 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
         }
         // Called when the typed value in a field changes
         case CreateJiraIssueUIActionType.FieldStateUpdate: {
-            const newFieldState = { ...state.fieldState };
-            newFieldState[action.fieldUI.key] = { value: action.value, isLoading: true };
+            let newFieldState = { ...state.fieldState };
+            if (action.fieldUI.index) {
+                if (!newFieldState[action.fieldUI.key]) {
+                    newFieldState[action.fieldUI.key] = { value: {} };
+                }
+                const newValue = { ...newFieldState[action.fieldUI.key]['value'] };
+                newValue[action.fieldUI.index] = action.value;
+                newFieldState[action.fieldUI.key] = { value: newValue, isLoading: true };
+            } else {
+                newFieldState[action.fieldUI.key] = { value: action.value, isLoading: true };
+            }
             return { ...state, fieldState: newFieldState };
         }
         default:
@@ -266,13 +284,20 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             }
             return state.isChangingProject;
         },
-        valueForField: (field: FieldUI) => {
+        valueForField: (field: FieldReference, index?: string) => {
             if (field.uiType === UIType.Radio) {
                 // If there's no value and no default for a radio control return "0" to select "None"
                 return state.fieldState[field.key]?.value ?? selectedIssueData.fieldValues[field.key] ?? '0';
             }
             if (field.valueType === ValueType.IssueType) {
                 return selectedIssueData.fieldValues[field.key];
+            }
+            if (field.valueType === ValueType.IssueLinks) {
+                const stateValue = state.fieldState[field.key];
+                if (stateValue) {
+                    return stateValue[field.index ?? ''];
+                }
+                return undefined;
             }
             if (field.valueType !== ValueType.Project) {
                 return state.fieldState[field.key]?.value ?? selectedIssueData.fieldValues[field.key];

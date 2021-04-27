@@ -39,11 +39,26 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
         };
     }
 
+    formatIssuelink(key: string, linkdata: any): any {
+        return {
+            type: {
+                id: linkdata.linktype.id,
+            },
+            inwardIssue: linkdata.linktype.type === 'inward' ? { key: linkdata.issues.key } : { key: key },
+            outwardIssue: linkdata.linktype.type === 'outward' ? { key: linkdata.issues.key } : { key: key },
+        };
+    }
+
     async create(site: DetailedSiteInfo, issueData: FieldValues): Promise<CreatedIssue> {
         const client = await Container.clientManager.jiraClient(site);
-        const [fields] = this.formatCreatePayload(issueData);
+        const [fields, , issuelinks] = this.formatCreatePayload(issueData);
         Logger.debug(`Creating Jira issue with fields: ${JSON.stringify(fields)}`);
-        return await client.createIssue({ fields: fields });
+        const response = await client.createIssue({ fields: fields });
+        if (issuelinks) {
+            const formattedIssuelinks = this.formatIssuelink(response.key, issuelinks);
+            await client.createIssueLink(response.key, formattedIssuelinks);
+        }
+        return response;
     }
 
     async performAutoComplete(site: DetailedSiteInfo, autoCompleteQuery: string, url: string): Promise<any> {
