@@ -1385,7 +1385,7 @@
         "flatten-anything": "^2.0.1",
         "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
-        "keytar": "^7.4.0",
+        "keytar": "^7.7.0",
         "lodash.debounce": "^4.0.8",
         "lodash.orderby": "^4.6.0",
         "lodash.truncate": "^4.4.2",
