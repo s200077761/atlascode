@@ -43,13 +43,13 @@ export function basicJiraTransportFactory(site: DetailedSiteInfo): TransportFact
     return () => axios;
 }
 
-export const jiraCloudAuthProvider = (token: string): AuthorizationProvider => {
+export const jiraTokenAuthProvider = (token: string): AuthorizationProvider => {
     return (method: string, url: string) => {
         return Promise.resolve(`Bearer ${token}`);
     };
 };
 
-export const jiraServerAuthProvider = (username: string, password: string): AuthorizationProvider => {
+export const jiraBasicAuthProvider = (username: string, password: string): AuthorizationProvider => {
     const basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
     return (method: string, url: string) => {
         return Promise.resolve(`Basic ${basicAuth}`);

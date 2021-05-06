@@ -12,6 +12,8 @@ import {
     Radio,
     RadioGroup,
     Switch,
+    Tab,
+    Tabs,
     TextField,
     Typography,
 } from '@material-ui/core';
@@ -24,6 +26,7 @@ import {
     BasicAuthInfo,
     emptyAuthInfo,
     emptyUserInfo,
+    PATAuthInfo,
     Product,
     ProductJira,
     SiteInfo,
@@ -47,6 +50,7 @@ type FormFields = {
     contextPath: string;
     username: string;
     password: string;
+    personalAccessToken: string;
     customSSLEnabled: boolean;
     sslCertPaths: string;
     pfxPath: string;
@@ -93,9 +97,33 @@ const isCustomUrl = (data?: string) => {
     }
 };
 
+interface TabPanelProps {
+    children?: React.ReactNode;
+    dir?: string;
+    index: any;
+    value: any;
+}
+
+function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`full-width-tabpanel-${index}`}
+            aria-labelledby={`full-width-tab-${index}`}
+            {...other}
+        >
+            {value === index && <Box p={3}>{children}</Box>}
+        </div>
+    );
+}
+
 export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
     ({ open, doClose, onExited, save, product, authEntry }) => {
         const [authFormState, updateState] = useState(emptyAuthFormState);
+        const [authTypeTabIndex, setAuthTypeTabIndex] = useState(0);
 
         const defaultSiteWithAuth = authEntry ? authEntry : emptySiteWithAuthInfo;
 
@@ -146,6 +174,13 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
 
                 if (!isCustomUrl(data.baseUrl)) {
                     save(siteInfo, emptyAuthInfo);
+                } else if (data.personalAccessToken) {
+                    const authInfo: PATAuthInfo = {
+                        token: data.personalAccessToken,
+                        user: emptyUserInfo,
+                        state: AuthInfoState.Valid,
+                    };
+                    save(siteInfo, authInfo);
                 } else {
                     const authInfo: BasicAuthInfo = {
                         username: data.username,
@@ -157,6 +192,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 }
 
                 updateState(emptyAuthFormState);
+                setAuthTypeTabIndex(0);
                 doClose();
             },
             [doClose, product, save]
@@ -235,54 +271,82 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                         </Grid>
                                     </Box>
                                 )}
-                                <Grid item>
-                                    <TextField
-                                        required
-                                        margin="dense"
-                                        id="username"
-                                        name="username"
-                                        label="Username"
-                                        defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
-                                        helperText={errors.username ? errors.username : undefined}
-                                        fullWidth
-                                        error={!!errors.username}
-                                        inputRef={registerRequiredString}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        required
-                                        margin="dense"
-                                        id="password"
-                                        name="password"
-                                        label="Password"
-                                        defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
-                                        type={authFormState.showPassword ? 'text' : 'password'}
-                                        helperText={errors.password ? errors.password : undefined}
-                                        fullWidth
-                                        error={!!errors.password}
-                                        inputRef={registerRequiredString}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <IconButton
-                                                    onClick={() =>
-                                                        updateState({
-                                                            ...authFormState,
-                                                            showPassword: !authFormState.showPassword,
-                                                        })
-                                                    }
-                                                    onMouseDown={preventClickDefault}
-                                                >
-                                                    {authFormState.showPassword ? (
-                                                        <Visibility fontSize="small" />
-                                                    ) : (
-                                                        <VisibilityOff fontSize="small" />
-                                                    )}
-                                                </IconButton>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
+                                <Tabs
+                                    value={authTypeTabIndex}
+                                    onChange={(event: React.ChangeEvent<{}>, value: any) => {
+                                        setAuthTypeTabIndex(value);
+                                    }}
+                                >
+                                    <Tab label="Username and Password" />
+                                    {product.key === ProductJira.key && <Tab label="Personal Access Token" />}
+                                </Tabs>
+                                <TabPanel value={authTypeTabIndex} index={0}>
+                                    <Grid item>
+                                        <TextField
+                                            required
+                                            margin="dense"
+                                            id="username"
+                                            name="username"
+                                            label="Username"
+                                            defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).username}
+                                            helperText={errors.username ? errors.username : undefined}
+                                            fullWidth
+                                            error={!!errors.username}
+                                            inputRef={registerRequiredString}
+                                        />
+                                    </Grid>
+                                    <Grid item>
+                                        <TextField
+                                            required
+                                            margin="dense"
+                                            id="password"
+                                            name="password"
+                                            label="Password"
+                                            defaultValue={(defaultSiteWithAuth.auth as BasicAuthInfo).password}
+                                            type={authFormState.showPassword ? 'text' : 'password'}
+                                            helperText={errors.password ? errors.password : undefined}
+                                            fullWidth
+                                            error={!!errors.password}
+                                            inputRef={registerRequiredString}
+                                            InputProps={{
+                                                endAdornment: (
+                                                    <IconButton
+                                                        onClick={() =>
+                                                            updateState({
+                                                                ...authFormState,
+                                                                showPassword: !authFormState.showPassword,
+                                                            })
+                                                        }
+                                                        onMouseDown={preventClickDefault}
+                                                    >
+                                                        {authFormState.showPassword ? (
+                                                            <Visibility fontSize="small" />
+                                                        ) : (
+                                                            <VisibilityOff fontSize="small" />
+                                                        )}
+                                                    </IconButton>
+                                                ),
+                                            }}
+                                        />
+                                    </Grid>
+                                </TabPanel>
+                                <TabPanel value={authTypeTabIndex} index={1}>
+                                    <Grid item>
+                                        <TextField
+                                            required
+                                            type="password"
+                                            margin="dense"
+                                            id="personalAccessToken"
+                                            name="personalAccessToken"
+                                            label="Personal Access Token"
+                                            defaultValue={''}
+                                            // helperText={errors.pat ? errors.pat : undefined}
+                                            fullWidth
+                                            // error={!!errors.pat}
+                                            inputRef={registerRequiredString}
+                                        />
+                                    </Grid>
+                                </TabPanel>
                                 <Grid item>
                                     <ToggleWithLabel
                                         control={
