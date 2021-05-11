@@ -1,4 +1,4 @@
-import { distanceInWordsToNow, format } from 'date-fns';
+import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import path from 'path';
 import {
     commands,
@@ -153,9 +153,9 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 nodes = [
                     new SimpleNode(
                         `No pipelines matching your filters from ${format(
-                            firstPipeTime,
-                            'YYYY-MM-DD h:mm A'
-                        )} to ${format(lastPipeTime, 'YYYY-MM-DD h:mm A')}`
+                            parseISO(firstPipeTime),
+                            'yyyy-MM-dd h:mm a'
+                        )} to ${format(parseISO(lastPipeTime), 'yyyy-MM-dd h:mm a')}`
                     ),
                 ];
             } else {
@@ -211,7 +211,7 @@ export class PipelineNode extends AbstractBaseNode {
         const label = `${descriptionForState(this.pipeline, false, true)}`;
         let description = '';
         if (this.pipeline.created_on) {
-            description = `${distanceInWordsToNow(this.pipeline.created_on)} ago`;
+            description = `${formatDistanceToNow(parseISO(this.pipeline.created_on))} ago`;
         }
 
         const item = new TreeItem(label);
@@ -245,7 +245,10 @@ class NextPageNode extends AbstractBaseNode {
     getTreeItem() {
         const treeItem = this._resultsSince
             ? new TreeItem(
-                  `Load more (showing filtered results since ${format(this._resultsSince, 'YYYY-MM-DD h:mm A')})`
+                  `Load more (showing filtered results since ${format(
+                      parseISO(this._resultsSince),
+                      'yyyy-MM-dd h:mm a'
+                  )})`
               )
             : new TreeItem('Load more', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');

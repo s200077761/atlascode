@@ -10,7 +10,7 @@ import {
     Tooltip,
     Typography,
 } from '@material-ui/core';
-import { differenceInWeeks, distanceInWordsToNow, format } from 'date-fns';
+import { differenceInWeeks, format, formatDistanceToNow } from 'date-fns';
 import React, { useMemo } from 'react';
 import { Commit } from '../../../bitbucket/model';
 
@@ -50,8 +50,8 @@ export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props) =
                             <Tooltip title={row.ts.toLocaleString()}>
                                 <Typography>
                                     {differenceInWeeks(row.ts, new Date()) === 0
-                                        ? distanceInWordsToNow(row.ts, { addSuffix: true })
-                                        : format(row.ts, 'YYYY-MM-DD')}
+                                        ? formatDistanceToNow(row.ts, { addSuffix: true })
+                                        : format(row.ts, 'yyyy-MM-dd')}
                                 </Typography>
                             </Tooltip>
                         </TableCell>

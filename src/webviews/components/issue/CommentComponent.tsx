@@ -7,7 +7,7 @@ import {
     CommentVisibility,
     JsdInternalCommentVisibility,
 } from '@atlassianlabs/jira-pi-common-models';
-import { distanceInWordsToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import React, { useState } from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { RenderedContent } from '../RenderedContent';
@@ -36,7 +36,7 @@ export const CommentComponent: React.FC<Props> = ({
     const [commentInputValue, setCommentInputValue] = useState(comment.body);
     const [isSaving, setIsSaving] = useState(false);
 
-    const prettyCreated = `${distanceInWordsToNow(comment.created)} ago`;
+    const prettyCreated = `${formatDistanceToNow(parseISO(comment.created))} ago`;
     const body = comment.renderedBody ? comment.renderedBody : comment.body;
     const type = isServiceDeskProject ? (comment.jsdPublic ? 'external' : 'internal') : undefined;
 

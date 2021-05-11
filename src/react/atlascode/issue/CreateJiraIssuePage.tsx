@@ -1,4 +1,4 @@
-import MomentUtils from '@date-io/moment';
+import DateFnsUtils from '@date-io/date-fns';
 import {
     AppBar,
     Avatar,
@@ -101,7 +101,7 @@ const CreateJiraIssuePage: React.FunctionComponent = () => {
     }, [controller.createIssueUIHelper, createInProgress, handleCreate, theme.typography.fontSize]);
 
     return (
-        <MuiPickersUtilsProvider utils={MomentUtils}>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
             <CreateJiraIssueControllerContext.Provider value={controller}>
                 <Container maxWidth="xl">
                     <AppBar position="relative">

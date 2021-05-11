@@ -16,7 +16,7 @@ import {
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
 import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { distanceInWordsToNow, format } from 'date-fns';
+import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import React, { useCallback, useMemo } from 'react';
 import { emptyPipeline } from '../../../lib/ipc/models/pipelineSummary';
 import {
@@ -211,14 +211,15 @@ function dateString(completed_on?: string): string {
         return '';
     }
 
-    return format(completed_on, 'MMM do YYYY, h:mm:ss a');
+    return format(parseISO(completed_on), 'MMM do yyyy, h:mm:ss aaa');
 }
 
-function timeString(completed_on?: any, created_on?: any): string {
-    if (!completed_on && !created_on) {
+function timeString(completed_on?: Date, created_on?: Date): string {
+    const date = completed_on ?? created_on;
+    if (!date) {
         return '';
     }
-    return `${distanceInWordsToNow(completed_on ?? created_on)} ago`;
+    return `${formatDistanceToNow(date)} ago`;
 }
 
 function isPaused(step: PipelineStep) {
@@ -522,7 +523,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                                 {`${durationString(state.pipeline.duration_in_seconds)}`}
                                 {state.pipeline.completed_on ? <CalendarTodayIcon className={classes.icon} /> : ''}
                                 <span title={dateString(state.pipeline.completed_on)}>{`${timeString(
-                                    state.pipeline.completed_on
+                                    parseISO(state.pipeline.completed_on ?? '')
                                 )}`}</span>
                             </Typography>
                             <div className={classes.flex}>

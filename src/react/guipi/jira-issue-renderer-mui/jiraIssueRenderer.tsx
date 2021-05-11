@@ -296,13 +296,13 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
             <KeyboardDatePicker
                 clearable
                 disableToolbar
-                format="MM/DD/yyyy"
+                format="MM/dd/yyyy"
                 margin="normal"
                 id={field.key}
                 label={field.name}
                 value={value ?? null}
                 onChange={(date: MaterialUiPickersDate, value?: string) => {
-                    onChange(field, date?.toDate());
+                    onChange(field, date as Date);
                 }}
             />
         );
@@ -316,13 +316,13 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
         return (
             <KeyboardDateTimePicker
                 clearable
-                format="MM/DD/yyyy h:mm A"
+                format="MM/dd/yyyy h:mm a"
                 minutesStep={5}
                 id={field.key}
                 label={field.name}
                 value={value ?? null}
                 onChange={(date: MaterialUiPickersDate, value?: string) => {
-                    onChange(field, date?.toDate());
+                    onChange(field, date as Date);
                 }}
             />
         );

@@ -16,7 +16,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import format from 'date-fns/format';
+import { format, parseISO } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
@@ -348,7 +348,11 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             <strong>Created</strong>
                                         </Typography>
                                         <Tooltip title={state.pr.data.ts || 'unknown'}>
-                                            <Typography>{format(state.pr.data.ts, 'YYYY-MM-DD h:mm A')}</Typography>
+                                            <Typography>
+                                                {state.pr.data.ts
+                                                    ? format(parseISO(state.pr.data.ts), 'yyyy-MM-dd h:mm a')
+                                                    : ''}
+                                            </Typography>
                                         </Tooltip>
                                     </Grid>
 
@@ -358,7 +362,9 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                         </Typography>
                                         <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
                                             <Typography>
-                                                {format(state.pr.data.updatedTs, 'YYYY-MM-DD h:mm A')}
+                                                {state.pr.data.updatedTs
+                                                    ? format(parseISO(state.pr.data.updatedTs), 'yyyy-MM-dd h:mm a')
+                                                    : ''}
                                             </Typography>
                                         </Tooltip>
                                     </Grid>

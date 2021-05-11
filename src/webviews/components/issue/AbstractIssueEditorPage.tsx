@@ -23,7 +23,7 @@ import {
     UIType,
     ValueType,
 } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
-import { distanceInWordsToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import debounce from 'lodash.debounce';
 import * as React from 'react';
 import EdiText, { EdiTextType } from 'react-editext';
@@ -1589,7 +1589,7 @@ export abstract class AbstractIssueEditorPage<
             case ValueType.Date: {
                 return (
                     <div className="ac-vpadding">
-                        <div>${distanceInWordsToNow(value)} ago`</div>
+                        <div>${formatDistanceToNow(value)} ago`</div>
                     </div>
                 );
             }

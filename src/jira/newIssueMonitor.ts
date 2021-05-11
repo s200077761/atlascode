@@ -36,7 +36,7 @@ export class NewIssueMonitor {
             return;
         }
 
-        const ts = format(this._timestamp, 'YYYY-MM-DD HH:mm');
+        const ts = format(this._timestamp, 'yyyy-MM-dd HH:mm');
         try {
             const enabledJQLs = Container.jqlManager.notifiableJQLEntries();
             const jqlPromises: Promise<JQLSettleResult>[] = [];

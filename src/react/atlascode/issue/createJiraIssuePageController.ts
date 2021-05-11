@@ -332,9 +332,9 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
 
     const convertDateTimeData = useCallback((date: Date, includeTime: boolean): string => {
         if (includeTime) {
-            return format(date, 'YYYY-MM-DD[T]HH:mm:ssZ');
+            return format(date, "yyyy-MM-dd'T'HH:mm:ssXXX");
         }
-        return format(date, 'YYYY-MM-DD');
+        return format(date, 'yyyy-MM-dd');
     }, []);
 
     const createIssueData = useCallback((): any => {

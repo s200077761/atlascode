@@ -1,9 +1,9 @@
+import { addDays, addMonths, addWeeks, format, isAfter, isBefore, parseISO, subMonths } from 'date-fns';
 import { ExtensionContext } from 'vscode';
-import { parse, format, addMonths, subMonths, addWeeks, addDays, isAfter, isBefore } from 'date-fns';
 
 const PmfStatsKey = 'pmfStats';
-const FormatYYYYMMDD = 'YYYY-MM-DD';
-const FormatISO = 'YYYY-MM-DD[T]HH:mm:ssZ';
+const FormatYYYYMMDD = 'yyyy-MM-dd';
+const FormatISO = 'yyyy-MM-dd[T]HH:mm:ssXXX';
 
 type PmfStatsData = {
     lastSurveyed: string;
@@ -29,16 +29,16 @@ export class PmfStats {
 
         const now = new Date();
 
-        if (isAfter(addMonths(parse(currentState.lastSurveyed), 3), now)) {
+        if (isAfter(addMonths(parseISO(currentState.lastSurveyed), 3), now)) {
             return false;
         }
 
-        if (isAfter(currentState.snoozeUntil, now)) {
+        if (isAfter(parseISO(currentState.snoozeUntil), now)) {
             return false;
         }
 
         const daysActiveInLastTwoWeeks = Object.keys(currentState.activityByDay)
-            .filter((key) => isAfter(addWeeks(parse(key), 2), now))
+            .filter((key) => isAfter(addWeeks(parseISO(key), 2), now))
             .reduce((prevSum, currKey) => prevSum + currentState.activityByDay[currKey], 0);
 
         return daysActiveInLastTwoWeeks >= 3;
@@ -81,7 +81,7 @@ export class PmfStats {
         const now = new Date();
 
         Object.keys(currentState.activityByDay)
-            .filter((key) => isBefore(addWeeks(parse(key), 2), now))
+            .filter((key) => isBefore(addWeeks(parseISO(key), 2), now))
             .forEach((key) => delete currentState.activityByDay[key]);
 
         await this.extensionContext.globalState.update(PmfStatsKey, currentState);
