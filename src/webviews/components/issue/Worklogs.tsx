@@ -1,13 +1,13 @@
 import Avatar from '@atlaskit/avatar';
 import TableTree from '@atlaskit/table-tree';
 import { Worklog, WorklogContainer } from '@atlassianlabs/jira-pi-common-models';
-import { distanceInWordsToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 
 type ItemData = { worklog: Worklog };
 
 const Created = (data: ItemData) => (
-    <p style={{ display: 'inline' }}>{`${distanceInWordsToNow(data.worklog.created)} ago`}</p>
+    <p style={{ display: 'inline' }}>{`${formatDistanceToNow(parseISO(data.worklog.created))} ago`}</p>
 );
 const Comment = (data: ItemData) => <p style={{ display: 'inline' }}>{data.worklog.comment}</p>;
 const TimeSpent = (data: ItemData) => <p style={{ display: 'inline' }}>{data.worklog.timeSpent}</p>;

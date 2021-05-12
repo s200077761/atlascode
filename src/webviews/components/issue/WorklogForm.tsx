@@ -36,7 +36,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         this.state = {
             ...emptyForm,
             savingDisabled: true,
-            started: format(Date.now(), 'YYYY-MM-DDTHH:mm:ss.SSSZZ'),
+            started: format(Date.now(), 'yyyy-MM-ddTHH:mm:ss.SSSXXX'),
         };
     }
 
@@ -56,7 +56,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
     handleSave = (formData: any) => {
         const worklog: WorklogData = {
             comment: formData.comment,
-            started: format(new Date(formData.started), 'YYYY-MM-DDTHH:mm:ss.SSSZZ'),
+            started: format(new Date(formData.started), 'yyyy-MM-ddTHH:mm:ss.SSSXXX'),
             timeSpent: formData.timeSpent,
             adjustEstimate: formData.newEstimate && formData.newEstimate !== '' ? 'new' : 'auto',
             newEstimate: formData.newEstimate,
@@ -71,7 +71,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
 
     render() {
         const defaultDate =
-            this.state.started.trim() !== '' ? this.state.started : format(Date.now(), 'YYYY-MM-DDTHH:mm:ss.SSSZZ');
+            this.state.started.trim() !== '' ? this.state.started : format(Date.now(), 'yyyy-MM-ddTHH:mm:ss.SSSXXX');
         return (
             <div>
                 <Form name="worklog-form" onSubmit={this.handleSave}>

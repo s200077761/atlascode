@@ -17,6 +17,8 @@ import {
     Typography,
 } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
+import { KeyboardDatePicker, KeyboardDateTimePicker } from '@material-ui/pickers';
+import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import React from 'react';
 import { CheckboxValue, IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
 
@@ -259,8 +261,8 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
 
     public renderRadioSelect(
         field: OptionableFieldUI,
-        onChange: (field: FieldUI, value: String) => void,
-        value?: String
+        onChange: (field: FieldUI, value: string) => void,
+        value?: string
     ): JSX.Element {
         const options = [{ id: '0', value: 'None' }, ...field.allowedValues];
 
@@ -282,6 +284,47 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
                     })}
                 </RadioGroup>
             </FormControl>
+        );
+    }
+
+    public renderDateField(
+        field: FieldUI,
+        onChange: (field: FieldUI, value?: Date) => void,
+        value?: Date
+    ): JSX.Element {
+        return (
+            <KeyboardDatePicker
+                clearable
+                disableToolbar
+                format="MM/dd/yyyy"
+                margin="normal"
+                id={field.key}
+                label={field.name}
+                value={value ?? null}
+                onChange={(date: MaterialUiPickersDate, value?: string) => {
+                    onChange(field, date as Date);
+                }}
+            />
+        );
+    }
+
+    public renderDateTimeField(
+        field: FieldUI,
+        onChange: (field: FieldUI, value?: Date) => void,
+        value?: Date
+    ): JSX.Element {
+        return (
+            <KeyboardDateTimePicker
+                clearable
+                format="MM/dd/yyyy h:mm a"
+                minutesStep={5}
+                id={field.key}
+                label={field.name}
+                value={value ?? null}
+                onChange={(date: MaterialUiPickersDate, value?: string) => {
+                    onChange(field, date as Date);
+                }}
+            />
         );
     }
 }

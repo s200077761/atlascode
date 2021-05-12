@@ -136,6 +136,20 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                     this._delegate.valueForField(fieldUI)
                 );
             }
+            case UIType.Date: {
+                return this._renderer.renderDateField(
+                    fieldUI,
+                    this._delegate.fieldDidUpdate,
+                    this._delegate.valueForField(fieldUI)
+                );
+            }
+            case UIType.DateTime: {
+                return this._renderer.renderDateTimeField(
+                    fieldUI,
+                    this._delegate.fieldDidUpdate,
+                    this._delegate.valueForField(fieldUI)
+                );
+            }
         }
 
         return undefined;

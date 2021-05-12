@@ -74,7 +74,7 @@ export class VSCCreateJiraIssueActionImpl implements CreateJiraIssueActionApi {
                             ...payload['worklog'],
                             adjustEstimate: 'new',
                             started: payload['worklog'].started
-                                ? format(payload['worklog'].started, 'YYYY-MM-DDTHH:mm:ss.SSSZZ')
+                                ? format(payload['worklog'].started, 'yyyy-MM-ddTHH:mm:ss.SSSXXX')
                                 : undefined,
                         },
                     },

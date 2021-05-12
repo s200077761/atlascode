@@ -28,7 +28,7 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import RemoveRedEyeOutlinedIcon from '@material-ui/icons/RemoveRedEyeOutlined';
 import StarBorder from '@material-ui/icons/StarBorder';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import React, { useCallback } from 'react';
 import CommentForm from '../common/CommentForm';
 import { CopyLinkButton } from '../common/CopyLinkButton';
@@ -195,7 +195,9 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                             <Typography variant="subtitle2">
                                                                 {c.user.displayName}
                                                                 {'  '}
-                                                                {format(c.ts, 'YYYY-MM-DD h:mm A')}
+                                                                {c.ts
+                                                                    ? format(parseISO(c.ts), 'yyyy-MM-dd h:mm a')
+                                                                    : ''}
                                                             </Typography>
                                                             <Typography
                                                                 dangerouslySetInnerHTML={{ __html: c.htmlContent }}
@@ -318,7 +320,12 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                         <Grid item>
                                             <Tooltip title={state.issue.data.created_on || 'unknown'}>
                                                 <Typography>
-                                                    {format(state.issue.data.created_on, 'YYYY-MM-DD h:mm A')}
+                                                    {state.issue.data.created_on
+                                                        ? format(
+                                                              parseISO(state.issue.data.created_on),
+                                                              'yyyy-MM-dd h:mm a'
+                                                          )
+                                                        : ''}
                                                 </Typography>
                                             </Tooltip>
                                         </Grid>
