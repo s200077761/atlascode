@@ -16,10 +16,12 @@ import {
     BasicAuthInfo,
     DetailedSiteInfo,
     isBasicAuthInfo,
+    isPATAuthInfo,
     OAuthInfo,
     OAuthProvider,
     oauthProviderForSite,
     OAuthResponse,
+    PATAuthInfo,
     Product,
     ProductBitbucket,
     ProductJira,
@@ -160,7 +162,7 @@ export class LoginManager {
     }
 
     public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
-        if (isBasicAuthInfo(authInfo)) {
+        if (isBasicAuthInfo(authInfo) || isPATAuthInfo(authInfo)) {
             try {
                 const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
                 authenticatedEvent(siteDetails).then((e) => {
@@ -189,10 +191,23 @@ export class LoginManager {
         }
     }
 
-    private async saveDetailsForServerSite(site: SiteInfo, credentials: BasicAuthInfo): Promise<DetailedSiteInfo> {
-        const authHeader = 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
-        // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances will
-        // have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
+    private authHeader(credentials: BasicAuthInfo | PATAuthInfo) {
+        if (isBasicAuthInfo(credentials)) {
+            return 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
+        } else if (isPATAuthInfo(credentials)) {
+            return `Bearer ${credentials.token}`;
+        }
+        Logger.warn(`Trying to construct auth header for non basic / non PAT auth info`);
+        return '';
+    }
+
+    private async saveDetailsForServerSite(
+        site: SiteInfo,
+        credentials: BasicAuthInfo | PATAuthInfo
+    ): Promise<DetailedSiteInfo> {
+        const authHeader = this.authHeader(credentials);
+        // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances
+        // will have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
 
         let siteDetailsUrl = '';
         let avatarUrl = '';
@@ -206,9 +221,10 @@ export class LoginManager {
                 apiUrl = `${protocol}//${site.host}${contextPath}/rest`;
                 break;
             case ProductBitbucket.key:
+                const bbCredentials = credentials as BasicAuthInfo;
                 siteDetailsUrl = `${protocol}//${
                     site.host
-                }${contextPath}/rest/api/1.0/users/${credentials.username.replace(slugRegex, '_')}?avatarSize=64`;
+                }${contextPath}/rest/api/1.0/users/${bbCredentials.username.replace(slugRegex, '_')}?avatarSize=64`;
                 avatarUrl = '';
                 apiUrl = `${protocol}//${site.host}${contextPath}`;
                 break;
@@ -228,7 +244,8 @@ export class LoginManager {
 
         const userId = site.product.key === ProductJira.key ? json.name : json.slug;
         const baseLinkUrl = `${site.host}${contextPath}`;
-        const credentialId = CredentialManager.generateCredentialId(baseLinkUrl, credentials.username);
+        const username = isBasicAuthInfo(credentials) ? credentials.username : userId;
+        const credentialId = CredentialManager.generateCredentialId(baseLinkUrl, username);
 
         const siteDetails = {
             product: site.product,

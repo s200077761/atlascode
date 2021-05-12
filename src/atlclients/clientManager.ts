@@ -15,15 +15,15 @@ import { Container } from '../container';
 import {
     basicJiraTransportFactory,
     getAgent,
-    jiraCloudAuthProvider,
-    jiraServerAuthProvider,
+    jiraBasicAuthProvider,
+    jiraTokenAuthProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap, Interval } from '../util/cachemap';
-import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo } from './authInfo';
+import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, isPATAuthInfo } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
@@ -115,14 +115,21 @@ export class ClientManager implements Disposable {
                 client = new JiraCloudClient(
                     site,
                     oauthJiraTransportFactory(site),
-                    jiraCloudAuthProvider(info.access),
+                    jiraTokenAuthProvider(info.access),
                     getAgent
                 );
             } else if (isBasicAuthInfo(info)) {
                 client = new JiraServerClient(
                     site,
                     basicJiraTransportFactory(site),
-                    jiraServerAuthProvider(info.username, info.password),
+                    jiraBasicAuthProvider(info.username, info.password),
+                    getAgent
+                );
+            } else if (isPATAuthInfo(info)) {
+                client = new JiraServerClient(
+                    site,
+                    basicJiraTransportFactory(site),
+                    jiraTokenAuthProvider(info.token),
                     getAgent
                 );
             }
