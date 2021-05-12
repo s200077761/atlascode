@@ -1393,7 +1393,6 @@
         "lodash.truncate": "^4.4.2",
         "macaddress": "^0.2.9",
         "merge-anything": "^3.0.3",
-        "moment": "^2.29.1",
         "mustache": "^4.0.1",
         "p-any": "^2.1.0",
         "p-cancelable": "^2.0.0",
