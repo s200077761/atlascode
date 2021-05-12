@@ -340,9 +340,11 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                                             name="personalAccessToken"
                                             label="Personal Access Token"
                                             defaultValue={''}
-                                            // helperText={errors.pat ? errors.pat : undefined}
+                                            helperText={
+                                                errors.personalAccessToken ? errors.personalAccessToken : undefined
+                                            }
                                             fullWidth
-                                            // error={!!errors.pat}
+                                            error={!!errors.personalAccessToken}
                                             inputRef={registerRequiredString}
                                         />
                                     </Grid>
