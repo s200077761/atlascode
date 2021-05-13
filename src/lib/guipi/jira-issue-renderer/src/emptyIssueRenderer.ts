@@ -42,8 +42,6 @@ export const emptyIssueRenderer: IssueRenderer<any> = {
         linkTypes: any[],
         options: any[],
         onAutoComplete: (field: FieldUI, value: string) => void,
-        onSelect: (field: FieldUI, value: string) => void,
-        linkTypeValue?: any,
-        linkedIssueValue?: any
+        onSelect: (field: FieldUI, value: string) => void
     ) => {},
 };

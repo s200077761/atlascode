@@ -19,8 +19,7 @@ import {
 import { Autocomplete } from '@material-ui/lab';
 import { KeyboardDatePicker, KeyboardDateTimePicker } from '@material-ui/pickers';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
-import React from 'react';
-import { FieldReference } from '../../../lib/guipi/jira-issue-renderer/src/issueDelegate';
+import React, { useEffect, useState } from 'react';
 import { CheckboxValue, IssueRenderer } from '../../../lib/guipi/jira-issue-renderer/src/issueRenderer';
 
 export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
@@ -333,95 +332,121 @@ export class JiraIssueRenderer implements IssueRenderer<JSX.Element> {
         field: FieldUI,
         linkTypes: any[],
         options: any[],
-        onAutoComplete: (field: FieldReference, value: string) => void,
-        onSelect: (field: FieldReference, value: string) => void,
-        isWaiting = false,
-        linkTypeValue?: any,
-        linkedIssueValue?: any
+        onAutoComplete: (field: FieldUI, value: string) => void,
+        onSelect: (field: FieldUI, value: string) => void,
+        isWaiting = false
     ): JSX.Element {
         return (
-            <FormGroup>
-                <FormLabel component="legend">{field.name}</FormLabel>
-                <Autocomplete
-                    fullWidth
-                    id={`${field.key}-linktype`}
-                    key={`${field.key}-linktype`}
-                    options={linkTypes || []}
-                    getOptionLabel={(option) => option.name ?? option.value ?? ''}
-                    getOptionSelected={(option, value) => option.id === value.id}
-                    groupBy={(option) => option.groupLabel}
-                    value={linkTypeValue}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            label={'Link Type'}
-                            InputProps={{
-                                ...params.InputProps,
-                                startAdornment: linkTypeValue?.iconUrl ? (
-                                    <InputAdornment position="start">
-                                        <Avatar
-                                            style={{ height: '1em', width: '1em' }}
-                                            variant="square"
-                                            src={linkTypeValue?.iconUrl}
-                                        />
-                                    </InputAdornment>
-                                ) : (
-                                    params.InputProps.startAdornment
-                                ),
-                            }}
-                        />
-                    )}
-                    renderOption={(option) => (
-                        <Grid container spacing={1} direction="row" alignItems="center" key={option.id}>
-                            <Grid item hidden={!!!option.iconUrl}>
-                                <Avatar style={{ height: '1em', width: '1em' }} variant="square" src={option.iconUrl} />
-                            </Grid>
-                            <Grid item>
-                                <Typography>{option.name ?? option.value ?? ''}</Typography>
-                            </Grid>
-                        </Grid>
-                    )}
-                    onChange={(event: React.ChangeEvent, newValue: any) => {
-                        onSelect({ ...field, index: 'linktype' }, newValue);
-                    }}
-                />
-
-                <Autocomplete
-                    onChange={(value: any, newValue: any) => {
-                        onSelect({ ...field, index: 'issues' }, newValue);
-                    }}
-                    filterOptions={(o, s) => o}
-                    filterSelectedOptions={true}
-                    value={linkedIssueValue}
-                    id={`${field.key}-issues`}
-                    options={options}
-                    getOptionLabel={(option) => `${option.key} ${option.summaryText}`}
-                    renderOption={(option) => `${option.key} ${option.summaryText}`}
-                    groupBy={(option) => {
-                        return option.category ? option.category : '';
-                    }}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            onChange={(event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
-                                onAutoComplete({ ...field, index: 'issues' }, event.target.value);
-                            }}
-                            label={'Linked Issue'}
-                            margin="normal"
-                            variant="outlined"
-                            InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <React.Fragment>
-                                        {isWaiting ? <CircularProgress color="inherit" size={20} /> : null}
-                                        {params.InputProps.endAdornment}
-                                    </React.Fragment>
-                                ),
-                            }}
-                        />
-                    )}
-                />
-            </FormGroup>
+            <IssueLink
+                field={field}
+                linkTypes={linkTypes}
+                options={options}
+                onAutoComplete={onAutoComplete}
+                isWaiting={isWaiting}
+                onChange={onSelect}
+            />
         );
     }
 }
+
+export const IssueLink = (props: any) => {
+    const emptyLinkType = { id: undefined, name: '', iconUrl: undefined };
+    const emptyLinkValue = { id: undefined, key: '', summaryText: '' };
+
+    const [linkType, setLinkType] = useState(emptyLinkType);
+    const [linkValue, setLinkValue] = useState(emptyLinkValue);
+
+    useEffect(() => {
+        if (linkType.id && linkValue.id) {
+            props.onChange(props.field, { linktype: linkType, issues: linkValue });
+        } else {
+            props.onChange(props.field, undefined);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [linkType, linkValue]);
+
+    return (
+        <FormGroup>
+            <FormLabel component="legend">{props.field.name}</FormLabel>
+            <Autocomplete
+                fullWidth
+                id={`${props.field.key}-linktype`}
+                key={`${props.field.key}-linktype`}
+                options={props.linkTypes || []}
+                getOptionLabel={(option) => option.name ?? option.value ?? ''}
+                getOptionSelected={(option, value) => option.id === value.id}
+                groupBy={(option) => option.groupLabel}
+                value={linkType}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        label={'Link Type'}
+                        InputProps={{
+                            ...params.InputProps,
+                            startAdornment: linkType.iconUrl ? (
+                                <InputAdornment position="start">
+                                    <Avatar
+                                        style={{ height: '1em', width: '1em' }}
+                                        variant="square"
+                                        src={linkType?.iconUrl}
+                                    />
+                                </InputAdornment>
+                            ) : (
+                                params.InputProps.startAdornment
+                            ),
+                        }}
+                    />
+                )}
+                renderOption={(option) => (
+                    <Grid container spacing={1} direction="row" alignItems="center" key={option.id}>
+                        <Grid item hidden={!!!option.iconUrl}>
+                            <Avatar style={{ height: '1em', width: '1em' }} variant="square" src={option.iconUrl} />
+                        </Grid>
+                        <Grid item>
+                            <Typography>{option.name ?? option.value ?? ''}</Typography>
+                        </Grid>
+                    </Grid>
+                )}
+                onChange={(event: React.ChangeEvent, newValue: any) => {
+                    setLinkType(newValue ?? emptyLinkType);
+                }}
+            />
+
+            <Autocomplete
+                onChange={(value: any, newValue: any) => {
+                    setLinkValue(newValue ?? emptyLinkValue);
+                }}
+                filterOptions={(o, s) => o}
+                filterSelectedOptions={true}
+                value={linkValue}
+                id={`${props.key}-issues`}
+                options={props.options}
+                getOptionLabel={(option) => (option.id ? `${option.key} ${option.summaryText}` : '')}
+                renderOption={(option) => (option.id ? `${option.key} ${option.summaryText}` : '')}
+                groupBy={(option) => {
+                    return option.category ? option.category : '';
+                }}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        onChange={(event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
+                            props.onAutoComplete({ ...props.field, index: 'issues' }, event.target.value);
+                        }}
+                        label={'Linked Issue'}
+                        margin="normal"
+                        variant="outlined"
+                        InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                                <React.Fragment>
+                                    {props.isWaiting ? <CircularProgress color="inherit" size={20} /> : null}
+                                    {params.InputProps.endAdornment}
+                                </React.Fragment>
+                            ),
+                        }}
+                    />
+                )}
+            />
+        </FormGroup>
+    );
+};

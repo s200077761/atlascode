@@ -47,8 +47,6 @@ export interface IssueRenderer<C> {
         options: any[],
         onAutoComplete: (field: FieldUI, value: string) => void,
         onSelect: (field: FieldUI, value: string) => void,
-        isWaiting: boolean,
-        linkTypeValue?: any,
-        linkedIssueValue?: any
+        isWaiting: boolean
     ) => C;
 }

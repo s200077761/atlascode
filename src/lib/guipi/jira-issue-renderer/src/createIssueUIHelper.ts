@@ -9,7 +9,7 @@ import {
     UIType,
     ValueType,
 } from '@atlassianlabs/jira-pi-meta-models';
-import { IssueDelegate, SelectFieldReference } from './issueDelegate';
+import { IssueDelegate } from './issueDelegate';
 import { IssueRenderer } from './issueRenderer';
 
 export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
@@ -151,7 +151,7 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                 );
             }
             case UIType.IssueLinks: {
-                const issueFieldUI: SelectFieldReference = { ...(fieldUI as SelectFieldUI), index: 'issues' };
+                const issueFieldUI: SelectFieldUI = fieldUI as SelectFieldUI;
                 return this._renderer.renderIssueLinks(
                     fieldUI,
                     this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key],
@@ -160,9 +160,7 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                         this._delegate.autocompleteRequest(issueFieldUI, value);
                     },
                     this._delegate.fieldDidUpdate,
-                    this._delegate.isFieldWaiting(issueFieldUI),
-                    this._delegate.valueForField({ ...issueFieldUI, index: 'linktype' }),
-                    this._delegate.valueForField({ ...issueFieldUI, index: 'issues' })
+                    this._delegate.isFieldWaiting(issueFieldUI)
                 );
             }
         }
