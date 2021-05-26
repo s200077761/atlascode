@@ -37,4 +37,11 @@ export const emptyIssueRenderer: IssueRenderer<any> = {
     ) => {},
     renderDateField: (field: FieldUI, onChange: (field: FieldUI, value?: Date) => void, value?: Date) => {},
     renderDateTimeField: (field: FieldUI, onChange: (field: FieldUI, value?: Date) => void, value?: Date) => {},
+    renderIssueLinks: (
+        field: FieldUI,
+        linkTypes: any[],
+        options: any[],
+        onAutoComplete: (field: FieldUI, value: string) => void,
+        onSelect: (field: FieldUI, value: string) => void
+    ) => {},
 };

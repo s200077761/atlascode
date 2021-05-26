@@ -159,7 +159,7 @@ function reducer(state: CreateJiraIssueState, action: CreateJiraIssueUIAction): 
         }
         // Called when the typed value in a field changes
         case CreateJiraIssueUIActionType.FieldStateUpdate: {
-            const newFieldState = { ...state.fieldState };
+            let newFieldState = { ...state.fieldState };
             newFieldState[action.fieldUI.key] = { value: action.value, isLoading: true };
             return { ...state, fieldState: newFieldState };
         }
@@ -266,7 +266,7 @@ export function useCreateJiraIssuePageController(): [CreateJiraIssueState, Creat
             }
             return state.isChangingProject;
         },
-        valueForField: (field: FieldUI) => {
+        valueForField: (field: FieldUI, index?: string) => {
             if (field.uiType === UIType.Radio) {
                 // If there's no value and no default for a radio control return "0" to select "None"
                 return state.fieldState[field.key]?.value ?? selectedIssueData.fieldValues[field.key] ?? '0';

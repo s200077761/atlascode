@@ -41,4 +41,12 @@ export interface IssueRenderer<C> {
     ) => C;
     renderDateField: (field: FieldUI, onChange: (field: FieldUI, value?: Date) => void, value?: Date) => C;
     renderDateTimeField: (field: FieldUI, onChange: (field: FieldUI, value?: Date) => void, value?: Date) => C;
+    renderIssueLinks: (
+        field: FieldUI,
+        linkTypes: any[],
+        options: any[],
+        onAutoComplete: (field: FieldUI, value: string) => void,
+        onSelect: (field: FieldUI, value: string) => void,
+        isWaiting: boolean
+    ) => C;
 }

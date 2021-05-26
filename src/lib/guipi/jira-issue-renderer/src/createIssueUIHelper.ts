@@ -150,6 +150,19 @@ export class CreateIssueUIHelper<S extends JiraSiteInfo, C> {
                     this._delegate.valueForField(fieldUI)
                 );
             }
+            case UIType.IssueLinks: {
+                const issueFieldUI: SelectFieldUI = fieldUI as SelectFieldUI;
+                return this._renderer.renderIssueLinks(
+                    fieldUI,
+                    this._meta.issueTypeUIs[this._meta.selectedIssueType.id].selectFieldOptions[fieldUI.key],
+                    this._delegate.optionsForField(fieldUI) ?? [],
+                    (field: FieldUI, value: string) => {
+                        this._delegate.autocompleteRequest(issueFieldUI, value);
+                    },
+                    this._delegate.fieldDidUpdate,
+                    this._delegate.isFieldWaiting(issueFieldUI)
+                );
+            }
         }
 
         return undefined;
