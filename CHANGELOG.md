@@ -1,3 +1,9 @@
+## What's New in 2.9.0
+
+### Improvements
+
+-   Added support for the use of personal access tokens with Jira Server
+
 ## What's New in 2.8.6
 
 ### Improvements

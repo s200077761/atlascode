@@ -83,6 +83,15 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.9.0 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Added support for the use of personal access tokens with Jira Server
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.8.6 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
