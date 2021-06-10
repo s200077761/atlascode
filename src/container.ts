@@ -46,7 +46,7 @@ import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageAction
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
-import { VSCCreateJiraIssueActionImpl } from './webview/issue/vscCreateJiraIssueActionApi';
+import { VSCCreateJiraIssueActionImpl } from './webview/issue/vscCreateJiraIssueActionImpl';
 import { VSCCreateJiraIssueWebviewControllerFactory } from './webview/issue/vscCreateJiraIssueWebviewControllerFactory';
 import { MultiWebview } from './webview/multiViewFactory';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
@@ -167,6 +167,7 @@ export class Container {
             new VSCCreateJiraIssueWebviewControllerFactory(
                 new VSCCreateJiraIssueActionImpl(),
                 this._commonMessageHandler,
+                this._siteManager,
                 this._analyticsApi
             ),
             this._analyticsApi

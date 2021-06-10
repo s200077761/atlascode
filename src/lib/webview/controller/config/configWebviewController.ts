@@ -1,6 +1,6 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
 import Axios from 'axios';
-import { isBasicAuthInfo, isEmptySiteInfo } from '../../../../atlclients/authInfo';
+import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
@@ -122,7 +122,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             }
             case ConfigActionType.Login: {
                 var isCloud = true;
-                if (isBasicAuthInfo(msg.authInfo)) {
+                if (isBasicAuthInfo(msg.authInfo) || isPATAuthInfo(msg.authInfo)) {
                     isCloud = false;
                     try {
                         await this._api.authenticateServer(msg.siteInfo, msg.authInfo);

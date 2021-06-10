@@ -13,7 +13,7 @@ import Tooltip from '@atlaskit/tooltip';
 import WidthDetector from '@atlaskit/width-detector';
 import { Comment as JiraComment, CommentVisibility, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { FieldUI, InputFieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
-import { distanceInWordsToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
@@ -879,8 +879,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     createdUpdatedDates(): any {
         let created, updated;
         try {
-            created = `Created ${distanceInWordsToNow(this.state.fieldValues['created'])} ago`;
-            updated = `Updated ${distanceInWordsToNow(this.state.fieldValues['updated'])} ago`;
+            created = `Created ${formatDistanceToNow(parseISO(this.state.fieldValues['created']))} ago`;
+            updated = `Updated ${formatDistanceToNow(parseISO(this.state.fieldValues['updated']))} ago`;
         } catch (e) {
             created = this.state.fieldValues['created.rendered'] || this.state.fieldValues['created'];
             updated = this.state.fieldValues['updated.rendered'] || this.state.fieldValues['updated'];

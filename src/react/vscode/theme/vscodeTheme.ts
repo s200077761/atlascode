@@ -97,6 +97,38 @@ export const createVSCodeTheme = (vscStyles: VSCodeStyles): any => {
             MuiFormLabel: {
                 root: {
                     color: vscStyles.inputPlaceholderForeground,
+                    marginBottom: 4,
+                },
+            },
+            MuiFormGroup: {
+                root: {
+                    marginTop: 4,
+                    paddingTop: 4,
+                    paddingLeft: 4,
+                    paddingRight: 8,
+                    marginLeft: 4,
+                    borderColor: vscStyles.editorWidgetBorder,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                },
+            },
+            MuiCheckbox: {
+                colorSecondary: {
+                    '&$checked': {
+                        color: vscStyles.buttonBackground,
+                    },
+                },
+            },
+            MuiFormControl: {
+                root: {
+                    marginLeft: 2,
+                },
+            },
+            MuiRadio: {
+                colorSecondary: {
+                    '&$checked': {
+                        color: vscStyles.buttonBackground,
+                    },
                 },
             },
             MuiOutlinedInput: {

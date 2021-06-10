@@ -1,8 +1,16 @@
 import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-import { emptySiteInfo, ProductJira } from '../../../../atlclients/authInfo';
+import { CreatedIssue } from '@atlassianlabs/jira-pi-common-models';
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models';
+import debounce from 'lodash.debounce';
+import { DetailedSiteInfo, ProductJira } from '../../../../atlclients/authInfo';
+import { Logger } from '../../../../logger';
 import { AnalyticsApi } from '../../../analyticsApi';
 import { CommonActionType } from '../../../ipc/fromUI/common';
-import { CreateJiraIssueAction, CreateJiraIssueActionType } from '../../../ipc/fromUI/createJiraIssue';
+import {
+    AutoCompleteAction,
+    CreateJiraIssueAction,
+    CreateJiraIssueActionType,
+} from '../../../ipc/fromUI/createJiraIssue';
 import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
 import {
@@ -11,7 +19,6 @@ import {
     CreateJiraIssueMessageType,
     emptyCreateJiraIssueInitMessage,
 } from '../../../ipc/toUI/createJiraIssue';
-import { Logger } from '../../../logger';
 import { formatError } from '../../formatError';
 import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
@@ -26,6 +33,7 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
         private messagePoster: MessagePoster,
         private api: CreateJiraIssueActionApi,
         private commonHandler: CommonActionMessageHandler,
+        private sitesAvailable: DetailedSiteInfo[],
         private logger: Logger,
         private analytics: AnalyticsApi,
         factoryData?: CreateJiraIssueInitMessage
@@ -52,15 +60,6 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
                 return;
             }
             this.isRefreshing = true;
-            if (this.initData && this.initData === emptyCreateJiraIssueInitMessage) {
-                const screenData = await this.api.fetchCreateMeta(emptySiteInfo);
-                this.initData = {
-                    site: screenData.site,
-                    project: screenData.project,
-                    screenData: screenData.createMeta,
-                };
-            }
-
             this.postMessage({
                 type: CreateJiraIssueMessageType.Init,
                 ...this.initData!,
@@ -83,20 +82,113 @@ export class CreateJiraIssueWebviewController implements WebviewController<Creat
         }
     }
 
+    findNames(response: any): any[] {
+        // Pick the actual results out of the response.
+        if (!Array.isArray(response)) {
+            if (response.results) {
+                response = response.results;
+            } else if (response.values) {
+                response = response.values;
+            } else if (response.sections) {
+                // Issue link results
+                const results: any[] = [];
+                response.sections.forEach((s: any) => {
+                    const label = `${s.label} (${s.sub})`;
+                    s.issues.forEach((i: any) => {
+                        i.category = label;
+                        results.push(i);
+                    });
+                });
+                return results;
+            }
+        }
+
+        if (!Array.isArray(response) || response.length === 0) {
+            Logger.debug(`Couldn't figure out ${JSON.stringify(response)}`);
+            return [];
+        }
+
+        // Normalize the results
+        const item = response[0];
+        if (!item.name && item.displayName) {
+            return response.map((i: any) => {
+                return { ...i, name: i.displayName };
+            });
+        }
+        return response as any[];
+    }
+
+    debounceSearch = debounce(
+        async (
+            site: DetailedSiteInfo,
+            url: string | undefined,
+            autoCompleteQuery: string | undefined,
+            field: FieldUI
+        ) => {
+            if (url && autoCompleteQuery) {
+                let result = await this.api.performAutoComplete(site, autoCompleteQuery, url);
+                result = this.findNames(result);
+                this.postMessage({
+                    type: CreateJiraIssueMessageType.Update,
+                    field: field,
+                    options: result,
+                });
+            }
+        },
+        500
+    );
+
     public async onMessageReceived(msg: CreateJiraIssueAction) {
         switch (msg.type) {
             case CreateJiraIssueActionType.GetCreateMeta: {
                 const screenData = await this.api.fetchCreateMeta(msg.site, msg.projectKey);
                 this.initData = {
                     site: screenData.site,
+                    sitesAvailable: this.sitesAvailable,
                     project: screenData.project,
                     screenData: screenData.createMeta,
                 };
-
                 this.postMessage({
                     type: CreateJiraIssueMessageType.Init,
                     ...this.initData!,
                 });
+                break;
+            }
+            case CreateJiraIssueActionType.CreateIssueRequest: {
+                let createdIssue: CreatedIssue | undefined = undefined;
+                try {
+                    createdIssue = await this.api.create(msg.site, msg.issueData);
+                    this.postMessage({
+                        type: CreateJiraIssueMessageType.CreateIssueResponse,
+                        createdIssue: {
+                            siteDetails: msg.site,
+                            key: createdIssue.key,
+                        },
+                    });
+                } catch (e) {
+                    const data = await e.response.data;
+                    this.postMessage({
+                        type: CommonMessageType.Error,
+                        reason: `Failed to create issue - ${e.message} - ${JSON.stringify(data.errors)}`,
+                    });
+                    // Need to post a CreateIssueResponse to get the UI go back to normal state
+                    this.postMessage({
+                        type: CreateJiraIssueMessageType.CreateIssueResponse,
+                        createdIssue: {
+                            siteDetails: msg.site,
+                            key: '',
+                        },
+                    });
+                }
+                break;
+            }
+            case CreateJiraIssueActionType.AutoCompleteQuery: {
+                const searchAction = msg as AutoCompleteAction;
+                const autoCompleteQuery = searchAction.autoCompleteQuery;
+                const field = searchAction.field;
+                const url = searchAction.url;
+                this.debounceSearch(msg.site, url, autoCompleteQuery, field);
+                break;
             }
             case CommonActionType.Refresh: {
                 try {

@@ -75,6 +75,10 @@ export interface OAuthInfo extends AuthInfo {
     refresh: string;
 }
 
+export interface PATAuthInfo extends AuthInfo {
+    token: string;
+}
+
 export interface BasicAuthInfo extends AuthInfo {
     username: string;
     password: string;
@@ -186,6 +190,12 @@ export const emptyBasicAuthInfo: BasicAuthInfo = {
     state: AuthInfoState.Valid,
 };
 
+export const emptyPATAuthInfo: PATAuthInfo = {
+    user: emptyUserInfo,
+    token: '',
+    state: AuthInfoState.Valid,
+};
+
 export function isUpdateAuthEvent(a: AuthInfoEvent): a is UpdateAuthInfoEvent {
     return (
         a &&
@@ -228,6 +238,10 @@ export function isBasicAuthInfo(a: any): a is BasicAuthInfo {
     return a && (<BasicAuthInfo>a).username !== undefined && (<BasicAuthInfo>a).password !== undefined;
 }
 
+export function isPATAuthInfo(a: any): a is PATAuthInfo {
+    return a && (<PATAuthInfo>a).token !== undefined;
+}
+
 export function getSecretForAuthInfo(info: any): string {
     if (isOAuthInfo(info)) {
         return info.access;
@@ -235,6 +249,10 @@ export function getSecretForAuthInfo(info: any): string {
 
     if (isBasicAuthInfo(info)) {
         return info.password;
+    }
+
+    if (isPATAuthInfo(info)) {
+        return info.token;
     }
 
     return '';

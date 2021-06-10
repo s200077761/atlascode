@@ -83,6 +83,36 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.9.0 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Added support for the use of personal access tokens with Jira Server
+                                                </li>
+                                            </ul>
+                                        </section>
+                                        <h4>🎉 What's New in 2.8.6 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Added URI handler to open specific Jira issue</li>
+                                                <li>Added filter for unreviewed pull requests</li>
+                                            </ul>
+                                        </section>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed issue preventing the extension from correctly showing that
+                                                    file had been renamed
+                                                </li>
+                                                <li>
+                                                    Opening file from the pull request view no longer causes the pull
+                                                    request view to scroll back to the top of the page
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.8.5 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>

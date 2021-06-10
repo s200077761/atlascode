@@ -1,4 +1,5 @@
-import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
+import { parseISO } from 'date-fns';
+import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commit, PaginatedComments, PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
@@ -48,7 +49,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
-        item.description = `updated ${distanceInWordsToNow(this.pr.data.updatedTs, {
+        item.description = `updated ${formatDistanceToNow(parseISO(this.pr.data.updatedTs), {
             addSuffix: true,
         })}`;
 

@@ -39,8 +39,11 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
     const getTemplatePreview = useCallback(() => {
         const view = {
             prefix: 'feature',
+            PREFIX: 'FEATURE',
             issueKey: 'VSCODE-1005',
+            issuekey: 'vscode-1005',
             summary: 'allow-users-to-configure-the-way-branch-name-is-co',
+            SUMMARY: 'ALLOW-USERS-TO-CONFIGURE-THE-WAY-BRANCH-NAME-IS-CO',
         };
 
         //Mustache doesn't seem to throw errors in most cases when the template is invalid, it just ignores variables that are entered wrong.
@@ -66,6 +69,12 @@ export const StartWorkSettings: React.FunctionComponent<StartWorkSettings> = ({ 
                         non-keyword in double curly brackets. E.g.{' '}
                         <code>{'{{{prefix}}}/{{{issueKey}}}-{{{summary}}}'}</code> will generate something of the format{' '}
                         <code>{'feature/VSCODE-1005-allow-users-to-configure-the-way-branch-name-is-co'}</code>
+                        <br />
+                        Upper-case: <code>PREFIX, SUMMARY</code>
+                        <br />
+                        Mixed-case: <code>Prefix, Summary, issueKey</code>
+                        <br />
+                        Lower-case: <code>prefix, issuekey, summary</code>
                     </Typography>
 
                     <Box marginTop={1} paddingBottom={2}>
