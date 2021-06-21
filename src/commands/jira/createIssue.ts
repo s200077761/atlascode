@@ -46,11 +46,7 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
         return;
     }
 
-    if (Container.isDebugging) {
-        Container.createJiraIssueWebviewFactory.createOrShow();
-    } else {
-        Container.createIssueWebview.createOrShow();
-    }
+    Container.createIssueWebview.createOrShow();
     startIssueCreationEvent(source || 'explorer', ProductJira).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
