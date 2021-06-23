@@ -390,7 +390,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                             ...payload['worklog'],
                             adjustEstimate: 'new',
                             started: payload['worklog'].started
-                                ? format(payload['worklog'].started, 'yyyy-MM-ddTHH:mm:ss.SSSXXX')
+                                ? format(payload['worklog'].started, "yyyy-MM-dd'T'HH:mm:ss.SSSXX")
                                 : undefined,
                         },
                     },
