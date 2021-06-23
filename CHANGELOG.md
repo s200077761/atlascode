@@ -1,3 +1,10 @@
+## What's New in 2.9.1
+
+### Bugs fixed
+
+-   Fixed bug preventing viewing pull requests on Bitbucket Server
+-   Fixed bug preventing time tracking on Jira issues
+
 ## What's New in 2.9.0
 
 ### Improvements

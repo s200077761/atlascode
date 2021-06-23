@@ -69,6 +69,16 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         { leading: false }
     );
 
+    const formatDate = (date: any): string => {
+        if (!date) {
+            return '';
+        }
+        if (typeof date === 'number') {
+            return format(new Date(date), 'yyyy-MM-dd h:mm a');
+        }
+        return format(parseISO(date), 'yyyy-MM-dd h:mm a');
+    };
+
     const isSomethingLoading = useCallback(() => {
         return Object.entries(state.loadState).some(
             (entry) => entry[1] /* Second index is the value in the key/value pair */
@@ -348,11 +358,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             <strong>Created</strong>
                                         </Typography>
                                         <Tooltip title={state.pr.data.ts || 'unknown'}>
-                                            <Typography>
-                                                {state.pr.data.ts
-                                                    ? format(parseISO(state.pr.data.ts), 'yyyy-MM-dd h:mm a')
-                                                    : ''}
-                                            </Typography>
+                                            <Typography>{formatDate(state.pr.data.ts)}</Typography>
                                         </Tooltip>
                                     </Grid>
 
@@ -361,11 +367,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                             <strong>Updated</strong>
                                         </Typography>
                                         <Tooltip title={state.pr.data.updatedTs || 'unknown'}>
-                                            <Typography>
-                                                {state.pr.data.updatedTs
-                                                    ? format(parseISO(state.pr.data.updatedTs), 'yyyy-MM-dd h:mm a')
-                                                    : ''}
-                                            </Typography>
+                                            <Typography>{formatDate(state.pr.data.updatedTs)}</Typography>
                                         </Tooltip>
                                     </Grid>
 
