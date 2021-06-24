@@ -41,9 +41,6 @@ const routes = {
     createPullRequestPageV2: React.lazy(() =>
         import(/* webpackChunkName: "createPullRequestPageV2" */ './atlascode/pullrequest/CreatePullRequestPage')
     ),
-    createIssueScreenV2: React.lazy(() =>
-        import(/* webpackChunkName: "createIssueScreenV2" */ './atlascode/issue/CreateJiraIssuePage')
-    ),
 };
 
 const ports = {
