@@ -8,13 +8,10 @@ import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { Commands, registerCommands } from './commands';
 import { configuration, Configuration, IConfig } from './config/configuration';
-import { AuthInfoVersionKey, CommandContext, GlobalStateVersionKey, setCommandContext } from './constants';
+import { CommandContext, GlobalStateVersionKey, setCommandContext } from './constants';
 import { Container } from './container';
 import { provideCodeLenses } from './jira/todoObserver';
 import { Logger } from './logger';
-import { migrateAllWorkspaceCustomJQLS, V1toV2Migrator } from './migrations/v1tov2';
-import { V2JiraServerUserIdFixer } from './migrations/v2JiraServerUserIdFixer';
-import { V2toV3Migrator } from './migrations/v2tov3';
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import {
     activateYamlExtension,
@@ -42,8 +39,6 @@ export async function activate(context: ExtensionContext) {
 
         registerCommands(context);
         activateCodebucket(context);
-
-        await migrateConfig(context.globalState);
 
         setCommandContext(
             CommandContext.IsJiraAuthenticated,
@@ -118,38 +113,6 @@ async function activateYamlFeatures(context: ExtensionContext) {
     );
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();
-}
-
-async function migrateConfig(globalState: Memento): Promise<void> {
-    const authModelVersion = globalState.get<number>(AuthInfoVersionKey);
-
-    if (!authModelVersion || authModelVersion < 2) {
-        const cfg = configuration.get<IConfig>();
-        const migrator = new V1toV2Migrator(
-            Container.siteManager,
-            Container.credentialManager,
-            !Container.isDebugging,
-            Container.config.jira.workingProject,
-            cfg.jira.workingSite
-        );
-        await migrator.convertLegacyAuthInfo();
-        await globalState.update(AuthInfoVersionKey, 2);
-        await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
-    } else {
-        // we've already migrated to 2.x but we might need to migrate workspace JQL
-        migrateAllWorkspaceCustomJQLS(!Container.isDebugging);
-        await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
-    }
-
-    if (authModelVersion === 2) {
-        const v2JiraServerUserIdFixer = new V2JiraServerUserIdFixer(Container.credentialManager, Container.siteManager);
-        await v2JiraServerUserIdFixer.fix();
-
-        // Migrate from V2 to V3
-        const migrator = new V2toV3Migrator(Container.siteManager, Container.credentialManager, !Container.isDebugging);
-        await migrator.convertLegacyAuthInfo();
-        await globalState.update(AuthInfoVersionKey, 3);
-    }
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {

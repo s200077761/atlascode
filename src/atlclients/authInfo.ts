@@ -73,6 +73,9 @@ export interface AuthInfo {
 export interface OAuthInfo extends AuthInfo {
     access: string;
     refresh: string;
+    expirationDate?: number;
+    iat?: number;
+    recievedAt: number;
 }
 
 export interface PATAuthInfo extends AuthInfo {
@@ -244,7 +247,7 @@ export function isPATAuthInfo(a: any): a is PATAuthInfo {
 
 export function getSecretForAuthInfo(info: any): string {
     if (isOAuthInfo(info)) {
-        return info.access;
+        return info.access + info.refresh;
     }
 
     if (isBasicAuthInfo(info)) {

@@ -28,7 +28,8 @@ import {
     UserInfo,
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
-import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './oldStrategy';
+import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraStagingStrategy } from './oldStrategy';
+import { JiraProdStrategy } from './rotateStrategy';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
@@ -38,9 +39,12 @@ declare interface ResponseEvent {
     timeout?: boolean;
 }
 
-declare interface Tokens {
+export declare interface Tokens {
     accessToken: string;
-    refreshToken: string;
+    refreshToken?: string;
+    expiration?: number;
+    iat?: number;
+    receivedAt: number;
 }
 
 export class OAuthDancer implements Disposable {
@@ -221,7 +225,7 @@ export class OAuthDancer implements Disposable {
                 ) {
                     try {
                         const agent = getAgent(site);
-                        let tokens: Tokens = { accessToken: '', refreshToken: '' };
+                        let tokens: Tokens = { accessToken: '', refreshToken: '', receivedAt: 0 };
                         let accessibleResources: AccessibleResource[] = [];
                         let user: UserInfo = emptyUserInfo;
 
@@ -276,7 +280,7 @@ export class OAuthDancer implements Disposable {
 
                         const oauthResponse: OAuthResponse = {
                             access: tokens.accessToken,
-                            refresh: tokens.refreshToken,
+                            refresh: tokens.refreshToken!,
                             user: user,
                             accessibleResources: accessibleResources,
                         };
@@ -359,7 +363,7 @@ export class OAuthDancer implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token };
+            return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
         } catch (err) {
             const newErr = new Error(`Error fetching Jira tokens: ${err}`);
             Logger.error(newErr);
@@ -382,7 +386,7 @@ export class OAuthDancer implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token };
+            return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
         } catch (err) {
             const newErr = new Error(`Error fetching Bitbucket tokens: ${err}`);
             Logger.error(newErr);

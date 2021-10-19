@@ -118,11 +118,13 @@ export class LoginManager {
 
     private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse) {
         try {
+            // XYZZY should we be dealing with iat and expiration?
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
                 refresh: resp.refresh,
                 user: resp.user,
                 state: AuthInfoState.Valid,
+                recievedAt: Date.now(),
             };
 
             const siteDetails = await this.getOAuthSiteDetails(

@@ -10,11 +10,13 @@ import { addCurlLogging } from './interceptors';
 import {
     BitbucketProdStrategy as OldBitbucketProdStrategy,
     BitbucketStagingStrategy as OldBitbucketStagingStrategy,
-    JiraProdStrategy as OldJiraProdStrategy,
     JiraStagingStrategy as OldJiraStagingStrategy,
 } from './oldStrategy';
+import { JiraProdStrategy as OldJiraProdStrategy } from './rotateStrategy';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-
+import { Tokens } from './oauthDancer';
+import { Logger } from 'src/logger';
+import jwtDecode from 'jwt-decode';
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
 
@@ -33,7 +35,7 @@ export class OAuthRefesher implements Disposable {
 
     dispose() {}
 
-    public async getNewAccessToken(provider: OAuthProvider, refreshToken: string): Promise<string | undefined> {
+    public async getNewTokens(provider: OAuthProvider, refreshToken: string): Promise<Tokens | undefined> {
         const product = provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
         if (product === ProductJira) {
@@ -66,7 +68,19 @@ export class OAuthRefesher implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return data.access_token;
+            const token = data.access_token;
+            const decodedToken: any = jwtDecode(token);
+            const iat = decodedToken ? (decodedToken.iat ? decodedToken.iat * 1000 : 0) : 0;
+            const expiresIn = data.expires_in;
+            const expiration = Date.now() + expiresIn * 1000;
+            Logger.debug(`AccessToken created at ${decodedToken.iat}`);
+            return {
+                accessToken: data.access_token,
+                refreshToken: data.refresh_token,
+                expiration: expiration,
+                iat: iat,
+                receivedAt: Date.now(),
+            };
         } else {
             let strategy: any = undefined;
             if (configuration.get<boolean>('useNewAuth')) {
@@ -87,7 +101,7 @@ export class OAuthRefesher implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return data.access_token;
+            return { accessToken: data.access_token, receivedAt: Date.now() };
         }
     }
 }
