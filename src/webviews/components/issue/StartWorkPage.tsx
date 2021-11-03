@@ -1,5 +1,6 @@
-import { BreadcrumbsItem, BreadcrumbsStateless } from '@atlaskit/breadcrumbs';
+import Breadcrumbs, { BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Button from '@atlaskit/button';
+import LoadingButton from '@atlaskit/button/loading-button';
 import { Checkbox } from '@atlaskit/checkbox';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
@@ -363,7 +364,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     <PageHeader
                         actions={undefined}
                         breadcrumbs={
-                            <BreadcrumbsStateless onExpand={() => {}}>
+                            <Breadcrumbs>
                                 {issue.parentKey && (
                                     <BreadcrumbsItem
                                         component={() => (
@@ -394,7 +395,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                         />
                                     )}
                                 />
-                            </BreadcrumbsStateless>
+                            </Breadcrumbs>
                         }
                     >
                         <p>{issue.summary}</p>
@@ -412,7 +413,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     <PageHeader
                         actions={undefined}
                         breadcrumbs={
-                            <BreadcrumbsStateless onExpand={() => {}}>
+                            <Breadcrumbs>
                                 <BreadcrumbsItem
                                     component={() => (
                                         <NavItem
@@ -440,7 +441,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                                         />
                                     )}
                                 />
-                            </BreadcrumbsStateless>
+                            </Breadcrumbs>
                         }
                     >
                         <p>{bbIssue.data.title}</p>
@@ -669,13 +670,13 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
                     <GridColumn medium={12}>
                         <div className="ac-vpadding">
                             {!this.state.result.successMessage && (
-                                <Button
+                                <LoadingButton
                                     className="ac-button"
                                     isLoading={this.state.isStartButtonLoading}
                                     onClick={this.handleStart}
                                 >
                                     Start
-                                </Button>
+                                </LoadingButton>
                             )}
                         </div>
                         {snippetTip}

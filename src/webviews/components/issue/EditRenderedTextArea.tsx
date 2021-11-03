@@ -1,5 +1,5 @@
 import { ButtonGroup } from '@atlaskit/button';
-import { Button } from '@atlaskit/button/dist/cjs/components/Button';
+import Button from '@atlaskit/button';
 import Comment from '@atlaskit/comment';
 import React, { useState } from 'react';
 import { RenderedContent } from '../RenderedContent';

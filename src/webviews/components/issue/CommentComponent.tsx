@@ -1,6 +1,6 @@
 import Avatar from '@atlaskit/avatar';
 import { ButtonGroup } from '@atlaskit/button';
-import { Button } from '@atlaskit/button/dist/cjs/components/Button';
+import Button from '@atlaskit/button';
 import Comment, { CommentAction, CommentAuthor, CommentEdited, CommentTime } from '@atlaskit/comment';
 import {
     Comment as JiraComment,
