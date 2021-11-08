@@ -214,8 +214,13 @@ function dateString(completed_on?: string): string {
     return format(parseISO(completed_on), 'MMM do yyyy, h:mm:ss aaa');
 }
 
-function timeString(completed_on?: Date, created_on?: Date): string {
-    const date = completed_on ?? created_on;
+function formatTime(dateString: string | undefined): string {
+    if (!dateString) {
+        return '';
+    }
+
+    const date = parseISO(dateString);
+
     if (!date) {
         return '';
     }
@@ -522,8 +527,8 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                                 {state.pipeline.duration_in_seconds ? <AccessTimeIcon className={classes.icon} /> : ''}
                                 {`${durationString(state.pipeline.duration_in_seconds)}`}
                                 {state.pipeline.completed_on ? <CalendarTodayIcon className={classes.icon} /> : ''}
-                                <span title={dateString(state.pipeline.completed_on)}>{`${timeString(
-                                    parseISO(state.pipeline.completed_on ?? '')
+                                <span title={dateString(state.pipeline.completed_on)}>{`${formatTime(
+                                    state.pipeline.completed_on
                                 )}`}</span>
                             </Typography>
                             <div className={classes.flex}>
