@@ -15,7 +15,6 @@ import { CancellationManager } from './lib/cancellation';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';
 import { ConfigAction } from './lib/ipc/fromUI/config';
 import { CreateBitbucketIssueAction } from './lib/ipc/fromUI/createBitbucketIssue';
-import { CreateJiraIssueAction } from './lib/ipc/fromUI/createJiraIssue';
 import { OnboardingAction } from './lib/ipc/fromUI/onboarding';
 import { PipelineSummaryAction } from './lib/ipc/fromUI/pipelineSummary';
 import { PullRequestDetailsAction } from './lib/ipc/fromUI/pullRequestDetails';
@@ -23,7 +22,6 @@ import { StartWorkAction } from './lib/ipc/fromUI/startWork';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { ConfigTarget } from './lib/ipc/models/config';
 import { SectionChangeMessage } from './lib/ipc/toUI/config';
-import { CreateJiraIssueInitMessage } from './lib/ipc/toUI/createJiraIssue';
 import { StartWorkIssueMessage } from './lib/ipc/toUI/startWork';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { CommonActionMessageHandler } from './lib/webview/controller/common/commonActionMessageHandler';
@@ -46,8 +44,6 @@ import { VSCCommonMessageHandler } from './webview/common/vscCommonMessageAction
 import { VSCConfigActionApi } from './webview/config/vscConfigActionApi';
 import { VSCConfigWebviewControllerFactory } from './webview/config/vscConfigWebviewControllerFactory';
 import { ExplorerFocusManager } from './webview/ExplorerFocusManager';
-import { VSCCreateJiraIssueActionImpl } from './webview/issue/vscCreateJiraIssueActionImpl';
-import { VSCCreateJiraIssueWebviewControllerFactory } from './webview/issue/vscCreateJiraIssueWebviewControllerFactory';
 import { MultiWebview } from './webview/multiViewFactory';
 import { VSCOnboardingActionApi } from './webview/onboarding/vscOnboardingActionApi';
 import { VSCOnboardingWebviewControllerFactory } from './webview/onboarding/vscOnboardingWebviewControllerFactory';
@@ -162,23 +158,11 @@ export class Container {
             this._analyticsApi
         );
 
-        const createJiraIssueV2WebviewFactory = new SingleWebview<CreateJiraIssueInitMessage, CreateJiraIssueAction>(
-            context.extensionPath,
-            new VSCCreateJiraIssueWebviewControllerFactory(
-                new VSCCreateJiraIssueActionImpl(),
-                this._commonMessageHandler,
-                this._siteManager,
-                this._analyticsApi
-            ),
-            this._analyticsApi
-        );
-
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
         context.subscriptions.push((this._onboardingWebviewFactory = onboardingV2ViewFactory));
         context.subscriptions.push((this._welcomeWebviewFactory = welcomeV2ViewFactory));
         context.subscriptions.push((this._startWorkWebviewFactory = startWorkV2ViewFactory));
         context.subscriptions.push((this._createPullRequestWebviewFactory = createPullRequestV2ViewFactory));
-        context.subscriptions.push((this._createJiraIssueWebviewFactory = createJiraIssueV2WebviewFactory));
 
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,
@@ -351,11 +335,6 @@ export class Container {
     private static _startWorkWebviewFactory: SingleWebview<StartWorkIssueMessage, StartWorkAction>;
     static get startWorkWebviewFactory() {
         return this._startWorkWebviewFactory;
-    }
-
-    private static _createJiraIssueWebviewFactory: SingleWebview<CreateJiraIssueInitMessage, CreateJiraIssueAction>;
-    static get createJiraIssueWebviewFactory() {
-        return this._createJiraIssueWebviewFactory;
     }
 
     private static _createPullRequestWebviewFactory: SingleWebview<WorkspaceRepo, StartWorkAction>;
