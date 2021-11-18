@@ -28,7 +28,10 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                         : new Date();
                     this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
-                    let newPRs = prList.data.filter((i) => Date.parse(i.data.ts!) > lastChecked.getTime());
+                    let newPRs = prList.data.filter((i) => {
+                        const timestamp = typeof i.data.ts === 'number' ? i.data.ts : Date.parse(i.data.ts!);
+                        return timestamp > lastChecked.getTime();
+                    });
                     return newPRs;
                 })
                 .catch((e) => {

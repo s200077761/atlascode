@@ -49,9 +49,17 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
-        item.description = `updated ${formatDistanceToNow(parseISO(this.pr.data.updatedTs), {
-            addSuffix: true,
-        })}`;
+        let dateString = '';
+        if (typeof this.pr.data.updatedTs === 'number') {
+            dateString = formatDistanceToNow(new Date(this.pr.data.updatedTs), {
+                addSuffix: true,
+            });
+        } else {
+            dateString = formatDistanceToNow(parseISO(this.pr.data.updatedTs), {
+                addSuffix: true,
+            });
+        }
+        item.description = `updated ${dateString}`;
 
         return item;
     }

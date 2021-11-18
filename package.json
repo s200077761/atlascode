@@ -1,6 +1,6 @@
 {
     "name": "atlascode",
-    "displayName": "Jira and Bitbucket (Official)",
+    "displayName": "Jira and Bitbucket (Atlassian Labs)",
     "description": "Bringing the power of Jira and Bitbucket to VS Code - With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
     "keywords": [
         "bitbucket",
@@ -1387,6 +1387,7 @@
         "flatten-anything": "^2.0.1",
         "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
+        "ini": "^1.3.8",
         "keytar": "^7.7.0",
         "lodash.debounce": "^4.0.8",
         "lodash.orderby": "^4.6.0",
