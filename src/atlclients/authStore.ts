@@ -64,7 +64,7 @@ export class CredentialManager implements Disposable {
     /**
      * Saves the auth info to both the in-memory store and the keychain.
      */
-    public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo, oldRefreshToken?: string): Promise<void> {
+    public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
         let productAuths = this._memStore.get(site.product.key);
 
         if (!productAuths) {
@@ -74,14 +74,6 @@ export class CredentialManager implements Disposable {
         const existingInfo = await this.getAuthInfo(site, false);
 
         if (isOAuthInfo(existingInfo) && isOAuthInfo(info)) {
-            if (existingInfo.refresh !== oldRefreshToken) {
-                // If this happens we know we're replacing a token that we didn't refresh.
-                // If we get this we have some hope for salvaging this whole thing.
-                Logger.debug(
-                    `Replacing a refresh token we didn't use to generate this refresh token. Probably not a big deal.   `
-                );
-            }
-
             const effectiveExistingIat = existingInfo.iat ?? 0;
             const effectiveNewIat = info.iat ?? 0;
             if (effectiveExistingIat > effectiveNewIat) {
@@ -286,7 +278,6 @@ export class CredentialManager implements Disposable {
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
         let newTokens = undefined;
         if (provider && credentials) {
-            const oldRefresh = credentials.refresh;
             newTokens = await this._refresher.getNewTokens(provider, credentials.refresh);
             if (newTokens) {
                 credentials.access = newTokens.accessToken;
@@ -297,7 +288,7 @@ export class CredentialManager implements Disposable {
                     credentials.iat = newTokens.iat ?? 0;
                 }
 
-                this.saveAuthInfo(site, credentials, oldRefresh);
+                this.saveAuthInfo(site, credentials);
             }
         }
         return newTokens;

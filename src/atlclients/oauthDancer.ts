@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
+import jwtDecode from 'jwt-decode';
 import Mustache from 'mustache';
 import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
@@ -44,6 +45,21 @@ export declare interface Tokens {
     expiration?: number;
     iat?: number;
     receivedAt: number;
+}
+
+export function tokensFromResponseData(data: any): Tokens {
+    const token = data.access_token;
+    const decodedToken: any = jwtDecode(token);
+    const iat = decodedToken ? (decodedToken.iat ? decodedToken.iat * 1000 : 0) : 0;
+    const expiresIn = data.expires_in;
+    const expiration = Date.now() + expiresIn * 1000;
+    return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiration: expiration,
+        iat: iat,
+        receivedAt: Date.now(),
+    };
 }
 
 export class OAuthDancer implements Disposable {
@@ -280,6 +296,9 @@ export class OAuthDancer implements Disposable {
                         const oauthResponse: OAuthResponse = {
                             access: tokens.accessToken,
                             refresh: tokens.refreshToken!,
+                            expirationDate: tokens.expiration,
+                            iat: tokens.iat,
+                            receivedAt: tokens.receivedAt,
                             user: user,
                             accessibleResources: accessibleResources,
                         };
@@ -361,8 +380,7 @@ export class OAuthDancer implements Disposable {
                 ...agent,
             });
 
-            const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
+            return tokensFromResponseData(tokenResponse.data);
         } catch (err) {
             const newErr = new Error(`Error fetching Jira tokens: ${err}`);
             Logger.error(newErr);

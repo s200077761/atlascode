@@ -56,6 +56,9 @@ export interface UserInfoV1 {
 export interface OAuthResponse {
     access: string;
     refresh: string;
+    expirationDate?: number;
+    iat?: number;
+    receivedAt: number;
     user: UserInfo;
     accessibleResources: Array<AccessibleResource>;
 }

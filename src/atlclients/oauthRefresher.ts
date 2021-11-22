@@ -14,9 +14,8 @@ import {
     JiraStagingStrategy as OldJiraStagingStrategy,
 } from './oldStrategy';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
-import { Tokens } from './oauthDancer';
-import { Logger } from 'src/logger';
-import jwtDecode from 'jwt-decode';
+import { Tokens, tokensFromResponseData } from './oauthDancer';
+
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
 
@@ -67,20 +66,8 @@ export class OAuthRefesher implements Disposable {
                 ...getAgent(),
             });
 
-            const data = tokenResponse.data;
-            const token = data.access_token;
-            const decodedToken: any = jwtDecode(token);
-            const iat = decodedToken ? (decodedToken.iat ? decodedToken.iat * 1000 : 0) : 0;
-            const expiresIn = data.expires_in;
-            const expiration = Date.now() + expiresIn * 1000;
-            Logger.debug(`AccessToken created at ${decodedToken.iat}`);
-            return {
-                accessToken: data.access_token,
-                refreshToken: data.refresh_token,
-                expiration: expiration,
-                iat: iat,
-                receivedAt: Date.now(),
-            };
+            const tokens = tokensFromResponseData(tokenResponse.data);
+            return tokens;
         } else {
             let strategy: any = undefined;
             if (configuration.get<boolean>('useNewAuth')) {
