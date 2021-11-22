@@ -23,7 +23,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
 
         Container.context.subscriptions.push(configuration.onDidChange(this._onConfigurationChanged, this));
 
-        this._refreshTimer = new RefreshTimer(this.explorerEnabledConfiguration(), this.refreshConfiguation(), () =>
+        this._refreshTimer = new RefreshTimer(this.explorerEnabledConfiguration(), this.refreshConfiguration(), () =>
             this.refresh()
         );
         this._disposable = Disposable.from(
@@ -43,7 +43,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     abstract monitorEnabledConfiguration(): string;
-    abstract refreshConfiguation(): string;
+    abstract refreshConfiguration(): string;
 
     abstract onConfigurationChanged(e: ConfigurationChangeEvent): void;
     abstract newTreeDataProvider(): BaseTreeDataProvider;
