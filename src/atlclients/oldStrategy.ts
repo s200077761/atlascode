@@ -1,19 +1,19 @@
 import { OAuthProvider } from './authInfo';
 
-// export const JiraProdStrategy = {
-//     clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
-//     clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
-//     authorizationURL: 'https://auth.atlassian.com/authorize',
-//     tokenURL: 'https://auth.atlassian.com/oauth/token',
-//     profileURL: 'https://api.atlassian.com/me',
-//     accessibleResourcesURL: 'https://api.atlassian.com/oauth/token/accessible-resources',
-//     callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloud,
-//     scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-//     authParams: {
-//         audience: 'api.atlassian.com',
-//         prompt: 'consent',
-//     },
-// };
+export const JiraProdStrategy = {
+    clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
+    clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
+    authorizationURL: 'https://auth.atlassian.com/authorize',
+    tokenURL: 'https://auth.atlassian.com/oauth/token',
+    profileURL: 'https://api.atlassian.com/me',
+    accessibleResourcesURL: 'https://api.atlassian.com/oauth/token/accessible-resources',
+    callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloud,
+    scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
+    authParams: {
+        audience: 'api.atlassian.com',
+        prompt: 'consent',
+    },
+};
 
 export const JiraStagingStrategy = {
     clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',

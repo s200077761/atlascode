@@ -8,11 +8,11 @@ import { ConnectionTimeout } from '../util/time';
 import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import {
+    JiraProdStrategy as OldJiraProdStrategy,
     BitbucketProdStrategy as OldBitbucketProdStrategy,
     BitbucketStagingStrategy as OldBitbucketStagingStrategy,
     JiraStagingStrategy as OldJiraStagingStrategy,
 } from './oldStrategy';
-import { JiraProdStrategy as OldJiraProdStrategy } from './rotateStrategy';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
 import { Tokens } from './oauthDancer';
 import { Logger } from 'src/logger';
