@@ -77,6 +77,7 @@ For pull requests:
 
 -   Follow the existing style
 -   Separate unrelated changes into multiple pull requests
+-   Pull requests should target the `external-contributions` branch
 
 Atlassian requires contributors to sign a Contributor License Agreement,
 known as a CLA. This serves as a record stating that the contributor is
