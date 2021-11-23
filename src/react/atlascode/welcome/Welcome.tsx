@@ -83,6 +83,25 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.10.0 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Enable refresh token rotation for Jira Cloud</li>
+                                                <li>
+                                                    Allow setting the default pull request filter via the VS Code
+                                                    settings (Thanks to Ian Chamberlain)
+                                                </li>
+                                            </ul>
+                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <ul>
+                                                <li>Fixed bug preventing viewing Bitbucket Pipelines while building</li>
+                                                <li>
+                                                    Hovering over issue keys for projects with digits in their IDs
+                                                    should now work (Again, thanks to Ian Chamberlain)
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.9.1 🎉</h4>
                                         <section>
                                             <h4>✨ Bugs Fixed ✨</h4>
