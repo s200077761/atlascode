@@ -83,6 +83,7 @@ export class JiraAuthentictor implements Authenticator {
             return {
                 access: tokens.accessToken,
                 refresh: tokens.refreshToken,
+                receivedAt: Date.now(),
                 user: user,
                 accessibleResources: accessibleResources,
             };

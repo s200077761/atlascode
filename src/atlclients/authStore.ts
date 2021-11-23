@@ -23,6 +23,7 @@ import {
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
 } from './authInfo';
+import { Tokens } from './oauthDancer';
 import { OAuthRefesher } from './oauthRefresher';
 
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
@@ -56,8 +57,8 @@ export class CredentialManager implements Disposable {
      * Gets the auth info for the given site. Will return value stored in the in-memory store if
      * it's available, otherwise will return the value in the keychain.
      */
-    public async getAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
-        return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId);
+    public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
+        return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId, allowCache);
     }
 
     /**
@@ -70,16 +71,34 @@ export class CredentialManager implements Disposable {
             productAuths = new Map<string, AuthInfo>();
         }
 
-        const oldInfo = await this.getAuthInfo(site);
+        const existingInfo = await this.getAuthInfo(site, false);
+
+        if (isOAuthInfo(existingInfo) && isOAuthInfo(info)) {
+            const effectiveExistingIat = existingInfo.iat ?? 0;
+            const effectiveNewIat = info.iat ?? 0;
+            if (effectiveExistingIat > effectiveNewIat) {
+                Logger.debug(`Not replacing credentials because the existing credentials have a later iat.`);
+                return;
+            }
+
+            if (effectiveExistingIat === effectiveNewIat && existingInfo.recievedAt > info.recievedAt) {
+                Logger.debug(
+                    `Not replacing credentials because the existing credentials have were received at a later time (despite having the same iat).`
+                );
+                return;
+            }
+        }
+
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
         const hasNewInfo =
-            !oldInfo ||
-            getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info) ||
-            oldInfo.user.id !== info.user.id ||
-            oldInfo.state !== info.state;
+            !existingInfo ||
+            getSecretForAuthInfo(existingInfo) !== getSecretForAuthInfo(info) ||
+            existingInfo.user.id !== info.user.id ||
+            existingInfo.state !== info.state;
 
         if (hasNewInfo) {
+            Logger.debug(`Saving new information to keychain.`);
             const cmdctx = this.commandContextFor(site.product);
             if (cmdctx !== undefined) {
                 setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
@@ -98,12 +117,13 @@ export class CredentialManager implements Disposable {
 
     private async getAuthInfoForProductAndCredentialId(
         productKey: string,
-        credentialId: string
+        credentialId: string,
+        allowCache: boolean
     ): Promise<AuthInfo | undefined> {
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(productKey);
 
-        if (productAuths && productAuths.has(credentialId)) {
+        if (allowCache && productAuths && productAuths.has(credentialId)) {
             foundInfo = productAuths.get(credentialId);
             if (foundInfo) {
                 // clone the object so editing it and saving it back doesn't trip up equality checks
@@ -115,6 +135,11 @@ export class CredentialManager implements Disposable {
         if (!foundInfo && keychain) {
             try {
                 let infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
+                if (isOAuthInfo(infoEntry)) {
+                    if (!infoEntry.recievedAt) {
+                        infoEntry.recievedAt = 0;
+                    }
+                }
                 if (infoEntry && productAuths) {
                     this._memStore.set(productKey, productAuths.set(credentialId, infoEntry));
 
@@ -243,7 +268,7 @@ export class CredentialManager implements Disposable {
     /**
      * Calls the OAuth provider and updates the access token.
      */
-    public async refreshAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
+    public async refreshAccessToken(site: DetailedSiteInfo): Promise<Tokens | undefined> {
         const credentials = await this.getAuthInfo(site);
         if (!isOAuthInfo(credentials)) {
             return undefined;
@@ -251,15 +276,22 @@ export class CredentialManager implements Disposable {
         Logger.debug(`refreshingAccessToken for ${site.baseApiUrl}`);
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
-        let newAccessToken = undefined;
+        let newTokens = undefined;
         if (provider && credentials) {
-            newAccessToken = await this._refresher.getNewAccessToken(provider, credentials.refresh);
-            if (newAccessToken) {
-                credentials.access = newAccessToken;
+            newTokens = await this._refresher.getNewTokens(provider, credentials.refresh);
+            if (newTokens) {
+                credentials.access = newTokens.accessToken;
+                credentials.expirationDate = newTokens.expiration;
+                credentials.recievedAt = newTokens.receivedAt;
+                if (newTokens.refreshToken) {
+                    credentials.refresh = newTokens.refreshToken;
+                    credentials.iat = newTokens.iat ?? 0;
+                }
+
                 this.saveAuthInfo(site, credentials);
             }
         }
-        return newAccessToken;
+        return newTokens;
     }
 
     /**

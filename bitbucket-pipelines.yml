@@ -1,4 +1,4 @@
-image: node:13.10.1
+image: node:14.18.1
 
 pipelines:
     default:
@@ -7,7 +7,7 @@ pipelines:
                   - node
               script:
                   - apt-get update && apt-get install -y libsecret-1-dev
-                  - npm install -g vsce
+                  - npm install --unsafe-perm -g vsce
                   - npm install
                   - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/
     tags:
@@ -17,7 +17,7 @@ pipelines:
                       - node
                   script:
                       - apt-get update && apt-get install -y libsecret-1-dev
-                      - npm install -g vsce
+                      - npm install --unsafe-perm -g vsce
                       - npm -no-git-tag-version --allow-same-version -f version ${BITBUCKET_TAG}
                       - npm install
                       - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/main/
@@ -31,7 +31,7 @@ pipelines:
                       - node
                   script:
                       - apt-get update && apt-get install -y libsecret-1-dev
-                      - npm install -g vsce
+                      - npm install --unsafe-perm -g vsce
                       - export NIGHTLY_VERSION="$(./nightlyver.sh ${BITBUCKET_COMMIT})"
                       - npm -no-git-tag-version -f version ${NIGHTLY_VERSION}
                       - npm install
