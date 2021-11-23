@@ -121,6 +121,9 @@ export class LoginManager {
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
                 refresh: resp.refresh,
+                iat: resp.iat,
+                expirationDate: resp.expirationDate,
+                recievedAt: resp.receivedAt,
                 user: resp.user,
                 state: AuthInfoState.Valid,
             };

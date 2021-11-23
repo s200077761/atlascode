@@ -23,11 +23,12 @@ import { Logger } from '../logger';
 import { PipelineApiImpl } from '../pipelines/pipelines';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap, Interval } from '../util/cachemap';
-import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, isPATAuthInfo } from './authInfo';
+import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, isPATAuthInfo, ProductJira } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
+const GRACE_PERIOD = 5 * Interval.MINUTE;
 
 export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
@@ -184,28 +185,65 @@ export class ClientManager implements Disposable {
         return site.credentialId;
     }
 
-    private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
-        let client: T | undefined = this._clients.getItem<T>(this.keyForSite(site));
+    private async createClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T | undefined> {
+        let client: T | undefined = undefined;
 
-        if (!client) {
-            try {
-                await Container.credentialManager.refreshAccessToken(site);
-            } catch (e) {
-                Logger.debug(`error refreshing token ${e}`);
-                return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
-            }
-            const credentials = await Container.credentialManager.getAuthInfo(site);
+        Logger.debug(`Creating client for ${site.baseApiUrl}`);
+        let credentials = await Container.credentialManager.getAuthInfo(site, false);
 
-            if (credentials) {
+        if (site.product.key === ProductJira.key && isOAuthInfo(credentials) && credentials.expirationDate) {
+            const diff = credentials.expirationDate - Date.now();
+            if (diff > GRACE_PERIOD) {
+                Logger.debug(`Have ${diff} millis left for auth token. Going ahead with it.`);
                 client = factory(credentials);
-                this._clients.setItem(this.keyForSite(site), client, isOAuthInfo(credentials) ? oauthTTL : serverTTL);
-            } else {
-                Logger.debug(`No credentials for ${site.name}!`);
+                this._clients.setItem(this.keyForSite(site), client, diff);
+                return client;
             }
+            Logger.debug(`Have credentials, but they're expired (or will be soon).`);
+        }
+
+        Logger.debug(`Refreshing credentials.`);
+        try {
+            await Container.credentialManager.refreshAccessToken(site);
+        } catch (e) {
+            Logger.debug(`error refreshing token ${e}`);
+            return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+        }
+
+        credentials = await Container.credentialManager.getAuthInfo(site, false); // we might be able to take cached version
+
+        if (credentials) {
+            client = factory(credentials);
+
+            // Figure out the TTL
+            let ttl = oauthTTL;
+            if (isOAuthInfo(credentials)) {
+                if (credentials.expirationDate) {
+                    const diff = credentials.expirationDate - Date.now();
+                    ttl = diff;
+                }
+            } else {
+                ttl = serverTTL;
+            }
+
+            this._clients.setItem(this.keyForSite(site), client, ttl);
+        } else {
+            Logger.debug(`No credentials for ${site.name}!`);
+        }
+
+        Logger.debug(`returning new client`);
+        return client;
+    }
+
+    private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
+        let client: T | undefined = undefined;
+        client = this._clients.getItem<T>(this.keyForSite(site));
+        if (!client) {
+            client = await this.createClient(site, factory);
         }
 
         if (this._agentChanged) {
-            const credentials = await Container.credentialManager.getAuthInfo(site);
+            const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
             if (credentials) {
                 client = factory(credentials);

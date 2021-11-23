@@ -8,12 +8,13 @@ import { ConnectionTimeout } from '../util/time';
 import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import {
+    JiraProdStrategy as OldJiraProdStrategy,
     BitbucketProdStrategy as OldBitbucketProdStrategy,
     BitbucketStagingStrategy as OldBitbucketStagingStrategy,
-    JiraProdStrategy as OldJiraProdStrategy,
     JiraStagingStrategy as OldJiraStagingStrategy,
 } from './oldStrategy';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
+import { Tokens, tokensFromResponseData } from './oauthDancer';
 
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
@@ -33,7 +34,7 @@ export class OAuthRefesher implements Disposable {
 
     dispose() {}
 
-    public async getNewAccessToken(provider: OAuthProvider, refreshToken: string): Promise<string | undefined> {
+    public async getNewTokens(provider: OAuthProvider, refreshToken: string): Promise<Tokens | undefined> {
         const product = provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
         if (product === ProductJira) {
@@ -65,8 +66,8 @@ export class OAuthRefesher implements Disposable {
                 ...getAgent(),
             });
 
-            const data = tokenResponse.data;
-            return data.access_token;
+            const tokens = tokensFromResponseData(tokenResponse.data);
+            return tokens;
         } else {
             let strategy: any = undefined;
             if (configuration.get<boolean>('useNewAuth')) {
@@ -87,7 +88,7 @@ export class OAuthRefesher implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return data.access_token;
+            return { accessToken: data.access_token, receivedAt: Date.now() };
         }
     }
 }

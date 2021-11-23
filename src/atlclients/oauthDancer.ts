@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
+import jwtDecode from 'jwt-decode';
 import Mustache from 'mustache';
 import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
@@ -28,7 +29,7 @@ import {
     UserInfo,
 } from './authInfo';
 import { addCurlLogging } from './interceptors';
-import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './oldStrategy';
+import { JiraProdStrategy, BitbucketProdStrategy, BitbucketStagingStrategy, JiraStagingStrategy } from './oldStrategy';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
@@ -38,9 +39,27 @@ declare interface ResponseEvent {
     timeout?: boolean;
 }
 
-declare interface Tokens {
+export declare interface Tokens {
     accessToken: string;
-    refreshToken: string;
+    refreshToken?: string;
+    expiration?: number;
+    iat?: number;
+    receivedAt: number;
+}
+
+export function tokensFromResponseData(data: any): Tokens {
+    const token = data.access_token;
+    const decodedToken: any = jwtDecode(token);
+    const iat = decodedToken ? (decodedToken.iat ? decodedToken.iat * 1000 : 0) : 0;
+    const expiresIn = data.expires_in;
+    const expiration = Date.now() + expiresIn * 1000;
+    return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiration: expiration,
+        iat: iat,
+        receivedAt: Date.now(),
+    };
 }
 
 export class OAuthDancer implements Disposable {
@@ -221,7 +240,7 @@ export class OAuthDancer implements Disposable {
                 ) {
                     try {
                         const agent = getAgent(site);
-                        let tokens: Tokens = { accessToken: '', refreshToken: '' };
+                        let tokens: Tokens = { accessToken: '', refreshToken: '', receivedAt: 0 };
                         let accessibleResources: AccessibleResource[] = [];
                         let user: UserInfo = emptyUserInfo;
 
@@ -276,7 +295,10 @@ export class OAuthDancer implements Disposable {
 
                         const oauthResponse: OAuthResponse = {
                             access: tokens.accessToken,
-                            refresh: tokens.refreshToken,
+                            refresh: tokens.refreshToken!,
+                            expirationDate: tokens.expiration,
+                            iat: tokens.iat,
+                            receivedAt: tokens.receivedAt,
                             user: user,
                             accessibleResources: accessibleResources,
                         };
@@ -358,8 +380,7 @@ export class OAuthDancer implements Disposable {
                 ...agent,
             });
 
-            const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token };
+            return tokensFromResponseData(tokenResponse.data);
         } catch (err) {
             const newErr = new Error(`Error fetching Jira tokens: ${err}`);
             Logger.error(newErr);
@@ -382,7 +403,7 @@ export class OAuthDancer implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token };
+            return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
         } catch (err) {
             const newErr = new Error(`Error fetching Bitbucket tokens: ${err}`);
             Logger.error(newErr);
