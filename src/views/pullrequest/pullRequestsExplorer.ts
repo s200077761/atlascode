@@ -65,7 +65,7 @@ export class PullRequestsExplorer extends BitbucketExplorer {
         return 'bitbucket.explorer.notifications.pullRequestCreated';
     }
 
-    refreshConfiguation(): string {
+    refreshConfiguration(): string {
         return 'bitbucket.explorer.refreshInterval';
     }
 

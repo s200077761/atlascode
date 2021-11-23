@@ -31,7 +31,7 @@ export class PipelinesExplorer extends BitbucketExplorer {
         return 'bitbucket.pipelines.monitorEnabled';
     }
 
-    refreshConfiguation(): string {
+    refreshConfiguration(): string {
         return 'bitbucket.pipelines.refreshInterval';
     }
 
