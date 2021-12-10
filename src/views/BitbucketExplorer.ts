@@ -1,3 +1,4 @@
+import { Logger } from 'src/logger';
 import vscode, { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
@@ -55,10 +56,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
 
     onBitbucketContextChanged() {
         this.updateMonitor();
-        this.refresh();
     }
 
     async refresh() {
+        Logger.debug(`BitbucketExplorer.refresh`);
         if (!Container.onlineDetector.isOnline() || !Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
             return;
         }
