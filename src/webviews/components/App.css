@@ -398,7 +398,8 @@ h4,
 h5,
 h6,
 label,
-span,
+button span,
+label span,
 .ac-inline-edit-p {
     color: var(--vscode-editor-foreground);
     margin: 0px;
@@ -1154,6 +1155,10 @@ div[role='dialog'],
 .ac-select-container-control-on-hover .ac-select__control--is-focused,
 .ac-select__control:hover {
     border-color: var(--vscode-focusBorder) !important;
+}
+
+.ac-select__option {
+    color: var(--vscode-dropdown-foreground) !important;
 }
 
 /*-------------------- END - select boxes --------------------*/

@@ -1,4 +1,5 @@
 import Button from '@atlaskit/button';
+import LoadingButton from '@atlaskit/button/loading-button';
 import Form, { Field, FormFooter } from '@atlaskit/form';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
@@ -369,14 +370,14 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                 </Panel>
                                             )}
                                             <FormFooter actions={{}}>
-                                                <Button
+                                                <LoadingButton
                                                     type="submit"
                                                     className="ac-button"
                                                     isDisabled={this.state.isSomethingLoading}
                                                     isLoading={this.state.loadingField === 'submitButton'}
                                                 >
                                                     Submit
-                                                </Button>
+                                                </LoadingButton>
                                             </FormFooter>
                                         </form>
                                     );
