@@ -83,6 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.10.1 🎉</h4>
+                                        <section>
+                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug causing excessive calls to refresh Bitbucket Pipelines
+                                                    status
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.10.0 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>

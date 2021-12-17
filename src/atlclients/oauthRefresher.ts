@@ -88,7 +88,17 @@ export class OAuthRefesher implements Disposable {
             });
 
             const data = tokenResponse.data;
-            return { accessToken: data.access_token, receivedAt: Date.now() };
+
+            const tokens = {
+                accessToken: data.access_token,
+                receivedAt: Date.now(),
+            };
+
+            if (data.expires_in) {
+                tokens['expiration'] = Date.now() + data.expires_in * 1000;
+            }
+
+            return tokens;
         }
     }
 }

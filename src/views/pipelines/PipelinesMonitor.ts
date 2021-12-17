@@ -1,3 +1,4 @@
+import { Logger } from 'src/logger';
 import { commands, window } from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { WorkspaceRepo } from '../../bitbucket/model';
@@ -28,6 +29,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
             if (!bbApi.pipelines) {
                 return; //Bitbucket Server instances will not have pipelines
             }
+            Logger.debug(`PipelinesMonitor.checkForNewActivity`);
             bbApi.pipelines.getRecentActivity(site).then((newResults) => {
                 var diffs = this.diffResults(previousResults, newResults);
                 diffs = diffs.filter((p) => this.shouldDisplayTarget(p.target));

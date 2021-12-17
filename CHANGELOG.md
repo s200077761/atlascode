@@ -1,3 +1,9 @@
+## What's New in 2.10.1
+
+### Bugs fixed
+
+-   Fixed bug causing excessive calls to refresh Bitbucket Pipelines status
+
 ## What's New in 2.10.0
 
 ### Improvements

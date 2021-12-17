@@ -24,6 +24,7 @@ export class PipelineApiImpl {
     constructor(private client: HTTPClient) {}
 
     async getRecentActivity(site: BitbucketSite): Promise<Pipeline[]> {
+        Logger.debug(`getRecentActivity`);
         return this.getSinglepagePipelines(site);
     }
 
@@ -56,7 +57,7 @@ export class PipelineApiImpl {
     }
 
     // A simplified version of getPaginatedPipelines() which assumes you just want some pipelines
-    async getSinglepagePipelines(site: BitbucketSite, query?: any): Promise<Pipeline[]> {
+    private async getSinglepagePipelines(site: BitbucketSite, query?: any): Promise<Pipeline[]> {
         const firstPaginatedPage = await this.getPaginatedPipelines(site, query);
         return firstPaginatedPage.values;
     }
