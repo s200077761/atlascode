@@ -25,14 +25,20 @@ import { SitesAvailableUpdateEvent } from '../siteManager';
 import { CacheMap, Interval } from '../util/cachemap';
 import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, isPATAuthInfo, ProductJira } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
+import { Negotiator } from './negotiate';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
-const GRACE_PERIOD = 5 * Interval.MINUTE;
+const GRACE_PERIOD = 10 * Interval.MINUTE;
+
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
     private _agentChanged: boolean = false;
+    private negotiator: Negotiator;
 
     constructor(context: ExtensionContext) {
         context.subscriptions.push(
@@ -40,6 +46,7 @@ export class ClientManager implements Disposable {
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this)
         );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
+        this.negotiator = new Negotiator(context.globalState);
     }
 
     dispose() {
@@ -202,12 +209,19 @@ export class ClientManager implements Disposable {
             Logger.debug(`Have credentials, but they're expired (or will be soon).`);
         }
 
-        Logger.debug(`Refreshing credentials.`);
-        try {
-            await Container.credentialManager.refreshAccessToken(site);
-        } catch (e) {
-            Logger.debug(`error refreshing token ${e}`);
-            return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+        const areRulingPid = await this.negotiator.weAreRulingPid();
+        if (areRulingPid) {
+            Logger.debug(`Refreshing credentials.`);
+            try {
+                await Container.credentialManager.refreshAccessToken(site);
+            } catch (e) {
+                Logger.debug(`error refreshing token ${e}`);
+                return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+            }
+        } else {
+            Logger.debug(`We're not the ruling pid, I hope they take care of it.`);
+            await sleep(5000);
+            Logger.debug(`I hope that sleep worked and it was long enough.`);
         }
 
         credentials = await Container.credentialManager.getAuthInfo(site, false); // we might be able to take cached version
