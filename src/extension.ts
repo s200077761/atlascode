@@ -36,7 +36,7 @@ export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
     Logger.configure(context);
 
-    Logger.debug(`Launching with pid ${pid} Focused: ${window.state.focused}`);
+    // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
     startListening();
 

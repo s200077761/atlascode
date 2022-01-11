@@ -26,6 +26,7 @@ import { CacheMap, Interval } from '../util/cachemap';
 import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, isPATAuthInfo, ProductJira } from './authInfo';
 import { BasicInterceptor } from './basicInterceptor';
 import { Negotiator } from './negotiate';
+import PQueue from 'p-queue';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -37,6 +38,7 @@ function sleep(ms: number) {
 
 export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
+    private _queue = new PQueue({ concurrency: 1 });
     private _agentChanged: boolean = false;
     private negotiator: Negotiator;
 
@@ -115,35 +117,50 @@ export class ClientManager implements Disposable {
         });
     }
 
+    public async removeClient(site: DetailedSiteInfo) {
+        this._clients.deleteItem(this.keyForSite(site));
+    }
+
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
-        return this.getClient<JiraClient<DetailedSiteInfo>>(site, (info) => {
-            let client: any = undefined;
+        let newClient: JiraClient<DetailedSiteInfo> | undefined = undefined;
+        try {
+            newClient = await this._queue.add(async () => {
+                return this.getClient<JiraClient<DetailedSiteInfo>>(site, (info) => {
+                    Logger.debug(`getClient factory`);
+                    let client: any = undefined;
 
-            if (isOAuthInfo(info)) {
-                client = new JiraCloudClient(
-                    site,
-                    oauthJiraTransportFactory(site),
-                    jiraTokenAuthProvider(info.access),
-                    getAgent
-                );
-            } else if (isBasicAuthInfo(info)) {
-                client = new JiraServerClient(
-                    site,
-                    basicJiraTransportFactory(site),
-                    jiraBasicAuthProvider(info.username, info.password),
-                    getAgent
-                );
-            } else if (isPATAuthInfo(info)) {
-                client = new JiraServerClient(
-                    site,
-                    basicJiraTransportFactory(site),
-                    jiraTokenAuthProvider(info.token),
-                    getAgent
-                );
-            }
-
-            return client;
-        });
+                    if (isOAuthInfo(info)) {
+                        Logger.debug(`creating client for ${site.baseApiUrl}`);
+                        client = new JiraCloudClient(
+                            site,
+                            oauthJiraTransportFactory(site),
+                            jiraTokenAuthProvider(info.access),
+                            getAgent
+                        );
+                    } else if (isBasicAuthInfo(info)) {
+                        client = new JiraServerClient(
+                            site,
+                            basicJiraTransportFactory(site),
+                            jiraBasicAuthProvider(info.username, info.password),
+                            getAgent
+                        );
+                    } else if (isPATAuthInfo(info)) {
+                        client = new JiraServerClient(
+                            site,
+                            basicJiraTransportFactory(site),
+                            jiraTokenAuthProvider(info.token),
+                            getAgent
+                        );
+                    }
+                    Logger.debug(`client created`);
+                    return client;
+                });
+            });
+        } catch (e) {
+            Logger.error(e, `Failed to refresh tokens`);
+            throw e;
+        }
+        return newClient!;
     }
 
     private createOAuthHTTPClient(site: DetailedSiteInfo, token: string): HTTPClient {
@@ -200,16 +217,17 @@ export class ClientManager implements Disposable {
 
         if (site.product.key === ProductJira.key && isOAuthInfo(credentials) && credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();
+            Logger.debug(`${Math.floor(diff / 1000)} seconds remaining for auth token.`);
             if (diff > GRACE_PERIOD) {
-                Logger.debug(`Have ${diff} millis left for auth token. Going ahead with it.`);
+                Logger.debug(`Using existing auth token.`);
                 client = factory(credentials);
                 this._clients.setItem(this.keyForSite(site), client, diff);
                 return client;
             }
-            Logger.debug(`Have credentials, but they're expired (or will be soon).`);
+            Logger.debug(`Need new auth token.`);
         }
 
-        const areRulingPid = await this.negotiator.weAreRulingPid();
+        const areRulingPid = await this.negotiator.areWeRulingPid();
         if (areRulingPid) {
             Logger.debug(`Refreshing credentials.`);
             try {
@@ -219,9 +237,8 @@ export class ClientManager implements Disposable {
                 return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
             }
         } else {
-            Logger.debug(`We're not the ruling pid, I hope they take care of it.`);
+            Logger.debug(`This process isn't in charge of refreshing credentials.`);
             await sleep(5000);
-            Logger.debug(`I hope that sleep worked and it was long enough.`);
         }
 
         credentials = await Container.credentialManager.getAuthInfo(site, false); // we might be able to take cached version
@@ -257,6 +274,7 @@ export class ClientManager implements Disposable {
         }
 
         if (this._agentChanged) {
+            Logger.debug(`Agent changed. Creating a new client`);
             const credentials = await Container.credentialManager.getAuthInfo(site, false);
 
             if (credentials) {
@@ -268,9 +286,5 @@ export class ClientManager implements Disposable {
         }
 
         return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
-    }
-
-    public async removeClient(site: DetailedSiteInfo) {
-        this._clients.deleteItem(this.keyForSite(site));
     }
 }

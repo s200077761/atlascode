@@ -15,6 +15,7 @@ import {
 } from './oldStrategy';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
 import { Tokens, tokensFromResponseData } from './oauthDancer';
+import { Logger } from 'src/logger';
 
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
@@ -35,6 +36,7 @@ export class OAuthRefesher implements Disposable {
     dispose() {}
 
     public async getNewTokens(provider: OAuthProvider, refreshToken: string): Promise<Tokens | undefined> {
+        Logger.debug(`Starting token refresh`);
         const product = provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
         if (product === ProductJira) {
@@ -57,6 +59,7 @@ export class OAuthRefesher implements Disposable {
                     redirect_uri: strategy.callbackURL,
                 });
             }
+
             const tokenResponse = await this._axios(strategy.tokenURL, {
                 method: 'POST',
                 headers: {
@@ -67,6 +70,7 @@ export class OAuthRefesher implements Disposable {
             });
 
             const tokens = tokensFromResponseData(tokenResponse.data);
+            Logger.debug(`have new tokens`);
             return tokens;
         } else {
             let strategy: any = undefined;

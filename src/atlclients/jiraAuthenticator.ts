@@ -105,7 +105,7 @@ export class JiraAuthentictor implements Authenticator {
         //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
 
         newSites = resources.map((r) => {
-            const credentialId = CredentialManager.generateCredentialId(r.id, userId);
+            const credentialId = CredentialManager.generateCredentialId(ProductJira.key, userId);
 
             return {
                 avatarUrl: r.avatarUrl,

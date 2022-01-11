@@ -22,9 +22,6 @@ export function startListening() {
             Logger.debug(message);
             ipc.server.emit(socket, ACK_MESSAGE);
         });
-        ipc.server.on('socket.disconnected', function (socket, destroyedSocketID) {
-            Logger.debug(`client ${destroyedSocketID} has disconnected!`);
-        });
     });
     ipc.server.start();
 
@@ -38,9 +35,9 @@ function sleep(ms: number) {
 export class Negotiator {
     constructor(private globalState: Memento) {}
 
-    public async weAreRulingPid(): Promise<boolean> {
+    public async areWeRulingPid(): Promise<boolean> {
+        // Give any other workspace enough time to wake up before trying to establish who's in charge
         const lifettime = uptime();
-        Logger.debug(`lifetime: ${lifettime}`);
         if (lifettime < LAUNCH_DELAY_SECONDS) {
             Logger.debug(`Waiting ${LAUNCH_DELAY_SECONDS} seconds before starting negotiations`);
             await sleep(Math.floor((LAUNCH_DELAY_SECONDS - lifettime) * 1000));
@@ -62,10 +59,9 @@ export class Negotiator {
 
     async negotiationRound(): Promise<boolean | undefined> {
         const rulingPid: number = this.globalState.get(RULING_PID_KEY) || 0;
-        Logger.debug(`Ruling pid: ${rulingPid} Our pid: ${pid}`);
 
         if (pid === rulingPid) {
-            Logger.debug(`This is the ruling process`);
+            Logger.debug(`This process is in charge of refreshing credentials.`);
             return true;
         }
 
@@ -73,10 +69,11 @@ export class Negotiator {
         const rulerIsAlive = await this.ping(pid, rulingPid);
 
         if (rulerIsAlive) {
-            Logger.debug(`Ruling PID responded`);
+            Logger.debug(`${rulingPid} responded.`);
             return false;
         }
 
+        Logger.debug(`${rulingPid} failed to respond. Negitiating new responsible process.`);
         this.globalState.update(RULING_PID_KEY, pid);
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -105,7 +102,7 @@ export class Negotiator {
 
             ipc.connectTo(theirAddress, () => {
                 ipc.of[theirAddress].on('connect', () => {
-                    ipc.of[theirAddress].emit(PING_MESSAGE, `${myPort} wants to know if you're awake.`);
+                    ipc.of[theirAddress].emit(PING_MESSAGE, `Ping received from ${myPort}.`);
                 });
                 ipc.of[theirAddress].on(ACK_MESSAGE, () => {
                     clearTimeout(timeout);
