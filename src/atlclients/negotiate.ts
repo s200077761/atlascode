@@ -11,6 +11,14 @@ const TIMEOUT = 5000;
 const READ_DELAY = 5000;
 const LAUNCH_DELAY_SECONDS = 20;
 
+/*
+    To avoid race conditions we need to ensure that only one workspace is responsible for refreshing tokens. When a workspace is opened
+    it writes its process ID to the global state. When it comes time to refresh tokens all processes will send a message to the refreshing
+    process via IPC to make sure it's still active. If it is no further action is taken (that process is resposnible for refreshing tokens).
+    If it doesn't respond all processes will try and write their PID to the global configuration and another round of messages will 
+    be sent to ensure that the responsible process is responding.
+*/
+
 export function startListening() {
     const ipc = new IPC();
 
