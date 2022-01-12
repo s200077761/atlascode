@@ -109,7 +109,7 @@ export class BitbucketAuthenticator implements Authenticator {
                     : 'https://api-staging.bb-inf.net/2.0';
             const siteName = provider === OAuthProvider.BitbucketCloud ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
 
-            const credentialId = CredentialManager.generateCredentialId(resource.id, userId);
+            const credentialId = CredentialManager.generateCredentialId(ProductBitbucket.key, userId);
 
             // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
             newSites = [

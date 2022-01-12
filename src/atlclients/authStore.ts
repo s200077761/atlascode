@@ -262,6 +262,9 @@ export class CredentialManager implements Disposable {
             info.state = AuthInfoState.Valid;
         }
 
+        Logger.debug(
+            `Reading from keychain\rkey: ${productKey}\rid: ${credentialId}\rinfo: ${JSON.stringify(info, null, '  ')}`
+        );
         return info;
     }
 

@@ -20,6 +20,8 @@ import {
 } from './pipelines/yaml/pipelinesYamlHelper';
 import { registerResources } from './resources';
 import { GitExtension } from './typings/git';
+import { pid } from 'process';
+import { startListening } from './atlclients/negotiate';
 
 const AnalyticDelay = 5000;
 
@@ -33,6 +35,10 @@ export async function activate(context: ExtensionContext) {
 
     Configuration.configure(context);
     Logger.configure(context);
+
+    // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
+    context.globalState.update('rulingPid', pid);
+    startListening();
 
     try {
         Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);

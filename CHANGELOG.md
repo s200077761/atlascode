@@ -1,3 +1,9 @@
+## What's New in 2.10.2
+
+### Bugs fixed
+
+-   Fixed bug causing users to get logged out frequently
+
 ## What's New in 2.10.1
 
 ### Bugs fixed
