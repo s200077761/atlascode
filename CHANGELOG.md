@@ -1,3 +1,9 @@
+## What's New in 2.10.3
+
+### Bugs fixed
+
+-   Update to error logging
+
 ## What's New in 2.10.2
 
 ### Bugs fixed
