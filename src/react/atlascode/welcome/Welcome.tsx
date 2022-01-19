@@ -89,6 +89,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                             <ul>
                                                 <li>
                                                     Fixed bug preventing old accounts from updating their credentials
+                                                    (you may need to log in one last time for this to take effect)
                                                 </li>
                                             </ul>
                                         </section>

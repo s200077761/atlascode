@@ -2,13 +2,13 @@
 
 ### Bugs fixed
 
--   Fixed bug preventing old accounts from updating their credentials
+-   Fixed bug preventing old accounts from updating their credentials (you may need to log in one last time for this to take effect)
 
 ## What's New in 2.10.3
 
 ### Bugs fixed
 
--   Update to error logging
+-   Update to error logging 
 
 ## What's New in 2.10.2
 
