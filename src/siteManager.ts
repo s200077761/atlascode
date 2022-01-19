@@ -10,6 +10,7 @@ import {
     ProductJira,
     SiteInfo,
 } from './atlclients/authInfo';
+import { CredentialManager } from './atlclients/authStore';
 import { configuration } from './config/configuration';
 import { Container } from './container';
 
@@ -61,10 +62,18 @@ export class SiteManager extends Disposable {
         if (newSites.length === 0) {
             return;
         }
+
         const productKey = newSites[0].product.key;
         let notify = true;
         let allSites = this.readSitesFromGlobalStore(productKey);
         if (allSites) {
+            // Ensure all cloud sites use the per account credential ID
+            allSites.forEach((site) => {
+                if (site.isCloud) {
+                    site.credentialId = CredentialManager.generateCredentialId(site.product.key, site.userId);
+                }
+            });
+
             newSites = newSites.filter((s) => !allSites!.some((s2) => s2.id === s.id && s2.userId === s.userId));
             if (newSites.length === 0) {
                 notify = false;

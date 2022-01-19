@@ -83,6 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.10.4 🎉</h4>
+                                        <section>
+                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug preventing old accounts from updating their credentials
+                                                    (you may need to log in one last time for this to take effect)
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.10.3 🎉</h4>
                                         <section>
                                             <h4>✨ Bugs Fixed ✨</h4>
