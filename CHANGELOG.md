@@ -1,3 +1,9 @@
+## What's New in 2.10.4
+
+### Bugs fixed
+
+-   Fixed bug preventing old accounts from updating their credentials
+
 ## What's New in 2.10.3
 
 ### Bugs fixed
