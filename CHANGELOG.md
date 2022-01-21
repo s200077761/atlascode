@@ -1,3 +1,9 @@
+## What's New in 2.10.5
+
+### Bugs fixed
+
+-   Fixed viewing comments in pull requests
+
 ## What's New in 2.10.4
 
 ### Bugs fixed
