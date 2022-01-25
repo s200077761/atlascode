@@ -1,8 +1,8 @@
 import { Avatar, Box, Button, CircularProgress, Grid, Typography } from '@material-ui/core';
-import { format, parseISO } from 'date-fns';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Comment, User } from '../../../bitbucket/model';
 import CommentForm from '../common/CommentForm';
+import { formatDate } from './bitbucketDateFormatter';
 import { CommentTaskList } from './CommentTaskList';
 import { NestedCommentList } from './NestedCommentList';
 import { PullRequestDetailsControllerContext } from './pullRequestDetailsController';
@@ -96,7 +96,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
                                 <Typography variant="subtitle2">
                                     {comment.user.displayName}
                                     {'  '}
-                                    {format(parseISO(comment.ts), 'yyyy-MM-dd h:mm a')}
+                                    {formatDate(comment.ts)}
                                 </Typography>
                             </Grid>
 

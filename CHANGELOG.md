@@ -1,3 +1,9 @@
+## What's New in 2.10.6
+
+### Bugs fixed
+
+-   Fixed bug preventing the viewing of pull request details for Bitbucket Server
+
 ## What's New in 2.10.5
 
 ### Bugs fixed
