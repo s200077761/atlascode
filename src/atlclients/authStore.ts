@@ -65,6 +65,7 @@ export class CredentialManager implements Disposable {
      * Saves the auth info to both the in-memory store and the keychain.
      */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
+        Logger.debug(`Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
         let productAuths = this._memStore.get(site.product.key);
 
         if (!productAuths) {
@@ -120,6 +121,7 @@ export class CredentialManager implements Disposable {
         credentialId: string,
         allowCache: boolean
     ): Promise<AuthInfo | undefined> {
+        Logger.debug(`Retrieving auth info for product: ${productKey} credentialID: ${credentialId}`);
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(productKey);
 
@@ -152,34 +154,6 @@ export class CredentialManager implements Disposable {
 
         return foundInfo;
         //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
-    }
-
-    /**
-     * Returns a raw keychain item.
-     *
-     * @remarks
-     * Ignores the in-memory store and returns the raw value stored in the keychain. Meant to
-     * used during migration.
-     */
-    public async getRawKeychainItem(service: string, productKey: string): Promise<any | undefined> {
-        try {
-            let item = undefined;
-            await this._queue.add(
-                async () => {
-                    if (keychain) {
-                        item = await keychain.getPassword(service, productKey);
-                    }
-                },
-                { priority: Priority.Read }
-            );
-            if (!item) {
-                return undefined;
-            }
-            return JSON.parse(item);
-        } catch (e) {
-            Logger.info(`keychain error ${e}`);
-        }
-        return undefined;
     }
 
     /**
@@ -235,6 +209,7 @@ export class CredentialManager implements Disposable {
         credentialId: string,
         serviceName?: string
     ): Promise<AuthInfo | undefined> {
+        Logger.debug(`Retrieving keychain info for product: ${productKey} credentialID: ${credentialId}`);
         let svcName = keychainServiceNameV3;
 
         if (serviceName) {
@@ -273,7 +248,7 @@ export class CredentialManager implements Disposable {
         if (!isOAuthInfo(credentials)) {
             return undefined;
         }
-        Logger.debug(`refreshingAccessToken for ${site.baseApiUrl}`);
+        Logger.debug(`refreshingAccessToken for ${site.baseApiUrl} credentialID: ${site.credentialId}`);
 
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
         let newTokens = undefined;

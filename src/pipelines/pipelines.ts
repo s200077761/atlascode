@@ -24,7 +24,6 @@ export class PipelineApiImpl {
     constructor(private client: HTTPClient) {}
 
     async getRecentActivity(site: BitbucketSite): Promise<Pipeline[]> {
-        Logger.debug(`getRecentActivity`);
         return this.getSinglepagePipelines(site);
     }
 

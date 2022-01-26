@@ -55,6 +55,31 @@ export class ClientManager implements Disposable {
         this._clients.clear();
     }
 
+    /*
+     * Method called when another process requests that a sites tokens be refreshed.
+     */
+    public requestSite(site: DetailedSiteInfo) {
+        const tag = Math.floor(Math.random() * 1000);
+
+        Logger.debug(`${tag}: clientManager requestSite ${site.baseApiUrl}`);
+
+        if (!this) {
+            Logger.debug(`this doesn't exist. wtf.`);
+            return;
+        }
+
+        if (site.isCloud) {
+            if (site.product.key === ProductJira.key) {
+                Logger.debug(`${tag}: requesting Jira site due to another process`);
+                this.jiraClient(site);
+            } else {
+                Logger.debug(`${tag}: requesting Bitbucket site due to another process`);
+                this.bbClient(site);
+            }
+            Logger.debug(`${tag}: finished requesting`);
+        }
+    }
+
     private onSitesDidChange(e: SitesAvailableUpdateEvent) {
         this._agentChanged = true;
     }
@@ -122,6 +147,8 @@ export class ClientManager implements Disposable {
     }
 
     public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
+        const tag = Math.floor(Math.random() * 1000);
+
         let newClient: JiraClient<DetailedSiteInfo> | undefined = undefined;
         try {
             newClient = await this._queue.add(async () => {
@@ -130,7 +157,7 @@ export class ClientManager implements Disposable {
                     let client: any = undefined;
 
                     if (isOAuthInfo(info)) {
-                        Logger.debug(`creating client for ${site.baseApiUrl}`);
+                        Logger.debug(`${tag}: creating client for ${site.baseApiUrl}`);
                         client = new JiraCloudClient(
                             site,
                             oauthJiraTransportFactory(site),
@@ -152,12 +179,12 @@ export class ClientManager implements Disposable {
                             getAgent
                         );
                     }
-                    Logger.debug(`client created`);
+                    Logger.debug(`${tag}: client created`);
                     return client;
                 });
             });
         } catch (e) {
-            Logger.error(e, `Failed to refresh tokens`);
+            Logger.error(e, `${tag}: Failed to refresh tokens`);
             throw e;
         }
         return newClient!;
@@ -227,8 +254,7 @@ export class ClientManager implements Disposable {
             Logger.debug(`Need new auth token.`);
         }
 
-        const areRulingPid = await this.negotiator.areWeRulingPid();
-        if (areRulingPid) {
+        if (this.negotiator.thisIsTheResponsibleProcess()) {
             Logger.debug(`Refreshing credentials.`);
             try {
                 await Container.credentialManager.refreshAccessToken(site);
@@ -238,6 +264,7 @@ export class ClientManager implements Disposable {
             }
         } else {
             Logger.debug(`This process isn't in charge of refreshing credentials.`);
+            await this.negotiator.requestTokenRefreshForSite(JSON.stringify(site));
             await sleep(5000);
         }
 
