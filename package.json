@@ -1455,6 +1455,7 @@
         "stylis": "^3.5.4",
         "tunnel": "^0.0.6",
         "turndown": "^5.0.3",
+        "ua-parser-js": "^0.7.22",
         "use-constant": "^1.0.0",
         "uuid": "^3.4.0",
         "websocket": "^1.0.31"
