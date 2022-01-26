@@ -16,7 +16,6 @@ import {
     Typography,
 } from '@material-ui/core';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import { format, parseISO } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApprovalStatus, User } from '../../../bitbucket/model';
 import { BasicPanel } from '../common/BasicPanel';
@@ -24,6 +23,7 @@ import CommentForm from '../common/CommentForm';
 import { CopyLinkButton } from '../common/CopyLinkButton';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { ApproveButton } from './ApproveButton';
+import { formatDate } from './bitbucketDateFormatter';
 import { BranchInfo } from './BranchInfo';
 import { Commits } from './Commits';
 import { DiffList } from './DiffList';
@@ -68,16 +68,6 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
         300,
         { leading: false }
     );
-
-    const formatDate = (date: any): string => {
-        if (!date) {
-            return '';
-        }
-        if (typeof date === 'number') {
-            return format(new Date(date), 'yyyy-MM-dd h:mm a');
-        }
-        return format(parseISO(date), 'yyyy-MM-dd h:mm a');
-    };
 
     const isSomethingLoading = useCallback(() => {
         return Object.entries(state.loadState).some(
