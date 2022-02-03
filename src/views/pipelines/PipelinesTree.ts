@@ -1,6 +1,5 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import path from 'path';
-import { Logger } from 'src/logger';
 import {
     commands,
     ConfigurationChangeEvent,

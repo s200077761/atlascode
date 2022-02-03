@@ -83,6 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.10.7 🎉</h4>
+                                        <section>
+                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that could prevent credential refreshes when multiple
+                                                    workspaces are open
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.10.6 🎉</h4>
                                         <section>
                                             <h4>✨ Bugs Fixed ✨</h4>

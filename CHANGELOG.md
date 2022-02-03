@@ -1,3 +1,9 @@
+## What's New in 2.10.7
+
+### Bugs fixed
+
+-   Fixed bug that could prevent credential refreshes when multiple workspaces are open
+
 ## What's New in 2.10.6
 
 ### Bugs fixed

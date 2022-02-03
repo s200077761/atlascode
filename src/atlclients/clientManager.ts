@@ -63,11 +63,6 @@ export class ClientManager implements Disposable {
 
         Logger.debug(`${tag}: clientManager requestSite ${site.baseApiUrl}`);
 
-        if (!this) {
-            Logger.debug(`this doesn't exist. wtf.`);
-            return;
-        }
-
         if (site.isCloud) {
             if (site.product.key === ProductJira.key) {
                 Logger.debug(`${tag}: requesting Jira site due to another process`);
