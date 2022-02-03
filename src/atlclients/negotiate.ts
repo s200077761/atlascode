@@ -57,7 +57,9 @@ export class Negotiator {
 
     public thisIsTheResponsibleProcess(): boolean {
         const responsiblePid: number = this.globalState.get(RESPONSIBLE_PID_KEY) || 0;
-        return pid === responsiblePid;
+        const isResponsible = pid === responsiblePid;
+        Logger.debug(`Is responsible process: ${isResponsible}`);
+        return isResponsible;
     }
 
     public async requestTokenRefreshForSite(site: string): Promise<boolean> {
