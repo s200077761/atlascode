@@ -1,6 +1,5 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import path from 'path';
-import { Logger } from 'src/logger';
 import {
     commands,
     ConfigurationChangeEvent,
@@ -182,7 +181,6 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
         const site = this.workspaceRepo.mainSiteRemote.site;
         if (site) {
-            Logger.debug(`PipelinesTree.fetchPipelines()`);
             const bbApi = await clientForSite(site);
             const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(site, {
                 page: `${this._page}`,

@@ -3,7 +3,7 @@
 import * as semver from 'semver';
 import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
 import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
-import { ProductBitbucket, ProductJira } from './atlclients/authInfo';
+import { DetailedSiteInfo, ProductBitbucket, ProductJira } from './atlclients/authInfo';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { Commands, registerCommands } from './commands';
@@ -38,7 +38,6 @@ export async function activate(context: ExtensionContext) {
 
     // Mark ourselves as the PID in charge of refreshing credentials and start listening for pings.
     context.globalState.update('rulingPid', pid);
-    startListening();
 
     try {
         Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
@@ -57,6 +56,10 @@ export async function activate(context: ExtensionContext) {
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
     }
+
+    startListening((site: DetailedSiteInfo) => {
+        Container.clientManager.requestSite(site);
+    });
 
     if (previousVersion === undefined && window.state.focused) {
         commands.executeCommand(Commands.ShowOnboardingPage); //This is shown to users who have never opened our extension before
