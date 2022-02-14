@@ -37,7 +37,7 @@ const ExternalLink = (data: ItemData) => {
                 className="ac-link-button"
                 appearance="link"
                 iconBefore={<ShortcutIcon size="small" label="open-attachment" />}
-                href={`${data.baseLinkUrl}/secure/attachment/${data.attachment.id}/${data.attachment.filename}`}
+                href={`${data.baseLinkUrl}/rest/api/2/attachment/content/${data.attachment.id}`}
             />
         </Tooltip>
     );

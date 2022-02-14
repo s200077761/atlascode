@@ -3,10 +3,11 @@ import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassian
 import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
+import { Logger } from 'src/logger';
 import * as sslRootCas from 'ssl-root-cas';
 import { DetailedSiteInfo, SiteInfo } from '../../atlclients/authInfo';
 import { BasicInterceptor } from '../../atlclients/basicInterceptor';
-import { addCurlLogging } from '../../atlclients/interceptors';
+import { addCurlLogging, rewriteSecureImageRequests } from '../../atlclients/interceptors';
 import { configuration } from '../../config/configuration';
 import { AxiosUserAgent } from '../../constants';
 import { Container } from '../../container';
@@ -33,7 +34,9 @@ export function getAxiosInstance(): AxiosInstance {
 }
 
 export function oauthJiraTransportFactory(site: DetailedSiteInfo): TransportFactory {
-    return () => getAxiosInstance();
+    const axios = getAxiosInstance();
+    rewriteSecureImageRequests(axios);
+    return () => axios;
 }
 
 export function basicJiraTransportFactory(site: DetailedSiteInfo): TransportFactory {
@@ -136,6 +139,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
             }
         }
     } catch (err) {
+        Logger.error(err, 'Error while creating agent');
         agent = {};
     }
 
