@@ -1,3 +1,9 @@
+## What's New in 2.10.8
+
+### Improvements
+
+-   Use new image endpoint for Jira attachments
+
 ## What's New in 2.10.7
 
 ### Bugs fixed

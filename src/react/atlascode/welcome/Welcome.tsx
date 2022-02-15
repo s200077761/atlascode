@@ -83,9 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.10.8 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Use new image endpoint for Jira attachments</li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.10.7 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>
                                                     Fixed bug that could prevent credential refreshes when multiple
@@ -95,7 +102,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                         </section>
                                         <h4>🎉 What's New in 2.10.6 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>
                                                     Fixed bug preventing the viewing of pull request details for
@@ -105,14 +112,14 @@ const WelcomePage: React.FunctionComponent = () => {
                                         </section>
                                         <h4>🎉 What's New in 2.10.5 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>Fixed viewing comments in pull requests</li>
                                             </ul>
                                         </section>
                                         <h4>🎉 What's New in 2.10.4 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>
                                                     Fixed bug preventing old accounts from updating their credentials
@@ -122,21 +129,21 @@ const WelcomePage: React.FunctionComponent = () => {
                                         </section>
                                         <h4>🎉 What's New in 2.10.3 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>Update to error logging</li>
                                             </ul>
                                         </section>
                                         <h4>🎉 What's New in 2.10.2 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>Fixed bug causing users to get logged out frequently</li>
                                             </ul>
                                         </section>
                                         <h4>🎉 What's New in 2.10.1 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>
                                                     Fixed bug causing excessive calls to refresh Bitbucket Pipelines
@@ -154,7 +161,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     settings (Thanks to Ian Chamberlain)
                                                 </li>
                                             </ul>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>Fixed bug preventing viewing Bitbucket Pipelines while building</li>
                                                 <li>
@@ -165,7 +172,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                         </section>
                                         <h4>🎉 What's New in 2.9.1 🎉</h4>
                                         <section>
-                                            <h4>✨ Bugs Fixed ✨</h4>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>Fixed bug preventing viewing pull requests on Bitbucket Server</li>
                                                 <li>Fixed bug preventing time tracking on Jira issues</li>
