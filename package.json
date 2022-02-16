@@ -24,7 +24,6 @@
     },
     "icon": "images/atlascode-icon.png",
     "preview": false,
-    "enabledApiProposals": [],
     "galleryBanner": {
         "color": "#c5ddff",
         "theme": "light"
