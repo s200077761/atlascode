@@ -1,4 +1,5 @@
 import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
+import { Logger } from 'src/logger';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
@@ -16,6 +17,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     async getRepoDetails(wsRepo: WorkspaceRepo): Promise<Repo> {
         const site = wsRepo.mainSiteRemote.site;
         if (!site) {
+            Logger.debug(`JS-1324 No site found for repo with URI '${wsRepo.rootUri}'`);
             return emptyRepo;
         }
         const client = await clientForSite(wsRepo.mainSiteRemote.site!);

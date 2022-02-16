@@ -260,10 +260,15 @@ const StartWorkPage: React.FunctionComponent = () => {
     }, [controller]);
 
     useEffect(() => {
+        console.log(`JS-1324 selected repo ${repository.workspaceRepo.rootUri}`);
         if (repository.workspaceRepo.rootUri === '' && state.repoData.length > 0) {
             setRepository(state.repoData?.[0]);
         }
     }, [repository, state.repoData]);
+
+    useEffect(() => {
+        console.log(`JS-1324 repos: ${JSON.stringify(state.repoData.map((r) => r.workspaceRepo.rootUri))}`);
+    }, [state.repoData]);
 
     useEffect(() => {
         setUpstream(repository.workspaceRepo.mainSiteRemote.remote.name);
