@@ -59,6 +59,8 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
             this.isRefreshing = true;
 
             const workspaceRepos = this.api.getWorkspaceRepos();
+            this.logger.debug(`JS-1324 Webview Controller - Repo count: ${workspaceRepos.length}`);
+            this.logger.debug(`JS-1324 ${JSON.stringify(workspaceRepos.map((r) => r.rootUri))}`);
 
             const repoData: (RepoData & { hasSubmodules: boolean })[] = await Promise.all(
                 workspaceRepos
@@ -92,6 +94,9 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                         };
                     })
             );
+
+            this.logger.debug(`JS-1324 Webview Controller - Repo data Count: ${repoData.length}`);
+            this.logger.debug(`JS-1324 ${JSON.stringify(repoData.map((r) => r.workspaceRepo.rootUri))}`);
 
             this.postMessage({
                 type: StartWorkMessageType.Init,
