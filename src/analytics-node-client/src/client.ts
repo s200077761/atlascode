@@ -169,9 +169,8 @@ class AnalyticsClient {
             flushInterval: flushInterval || DEFAULT_QUEUE_FLUSH_INTERVAL,
             host: baseUrl || getUrlFromEnvironment(env),
             enable: enable !== undefined ? enable : true,
-            //un-comment line below to debug analytics calls with charles
-            //agent: getAgent(),
-        });
+            retryCount: 0,
+        } as any);
 
         this.deviceId = deviceId;
     }
