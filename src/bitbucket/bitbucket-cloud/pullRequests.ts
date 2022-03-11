@@ -210,6 +210,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             : `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`;
         let { data } = await this.client.get(diffUrl);
 
+        const conflictUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/conflicts`;
+        let resp = await this.client.get(conflictUrl);
+        const conflictData = resp.data;
+
+        const prTypeUrl = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`;
+        resp = await this.client.get(prTypeUrl);
+        const diffType = resp.data.diff_type;
+
         if (!data.values) {
             return [];
         }
@@ -235,7 +243,14 @@ export class CloudPullRequestApi implements PullRequestApi {
                 newPathDeletions: [],
                 newPathContextMap: {},
             },
+            isConflicted: this.isFileConflicted(diffType, diffStat, conflictData),
         }));
+    }
+
+    // Topic diffs no longer indicate a conflict in the status field so we have to check the results of the conflict endpoint.
+    private isFileConflicted(diffType: string, diffStat: any, conflictData: any[]): boolean | undefined {
+        const diffPath = diffStat.new.path;
+        return diffType === 'TOPIC' && conflictData.some((c) => c.path === diffPath);
     }
 
     private mapStatusWordsToFileStatus(status: string): FileStatus {

@@ -47,6 +47,10 @@ export class PullRequestFilesNode extends AbstractBaseNode {
                 break;
         }
 
+        if (this.diffViewData.fileDisplayData.isConflicted) {
+            item.iconPath = Resources.icons.get('warning');
+        }
+
         return item;
     }
 

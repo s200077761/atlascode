@@ -208,6 +208,10 @@ export interface FileDiff {
         // NOT using Map here as Map does not serialize to JSON
         newPathContextMap: Object;
     };
+
+    // Indicates whether or not the file has a conflict. Only defined on topic diffs - recent (approx 2022 and forward) BB server diffs.
+    // If it's undefined fall back to looking for FileStatus.CONFLICT
+    isConflicted?: boolean;
 }
 
 export type CreatePullRequestData = {

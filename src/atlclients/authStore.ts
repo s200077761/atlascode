@@ -177,11 +177,15 @@ export class CredentialManager implements Disposable {
         await this._queue.add(
             async () => {
                 if (keychain) {
-                    await keychain.setPassword(
-                        keychainServiceNameV3,
-                        `${productKey}-${credentialId}`,
-                        JSON.stringify(info)
-                    );
+                    try {
+                        await keychain.setPassword(
+                            keychainServiceNameV3,
+                            `${productKey}-${credentialId}`,
+                            JSON.stringify(info)
+                        );
+                    } catch (e) {
+                        Logger.error(e, `Error writing to keychain`);
+                    }
                 }
             },
             { priority: Priority.Write }
