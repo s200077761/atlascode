@@ -1,3 +1,9 @@
+## What's New in 2.10.10
+
+### Improvements
+
+-   Upadate to handle changes to Bitbucket pull request API
+
 ## What's New in 2.10.9
 
 ### Improvements

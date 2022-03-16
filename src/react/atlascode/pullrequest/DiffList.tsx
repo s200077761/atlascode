@@ -93,6 +93,27 @@ export const DiffList: React.FunctionComponent<{
         }
     };
 
+    const ConflictChip = (fileDiff: FileDiff) => {
+        // Is either undefined or false
+        if (!fileDiff.isConflicted) {
+            return <div></div>;
+        }
+        return (
+            <Tooltip title={fileStatusToString(FileStatus.CONFLICT)}>
+                <Chip
+                    className={clsx(classes.chip, fileStatusClassName(FileStatus.CONFLICT))}
+                    label={
+                        <Typography className={classes.monospace}>
+                            {fileStatusToString(FileStatus.CONFLICT).substring(0, 1)}
+                        </Typography>
+                    }
+                    size="small"
+                    variant="outlined"
+                />
+            </Tooltip>
+        );
+    };
+
     return (
         <TableContainer>
             <Table size="small" className={classes.table} aria-label="commits list">
@@ -132,6 +153,7 @@ export const DiffList: React.FunctionComponent<{
                                     />
                                 </Tooltip>
                             </TableCell>
+                            <TableCell className={classes.tableCell}>{ConflictChip(row)}</TableCell>
                             <TableCell className={classes.tableCell}>
                                 <Link onClick={() => props.openDiffHandler(row)}>
                                     <Typography>{row.file}</Typography>

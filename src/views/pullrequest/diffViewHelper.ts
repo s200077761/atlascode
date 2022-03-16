@@ -27,6 +27,7 @@ export interface DiffViewArgs {
         prUrl: string;
         fileDisplayName: string;
         fileDiffStatus: FileStatus;
+        isConflicted?: boolean;
         numberOfComments: number;
     };
 }
@@ -202,6 +203,7 @@ export async function getArgsForDiffView(
             fileDisplayName: fileDisplayName,
             fileDiffStatus: fileDiff.status,
             numberOfComments: comments.length ? comments.length : 0,
+            isConflicted: fileDiff.isConflicted,
         },
     };
 }
