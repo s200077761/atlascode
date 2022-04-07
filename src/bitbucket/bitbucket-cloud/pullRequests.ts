@@ -249,8 +249,9 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     // Topic diffs no longer indicate a conflict in the status field so we have to check the results of the conflict endpoint.
     private isFileConflicted(diffType: string, diffStat: any, conflictData: any[]): boolean | undefined {
-        const diffPath = diffStat.new.path;
-        return diffType === 'TOPIC' && conflictData.some((c) => c.path === diffPath);
+        const oldPath = diffStat.old?.path;
+        const newPath = diffStat.new?.path;
+        return diffType === 'TOPIC' && conflictData.some((c) => c.path === newPath ?? oldPath);
     }
 
     private mapStatusWordsToFileStatus(status: string): FileStatus {
