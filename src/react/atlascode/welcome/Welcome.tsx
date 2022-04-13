@@ -83,11 +83,27 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 2.10.12 🎉</h4>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that prevented displaying pull requests if any files had
+                                                    been deleted
+                                                </li>
+                                            </ul>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that prevented display of repos on Start Work screen when
+                                                    not using Bitbucket
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 2.10.11 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
                                             <ul>
-                                                <li>Upadate to handle changes to Bitbucket pull request API</li>
+                                                <li>Update to handle changes to Bitbucket pull request API</li>
                                             </ul>
                                         </section>
                                         <h4>🎉 What's New in 2.10.9 🎉</h4>

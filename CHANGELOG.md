@@ -1,8 +1,15 @@
+## What's New in 2.10.12
+
+### Bugs fixed
+
+-   Fixed bug that prevented displaying pull requests if any files had been deleted
+-   Fixed bug that prevented display of repos on Start Work screen when not using Bitbucket
+
 ## What's New in 2.10.11
 
 ### Improvements
 
--   Upadate to handle changes to Bitbucket pull request API
+-   Update to handle changes to Bitbucket pull request API
 
 ## What's New in 2.10.9
 
