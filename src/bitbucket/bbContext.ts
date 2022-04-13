@@ -107,11 +107,19 @@ export class BitbucketContext extends Disposable {
             })
         );
 
-        this.getAllRepositoriesRaw().forEach((repo) => {
+        const repos = this.getAllRepositoriesRaw();
+        for (let i = 0; i < repos.length; i++) {
+            const repo: Repository = repos[i];
+            if (!repo.state.HEAD) {
+                Logger.debug(`JS-1324 Forcing updateModelState on ${repo.rootUri}`);
+                await repo.status();
+            }
             if (repo.state.remotes.length > 0) {
                 this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
+            } else {
+                Logger.warn(`JS-1324 no remotes found for ${repo.rootUri}`);
             }
-        });
+        }
 
         this._onDidChangeBitbucketContext.fire();
     }
