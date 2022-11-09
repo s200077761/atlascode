@@ -404,7 +404,7 @@
             "description": "Checksum of these file paths will be used to generate the cache key",
             "items": {
                 "type": "string",
-                "description": "Glob pattern for the cache path",
+                "description": "Glob pattern for the cache key files",
                 "minLength": 1
             }
         },
@@ -440,7 +440,7 @@
                                 "path": {
                                     "type": "string",
                                     "title": "Cache path",
-                                    "description": "Glob pattern for the cache path",
+                                    "description": "Path to the directory to be cached, can be absolute or relative to the clone directory",
                                     "minLength": 1
                                 }
                             },
