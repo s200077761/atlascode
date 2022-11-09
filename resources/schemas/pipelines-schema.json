@@ -398,16 +398,59 @@
                 }
             }
         },
+        "cache-key-files": {
+            "type": "array",
+            "title": "Cache key",
+            "description": "Checksum of these file paths will be used to generate the cache key",
+            "items": {
+                "type": "string",
+                "description": "Glob pattern for the cache path",
+                "minLength": 1
+            }
+        },
         "caches": {
             "type": "object",
-            "title": "Defines custom caches to be used by pipelines",
+            "title": "Defines custom caches to be used by pipelines.",
             "description": "Re-downloading dependencies from the internet for each step of a build can take a lot of time. Using a cache they are downloaded once to our servers and then locally loaded into the build each time.",
             "patternProperties": {
                 "^(?!-)[-a-z0-9]{0,49}[a-z0-9]$": {
-                    "type": "string",
-                    "title": "Path to the directory to be cached",
-                    "description": "Path to the directory to be cached, can be absolute or relative to the clone directory",
-                    "minLength": 1
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "title": "Path to the directory to be cached",
+                            "description": "Path to the directory to be cached, can be absolute or relative to the clone directory",
+                            "minLength": 1
+                        },
+                        {
+                            "type": "object",
+                            "title": "Caches",
+                            "description": "Cache name",
+                            "minLength": 2,
+                            "properties": {
+                                "key": {
+                                    "type": "object",
+                                    "title": "Cache key",
+                                    "description": "Checksum of these file paths will be used to generate the cache key",
+                                    "properties": {
+                                        "files": {
+                                            "$ref": "#/definitions/cache-key-files"
+                                        }
+                                    }
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "title": "Cache path",
+                                    "description": "Glob pattern for the cache path",
+                                    "minLength": 1
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "path"
+                            ],
+                            "additionalProperties": false
+                        }
+                    ]
                 }
             },
             "not": {
