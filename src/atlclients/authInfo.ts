@@ -268,6 +268,7 @@ export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined 
     const hostname = site.host.split(':')[0];
 
     if (hostname.endsWith('atlassian.net') || hostname.endsWith('jira.com')) {
+        // return OAuthProvider.JiraCloudPKCE;
         return OAuthProvider.JiraCloud;
     }
 

@@ -1,21 +1,23 @@
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
-import { AxiosInstance } from 'axios';
-import crypto from 'crypto';
 import * as vscode from 'vscode';
-import { Logger } from '../logger';
-import { Authenticator, Tokens } from './authenticator';
+
 import {
     AccessibleResource,
     DetailedSiteInfo,
     OAuthProvider,
-    oauthProviderForSite,
     OAuthResponse,
     ProductJira,
     SiteInfo,
     UserInfo,
+    oauthProviderForSite,
 } from './authInfo';
+import { Authenticator, Tokens } from './authenticator';
+import { Strategy, strategyForProvider } from './oldStrategy'; // figure out new vs old strategy
+
+import { AxiosInstance } from 'axios';
 import { CredentialManager } from './authStore';
-import { JiraProdStrategy, JiraStagingStrategy } from './strategy';
+import { Logger } from '../logger';
+import crypto from 'crypto';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 
 export class JiraAuthentictor implements Authenticator {
     private activeCodes: Map<string, string> = new Map();
@@ -24,14 +26,19 @@ export class JiraAuthentictor implements Authenticator {
 
     public startAuthentication(state: string, site: SiteInfo) {
         const provider = oauthProviderForSite(site)!;
-        const strategy = provider === OAuthProvider.JiraCloud ? JiraProdStrategy : JiraStagingStrategy;
+        const strategy = strategyForProvider(provider);
         const verifier = this.verifier();
         this.activeCodes.set(state, verifier);
         const url = this.constructUrl(strategy, state, verifier);
         vscode.env.openExternal(vscode.Uri.parse(url));
     }
 
-    public async getTokens(state: string, strategy: any, code: string, agent: { [k: string]: any }): Promise<Tokens> {
+    private async getTokens(
+        state: string,
+        strategy: Strategy,
+        code: string,
+        agent: { [k: string]: any }
+    ): Promise<Tokens> {
         try {
             const [proxyHost, proxyPort] = getProxyHostAndPort();
             if (proxyHost.trim() !== '') {
@@ -40,20 +47,15 @@ export class JiraAuthentictor implements Authenticator {
                 Logger.debug(`no proxy configured in environment`);
             }
 
-            const codeVerifier = this.activeCodes.get(state);
+            // const codeVerifier = this.activeCodes.get(state);
+            // // what to do if there's no verifier?
 
-            const tokenResponse = await this.axios(strategy.tokenURL, {
+            const tokenResponse = await this.axios(strategy.tokenUrl(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                data: JSON.stringify({
-                    grant_type: 'authorization_code',
-                    code: code,
-                    redirect_uri: strategy.callbackURL,
-                    client_id: strategy.clientID,
-                    code_verifier: codeVerifier,
-                }),
+                data: strategy.tokenAuthorizationData(code),
                 ...agent,
             });
 
@@ -75,7 +77,7 @@ export class JiraAuthentictor implements Authenticator {
         code: string,
         agent: { [k: string]: any }
     ): Promise<OAuthResponse> {
-        const strategy = provider === OAuthProvider.JiraCloud ? JiraProdStrategy : JiraStagingStrategy;
+        const strategy = strategyForProvider(provider);
         const tokens = await this.getTokens(state, strategy, code, agent);
         const accessibleResources = await this.getResources(strategy, tokens.accessToken, agent);
         if (accessibleResources.length > 0) {
@@ -124,19 +126,8 @@ export class JiraAuthentictor implements Authenticator {
         return newSites;
     }
 
-    private constructUrl(strategy: any, state: string, verifier: string): string {
-        const codeChallenge = this.base64URLEncode(this.sha256(verifier));
-        const params = new URLSearchParams();
-        params.append('client_id', strategy.clientID);
-        params.append('redirect_uri', strategy.callbackURL);
-        params.append('response_type', 'code');
-        params.append('scope', strategy.scope);
-        params.append('audience', strategy.authParams.audience);
-        params.append('prompt', strategy.authParams.prompt);
-        params.append('state', state);
-        params.append('code_challenge', codeChallenge);
-        params.append('code_challenge_method', 'S256');
-        return strategy.authorizationURL + '?' + params.toString();
+    private constructUrl(strategy: Strategy, state: string, verifier: string): string {
+        return strategy.authorizeUrl(state);
     }
 
     private async getUser(
@@ -175,14 +166,14 @@ export class JiraAuthentictor implements Authenticator {
     }
 
     private async getResources(
-        strategy: any,
+        strategy: Strategy,
         accessToken: string,
         agent: { [k: string]: any }
     ): Promise<AccessibleResource[]> {
         try {
             const resources: AccessibleResource[] = [];
 
-            const resourcesResponse = await this.axios(strategy.accessibleResourcesURL, {
+            const resourcesResponse = await this.axios(strategy.accessibleResourcesUrl(), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -210,9 +201,5 @@ export class JiraAuthentictor implements Authenticator {
 
     private verifier(): string {
         return this.base64URLEncode(crypto.randomBytes(32));
-    }
-
-    private sha256(buffer: any) {
-        return crypto.createHash('sha256').update(buffer).digest();
     }
 }

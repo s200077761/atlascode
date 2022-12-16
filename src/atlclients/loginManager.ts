@@ -1,36 +1,38 @@
-import axios, { AxiosInstance } from 'axios';
-import { v4 } from 'uuid';
 import * as vscode from 'vscode';
-import { authenticatedEvent, editedEvent } from '../analytics';
-import { AnalyticsClient } from '../analytics-node-client/src';
-import { configuration } from '../config/configuration';
-import { AxiosUserAgent } from '../constants';
-import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
-import { Logger } from '../logger';
-import { SiteManager } from '../siteManager';
-import { ConnectionTimeout } from '../util/time';
+
 import {
     AccessibleResource,
     AuthInfo,
     AuthInfoState,
     BasicAuthInfo,
     DetailedSiteInfo,
-    isBasicAuthInfo,
-    isPATAuthInfo,
     OAuthInfo,
     OAuthProvider,
-    oauthProviderForSite,
     OAuthResponse,
     PATAuthInfo,
     Product,
     ProductBitbucket,
     ProductJira,
     SiteInfo,
+    isBasicAuthInfo,
+    isPATAuthInfo,
+    oauthProviderForSite,
 } from './authInfo';
-import { CredentialManager } from './authStore';
+import { authenticatedEvent, editedEvent } from '../analytics';
+import axios, { AxiosInstance } from 'axios';
+import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
+
+import { AnalyticsClient } from '../analytics-node-client/src';
+import { AxiosUserAgent } from '../constants';
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
+import { ConnectionTimeout } from '../util/time';
+import { CredentialManager } from './authStore';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
+import { Logger } from '../logger';
 import { OAuthDancer } from './oauthDancer';
+import { SiteManager } from '../siteManager';
+import { configuration } from '../config/configuration';
+import { v4 } from 'uuid';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 
@@ -59,7 +61,13 @@ export class LoginManager {
 
     // this is *only* called when login buttons are clicked by the user
     public async userInitiatedOAuthLogin(site: SiteInfo, callback: string): Promise<void> {
-        if (configuration.get<boolean>('useNewAuth')) {
+        const provider = oauthProviderForSite(site)!;
+        if (!provider) {
+            throw new Error(`No provider found for ${site.host}`);
+        }
+        if (configuration.get('useNewAuth')) {
+            // This is now the Bitbucket path
+
             // `callableUri` is the URI for the last redirect in the OAuth process (redirecting to the extension). This
             // should work for VS Code, Insiders, and any online version.
             const callableUri = await vscode.env.asExternalUri(
@@ -76,25 +84,16 @@ export class LoginManager {
             // The UUID / redirect URI combination is base64 encoded to prevent any issues with URL encoding.
             const state = new Buffer(rawState).toString('base64');
             this._activeRequests.set(state, site);
-            if (site.product.key === ProductJira.key) {
-                this._jiraAuthenticator.startAuthentication(state, site);
-            } else {
-                this._bitbucketAuthenticator.startAuthentication(state, site);
-            }
-
+            this._bitbucketAuthenticator.startAuthentication(state, site);
             return Promise.resolve();
         } else {
-            const provider = oauthProviderForSite(site)!;
-            if (!provider) {
-                throw new Error(`No provider found for ${site.host}`);
-            }
-
             const resp = await this._dancer.doDance(provider, site, callback);
             this.saveDetails(provider, site, resp);
         }
     }
 
     // We get here via the app url as part of the OAuth dance
+    // Also possibly from manually adding token via the settings
     public async exchangeCodeForTokens(state: string, code: string) {
         const site = this._activeRequests.get(state);
         if (site) {
