@@ -3,7 +3,7 @@ import { AccessibleResource, UserInfo } from '../authInfo';
 import { AxiosInstance } from 'axios';
 import { Logger } from '../../logger';
 import { ResponseHandler } from './ResponseHandler';
-import { Strategy } from '../oldStrategy';
+import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 

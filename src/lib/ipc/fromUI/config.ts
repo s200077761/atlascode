@@ -1,12 +1,12 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
-import { ConfigTarget } from '../models/config';
+
 import { CommonAction } from './common';
+import { ConfigTarget } from '../models/config';
+import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
 
 export enum ConfigActionType {
     Login = 'login',
     Logout = 'logout',
-    SaveCode = 'saveCode',
     SaveSettings = 'saveSettings',
     OpenJSON = 'openJson',
     JQLOptionsRequest = 'jqlOptionsRequest',
@@ -23,7 +23,6 @@ export enum ConfigActionType {
 export type ConfigAction =
     | ReducerAction<ConfigActionType.Login, LoginAuthAction>
     | ReducerAction<ConfigActionType.Logout, LogoutAuthAction>
-    | ReducerAction<ConfigActionType.SaveCode, SaveCodeAction>
     | ReducerAction<ConfigActionType.SaveSettings, SaveSettingsAction>
     | ReducerAction<ConfigActionType.OpenJSON, OpenJsonAction>
     | ReducerAction<ConfigActionType.JQLOptionsRequest, JQLOptionsRequestAction>

@@ -1,23 +1,23 @@
-import { Fade, Grid } from '@material-ui/core';
-import React from 'react';
-import { ProductBitbucket } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { CommonPanelProps } from '../../common/commonPanelProps';
-import { StatusBarPanel } from '../../common/StatusBarPanel';
+import { Fade, Grid } from '@material-ui/core';
+
 import { AuthPanel } from '../auth/AuthPanel';
 import { BitbucketIssuesPanel } from './subpanels/BitbucketIssuesPanel';
+import { CommonPanelProps } from '../../common/commonPanelProps';
 import { ContextMenuPanel } from './subpanels/ContextMenuPanel';
+import { PRExplorerPanel } from './subpanels/PRExplorerPanel';
 import { PipelinesPanel } from './subpanels/PipelinesPanel';
 import { PreferredRemotesPanel } from './subpanels/PreferredRemotesPanel';
-import { PRExplorerPanel } from './subpanels/PRExplorerPanel';
+import { ProductBitbucket } from '../../../../atlclients/authInfo';
+import React from 'react';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { StatusBarPanel } from '../../common/StatusBarPanel';
 
 type BitbucketPanelProps = CommonPanelProps & {
     config: { [key: string]: any };
     sites: SiteWithAuthInfo[];
     isRemote: boolean;
     onSubsectionChange: (subSection: ConfigSubSection, expanded: boolean) => void;
-    useNewAuth: boolean;
 };
 
 export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
@@ -27,7 +27,6 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
     config,
     sites,
     isRemote,
-    useNewAuth,
 }) => {
     return (
         <>
@@ -47,7 +46,6 @@ export const BitbucketPanel: React.FunctionComponent<BitbucketPanelProps> = ({
                                 sites={sites}
                                 product={ProductBitbucket}
                                 section={ConfigSection.Bitbucket}
-                                useNewAuth={useNewAuth}
                             />
                         </Grid>
                         <Grid item>

@@ -3,7 +3,7 @@ import { BitbucketResponseHandler } from './responseHandlers/BitbucketResponseHa
 import { JiraPKCEResponseHandler } from './responseHandlers/JiraPKCEResponseHandler';
 import { OAuthProvider } from './authInfo';
 import { ResponseHandler } from './responseHandlers/ResponseHandler';
-import { Strategy } from './oldStrategy';
+import { Strategy } from './strategy';
 
 export function responseHandlerForStrategy(
     strategy: Strategy,

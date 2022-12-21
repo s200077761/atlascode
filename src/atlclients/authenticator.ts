@@ -1,4 +1,4 @@
-import { AccessibleResource, DetailedSiteInfo, OAuthProvider, OAuthResponse, SiteInfo } from './authInfo';
+import { AccessibleResource, DetailedSiteInfo, OAuthProvider } from './authInfo';
 
 export interface Tokens {
     accessToken: string;
@@ -10,33 +10,6 @@ export interface Tokens {
  */
 
 export interface Authenticator {
-    /**
-     * This starts the authentication process. It will open a browser window to the appropriate auth service. When
-     * the user has authenticated with that service the browser will be redirected to the Atlascode auth service (or
-     * auth service running on the user's machine) where the app redirect URI will be decoded and the user will be
-     * redirect to VS Code or some equivalent.
-     * @param state The state parameter for the OAuth dance. To work with the Atlascode auth service this should be a
-     * UUID followed by "::" followed by the app URI to be redirect to as the last redirect in the OAuth process.
-     * @param site The site being authenticated with.
-     */
-    startAuthentication(state: string, site: SiteInfo): void;
-
-    /**
-     * When the final redirect to the application happens this method should be called to exchange the authorization
-     * token for an access and refresh token.
-     * @param provider The OAuth provider for the site.
-     * @param state The state parameter for the OAuth process. This will be the same as the value provided to
-     * startAuthentication.
-     * @param code The authorization token returned in the redirect.
-     * @param agent The agent to use during the code exchange.
-     */
-    exchangeCode(
-        provider: OAuthProvider,
-        state: string,
-        code: string,
-        agent: { [k: string]: any }
-    ): Promise<OAuthResponse>;
-
     getOAuthSiteDetails(
         provider: OAuthProvider,
         userId: string,

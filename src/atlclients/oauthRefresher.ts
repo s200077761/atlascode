@@ -9,7 +9,7 @@ import { Disposable } from 'vscode';
 import { Logger } from 'src/logger';
 import { addCurlLogging } from './interceptors';
 import { getAgent } from '../jira/jira-client/providers';
-import { strategyForProvider } from './oldStrategy';
+import { strategyForProvider } from './strategy';
 
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;

@@ -19,27 +19,20 @@ import {
     oauthProviderForSite,
 } from './authInfo';
 import { authenticatedEvent, editedEvent } from '../analytics';
-import axios, { AxiosInstance } from 'axios';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
 
 import { AnalyticsClient } from '../analytics-node-client/src';
-import { AxiosUserAgent } from '../constants';
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
-import { ConnectionTimeout } from '../util/time';
 import { CredentialManager } from './authStore';
 import { JiraAuthentictor as JiraAuthenticator } from './jiraAuthenticator';
 import { Logger } from '../logger';
 import { OAuthDancer } from './oauthDancer';
 import { SiteManager } from '../siteManager';
-import { configuration } from '../config/configuration';
-import { v4 } from 'uuid';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
-    private _activeRequests: Map<string, SiteInfo> = new Map();
-    private _axios: AxiosInstance;
     private _jiraAuthenticator: JiraAuthenticator;
     private _bitbucketAuthenticator: BitbucketAuthenticator;
 
@@ -48,15 +41,8 @@ export class LoginManager {
         private _siteManager: SiteManager,
         private _analyticsClient: AnalyticsClient
     ) {
-        this._axios = axios.create({
-            timeout: ConnectionTimeout,
-            headers: {
-                'User-Agent': AxiosUserAgent,
-                'Accept-Encoding': 'gzip, deflate',
-            },
-        });
-        this._bitbucketAuthenticator = new BitbucketAuthenticator(this._axios);
-        this._jiraAuthenticator = new JiraAuthenticator(this._axios);
+        this._bitbucketAuthenticator = new BitbucketAuthenticator();
+        this._jiraAuthenticator = new JiraAuthenticator();
     }
 
     // this is *only* called when login buttons are clicked by the user
@@ -65,54 +51,8 @@ export class LoginManager {
         if (!provider) {
             throw new Error(`No provider found for ${site.host}`);
         }
-        if (configuration.get('useNewAuth')) {
-            // This is now the Bitbucket path
-
-            // `callableUri` is the URI for the last redirect in the OAuth process (redirecting to the extension). This
-            // should work for VS Code, Insiders, and any online version.
-            const callableUri = await vscode.env.asExternalUri(
-                vscode.Uri.parse(`${vscode.env.uriScheme}://atlassian.atlascode/finalizeAuthentication`)
-            );
-
-            // Since there's no consistent way to include a URI for the final redirect in the OAuth sequence we
-            // encode it in the state parameter. This parameter will be passed along through all steps in the OAuth
-            // dance meaning it will be included in the redirect to our auth service. We decode the uri in the auth
-            // service and redirect from there. That redirect is then handled by `exchangeCodesForTokens()`. Additinally
-            // state needs to be unique to correlate incoming responses with outgoing requests so a UUID is included.
-            const rawState = `${v4()}::${callableUri.toString(true)}`;
-
-            // The UUID / redirect URI combination is base64 encoded to prevent any issues with URL encoding.
-            const state = new Buffer(rawState).toString('base64');
-            this._activeRequests.set(state, site);
-            this._bitbucketAuthenticator.startAuthentication(state, site);
-            return Promise.resolve();
-        } else {
-            const resp = await this._dancer.doDance(provider, site, callback);
-            this.saveDetails(provider, site, resp);
-        }
-    }
-
-    // We get here via the app url as part of the OAuth dance
-    // Also possibly from manually adding token via the settings
-    public async exchangeCodeForTokens(state: string, code: string) {
-        const site = this._activeRequests.get(state);
-        if (site) {
-            try {
-                const provider = oauthProviderForSite(site)!;
-                const agent = getAgent(site);
-
-                if (site.product.key === ProductJira.key) {
-                    const oauthResponse = await this._jiraAuthenticator.exchangeCode(provider, state, code, agent);
-                    this.saveDetails(provider, site, oauthResponse);
-                } else {
-                    const oauthResponse = await this._bitbucketAuthenticator.exchangeCode(provider, state, code, agent);
-                    this.saveDetails(provider, site, oauthResponse);
-                }
-            } catch (e) {
-                Logger.error(e, 'Error while exchanging bearer token for access token.');
-                vscode.window.showErrorMessage(`There was an error fetching access tokens': ${e}`);
-            }
-        }
+        const resp = await this._dancer.doDance(provider, site, callback);
+        this.saveDetails(provider, site, resp);
     }
 
     private async saveDetails(provider: OAuthProvider, site: SiteInfo, resp: OAuthResponse) {

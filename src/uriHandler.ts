@@ -1,14 +1,14 @@
-import { Disposable, env, Uri, UriHandler, window } from 'vscode';
-import { ProductJira } from './atlclients/authInfo';
-import { LoginManager } from './atlclients/loginManager';
+import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
+import { Disposable, Uri, UriHandler, env, window } from 'vscode';
+
+import { AnalyticsApi } from './lib/analyticsApi';
 import { CheckoutHelper } from './bitbucket/checkoutHelper';
+import { Container } from './container';
+import { Logger } from './logger';
+import { ProductJira } from './atlclients/authInfo';
+import { fetchMinimalIssue } from './jira/fetchIssue';
 import { showIssue } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
-import { Container } from './container';
-import { fetchMinimalIssue } from './jira/fetchIssue';
-import { AnalyticsApi } from './lib/analyticsApi';
-import { ConfigSection, ConfigSubSection } from './lib/ipc/models/config';
-import { Logger } from './logger';
 
 const ExtensionId = 'atlassian.atlascode';
 //const pullRequestUrl = `${env.uriScheme}://${ExtensionId}/openPullRequest`;
@@ -49,11 +49,7 @@ export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
 
-    constructor(
-        private loginManager: LoginManager,
-        private analyticsApi: AnalyticsApi,
-        private bitbucketHelper: CheckoutHelper
-    ) {
+    constructor(private analyticsApi: AnalyticsApi, private bitbucketHelper: CheckoutHelper) {
         this.disposables = window.registerUriHandler(this);
     }
 
@@ -66,8 +62,6 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.handlePullRequestUri(uri);
         } else if (uri.path.endsWith('cloneRepository')) {
             await this.handleCloneRepository(uri);
-        } else if (uri.path.endsWith('finalizeAuthentication')) {
-            await this.finalizeAuthentication(uri);
         } else if (uri.path.endsWith('startWorkOnJiraIssue')) {
             await this.handleStartWorkOnJiraIssue(uri);
         } else if (uri.path.endsWith('checkoutBranch')) {
@@ -232,13 +226,6 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             Logger.debug('error cloning repository:', e);
             window.showErrorMessage('Error cloning repository (check log for details)');
         }
-    }
-
-    private async finalizeAuthentication(uri: Uri) {
-        const query = new URLSearchParams(uri.query);
-        const code = query.get('code') ?? '';
-        const state = query.get('xstate') ?? ''; // xstate is used to avoid overwriting the state param used by codespaces
-        this.loginManager.exchangeCodeForTokens(state, code);
     }
 
     dispose(): void {

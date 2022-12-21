@@ -4,7 +4,7 @@ import { AxiosInstance } from 'axios';
 import { Logger } from '../../logger';
 import { ProductBitbucket } from '../authInfo';
 import { ResponseHandler } from './ResponseHandler';
-import { Strategy } from '../oldStrategy';
+import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
 
 export class BitbucketResponseHandler extends ResponseHandler {

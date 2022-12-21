@@ -1,94 +1,10 @@
-import * as vscode from 'vscode';
+import { AccessibleResource, DetailedSiteInfo, OAuthProvider, ProductBitbucket } from './authInfo';
 
-import {
-    AccessibleResource,
-    DetailedSiteInfo,
-    OAuthProvider,
-    OAuthResponse,
-    ProductBitbucket,
-    SiteInfo,
-    UserInfo,
-    oauthProviderForSite,
-} from './authInfo';
-import { Authenticator, Tokens } from './authenticator';
-import { BitbucketProdStrategy, BitbucketStagingStrategy } from './strategy';
-import { Strategy, strategyForProvider } from './oldStrategy';
-
-import { AxiosInstance } from 'axios';
+import { Authenticator } from './authenticator';
 import { CredentialManager } from './authStore';
-import { Logger } from '../logger';
 
 export class BitbucketAuthenticator implements Authenticator {
-    constructor(private axios: AxiosInstance) {}
-
-    public startAuthentication(state: string, site: SiteInfo) {
-        const provider = oauthProviderForSite(site);
-        const strategy = provider === OAuthProvider.BitbucketCloud ? BitbucketProdStrategy : BitbucketStagingStrategy;
-
-        const url = new URL(strategy.authorizationURL);
-        url.searchParams.append('client_id', strategy.clientID);
-        url.searchParams.append('response_type', 'code');
-        url.searchParams.append('state', state);
-
-        vscode.env.openExternal(vscode.Uri.parse(url.toString()));
-    }
-
-    public async getTokens(strategy: Strategy, code: string, agent: { [k: string]: any }): Promise<Tokens> {
-        try {
-            const tokenResponse = await this.axios(strategy.tokenUrl(), {
-                method: 'POST',
-                headers: strategy.refreshHeaders(),
-                data: `grant_type=authorization_code&code=${code}`,
-                ...agent,
-            });
-
-            const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token };
-        } catch (err) {
-            const newErr = new Error(`Error fetching Bitbucket tokens: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
-    }
-
-    public async exchangeCode(
-        provider: OAuthProvider,
-        state: string,
-        code: string,
-        agent: { [k: string]: any }
-    ): Promise<OAuthResponse> {
-        let strategy = strategyForProvider(provider);
-        let accessibleResources: AccessibleResource[] = [];
-
-        if (provider === OAuthProvider.BitbucketCloud) {
-            accessibleResources.push({
-                id: OAuthProvider.BitbucketCloud,
-                name: ProductBitbucket.name,
-                scopes: [],
-                avatarUrl: '',
-                url: 'https://bitbucket.org',
-            });
-        } else {
-            accessibleResources.push({
-                id: OAuthProvider.BitbucketCloudStaging,
-                name: ProductBitbucket.name,
-                scopes: [],
-                avatarUrl: '',
-                url: 'https://staging.bb-inf.net',
-            });
-        }
-
-        const tokens = await this.getTokens(strategy, code, agent);
-        const user = await this.getUser(strategy, tokens.accessToken, agent);
-
-        return {
-            access: tokens.accessToken,
-            refresh: tokens.refreshToken,
-            receivedAt: Date.now(),
-            user: user,
-            accessibleResources: accessibleResources,
-        };
-    }
+    constructor() {}
 
     public async getOAuthSiteDetails(
         provider: OAuthProvider,
@@ -126,54 +42,5 @@ export class BitbucketAuthenticator implements Authenticator {
         }
 
         return newSites;
-    }
-
-    private async getUser(strategy: Strategy, accessToken: string, agent: { [k: string]: any }): Promise<UserInfo> {
-        try {
-            const userResponse = await this.axios(strategy.profileUrl(), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                ...agent,
-            });
-
-            let email = 'do-not-reply@atlassian.com';
-            try {
-                const emailsResponse = await this.axios(strategy.emailsUrl(), {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    ...agent,
-                });
-
-                if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
-                    const primary = emailsResponse.data.values.filter((val: any) => val.is_primary);
-                    if (primary.length > 0) {
-                        email = primary[0].email;
-                    }
-                }
-            } catch (e) {
-                //ignore
-            }
-
-            const userData = userResponse.data;
-
-            return {
-                id: userData.account_id,
-                displayName: userData.display_name,
-                email: email,
-                avatarUrl: userData.links.avatar.href,
-            };
-        } catch (err) {
-            const newErr = new Error(`Error fetching Bitbucket user: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
     }
 }

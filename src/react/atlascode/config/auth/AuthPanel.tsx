@@ -1,24 +1,24 @@
-import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import React, { memo, useCallback, useEffect, useState } from 'react';
-import { Product } from '../../../../atlclients/authInfo';
 import { ConfigSection, ConfigSubSection } from '../../../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+import { ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary } from '@material-ui/core';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+
 import { CommonSubpanelProps } from '../../common/commonPanelProps';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { PanelSubtitle } from '../../common/PanelSubtitle';
 import { PanelTitle } from '../../common/PanelTitle';
+import { Product } from '../../../../atlclients/authInfo';
 import { SiteAuthenticator } from './SiteAuthenticator';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 
 type AuthPanelProps = CommonSubpanelProps & {
     isRemote: boolean;
     sites: SiteWithAuthInfo[];
     product: Product;
     section: ConfigSection;
-    useNewAuth: boolean;
 };
 
 export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
-    ({ visible, expanded, onSubsectionChange, isRemote, sites, product, section, useNewAuth }) => {
+    ({ visible, expanded, onSubsectionChange, isRemote, sites, product, section }) => {
         const [internalExpanded, setInternalExpanded] = useState(expanded);
 
         const expansionHandler = useCallback(
@@ -49,7 +49,7 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
                     <PanelSubtitle>authenticate with {product.name} instances</PanelSubtitle>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
-                    <SiteAuthenticator product={product} isRemote={isRemote} sites={sites} useNewAuth={useNewAuth} />
+                    <SiteAuthenticator product={product} isRemote={isRemote} sites={sites} />
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );

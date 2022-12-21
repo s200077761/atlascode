@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { ConnectionTimeout, Time } from '../util/time';
 import { OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo } from './authInfo';
-import { Strategy, strategyForProvider } from './oldStrategy';
+import { Strategy, strategyForProvider } from './strategy';
 import axios, { AxiosInstance } from 'axios';
 
 import { AxiosUserAgent } from '../constants';

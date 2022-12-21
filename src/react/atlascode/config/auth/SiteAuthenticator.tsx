@@ -1,30 +1,25 @@
 import { Box, Button, Grid, Typography } from '@material-ui/core';
-import CloudIcon from '@material-ui/icons/Cloud';
-import DomainIcon from '@material-ui/icons/Domain';
 import React, { memo, useCallback, useContext } from 'react';
-import { Product } from '../../../../atlclients/authInfo';
-import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { CloudAuthButton } from './CloudAuthButton';
-import { SiteList } from './SiteList';
+
 import { AuthDialogControllerContext } from './useAuthDialog';
-import { CodeEntryDialogControllerContext } from './useCodeEntryDialog';
+import { CloudAuthButton } from './CloudAuthButton';
+import DomainIcon from '@material-ui/icons/Domain';
+import { Product } from '../../../../atlclients/authInfo';
+import { SiteList } from './SiteList';
+import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
+
 type SiteAuthenticatorProps = {
     product: Product;
     isRemote: boolean;
     sites: SiteWithAuthInfo[];
-    useNewAuth: boolean;
 };
 
 export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = memo(
-    ({ product, isRemote, sites, useNewAuth }) => {
+    ({ product, isRemote, sites }) => {
         const authDialogController = useContext(AuthDialogControllerContext);
         const openProductAuth = useCallback(() => {
             authDialogController.openDialog(product, undefined);
         }, [authDialogController, product]);
-        const codeEntryDialogController = useContext(CodeEntryDialogControllerContext);
-        const openCodeDialog = useCallback(() => {
-            codeEntryDialogController.openDialog(product);
-        }, [codeEntryDialogController, product]);
 
         const handleEdit = useCallback(
             (swa: SiteWithAuthInfo) => {
@@ -32,6 +27,7 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
             },
             [authDialogController, product]
         );
+        const useNewAuth = false;
 
         return (
             <Box flexGrow={1}>
@@ -67,13 +63,6 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                                             {`Add Custom ${product.name} Site`}
                                         </Button>
                                     </Grid>
-                                    {useNewAuth && (
-                                        <Grid item>
-                                            <Button color="primary" startIcon={<CloudIcon />} onClick={openCodeDialog}>
-                                                {`Manually Add ${product.name} Code`}
-                                            </Button>
-                                        </Grid>
-                                    )}
                                 </Grid>
                             </Grid>
                             <Grid item>
