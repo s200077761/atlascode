@@ -1,5 +1,3 @@
-import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
-import { emptyTransition, Transition } from '@atlassianlabs/jira-pi-common-models';
 import {
     AppBar,
     Box,
@@ -21,27 +19,27 @@ import {
     Typography,
     useTheme,
 } from '@material-ui/core';
-import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import LaunchIcon from '@material-ui/icons/Launch';
-import { Autocomplete } from '@material-ui/lab';
-import { makeStyles } from '@material-ui/styles';
-import path from 'path';
+import { CreatePullRequestControllerContext, useCreatePullRequestController } from './createPullRequestController';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { User } from '../../../bitbucket/model';
-import { Branch } from '../../../typings/git';
-import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
+import { RefreshButton, ToggleWithLabel } from '@atlassianlabs/guipi-core-components';
+import { Transition, emptyTransition } from '@atlassianlabs/jira-pi-common-models';
 import { VSCodeStyles, VSCodeStylesContext } from '../../vscode/theme/styles';
-import { ErrorDisplay } from '../common/ErrorDisplay';
-import Lozenge from '../common/Lozenge';
-import { PMFDisplay } from '../common/pmf/PMFDisplay';
+
+import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
+import { Autocomplete } from '@material-ui/lab';
+import { Branch } from '../../../typings/git';
 import { BranchWarning } from './BranchWarning';
 import { Commits } from './Commits';
-import { CreatePullRequestControllerContext, useCreatePullRequestController } from './createPullRequestController';
 import { DiffList } from './DiffList';
+import { ErrorDisplay } from '../common/ErrorDisplay';
+import LaunchIcon from '@material-ui/icons/Launch';
+import Lozenge from '../common/Lozenge';
+import { PMFDisplay } from '../common/pmf/PMFDisplay';
+import { User } from '../../../bitbucket/model';
 import UserPicker from './UserPicker';
-
-const createdFromAtlascodeFooter =
-    '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
+import { colorToLozengeAppearanceMap } from '../../vscode/theme/colors';
+import { makeStyles } from '@material-ui/styles';
+import path from 'path';
 
 const useStyles = makeStyles((theme: Theme) => ({
     title: {
@@ -87,7 +85,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
     const [sourceBranch, setSourceBranch] = useState<Branch>({ type: 0, name: '' });
     const [destinationBranch, setDestinationBranch] = useState<Branch>({ type: 1, name: '' });
     const [title, setTitle] = useState('Pull request title');
-    const [summary, setSummary] = useState(createdFromAtlascodeFooter);
+    const [summary, setSummary] = useState('');
     const [reviewers, setReviewers] = useState<User[]>([]);
     const [pushLocalChanges, setPushLocalChanges] = useState(true);
     const [closeSourceBranch, setCloseSourceBranch] = useState(false);
@@ -220,15 +218,11 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
         if (state.commits.length === 1) {
             setTitle(state.commits[0].message!.split('\n', 1)[0].trim());
             setSummary(
-                `${state.commits[0]
-                    .message!.substring(state.commits[0].message!.indexOf('\n') + 1)
-                    .trimLeft()}${createdFromAtlascodeFooter}`
+                `${state.commits[0].message!.substring(state.commits[0].message!.indexOf('\n') + 1).trimLeft()}`
             );
         } else if (state.commits.length > 1) {
             setTitle(sourceBranch.name!);
-            setSummary(
-                `${state.commits.map((c) => `* ${c.message.trimRight()}`).join('\n\n')}${createdFromAtlascodeFooter}`
-            );
+            setSummary(`${state.commits.map((c) => `* ${c.message.trimRight()}`).join('\n\n')}`);
         }
     }, [sourceBranch.name, state.commits]);
 

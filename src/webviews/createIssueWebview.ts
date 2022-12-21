@@ -1,20 +1,6 @@
-import { emptyIssueType, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
-import {
-    CreateMetaTransformerResult,
-    FieldValues,
-    IssueTypeUI,
-    ValueType,
-} from '@atlassianlabs/jira-pi-meta-models/ui-meta';
-import { format } from 'date-fns';
-import FormData from 'form-data';
 import * as fs from 'fs';
-import { commands, Position, Uri, ViewColumn } from 'vscode';
-import { issueCreatedEvent } from '../analytics';
-import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
-import { BitbucketIssue } from '../bitbucket/model';
-import { Commands } from '../commands';
-import { configuration } from '../config/configuration';
-import { Container } from '../container';
+
+import { Action, onlineStatus } from '../ipc/messaging';
 import {
     CreateIssueAction,
     isCreateIssue,
@@ -22,12 +8,29 @@ import {
     isScreensForSite,
     isSetIssueType,
 } from '../ipc/issueActions';
-import { CreateIssueData } from '../ipc/issueMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
-import { fetchCreateIssueUI } from '../jira/fetchIssue';
-import { Logger } from '../logger';
+import {
+    CreateMetaTransformerResult,
+    FieldValues,
+    IssueTypeUI,
+    ValueType,
+} from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import { DetailedSiteInfo, Product, ProductJira, emptySiteInfo } from '../atlclients/authInfo';
+import { IssueType, Project, emptyIssueType } from '@atlassianlabs/jira-pi-common-models';
+import { Position, Uri, ViewColumn, commands } from 'vscode';
+
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
+import { BitbucketIssue } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { Container } from '../container';
+import { CreateIssueData } from '../ipc/issueMessaging';
+import FormData from 'form-data';
 import { InitializingWebview } from './abstractWebview';
+import { Logger } from '../logger';
+import { configuration } from '../config/configuration';
+import { fetchCreateIssueUI } from '../jira/fetchIssue';
+import { format } from 'date-fns';
+import { issueCreatedEvent } from '../analytics';
+
 export interface PartialIssue {
     uri?: Uri;
     position?: Position;
@@ -48,8 +51,6 @@ export interface BBData {
     bbIssue: BitbucketIssue;
     issueKey: string;
 }
-
-const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
 export const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
     selectedIssueType: emptyIssueType,
@@ -258,10 +259,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
             */
             if (this._partialIssue && !fieldValues) {
                 const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
-                const desc = this._partialIssue.description
-                    ? this._partialIssue.description + createdFromAtlascodeFooter
-                    : createdFromAtlascodeFooter;
-                const partialvals = { summary: this._partialIssue.summary, description: desc };
+                const partialvals = {
+                    summary: this._partialIssue.summary,
+                    description: this._partialIssue.description,
+                };
 
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
                     ...currentVals,
