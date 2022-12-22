@@ -1,3 +1,11 @@
+## What's New in 3.0.0
+
+### Improvements
+
+-   Update to handle changes in how Atlassian handles authentication. Unfortunately you will need to log in again after this update
+-   Removed "Created from Atlassian for VS Code" footer when creating a new issue or pull request
+-   Updates to Bitbucket Pipelines configuration file validation (Thanks to Damian Karzon. Additional thanks to Jim den Otter)
+
 ## What's New in 2.10.12
 
 ### Bugs fixed
