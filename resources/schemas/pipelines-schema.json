@@ -265,6 +265,22 @@
                     "title": "Type of environment for the deployment step",
                     "description": "Sets the type of environment for your deployment step, used in the Deployments dashboard.",
                     "minLength": 1
+                },
+                "condition": {
+                    "type": "object",
+                    "title": "Execute step when only condition is satisfied",
+                    "description": "Allows for steps to execute when certain conditions or rules are satisfied",
+                    "properties": {
+                        "changesets": {
+                            "type": "object",
+                            "properties": {
+                                "includePaths": {
+                                    "type": "array",
+                                    "title": "List of paths for changeset condition."
+                                }
+                            }
+                        }
+                    }
                 }
             },
             "required": [
