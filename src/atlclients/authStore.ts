@@ -258,8 +258,9 @@ export class CredentialManager implements Disposable {
         const provider: OAuthProvider | undefined = oauthProviderForSite(site);
         let newTokens = undefined;
         if (provider && credentials) {
-            newTokens = await this._refresher.getNewTokens(provider, credentials.refresh);
-            if (newTokens) {
+            const tokenResponse = await this._refresher.getNewTokens(provider, credentials.refresh);
+            if (tokenResponse.tokens) {
+                const newTokens = tokenResponse.tokens;
                 credentials.access = newTokens.accessToken;
                 credentials.expirationDate = newTokens.expiration;
                 credentials.recievedAt = newTokens.receivedAt;
@@ -268,6 +269,9 @@ export class CredentialManager implements Disposable {
                     credentials.iat = newTokens.iat ?? 0;
                 }
 
+                this.saveAuthInfo(site, credentials);
+            } else if (tokenResponse.shouldInvalidate) {
+                credentials.state = AuthInfoState.Invalid;
                 this.saveAuthInfo(site, credentials);
             }
         }

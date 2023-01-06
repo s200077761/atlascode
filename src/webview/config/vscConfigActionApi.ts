@@ -125,7 +125,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
         const jiraSites = await Promise.all(
             jiraSitesAvailable.map(
                 async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                    const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite);
+                    const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite, false);
                     return {
                         site: jiraSite,
                         auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
