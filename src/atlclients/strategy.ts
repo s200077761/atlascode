@@ -1,8 +1,8 @@
 import { OAuthProvider } from './authInfo';
 import crypto from 'crypto';
 
-const NewJiraProdStrategyData = {
-    clientID: 'UV2010EkKxO7GZ7zxZ8Swm9Rn4M5K0Eh',
+const JiraProdStrategyData = {
+    clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
     clientSecret: '',
     authorizationURL: 'https://auth.atlassian.com/authorize',
     tokenURL: 'https://auth.atlassian.com/oauth/token',
@@ -16,8 +16,8 @@ const NewJiraProdStrategyData = {
     },
 };
 
-const NewJiraStagingStrategyData = {
-    clientID: 'gtv5kAPJtJRQOvF7bepAh9rOUnZWTv3E',
+const JiraStagingStrategyData = {
+    clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
     clientSecret: '',
     authorizationURL: 'https://auth.stg.atlassian.com/authorize',
     tokenURL: 'https://auth.stg.atlassian.com/oauth/token',
@@ -100,24 +100,24 @@ class PKCEJiraProdStrategy extends Strategy {
     public authorizeUrl(state: string): string {
         const codeChallenge = base64URLEncode(sha256(this.verifier));
         const params = new URLSearchParams();
-        params.append('client_id', NewJiraProdStrategyData.clientID);
-        params.append('redirect_uri', NewJiraProdStrategyData.callbackURL);
+        params.append('client_id', JiraProdStrategyData.clientID);
+        params.append('redirect_uri', JiraProdStrategyData.callbackURL);
         params.append('response_type', 'code');
-        params.append('scope', NewJiraProdStrategyData.scope);
-        params.append('audience', NewJiraProdStrategyData.authParams.audience);
-        params.append('prompt', NewJiraProdStrategyData.authParams.prompt);
+        params.append('scope', JiraProdStrategyData.scope);
+        params.append('audience', JiraProdStrategyData.authParams.audience);
+        params.append('prompt', JiraProdStrategyData.authParams.prompt);
         params.append('state', state);
         params.append('code_challenge', codeChallenge);
         params.append('code_challenge_method', 'S256');
-        return NewJiraProdStrategyData.authorizationURL + '?' + params.toString();
+        return JiraProdStrategyData.authorizationURL + '?' + params.toString();
     }
 
     public accessibleResourcesUrl(): string {
-        return NewJiraProdStrategyData.accessibleResourcesURL;
+        return JiraProdStrategyData.accessibleResourcesURL;
     }
 
     public tokenUrl(): string {
-        return NewJiraProdStrategyData.tokenURL;
+        return JiraProdStrategyData.tokenURL;
     }
 
     public apiUrl(): string {
@@ -134,8 +134,8 @@ class PKCEJiraProdStrategy extends Strategy {
         const data = JSON.stringify({
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: NewJiraProdStrategyData.callbackURL,
-            client_id: NewJiraProdStrategyData.clientID,
+            redirect_uri: JiraProdStrategyData.callbackURL,
+            client_id: JiraProdStrategyData.clientID,
             code_verifier: this.verifier,
         });
         return data;
@@ -144,7 +144,7 @@ class PKCEJiraProdStrategy extends Strategy {
     public tokenRefreshData(refreshToken: string): string {
         const dataString = JSON.stringify({
             grant_type: 'refresh_token',
-            client_id: NewJiraProdStrategyData.clientID,
+            client_id: JiraProdStrategyData.clientID,
             refresh_token: refreshToken,
         });
         return dataString;
@@ -174,21 +174,21 @@ class PKCEJiraStagingStrategy extends Strategy {
     public authorizeUrl(state: string) {
         const codeChallenge = base64URLEncode(sha256(this.verifier));
         const params = new URLSearchParams();
-        params.append('client_id', NewJiraStagingStrategyData.clientID);
-        params.append('redirect_uri', NewJiraStagingStrategyData.callbackURL);
+        params.append('client_id', JiraStagingStrategyData.clientID);
+        params.append('redirect_uri', JiraStagingStrategyData.callbackURL);
         params.append('response_type', 'code');
-        params.append('scope', NewJiraStagingStrategyData.scope);
-        params.append('audience', NewJiraStagingStrategyData.authParams.audience);
-        params.append('prompt', NewJiraStagingStrategyData.authParams.prompt);
+        params.append('scope', JiraStagingStrategyData.scope);
+        params.append('audience', JiraStagingStrategyData.authParams.audience);
+        params.append('prompt', JiraStagingStrategyData.authParams.prompt);
         params.append('state', state);
         params.append('code_challenge', codeChallenge);
         params.append('code_challenge_method', 'S256');
 
-        return NewJiraStagingStrategyData.authorizationURL + '?' + params.toString();
+        return JiraStagingStrategyData.authorizationURL + '?' + params.toString();
     }
 
     public tokenUrl(): string {
-        return NewJiraStagingStrategyData.tokenURL;
+        return JiraStagingStrategyData.tokenURL;
     }
 
     public apiUrl(): string {
@@ -196,7 +196,7 @@ class PKCEJiraStagingStrategy extends Strategy {
     }
 
     public accessibleResourcesUrl(): string {
-        return NewJiraStagingStrategyData.accessibleResourcesURL;
+        return JiraStagingStrategyData.accessibleResourcesURL;
     }
 
     public refreshHeaders() {
@@ -209,8 +209,8 @@ class PKCEJiraStagingStrategy extends Strategy {
         const data = JSON.stringify({
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: NewJiraStagingStrategyData.callbackURL,
-            client_id: NewJiraStagingStrategyData.clientID,
+            redirect_uri: JiraStagingStrategyData.callbackURL,
+            client_id: JiraStagingStrategyData.clientID,
             code_verifier: this.verifier,
         });
         return data;
@@ -219,7 +219,7 @@ class PKCEJiraStagingStrategy extends Strategy {
     public tokenRefreshData(refreshToken: string): string {
         const dataString = JSON.stringify({
             grant_type: 'refresh_token',
-            client_id: NewJiraStagingStrategyData.clientID,
+            client_id: JiraStagingStrategyData.clientID,
             refresh_token: refreshToken,
         });
         return dataString;
