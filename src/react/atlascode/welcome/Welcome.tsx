@@ -1,4 +1,3 @@
-import { IconLink } from '@atlassianlabs/guipi-core-components';
 import {
     AppBar,
     Box,
@@ -6,18 +5,20 @@ import {
     Container,
     Grid,
     Link,
-    makeStyles,
     Paper,
     Theme,
     Toolbar,
     Typography,
+    makeStyles,
 } from '@material-ui/core';
-import React from 'react';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
+import { WelcomeControllerContext, useWelcomeController } from './welcomeController';
+
+import BitbucketIcon from '../icons/BitbucketIcon';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
-import BitbucketIcon from '../icons/BitbucketIcon';
-import { useWelcomeController, WelcomeControllerContext } from './welcomeController';
+import { IconLink } from '@atlassianlabs/guipi-core-components';
+import { KnownLinkID } from '../../../lib/ipc/models/common';
+import React from 'react';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -82,6 +83,25 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     command palette and typing 'Atlassian: Open Settings'
                                                 </p>
                                             </div>
+                                        </section>
+                                        <h4>🎉 What's New in 3.0.0 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    UpdatUpdate to handle changes in how Atlassian handles
+                                                    authentication. It's possible you will need to log in again after
+                                                    this update
+                                                </li>
+                                                <li>
+                                                    Removed "Created from Atlassian for VS Code" footer when creating a
+                                                    new issue or pull request
+                                                </li>
+                                                <li>
+                                                    Updates to Bitbucket Pipelines configuration file validation (Thanks
+                                                    to Damian Karzon. Additional thanks to Jim den Otter)
+                                                </li>
+                                            </ul>
                                         </section>
                                         <h4>🎉 What's New in 2.10.12 🎉</h4>
                                         <section>
