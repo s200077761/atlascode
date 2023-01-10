@@ -1,22 +1,5 @@
-import Button from '@atlaskit/button';
-import LoadingButton from '@atlaskit/button/loading-button';
-import Form, { Field, FormFooter } from '@atlaskit/form';
-import Page, { Grid, GridColumn } from '@atlaskit/page';
-import Panel from '@atlaskit/panel';
-import SectionMessage from '@atlaskit/section-message';
-import Select, { components } from '@atlaskit/select';
-import Spinner from '@atlaskit/spinner';
-import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
-import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import * as React from 'react';
-import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
-import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
-import { LegacyPMFData } from '../../../ipc/messaging';
-import { AtlLoader } from '../AtlLoader';
-import ErrorBanner from '../ErrorBanner';
-import { chain } from '../fieldValidators';
-import Offline from '../Offline';
-import PMFBBanner from '../pmfBanner';
+
 import {
     AbstractIssueEditorPage,
     CommonEditorPageAccept,
@@ -24,6 +7,25 @@ import {
     CommonEditorViewState,
     emptyCommonEditorState,
 } from './AbstractIssueEditorPage';
+import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
+import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { FieldUI, UIType, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
+import Form, { Field, FormFooter } from '@atlaskit/form';
+import Page, { Grid, GridColumn } from '@atlaskit/page';
+import Select, { components } from '@atlaskit/select';
+
+import { AtlLoader } from '../AtlLoader';
+import Button from '@atlaskit/button';
+import ErrorBanner from '../ErrorBanner';
+import { IssueKeyAndSite } from '@atlassianlabs/jira-pi-common-models';
+import { LegacyPMFData } from '../../../ipc/messaging';
+import LoadingButton from '@atlaskit/button/loading-button';
+import Offline from '../Offline';
+import PMFBBanner from '../pmfBanner';
+import Panel from '@atlaskit/panel';
+import SectionMessage from '@atlaskit/section-message';
+import Spinner from '@atlaskit/spinner';
+import { chain } from '../fieldValidators';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -56,8 +58,6 @@ const IconValue = (props: any) => (
         </div>
     </components.SingleValue>
 );
-
-const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedFields: FieldUI[] = [];
@@ -104,7 +104,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             createdIssue: e.issueData,
                             fieldValues: {
                                 ...this.state.fieldValues,
-                                ...{ description: createdFromAtlascodeFooter, summary: '' },
+                                ...{ description: '', summary: '' },
                             },
                         });
                     }
