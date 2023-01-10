@@ -1,65 +1,32 @@
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
-import axios, { AxiosInstance } from 'axios';
-import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
-import jwtDecode from 'jwt-decode';
-import Mustache from 'mustache';
-import PCancelable from 'p-cancelable';
-import pTimeout from 'p-timeout';
-import { URL } from 'url';
-import { promisify } from 'util';
-import { v4 } from 'uuid';
 import * as vscode from 'vscode';
-import { Disposable } from 'vscode';
+
+import { ConnectionTimeout, Time } from '../util/time';
+import { OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo } from './authInfo';
+import { Strategy, strategyForProvider } from './strategy';
+import axios, { AxiosInstance } from 'axios';
+
 import { AxiosUserAgent } from '../constants';
 import { Container } from '../container';
-import { getAgent } from '../jira/jira-client/providers';
+import { Disposable } from 'vscode';
+import EventEmitter from 'eventemitter3';
 import { Logger } from '../logger';
+import Mustache from 'mustache';
+import PCancelable from 'p-cancelable';
 import { Resources } from '../resources';
-import { ConnectionTimeout, Time } from '../util/time';
-import {
-    AccessibleResource,
-    emptyUserInfo,
-    OAuthProvider,
-    OAuthResponse,
-    ProductBitbucket,
-    ProductJira,
-    SiteInfo,
-    UserInfo,
-} from './authInfo';
 import { addCurlLogging } from './interceptors';
-import { JiraProdStrategy, BitbucketProdStrategy, BitbucketStagingStrategy, JiraStagingStrategy } from './oldStrategy';
+import { getAgent } from '../jira/jira-client/providers';
+import pTimeout from 'p-timeout';
+import { promisify } from 'util';
+import { responseHandlerForStrategy } from './responseHandler';
+import { v4 } from 'uuid';
 
 declare interface ResponseEvent {
     provider: OAuthProvider;
-    strategy: any;
     req: express.Request;
     res: express.Response;
     timeout?: boolean;
-}
-
-export declare interface Tokens {
-    accessToken: string;
-    refreshToken?: string;
-    expiration?: number;
-    iat?: number;
-    receivedAt: number;
-}
-
-export function tokensFromResponseData(data: any): Tokens {
-    const token = data.access_token;
-    const decodedToken: any = jwtDecode(token);
-    const iat = decodedToken ? (decodedToken.iat ? decodedToken.iat * 1000 : 0) : 0;
-    const expiresIn = data.expires_in;
-    const expiration = Date.now() + expiresIn * 1000;
-    return {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        expiration: expiration,
-        iat: iat,
-        receivedAt: Date.now(),
-    };
 }
 
 export class OAuthDancer implements Disposable {
@@ -69,6 +36,7 @@ export class OAuthDancer implements Disposable {
     private _app: any;
     private _axios: AxiosInstance;
     private _authsInFlight: Map<OAuthProvider, PCancelable<OAuthResponse>> = new Map();
+    private _strategiesInFlight: Map<OAuthProvider, Strategy> = new Map();
     private _oauthResponseEventEmitter: EventEmitter = new EventEmitter();
     private _shutdownCheck: any;
     private _shutdownCheckInterval = 5 * Time.MINUTES;
@@ -98,103 +66,27 @@ export class OAuthDancer implements Disposable {
         this.forceShutdownAll();
     }
 
-    private getAuthorizeURL(provider: OAuthProvider, state: string): string {
-        let finalUrl = '';
-
-        switch (provider) {
-            case OAuthProvider.JiraCloud: {
-                const url = new URL(JiraProdStrategy.authorizationURL);
-                url.searchParams.append('client_id', JiraProdStrategy.clientID);
-                url.searchParams.append('redirect_uri', JiraProdStrategy.callbackURL);
-                url.searchParams.append('response_type', 'code');
-                url.searchParams.append('scope', JiraProdStrategy.scope);
-                url.searchParams.append('audience', JiraProdStrategy.authParams.audience);
-                url.searchParams.append('prompt', JiraProdStrategy.authParams.prompt);
-                url.searchParams.append('state', state);
-
-                finalUrl = url.toString();
-                break;
-            }
-            case OAuthProvider.JiraCloudStaging: {
-                const url = new URL(JiraStagingStrategy.authorizationURL);
-                url.searchParams.append('client_id', JiraStagingStrategy.clientID);
-                url.searchParams.append('redirect_uri', JiraStagingStrategy.callbackURL);
-                url.searchParams.append('response_type', 'code');
-                url.searchParams.append('scope', JiraStagingStrategy.scope);
-                url.searchParams.append('audience', JiraStagingStrategy.authParams.audience);
-                url.searchParams.append('prompt', JiraStagingStrategy.authParams.prompt);
-                url.searchParams.append('state', state);
-
-                finalUrl = url.toString();
-                break;
-            }
-            case OAuthProvider.BitbucketCloud: {
-                const url = new URL(BitbucketProdStrategy.authorizationURL);
-                url.searchParams.append('client_id', BitbucketProdStrategy.clientID);
-                url.searchParams.append('response_type', 'code');
-                url.searchParams.append('state', state);
-
-                finalUrl = url.toString();
-                break;
-            }
-            case OAuthProvider.BitbucketCloudStaging: {
-                const url = new URL(BitbucketStagingStrategy.authorizationURL);
-                url.searchParams.append('client_id', BitbucketStagingStrategy.clientID);
-                url.searchParams.append('response_type', 'code');
-                url.searchParams.append('state', state);
-
-                finalUrl = url.toString();
-                break;
-            }
-        }
-
-        return finalUrl;
+    private addPathForProvider(app: any, provider: OAuthProvider) {
+        app.get('/' + provider, (req: any, res: any) => {
+            this._oauthResponseEventEmitter.emit('response', {
+                provider: provider,
+                req: req,
+                res: res,
+            });
+        });
     }
 
     private createApp(): any {
         let app = express();
 
-        app.get('/' + OAuthProvider.BitbucketCloud, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', {
-                provider: OAuthProvider.BitbucketCloud,
-                strategy: BitbucketProdStrategy,
-                req: req,
-                res: res,
-            });
-        });
-
-        app.get('/' + OAuthProvider.BitbucketCloudStaging, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', {
-                provider: OAuthProvider.BitbucketCloudStaging,
-                strategy: BitbucketStagingStrategy,
-                req: req,
-                res: res,
-            });
-        });
-
-        app.get('/' + OAuthProvider.JiraCloud, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', {
-                provider: OAuthProvider.JiraCloud,
-                strategy: JiraProdStrategy,
-                req: req,
-                res: res,
-            });
-        });
-
-        app.get('/' + OAuthProvider.JiraCloudStaging, (req, res) => {
-            this._oauthResponseEventEmitter.emit('response', {
-                provider: OAuthProvider.JiraCloudStaging,
-                strategy: JiraStagingStrategy,
-                req: req,
-                res: res,
-            });
-        });
+        this.addPathForProvider(app, OAuthProvider.BitbucketCloud);
+        this.addPathForProvider(app, OAuthProvider.BitbucketCloudStaging);
+        this.addPathForProvider(app, OAuthProvider.JiraCloud);
+        this.addPathForProvider(app, OAuthProvider.JiraCloudStaging);
 
         app.get('/timeout', (req, res) => {
             this._oauthResponseEventEmitter.emit('response', {
                 provider: req.query.provider,
-                //NOTE: this is a dummy strategy that is never read in case of timeouts
-                strategy: JiraProdStrategy,
                 req: req,
                 res: res,
                 timeout: true,
@@ -210,6 +102,9 @@ export class OAuthDancer implements Disposable {
             currentlyInflight.cancel(`Authentication for ${provider} has been cancelled.`);
             this._authsInFlight.delete(provider);
         }
+
+        const strategy = strategyForProvider(provider);
+        this._strategiesInFlight.set(provider, strategy);
 
         const state = v4();
         const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
@@ -239,50 +134,21 @@ export class OAuthDancer implements Disposable {
                     respEvent.req.query.state === myState
                 ) {
                     try {
-                        const agent = getAgent(site);
-                        let tokens: Tokens = { accessToken: '', refreshToken: '', receivedAt: 0 };
-                        let accessibleResources: AccessibleResource[] = [];
-                        let user: UserInfo = emptyUserInfo;
-
-                        if (product === ProductJira) {
-                            tokens = await this.getJiraTokens(respEvent.strategy, respEvent.req.query.code, agent);
-                            accessibleResources = await this.getJiraResources(
-                                respEvent.strategy,
-                                tokens.accessToken,
-                                agent
+                        const strategy = this._strategiesInFlight.get(respEvent.provider);
+                        if (!strategy) {
+                            reject(
+                                `Auth failure. No strategy for provider ${respEvent.provider}. There may have been overlapping requests.`
                             );
-                            if (accessibleResources.length > 0) {
-                                user = await this.getJiraUser(
-                                    respEvent.provider,
-                                    tokens.accessToken,
-                                    accessibleResources[0],
-                                    agent
-                                );
-                            } else {
-                                throw new Error(`No accessible resources found for ${provider}`);
-                            }
-                        } else {
-                            if (provider === OAuthProvider.BitbucketCloud) {
-                                accessibleResources.push({
-                                    id: OAuthProvider.BitbucketCloud,
-                                    name: ProductBitbucket.name,
-                                    scopes: [],
-                                    avatarUrl: '',
-                                    url: 'https://bitbucket.org',
-                                });
-                            } else {
-                                accessibleResources.push({
-                                    id: OAuthProvider.BitbucketCloudStaging,
-                                    name: ProductBitbucket.name,
-                                    scopes: [],
-                                    avatarUrl: '',
-                                    url: 'https://staging.bb-inf.net',
-                                });
-                            }
-
-                            tokens = await this.getBitbucketTokens(respEvent.strategy, respEvent.req.query.code, agent);
-                            user = await this.getBitbucketUser(respEvent.strategy, tokens.accessToken, agent);
                         }
+                        this._strategiesInFlight.delete(respEvent.provider);
+                        const agent = getAgent(site);
+                        const responseHandler = responseHandlerForStrategy(strategy!, agent, this._axios);
+                        const tokens = await responseHandler.tokens(respEvent.req.query.code);
+                        const accessibleResources = await responseHandler.accessibleResources(tokens.accessToken);
+                        if (accessibleResources.length === 0) {
+                            throw new Error(`No accessible resources found for ${provider}`);
+                        }
+                        const user = await responseHandler.user(tokens.accessToken, accessibleResources[0]);
 
                         this._authsInFlight.delete(respEvent.provider);
 
@@ -306,6 +172,7 @@ export class OAuthDancer implements Disposable {
                         resolve(oauthResponse);
                     } catch (err) {
                         this._authsInFlight.delete(respEvent.provider);
+                        this._strategiesInFlight.delete(respEvent.provider);
 
                         respEvent.res.send(
                             Mustache.render(Resources.html.get('authFailureHtml')!, {
@@ -344,7 +211,7 @@ export class OAuthDancer implements Disposable {
             this.startShutdownChecker();
         }
 
-        vscode.env.openExternal(vscode.Uri.parse(this.getAuthorizeURL(provider, state)));
+        vscode.env.openExternal(vscode.Uri.parse(strategy.authorizeUrl(state)));
 
         return pTimeout<OAuthResponse, OAuthResponse>(
             cancelPromise,
@@ -354,175 +221,6 @@ export class OAuthDancer implements Disposable {
                 return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
             }
         );
-    }
-
-    private async getJiraTokens(strategy: any, code: string, agent: { [k: string]: any }): Promise<Tokens> {
-        try {
-            const [proxyHost, proxyPort] = getProxyHostAndPort();
-            if (proxyHost.trim() !== '') {
-                Logger.debug(`using proxy: ${proxyHost}:${proxyPort}`);
-            } else {
-                Logger.debug(`no proxy configured in environment`);
-            }
-
-            const tokenResponse = await this._axios(strategy.tokenURL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                data: JSON.stringify({
-                    grant_type: 'authorization_code',
-                    client_id: strategy.clientID,
-                    client_secret: strategy.clientSecret,
-                    code: code,
-                    redirect_uri: strategy.callbackURL,
-                }),
-                ...agent,
-            });
-
-            return tokensFromResponseData(tokenResponse.data);
-        } catch (err) {
-            const newErr = new Error(`Error fetching Jira tokens: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
-    }
-
-    private async getBitbucketTokens(strategy: any, code: string, agent: { [k: string]: any }): Promise<Tokens> {
-        try {
-            const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
-
-            const tokenResponse = await this._axios(strategy.tokenURL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Authorization: `Basic ${basicAuth}`,
-                },
-                data: `grant_type=authorization_code&code=${code}`,
-                ...agent,
-            });
-
-            const data = tokenResponse.data;
-            return { accessToken: data.access_token, refreshToken: data.refresh_token, receivedAt: Date.now() };
-        } catch (err) {
-            const newErr = new Error(`Error fetching Bitbucket tokens: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
-    }
-
-    private async getJiraResources(
-        strategy: any,
-        accessToken: string,
-        agent: { [k: string]: any }
-    ): Promise<AccessibleResource[]> {
-        try {
-            const resources: AccessibleResource[] = [];
-
-            const resourcesResponse = await this._axios(strategy.accessibleResourcesURL, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                ...agent,
-            });
-
-            resourcesResponse.data.forEach((resource: AccessibleResource) => {
-                resources.push(resource);
-            });
-
-            return resources;
-        } catch (err) {
-            const newErr = new Error(`Error fetching Jira resources: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
-    }
-
-    private async getJiraUser(
-        provider: OAuthProvider,
-        accessToken: string,
-        resource: AccessibleResource,
-        agent: { [k: string]: any }
-    ): Promise<UserInfo> {
-        try {
-            let apiUri = provider === OAuthProvider.JiraCloudStaging ? 'api.stg.atlassian.com' : 'api.atlassian.com';
-            const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
-
-            const userResponse = await this._axios(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                ...agent,
-            });
-
-            const data = userResponse.data;
-
-            return {
-                id: data.accountId,
-                displayName: data.displayName,
-                email: data.emailAddress,
-                avatarUrl: data.avatarUrls['48x48'],
-            };
-        } catch (err) {
-            const newErr = new Error(`Error fetching Jira user: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
-    }
-
-    private async getBitbucketUser(strategy: any, accessToken: string, agent: { [k: string]: any }): Promise<UserInfo> {
-        try {
-            const userResponse = await this._axios(strategy.profileURL, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                ...agent,
-            });
-
-            let email = 'do-not-reply@atlassian.com';
-            try {
-                const emailsResponse = await this._axios(strategy.emailsURL, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    ...agent,
-                });
-
-                if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
-                    const primary = emailsResponse.data.values.filter((val: any) => val.is_primary);
-                    if (primary.length > 0) {
-                        email = primary[0].email;
-                    }
-                }
-            } catch (e) {
-                //ignore
-            }
-
-            const userData = userResponse.data;
-
-            return {
-                id: userData.account_id,
-                displayName: userData.display_name,
-                email: email,
-                avatarUrl: userData.links.avatar.href,
-            };
-        } catch (err) {
-            const newErr = new Error(`Error fetching Bitbucket user: ${err}`);
-            Logger.error(newErr);
-            throw newErr;
-        }
     }
 
     private maybeShutdown() {

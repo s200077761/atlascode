@@ -1,19 +1,19 @@
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
 import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
-import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../../atlclients/authInfo';
-import { FeedbackUser } from '../../../ipc/models/common';
 import { ConfigTarget, FlattenedConfig } from '../../../ipc/models/config';
+
+import { FeedbackUser } from '../../../ipc/models/common';
 import { SiteWithAuthInfo } from '../../../ipc/toUI/config';
 
 export interface ConfigActionApi {
     authenticateServer(site: SiteInfo, authInfo: AuthInfo): Promise<void>;
     authenticateCloud(site: SiteInfo, callback: string): Promise<void>;
     clearAuth(site: DetailedSiteInfo): Promise<void>;
-    saveCode(code: string): Promise<void>;
     openJsonSettingsFile(target: ConfigTarget): Promise<void>;
     fetchJqlOptions: (site: DetailedSiteInfo) => Promise<JQLAutocompleteData>;
     fetchJqlSuggestions: (

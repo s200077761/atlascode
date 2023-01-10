@@ -1,36 +1,35 @@
 import {
+    AuthInfo,
+    DetailedSiteInfo,
+    ProductBitbucket,
+    ProductJira,
+    SiteInfo,
+    emptyAuthInfo,
+    emptyBasicAuthInfo,
+} from '../../atlclients/authInfo';
+import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
+import { ConfigurationTarget, Uri, WorkspaceEdit, commands, env, window, workspace } from 'vscode';
+import { IConfig, JQLEntry, configuration } from '../../config/configuration';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
-import { flatten } from 'flatten-anything';
-import { merge } from 'merge-anything';
-import { join as pathJoin } from 'path';
-import { commands, ConfigurationTarget, env, Uri, window, workspace, WorkspaceEdit } from 'vscode';
-import {
-    AuthInfo,
-    DetailedSiteInfo,
-    emptyAuthInfo,
-    emptyBasicAuthInfo,
-    ProductBitbucket,
-    ProductJira,
-    SiteInfo,
-} from '../../atlclients/authInfo';
-import { configuration, IConfig, JQLEntry } from '../../config/configuration';
-import { Container } from '../../container';
-import { getFeedbackUser } from '../../feedback/feedbackUser';
+
 import { AnalyticsApi } from '../../lib/analyticsApi';
 import { CancellationManager } from '../../lib/cancellation';
-import { FeedbackUser } from '../../lib/ipc/models/common';
-import { ConfigTarget, FlattenedConfig } from '../../lib/ipc/models/config';
-import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
+import { Container } from '../../container';
+import { FeedbackUser } from '../../lib/ipc/models/common';
 import { FocusEventActions } from '../ExplorerFocusManager';
-
-const accessCodeSeparator = '::';
+import { SiteWithAuthInfo } from '../../lib/ipc/toUI/config';
+import { flatten } from 'flatten-anything';
+import { getFeedbackUser } from '../../feedback/feedbackUser';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
+import { merge } from 'merge-anything';
+import { join as pathJoin } from 'path';
 
 export class VSCConfigActionApi implements ConfigActionApi {
     private _analyticsApi: AnalyticsApi;
@@ -51,15 +50,6 @@ export class VSCConfigActionApi implements ConfigActionApi {
     public async clearAuth(site: DetailedSiteInfo): Promise<void> {
         await Container.clientManager.removeClient(site);
         Container.siteManager.removeSite(site);
-    }
-
-    public async saveCode(combinedCode: string): Promise<void> {
-        const loginManager = Container.loginManager;
-        const pieces = combinedCode.split(accessCodeSeparator);
-        if (pieces.length !== 2) {
-            throw new Error('Improperly formatted access code.');
-        }
-        loginManager.exchangeCodeForTokens(pieces[0], pieces[1]);
     }
 
     public async fetchJqlOptions(site: DetailedSiteInfo): Promise<JQLAutocompleteData> {

@@ -1,17 +1,19 @@
-import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
-import Axios from 'axios';
-import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
-import { AnalyticsApi } from '../../../analyticsApi';
-import { CommonActionType } from '../../../ipc/fromUI/common';
-import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
-import { WebViewID } from '../../../ipc/models/common';
 import { CommonMessage, CommonMessageType } from '../../../ipc/toUI/common';
+import { ConfigAction, ConfigActionType } from '../../../ipc/fromUI/config';
 import { ConfigMessage, ConfigMessageType, ConfigResponse, SectionChangeMessage } from '../../../ipc/toUI/config';
-import { Logger } from '../../../logger';
-import { formatError } from '../../formatError';
-import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
 import { MessagePoster, WebviewController } from '../webviewController';
+import { isBasicAuthInfo, isEmptySiteInfo, isPATAuthInfo } from '../../../../atlclients/authInfo';
+
+import { AnalyticsApi } from '../../../analyticsApi';
+import Axios from 'axios';
+import { CommonActionMessageHandler } from '../common/commonActionMessageHandler';
+import { CommonActionType } from '../../../ipc/fromUI/common';
 import { ConfigActionApi } from './configActionApi';
+import { Logger } from '../../../logger';
+import { WebViewID } from '../../../ipc/models/common';
+import { defaultActionGuard } from '@atlassianlabs/guipi-core-controller';
+import { formatError } from '../../formatError';
+
 export const id: string = 'atlascodeSettingsV2';
 
 export class ConfigWebviewController implements WebviewController<SectionChangeMessage> {
@@ -23,7 +25,6 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
     private _isRefreshing: boolean;
     private _settingsUrl: string;
     private _initialSection?: SectionChangeMessage;
-    private _useNewAuth: boolean;
 
     constructor(
         messagePoster: MessagePoster,
@@ -32,7 +33,6 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         logger: Logger,
         analytics: AnalyticsApi,
         settingsUrl: string,
-        useNewAuth: boolean,
         section?: SectionChangeMessage
     ) {
         this._messagePoster = messagePoster;
@@ -42,7 +42,6 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         this._settingsUrl = settingsUrl;
         this._commonHandler = commonHandler;
         this._initialSection = section;
-        this._useNewAuth = useNewAuth;
     }
 
     public title(): string {
@@ -87,7 +86,6 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                 showTunnelOption: this._api.shouldShowTunnelOption(),
                 config: cfg,
                 ...section,
-                useNewAuth: this._useNewAuth,
             });
 
             if (this._initialSection) {
@@ -143,20 +141,6 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
             case ConfigActionType.Logout: {
                 this._api.clearAuth(msg.siteInfo);
                 this._analytics.fireLogoutButtonEvent(id);
-                break;
-            }
-            case ConfigActionType.SaveCode: {
-                try {
-                    await this._api.saveCode(msg.code);
-                    this._analytics.fireSaveManualCodeEvent(id);
-                } catch (e) {
-                    let err = new Error(`Error with manual code entry: ${e}`);
-                    this._logger.error(err);
-                    this.postMessage({
-                        type: CommonMessageType.Error,
-                        reason: formatError(e, 'Adding access code failed'),
-                    });
-                }
                 break;
             }
             case ConfigActionType.SetTarget: {

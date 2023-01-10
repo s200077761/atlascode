@@ -1,16 +1,16 @@
+import { ConfigWebviewController, id } from '../../lib/webview/controller/config/configWebviewController';
 import { Disposable, Uri } from 'vscode';
-import { configuration } from '../../config/configuration';
-import { Container } from '../../container';
+import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
+import { Resources, iconSet } from '../../resources';
+
 import { AnalyticsApi } from '../../lib/analyticsApi';
-import { UIWSPort } from '../../lib/ipc/models/ports';
-import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
 import { CommonActionMessageHandler } from '../../lib/webview/controller/common/commonActionMessageHandler';
 import { ConfigActionApi } from '../../lib/webview/controller/config/configActionApi';
-import { ConfigWebviewController, id } from '../../lib/webview/controller/config/configWebviewController';
+import { Container } from '../../container';
 import { Logger } from '../../logger';
-import { iconSet, Resources } from '../../resources';
+import { SectionChangeMessage } from '../../lib/ipc/toUI/config';
+import { UIWSPort } from '../../lib/ipc/models/ports';
 import { getHtmlForView } from '../common/getHtmlForView';
-import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
 export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFactory<SectionChangeMessage> {
     private _api: ConfigActionApi;
@@ -56,7 +56,6 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
             Logger.Instance,
             this._analytics,
             this._settingsUrl,
-            configuration.get<boolean>('useNewAuth'),
             factoryData
         );
 

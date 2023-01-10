@@ -1,28 +1,29 @@
-import { defaultActionGuard, defaultStateGuard, ReducerAction } from '@atlassianlabs/guipi-core-controller';
-import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
-import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
-import React, { useCallback, useMemo, useReducer } from 'react';
-import { v4 } from 'uuid';
 import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../../../atlclients/authInfo';
-import { CommonActionType } from '../../../lib/ipc/fromUI/common';
 import { ConfigAction, ConfigActionType } from '../../../lib/ipc/fromUI/config';
-import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
-import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
 import {
     ConfigInitMessage,
     ConfigMessage,
     ConfigMessageType,
     ConfigResponse,
-    emptyConfigInitMessage,
     FilterSearchResponseMessage,
     JQLOptionsResponseMessage,
     JQLSuggestionsResponseMessage,
     SectionChangeMessage,
     SiteWithAuthInfo,
     ValidateJqlResponseMessage,
+    emptyConfigInitMessage,
 } from '../../../lib/ipc/toUI/config';
-import { ConnectionTimeout } from '../../../util/time';
+import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../../../lib/ipc/models/config';
+import { FilterSearchResults, JQLErrors } from '@atlassianlabs/jira-pi-common-models';
+import { JqlAutocompleteRestData, Suggestion } from '@atlassianlabs/guipi-jira-components';
+import { KnownLinkID, WebViewID } from '../../../lib/ipc/models/common';
 import { PostMessageFunc, useMessagingApi } from '../messagingApi';
+import React, { useCallback, useMemo, useReducer } from 'react';
+import { ReducerAction, defaultActionGuard, defaultStateGuard } from '@atlassianlabs/guipi-core-controller';
+
+import { CommonActionType } from '../../../lib/ipc/fromUI/common';
+import { ConnectionTimeout } from '../../../util/time';
+import { v4 } from 'uuid';
 
 export interface ConfigControllerApi {
     postMessage: PostMessageFunc<ConfigAction>;
@@ -32,7 +33,6 @@ export interface ConfigControllerApi {
     openLink: (linkId: KnownLinkID) => void;
     login: (site: SiteInfo, auth: AuthInfo) => void;
     logout: (site: DetailedSiteInfo) => void;
-    saveCode: (code: string) => void;
     fetchJqlOptions: (site: DetailedSiteInfo) => Promise<JqlAutocompleteRestData>;
     fetchJqlSuggestions: (
         site: DetailedSiteInfo,
@@ -75,9 +75,6 @@ export const emptyApi: ConfigControllerApi = {
         return;
     },
     logout: (site: DetailedSiteInfo) => {
-        return;
-    },
-    saveCode: (code: string) => {
         return;
     },
     fetchJqlOptions: (site: DetailedSiteInfo): Promise<JqlAutocompleteRestData> => {
@@ -320,14 +317,6 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         [postMessage]
     );
 
-    const saveCode = useCallback(
-        (code: string) => {
-            dispatch({ type: ConfigUIActionType.Loading });
-            postMessage({ type: ConfigActionType.SaveCode, code: code });
-        },
-        [postMessage]
-    );
-
     const fetchJqlOptions = useCallback(
         (site: DetailedSiteInfo): Promise<JqlAutocompleteRestData> => {
             return new Promise<JqlAutocompleteRestData>((resolve, reject) => {
@@ -510,7 +499,6 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             openLink: openLink,
             login: login,
             logout: logout,
-            saveCode: saveCode,
             fetchJqlSuggestions: fetchJqlSuggestions,
             fetchJqlOptions: fetchJqlOptions,
             fetchFilterSearchResults: fetchFilterSearchResults,
@@ -524,7 +512,6 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
         handleConfigChange,
         login,
         logout,
-        saveCode,
         openLink,
         postMessage,
         sendRefresh,

@@ -1,30 +1,31 @@
-import crypto from 'crypto';
-import PQueue from 'p-queue';
-import { Disposable, Event, EventEmitter, version, window } from 'vscode';
-import { loggedOutEvent } from '../analytics';
-import { AnalyticsClient } from '../analytics-node-client/src';
-import { CommandContext, setCommandContext } from '../constants';
-import { Logger } from '../logger';
-import { keychain } from '../util/keychain';
 import {
     AuthChangeType,
     AuthInfo,
     AuthInfoEvent,
     AuthInfoState,
     DetailedSiteInfo,
-    emptyAuthInfo,
-    getSecretForAuthInfo,
-    isOAuthInfo,
     OAuthProvider,
-    oauthProviderForSite,
     Product,
     ProductBitbucket,
     ProductJira,
     RemoveAuthInfoEvent,
     UpdateAuthInfoEvent,
+    emptyAuthInfo,
+    getSecretForAuthInfo,
+    isOAuthInfo,
+    oauthProviderForSite,
 } from './authInfo';
-import { Tokens } from './oauthDancer';
+import { CommandContext, setCommandContext } from '../constants';
+import { Disposable, Event, EventEmitter, version, window } from 'vscode';
+
+import { AnalyticsClient } from '../analytics-node-client/src';
+import { Logger } from '../logger';
 import { OAuthRefesher } from './oauthRefresher';
+import PQueue from 'p-queue';
+import { Tokens } from './tokens';
+import crypto from 'crypto';
+import { keychain } from '../util/keychain';
+import { loggedOutEvent } from '../analytics';
 
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 

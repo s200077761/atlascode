@@ -1,15 +1,16 @@
-import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import {
     AutocompleteSuggestion,
     FilterSearchResults,
     JQLAutocompleteData,
     JQLErrors,
 } from '@atlassianlabs/jira-pi-common-models';
-import { flatten } from 'flatten-anything';
-import { AuthInfo, DetailedSiteInfo, emptyBasicAuthInfo, emptySiteInfo } from '../../../atlclients/authInfo';
-import { emptyConfig } from '../../../config/model';
-import { emptyFeedbackUser, FeedbackUser } from '../models/common';
 import { ConfigSection, ConfigSubSection, ConfigTarget, FlattenedConfig } from '../models/config';
+import { FeedbackUser, emptyFeedbackUser } from '../models/common';
+
+import { ReducerAction } from '@atlassianlabs/guipi-core-controller';
+import { emptyConfig } from '../../../config/model';
+import { flatten } from 'flatten-anything';
 
 export enum ConfigMessageType {
     Init = 'init',
@@ -44,7 +45,6 @@ export interface ConfigInitMessage {
     target: ConfigTarget;
     section?: ConfigSection;
     subSection?: ConfigSubSection;
-    useNewAuth: boolean;
 }
 
 export const emptyConfigInitMessage: ConfigInitMessage = {
@@ -56,7 +56,6 @@ export const emptyConfigInitMessage: ConfigInitMessage = {
     showTunnelOption: false,
     target: ConfigTarget.User,
     section: ConfigSection.Jira,
-    useNewAuth: false,
 };
 
 export interface ConfigUpdateMessage {
