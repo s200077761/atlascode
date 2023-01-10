@@ -2,7 +2,7 @@
 
 ### Improvements
 
--   Update to handle changes in how Atlassian handles authentication. Unfortunately you will need to log in again after this update
+-   Update to handle changes in how Atlassian handles authentication. It's possible you will need to log in again after this update
 -   Removed "Created from Atlassian for VS Code" footer when creating a new issue or pull request
 -   Updates to Bitbucket Pipelines configuration file validation (Thanks to Damian Karzon. Additional thanks to Jim den Otter)
 

@@ -90,7 +90,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                             <ul>
                                                 <li>
                                                     UpdatUpdate to handle changes in how Atlassian handles
-                                                    authentication. Unfortunately you will need to log in again after
+                                                    authentication. It's possible you will need to log in again after
                                                     this update
                                                 </li>
                                                 <li>
