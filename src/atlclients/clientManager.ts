@@ -1,17 +1,16 @@
-import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
-import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
-import { AxiosResponse } from 'axios';
-import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
-import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';
-import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
-import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
-import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
-import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositories';
+import {
+    AuthInfo,
+    AuthInfoState,
+    DetailedSiteInfo,
+    ProductJira,
+    isBasicAuthInfo,
+    isOAuthInfo,
+    isPATAuthInfo,
+} from './authInfo';
+import { CacheMap, Interval } from '../util/cachemap';
 import { ClientError, HTTPClient } from '../bitbucket/httpClient';
-import { BitbucketApi } from '../bitbucket/model';
-import { configuration } from '../config/configuration';
-import { cannotGetClientFor } from '../constants';
-import { Container } from '../container';
+import { ConfigurationChangeEvent, Disposable, ExtensionContext } from 'vscode';
+import { JiraClient, JiraCloudClient, JiraServerClient } from '@atlassianlabs/jira-pi-client';
 import {
     basicJiraTransportFactory,
     getAgent,
@@ -19,14 +18,25 @@ import {
     jiraTokenAuthProvider,
     oauthJiraTransportFactory,
 } from '../jira/jira-client/providers';
-import { Logger } from '../logger';
-import { PipelineApiImpl } from '../pipelines/pipelines';
-import { SitesAvailableUpdateEvent } from '../siteManager';
-import { CacheMap, Interval } from '../util/cachemap';
-import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, isPATAuthInfo, ProductJira } from './authInfo';
+import { commands, window } from 'vscode';
+
+import { AxiosResponse } from 'axios';
 import { BasicInterceptor } from './basicInterceptor';
+import { BitbucketApi } from '../bitbucket/model';
+import { BitbucketIssuesApiImpl } from '../bitbucket/bitbucket-cloud/bbIssues';
+import { CloudPullRequestApi } from '../bitbucket/bitbucket-cloud/pullRequests';
+import { CloudRepositoriesApi } from '../bitbucket/bitbucket-cloud/repositories';
+import { Container } from '../container';
+import { Logger } from '../logger';
 import { Negotiator } from './negotiate';
 import PQueue from 'p-queue';
+import { PipelineApiImpl } from '../pipelines/pipelines';
+import { ServerPullRequestApi } from '../bitbucket/bitbucket-server/pullRequests';
+import { ServerRepositoriesApi } from '../bitbucket/bitbucket-server/repositories';
+import { SitesAvailableUpdateEvent } from '../siteManager';
+import { cannotGetClientFor } from '../constants';
+import { configuration } from '../config/configuration';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -40,6 +50,7 @@ export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
     private _queue = new PQueue({ concurrency: 1 });
     private _agentChanged: boolean = false;
+    private hasWarnedOfFailure = false;
     private negotiator: Negotiator;
 
     constructor(context: ExtensionContext) {
@@ -236,6 +247,23 @@ export class ClientManager implements Disposable {
 
         Logger.debug(`Creating client for ${site.baseApiUrl}`);
         let credentials = await Container.credentialManager.getAuthInfo(site, false);
+
+        if (credentials?.state === AuthInfoState.Invalid) {
+            if (!this.hasWarnedOfFailure) {
+                window
+                    .showErrorMessage(
+                        `There was an error connecting to ${site.name}. Please log in again.`,
+                        'View Atlascode settings'
+                    )
+                    .then((userChoice) => {
+                        if (userChoice === 'View Atlascode settings') {
+                            commands.executeCommand('atlascode.showConfigPage');
+                        }
+                    });
+                this.hasWarnedOfFailure = true;
+            }
+            return undefined;
+        }
 
         if (site.product.key === ProductJira.key && isOAuthInfo(credentials) && credentials.expirationDate) {
             const diff = credentials.expirationDate - Date.now();

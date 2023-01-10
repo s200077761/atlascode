@@ -11,6 +11,11 @@ import { addCurlLogging } from './interceptors';
 import { getAgent } from '../jira/jira-client/providers';
 import { strategyForProvider } from './strategy';
 
+export interface TokenResponse {
+    tokens?: Tokens;
+    shouldInvalidate: boolean;
+}
+
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
 
@@ -29,35 +34,44 @@ export class OAuthRefesher implements Disposable {
 
     dispose() {}
 
-    public async getNewTokens(provider: OAuthProvider, refreshToken: string): Promise<Tokens | undefined> {
+    public async getNewTokens(provider: OAuthProvider, refreshToken: string): Promise<TokenResponse> {
         Logger.debug(`Starting token refresh`);
         const product = provider.startsWith('jira') ? ProductJira : ProductBitbucket;
 
         const strategy = strategyForProvider(provider);
-        const tokenResponse = await this._axios(strategy.tokenUrl(), {
-            method: 'POST',
-            headers: strategy.refreshHeaders(),
-            data: strategy.tokenRefreshData(refreshToken),
-            ...getAgent(),
-        });
 
-        if (product === ProductJira) {
-            const tokens = tokensFromResponseData(tokenResponse.data);
-            Logger.debug(`have new tokens`);
-            return tokens;
-        } else {
-            const data = tokenResponse.data;
+        const response: TokenResponse = { tokens: undefined, shouldInvalidate: false };
 
-            const tokens = {
-                accessToken: data.access_token,
-                receivedAt: Date.now(),
-            };
+        try {
+            const tokenResponse = await this._axios(strategy.tokenUrl(), {
+                method: 'POST',
+                headers: strategy.refreshHeaders(),
+                data: strategy.tokenRefreshData(refreshToken),
+                ...getAgent(),
+            });
 
-            if (data.expires_in) {
-                tokens['expiration'] = Date.now() + data.expires_in * 1000;
+            if (product === ProductJira) {
+                response.tokens = tokensFromResponseData(tokenResponse.data);
+                Logger.debug(`have new tokens`);
+            } else {
+                const data = tokenResponse.data;
+
+                response.tokens = {
+                    accessToken: data.access_token,
+                    receivedAt: Date.now(),
+                };
+
+                if (data.expires_in) {
+                    response.tokens['expiration'] = Date.now() + data.expires_in * 1000;
+                }
             }
-
-            return tokens;
+        } catch (err) {
+            Logger.error(err, 'Error while refreshing tokens');
+            if (err.response?.status === 401 || err.response?.status === 403) {
+                Logger.debug(`Invalidationg credentials due to ${err.response.status} while refreshing tokens`);
+                response.shouldInvalidate = true;
+            }
         }
+        return response;
     }
 }
