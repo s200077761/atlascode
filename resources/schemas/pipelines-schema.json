@@ -19,6 +19,11 @@
         },
         "pipelines": {
             "$ref": "#/definitions/pipelines"
+        },
+        "export": {
+            "type": "boolean",
+            "title": "Enable pipelines config sharing",
+            "description": "Allows other Bitbucket repositories to import pipeline configurations from this file. A bitbucket-pipelines.yml can't contain both an `import` and an `export` property"
         }
     },
     "additionalProperties": false,
@@ -36,7 +41,22 @@
                     "title": "Branch-specific build pipelines",
                     "description": "Defines a section for all branch-specific build pipelines. The names or expressions in this section are matched against:\n\n  * branches in your Git repository\n  * named branches in your Mercurial repository\n\nYou can use glob patterns for handling the branch names.",
                     "additionalProperties": {
-                        "$ref": "#/definitions/steps"
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/steps"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "import": {
+                                        "type": "string",
+                                        "title": "Location to import pipelines config from",
+                                        "description": "{repo_slug | repo_uuid}:{commit_sha | branch}"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        ]
                     },
                     "minProperties": 1
                 },
