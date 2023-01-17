@@ -84,6 +84,17 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 3.0.1 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Now allow changing the remote when creating a PR</li>
+                                                <li>
+                                                    Updates to the Bitbucket Pipelines cache schema (Thanks to Skyler
+                                                    Cowley)
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 3.0.0 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
