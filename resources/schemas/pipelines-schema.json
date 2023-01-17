@@ -411,7 +411,7 @@
         "caches": {
             "type": "object",
             "title": "Defines custom caches to be used by pipelines.",
-            "description": "Re-downloading dependencies from the internet for each step of a build can take a lot of time. Using a cache they are downloaded once to our servers and then locally loaded into the build each time.",
+            "description": "Caching build dependencies and directories enables faster builds and reduces the number of consumed build minutes.\n\nLearn more about caches: https://support.atlassian.com/bitbucket-cloud/docs/cache-dependencies",
             "patternProperties": {
                 "^(?!-)[-a-z0-9]{0,49}[a-z0-9]$": {
                     "oneOf": [
