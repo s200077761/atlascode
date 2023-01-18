@@ -103,6 +103,11 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
         [setSummary]
     );
 
+    const handleSourceRemoteChange = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => setSourceRemoteName(event.target.value),
+        [setSourceRemoteName]
+    );
+
     const handleSourceBranchChange = useCallback(
         (event: React.ChangeEvent, value: Branch) => {
             setSourceBranch(value);
@@ -275,6 +280,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                             size="small"
                                                             label="Remote"
                                                             value={sourceRemoteName}
+                                                            onChange={handleSourceRemoteChange}
                                                         >
                                                             {state.repoData.workspaceRepo.siteRemotes
                                                                 .filter((r) => !r.remote.name.endsWith('(parent repo)'))
