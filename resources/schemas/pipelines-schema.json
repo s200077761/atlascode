@@ -46,15 +46,7 @@
                                 "$ref": "#/definitions/steps"
                             },
                             {
-                                "type": "object",
-                                "properties": {
-                                    "import": {
-                                        "type": "string",
-                                        "title": "Location to import pipelines config from",
-                                        "description": "{repo_slug | repo_uuid}:{commit_sha | branch}"
-                                    }
-                                },
-                                "additionalProperties": false
+                                "$ref": "#/definitions/import"
                             }
                         ]
                     },
@@ -65,7 +57,14 @@
                     "title": "Bookmark-specific build pipelines (to be used in Mercurial repositories)",
                     "description": "Defines all bookmark-specific build pipelines. \n\nThe names or expressions in this section are matched against bookmarks in your Mercurial repository. \n\nYou can use glob patterns for handling the tag names.",
                     "additionalProperties": {
-                        "$ref": "#/definitions/steps"
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/steps"
+                            },
+                            {
+                                "$ref": "#/definitions/import"
+                            }
+                        ]
                     },
                     "minProperties": 1
                 },
@@ -74,7 +73,14 @@
                     "title": "Manually triggered build pipelines",
                     "description": "Defines pipelines that can only be triggered manually or scheduled from the Bitbucket Cloud interface.",
                     "additionalProperties": {
-                        "$ref": "#/definitions/stepsWithVariables"
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/stepsWithVariables"
+                            },
+                            {
+                                "$ref": "#/definitions/import"
+                            }
+                        ]
                     },
                     "minProperties": 1
                 },
@@ -92,14 +98,40 @@
                     "title": "Pull-request-specific build pipelines",
                     "description": "A special pipeline which only runs on pull requests. Pull-requests has the same level of indentation as branches.\n\nThis type of pipeline runs a little differently to other pipelines. When it's triggered, we'll merge the destination branch into your working branch before it runs. If the merge fails we will stop the pipeline.",
                     "additionalProperties": {
-                        "$ref": "#/definitions/steps"
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/steps"
+                            },
+                            {
+                                "$ref": "#/definitions/import"
+                            }
+                        ]
                     },
                     "minProperties": 1
                 },
                 "default": {
                     "title": "Default build pipeline for branches",
                     "description": "The default pipeline runs on every push to the repository, unless a branch-specific pipeline is defined. \nYou can define a branch pipeline in the branches section.\n\nNote: The default pipeline doesn't run on tags or bookmarks.",
-                    "$ref": "#/definitions/steps"
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/steps"
+                        },
+                        {
+                            "$ref": "#/definitions/import"
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false
+        },
+        "import": {
+            "type": "object",
+            "properties": {
+                "import": {
+                    "type": "string",
+                    "pattern": "\\S:\\S",
+                    "title": "Location to import pipelines config from",
+                    "description": "{repo_slug | repo_uuid}:{commit_sha | branch}"
                 }
             },
             "additionalProperties": false
