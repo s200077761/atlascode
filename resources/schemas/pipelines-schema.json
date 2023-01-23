@@ -131,7 +131,7 @@
                     "type": "string",
                     "pattern": "\\S:\\S",
                     "title": "Location to import pipelines config from",
-                    "description": "{repo_slug | repo_uuid}:{commit_sha | branch}"
+                    "description": "{repo_slug | repo_uuid}:{branch}"
                 }
             },
             "additionalProperties": false
