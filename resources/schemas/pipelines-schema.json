@@ -131,7 +131,7 @@
                     "type": "string",
                     "pattern": "\\S:\\S",
                     "title": "Location to import pipelines config from",
-                    "description": "{repo_slug | repo_uuid}:{branch}"
+                    "description": "The import needs to match the following format: {repo-slug|repo-uuid}:{tag|branch-name}"
                 }
             },
             "additionalProperties": false
