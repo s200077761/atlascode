@@ -1,4 +1,12 @@
+## What's New in 3.0.2
+
+### Improvements
+
+-   Improved description of pipelines import
+
 ## What's New in 3.0.1
+
+### Improvements
 
 -   Now allow changing the remote when creating a PR
 -   Updates to the Bitbucket Pipelines cache schema (Thanks to Skyler Cowley)
