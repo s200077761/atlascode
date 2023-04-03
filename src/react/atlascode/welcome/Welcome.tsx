@@ -13,12 +13,12 @@ import {
 } from '@material-ui/core';
 import { WelcomeControllerContext, useWelcomeController } from './welcomeController';
 
-import BitbucketIcon from '../icons/BitbucketIcon';
+import { IconLink } from '@atlassianlabs/guipi-core-components';
+import React from 'react';
+import { KnownLinkID } from '../../../lib/ipc/models/common';
 import { ErrorDisplay } from '../common/ErrorDisplay';
 import { FeedbackDialogButton } from '../common/feedback/FeedbackDialogButton';
-import { IconLink } from '@atlassianlabs/guipi-core-components';
-import { KnownLinkID } from '../../../lib/ipc/models/common';
-import React from 'react';
+import BitbucketIcon from '../icons/BitbucketIcon';
 
 const useStyles = makeStyles(
     (theme: Theme) =>
@@ -83,6 +83,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     command palette and typing 'Atlassian: Open Settings'
                                                 </p>
                                             </div>
+                                        </section>
+                                        <h4>🎉 What's New in 3.0.3 🎉</h4>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that prevented any operations requiring git branches to
+                                                    work properly
+                                                </li>
+                                            </ul>
                                         </section>
                                         <h4>🎉 What's New in 3.0.2 🎉</h4>
                                         <section>
