@@ -89,7 +89,7 @@ const WelcomePage: React.FunctionComponent = () => {
                                             <h4>🐞 Bugs Fixed 🐞</h4>
                                             <ul>
                                                 <li>
-                                                    Fixed bug that prevented any operations requiring git brancches to
+                                                    Fixed bug that prevented any operations requiring git branches to
                                                     work properly
                                                 </li>
                                             </ul>

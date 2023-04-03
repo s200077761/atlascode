@@ -2,7 +2,7 @@
 
 ### Bugs fixed
 
--   Fixed bug that prevented any operations requiring git brancches to work properly
+-   Fixed bug that prevented any operations requiring git branches to work properly
 
 ## What's New in 3.0.2
 
