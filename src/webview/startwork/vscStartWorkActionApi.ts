@@ -2,7 +2,7 @@ import { MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { Logger } from 'src/logger';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { emptyRepo, Repo, WorkspaceRepo } from '../../bitbucket/model';
+import { Repo, WorkspaceRepo, emptyRepo } from '../../bitbucket/model';
 import { StartWorkBranchTemplate } from '../../config/model';
 import { Container } from '../../container';
 import { ConfigSection, ConfigSubSection } from '../../lib/ipc/models/config';
@@ -31,8 +31,8 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
         return {
-            localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
-            remoteBranches: scm.state.refs.filter((ref) => ref.type === RefType.RemoteHead && ref.name),
+            localBranches: await scm.getBranches({ remote: false }),
+            remoteBranches: await scm.getBranches({ remote: true }),
             hasSubmodules: scm.state.submodules.length > 0,
         };
     }

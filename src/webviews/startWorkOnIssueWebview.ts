@@ -229,8 +229,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                         return {
                             workspaceRepo: wsRepo,
                             href: href,
-                            localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
-                            remoteBranches: scm.state.refs.filter((ref) => ref.type === RefType.RemoteHead && ref.name),
+                            localBranches: await scm.getBranches({ remote: false }),
+                            remoteBranches: await scm.getBranches({ remote: true }),
                             branchTypes: branchTypes,
                             developmentBranch: developmentBranch,
                             isCloud: isCloud,
