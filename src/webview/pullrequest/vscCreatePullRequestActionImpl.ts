@@ -1,6 +1,6 @@
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
-import { commands, Uri } from 'vscode';
+import { Uri, commands } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Commit, FileDiff, FileStatus, PullRequest, User, WorkspaceRepo } from '../../bitbucket/model';
@@ -11,13 +11,13 @@ import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { transitionIssue } from '../../jira/transitionIssue';
 import { CancellationManager } from '../../lib/cancellation';
 import { SubmitCreateRequestAction } from '../../lib/ipc/fromUI/createPullRequest';
-import { emptyRepoData, RepoData } from '../../lib/ipc/toUI/createPullRequest';
+import { RepoData, emptyRepoData } from '../../lib/ipc/toUI/createPullRequest';
 import { CreatePullRequestActionApi } from '../../lib/webview/controller/pullrequest/createPullRequestActionApi';
 import { Logger } from '../../logger';
-import { Branch, Commit as GitCommit, RefType } from '../../typings/git';
+import { Branch, Commit as GitCommit } from '../../typings/git';
 import { Shell } from '../../util/shell';
-import { FileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
+import { FileDiffQueryParams } from '../../views/pullrequest/diffViewHelper';
 
 export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi {
     constructor(private cancellationManager: CancellationManager) {}
@@ -71,8 +71,8 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
         return {
-            localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
-            remoteBranches: scm.state.refs.filter((ref) => ref.type === RefType.RemoteHead && ref.name),
+            localBranches: await scm.getBranches({ remote: false }),
+            remoteBranches: await scm.getBranches({ remote: true }),
             hasSubmodules: scm.state.submodules.length > 0,
             hasLocalChanges:
                 scm.state.workingTreeChanges.length + scm.state.indexChanges.length + scm.state.mergeChanges.length > 0,

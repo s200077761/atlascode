@@ -12,7 +12,7 @@ import { isStartWork } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { RepoData } from '../ipc/prMessaging';
 import { Logger } from '../logger';
-import { iconSet, Resources } from '../resources';
+import { Resources, iconSet } from '../resources';
 import { Branch, RefType, Repository } from '../typings/git';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
@@ -195,8 +195,8 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                     return {
                         workspaceRepo: wsRepo,
                         href: href,
-                        localBranches: scm.state.refs.filter((ref) => ref.type === RefType.Head && ref.name),
-                        remoteBranches: scm.state.refs.filter((ref) => ref.type === RefType.RemoteHead && ref.name),
+                        localBranches: await scm.getBranches({ remote: false }),
+                        remoteBranches: await scm.getBranches({ remote: true }),
                         branchTypes: [],
                         developmentBranch: developmentBranch,
                         isCloud: isCloud,
