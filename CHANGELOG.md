@@ -1,3 +1,9 @@
+## What's New in 3.0.3
+
+### Bugs fixed
+
+-   Fixed bug that prevented any operations requiring git brancches to work properly
+
 ## What's New in 3.0.2
 
 ### Improvements
@@ -66,7 +72,7 @@
 
 ### Bugs fixed
 
--   Update to error logging 
+-   Update to error logging
 
 ## What's New in 2.10.2
 
