@@ -129,9 +129,9 @@
             "properties": {
                 "import": {
                     "type": "string",
-                    "pattern": "\\S:\\S",
+                    "pattern": "\\S:\\S:\\S",
                     "title": "Location to import pipelines config from",
-                    "description": "The import needs to match the following format: {repo-slug|repo-uuid}:{tag|branch-name}"
+                    "description": "The import needs to match the following format: {repo-slug|repo-uuid}:{tag|branch-name}:{pipeline-name}"
                 }
             },
             "additionalProperties": false
