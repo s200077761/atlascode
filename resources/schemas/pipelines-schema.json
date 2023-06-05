@@ -129,7 +129,7 @@
             "properties": {
                 "import": {
                     "type": "string",
-                    "pattern": "\\S:\\S:\\S",
+                    "pattern": "^[^:]+:[^:]+:[^:]+$",
                     "title": "Location to import pipelines config from",
                     "description": "The import needs to match the following format: {repo-slug|repo-uuid}:{tag|branch-name}:{pipeline-name}"
                 }
@@ -418,8 +418,24 @@
                 },
                 "caches": {
                     "$ref": "#/definitions/caches"
+                },
+                "pipelines": {
+                    "$ref": "#/definitions/pipelinesUnderDefinitions"
                 }
             }
+        },
+        "pipelinesUnderDefinitions": {
+            "type": "object",
+            "title": "Pipeline definitions that are defined to be used elsewhere",
+            "description": "Defines pipelines that can be used under root level pipelines section.",
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/stepsWithVariables"
+                    }
+                ]
+            },
+            "minProperties": 1
         },
         "services": {
             "type": "object",
