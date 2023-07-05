@@ -292,7 +292,11 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
             (r) => r.remote.name === data.destinationBranch.remote
         )!;
         // fallback to mainSite remote if destinationSiteRemote is not passed
-        const site = destinationSiteRemote?.site ?? data.workspaceRepo.mainSiteRemote.site!;
+        const site = destinationSiteRemote?.site ?? data.workspaceRepo.mainSiteRemote.site;
+        if (!site) {
+            Logger.warn('Cannot find remote configured in destination site or in workspace repo');
+            throw new Error('Cannot find remote configured in destination site or in workspace repo');
+        }
         const bbApi = await clientForSite(site);
 
         const destinationBranchName = data.destinationBranch.name!.replace(`${data.destinationBranch.remote}/`, '');
