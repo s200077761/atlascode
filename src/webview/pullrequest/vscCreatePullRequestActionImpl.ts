@@ -291,7 +291,8 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         const destinationSiteRemote = data.workspaceRepo.siteRemotes.find(
             (r) => r.remote.name === data.destinationBranch.remote
         )!;
-        const site = destinationSiteRemote.site!;
+        // fallback to mainSite remote if destinationSiteRemote is not passed
+        const site = destinationSiteRemote?.site ?? data.workspaceRepo.mainSiteRemote.site!;
         const bbApi = await clientForSite(site);
 
         const destinationBranchName = data.destinationBranch.name!.replace(`${data.destinationBranch.remote}/`, '');
