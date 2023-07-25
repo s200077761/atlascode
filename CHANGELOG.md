@@ -1,3 +1,9 @@
+## What's New in 3.0.4
+
+### Bugs fixed
+
+-   Fixed bug that required remote to be set in destination branch
+
 ## What's New in 3.0.3
 
 ### Bugs fixed
