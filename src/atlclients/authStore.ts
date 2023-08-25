@@ -137,26 +137,28 @@ export class CredentialManager implements Disposable {
         if (!foundInfo) {
             try {
                 let infoEntry = await this.getAuthInfoFromSecretStorage(productKey, credentialId);
-                // for users using secretstorage for the first time there will be no info in secretstorage, 
+                // for users using secretstorage for the first time there will be no info in secretstorage,
                 // so fetching authInfo from the keychain and storing it in the secretstorage so that such users dont' have to relogin manually
-                if( !infoEntry && keychain ){
+                if (!infoEntry && keychain) {
                     infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
-                    if(infoEntry){
-                        Logger.debug(`adding info from keychain to secretstorage for product: ${productKey} credentialID: ${credentialId}`);
+                    if (infoEntry) {
+                        Logger.debug(
+                            `adding info from keychain to secretstorage for product: ${productKey} credentialID: ${credentialId}`
+                        );
                         await this.addSiteInformationToSecretStorage(productKey, credentialId, infoEntry);
                         // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
                         await this._queue.add(
                             async () => {
-                               if(keychain){
+                                if (keychain) {
                                     await keychain.deletePassword(
                                         keychainServiceNameV3,
                                         `${productKey}-${credentialId}`
                                     );
-                               }
+                                }
                             },
                             { priority: Priority.Write }
                         );
-                    }        
+                    }
                 }
                 if (isOAuthInfo(infoEntry)) {
                     if (!infoEntry.recievedAt) {
@@ -186,7 +188,7 @@ export class CredentialManager implements Disposable {
      */
     public async deleteSecretStorageItem(productKey: string) {
         try {
-            // secretstorage can be accessed using the ExtensionContext provided by vscode to the activate function and the Container class has the 
+            // secretstorage can be accessed using the ExtensionContext provided by vscode to the activate function and the Container class has the
             // "ExtensionContext" stored as it's private static member, hence using it to access vscode's secretstorage
             const storedInfo = await Container.context.secrets.get(productKey);
             if (storedInfo) {
@@ -201,10 +203,7 @@ export class CredentialManager implements Disposable {
         await this._queue.add(
             async () => {
                 try {
-                    await Container.context.secrets.store(
-                        `${productKey}-${credentialId}`,
-                        JSON.stringify(info)
-                    );
+                    await Container.context.secrets.store(`${productKey}-${credentialId}`, JSON.stringify(info));
                 } catch (e) {
                     Logger.error(e, `Error writing to secretstorage`);
                 }
@@ -228,7 +227,6 @@ export class CredentialManager implements Disposable {
         // Logger.debug(`Deleting from secretstorage ${productKey}-${credentialId} returned this ${value}`);
         return wasKeyDeleted;
     }
-   
 
     private async getAuthInfoFromSecretStorage(
         productKey: string,
@@ -247,14 +245,12 @@ export class CredentialManager implements Disposable {
         if (!authInfo) {
             return undefined;
         }
-        
         let info: AuthInfo = JSON.parse(authInfo);
 
         // When in doubt, assume credentials are valid
         if (info.state === undefined) {
             info.state = AuthInfoState.Valid;
         }
-        
         return info;
     }
     private async getAuthInfoFromKeychain(
