@@ -25,8 +25,8 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     private _disposable: Disposable;
     private _jqlList: JQLEntry[];
     private _children: CustomJQLTree[];
-    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
-    public get onDidChangeTreeData(): Event<AbstractBaseNode> {
+    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | undefined>();
+    public get onDidChangeTreeData(): Event<AbstractBaseNode | undefined> {
         return this._onDidChangeTreeData.event;
     }
 
@@ -158,7 +158,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
         this._children = [];
         this._jqlList = this.getCustomJqlSiteList();
 
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     getCustomJqlSiteList(): JQLEntry[] {

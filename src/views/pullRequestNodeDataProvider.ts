@@ -161,7 +161,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     async refresh() {
         await this.updateChildren();
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     async refreshResource(uri: Uri) {
@@ -215,7 +215,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         }
 
         this._childrenMap.get(prs.workspaceRepo.rootUri)!.addItems(prs);
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {

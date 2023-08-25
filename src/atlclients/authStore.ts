@@ -26,7 +26,7 @@ import { Tokens } from './tokens';
 import crypto from 'crypto';
 import { keychain } from '../util/keychain';
 import { loggedOutEvent } from '../analytics';
-
+import { Container } from 'src/container';
 const keychainServiceNameV3 = version.endsWith('-insider') ? 'atlascode-insiders-authinfoV3' : 'atlascode-authinfoV3';
 
 enum Priority {
@@ -56,14 +56,14 @@ export class CredentialManager implements Disposable {
 
     /**
      * Gets the auth info for the given site. Will return value stored in the in-memory store if
-     * it's available, otherwise will return the value in the keychain.
+     * it's available, otherwise will return the value in the secretstorage.
      */
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
         return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId, allowCache);
     }
 
     /**
-     * Saves the auth info to both the in-memory store and the keychain.
+     * Saves the auth info to both the in-memory store and the secretstorage.
      */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
         Logger.debug(`Saving auth info for site: ${site.baseApiUrl} credentialID: ${site.credentialId}`);
@@ -100,19 +100,18 @@ export class CredentialManager implements Disposable {
             existingInfo.state !== info.state;
 
         if (hasNewInfo) {
-            Logger.debug(`Saving new information to keychain.`);
+            Logger.debug(`Saving new information to secretstorage.`);
             const cmdctx = this.commandContextFor(site.product);
             if (cmdctx !== undefined) {
                 setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
             }
 
             try {
-                this.addSiteInformationToKeychain(site.product.key, site.credentialId, info);
-
+                this.addSiteInformationToSecretStorage(site.product.key, site.credentialId, info);
                 const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site };
                 this._onDidAuthChange.fire(updateEvent);
             } catch (e) {
-                Logger.debug('error saving auth info to keychain: ', e);
+                Logger.debug('error saving auth info to secretstorage: ', e);
             }
         }
     }
@@ -135,9 +134,30 @@ export class CredentialManager implements Disposable {
             }
         }
 
-        if (!foundInfo && keychain) {
+        if (!foundInfo) {
             try {
-                let infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
+                let infoEntry = await this.getAuthInfoFromSecretStorage(productKey, credentialId);
+                // for users using secretstorage for the first time there will be no info in secretstorage, 
+                // so fetching authInfo from the keychain and storing it in the secretstorage so that such users dont' have to relogin manually
+                if( !infoEntry && keychain ){
+                    infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
+                    if(infoEntry){
+                        Logger.debug(`adding info from keychain to secretstorage for product: ${productKey} credentialID: ${credentialId}`);
+                        await this.addSiteInformationToSecretStorage(productKey, credentialId, infoEntry);
+                        // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
+                        await this._queue.add(
+                            async () => {
+                               if(keychain){
+                                    await keychain.deletePassword(
+                                        keychainServiceNameV3,
+                                        `${productKey}-${credentialId}`
+                                    );
+                               }
+                            },
+                            { priority: Priority.Write }
+                        );
+                    }        
+                }
                 if (isOAuthInfo(infoEntry)) {
                     if (!infoEntry.recievedAt) {
                         infoEntry.recievedAt = 0;
@@ -149,7 +169,7 @@ export class CredentialManager implements Disposable {
                     foundInfo = infoEntry;
                 }
             } catch (e) {
-                Logger.info(`keychain error ${e}`);
+                Logger.info(`secretstorage error ${e}`);
             }
         }
 
@@ -158,57 +178,85 @@ export class CredentialManager implements Disposable {
     }
 
     /**
-     * Deletes the keychain item.
+     * Deletes the secretstorage item.
      *
      * @remarks
-     * This only deletes the keychain item, leaving the in-memory store un-touched. It's
+     * This only deletes the secretstorage item, leaving the in-memory store un-touched. It's
      * meant to be used during migrations.
      */
-    public async deleteKeychainItem(service: string, productKey: string) {
+    public async deleteSecretStorageItem(productKey: string) {
         try {
-            if (keychain) {
-                await keychain.deletePassword(service, productKey);
+            // secretstorage can be accessed using the ExtensionContext provided by vscode to the activate function and the Container class has the 
+            // "ExtensionContext" stored as it's private static member, hence using it to access vscode's secretstorage
+            const storedInfo = await Container.context.secrets.get(productKey);
+            if (storedInfo) {
+                await Container.context.secrets.delete(productKey);
             }
         } catch (e) {
-            Logger.info(`keychain error ${e}`);
+            Logger.info(`secretstorage error error ${e}`);
         }
     }
 
-    private async addSiteInformationToKeychain(productKey: string, credentialId: string, info: AuthInfo) {
+    private async addSiteInformationToSecretStorage(productKey: string, credentialId: string, info: AuthInfo) {
         await this._queue.add(
             async () => {
-                if (keychain) {
-                    try {
-                        await keychain.setPassword(
-                            keychainServiceNameV3,
-                            `${productKey}-${credentialId}`,
-                            JSON.stringify(info)
-                        );
-                    } catch (e) {
-                        Logger.error(e, `Error writing to keychain`);
-                    }
+                try {
+                    await Container.context.secrets.store(
+                        `${productKey}-${credentialId}`,
+                        JSON.stringify(info)
+                    );
+                } catch (e) {
+                    Logger.error(e, `Error writing to secretstorage`);
                 }
             },
             { priority: Priority.Write }
         );
     }
 
-    private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
+    private async removeSiteInformationFromSecretStorage(productKey: string, credentialId: string): Promise<boolean> {
         let wasKeyDeleted = false;
         await this._queue.add(
             async () => {
-                if (keychain) {
-                    wasKeyDeleted = await keychain.deletePassword(
-                        keychainServiceNameV3,
-                        `${productKey}-${credentialId}`
-                    );
+                const storedInfo = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+                if (storedInfo) {
+                    await Container.context.secrets.delete(`${productKey}-${credentialId}`);
+                    wasKeyDeleted = true;
                 }
             },
             { priority: Priority.Write }
         );
+        // Logger.debug(`Deleting from secretstorage ${productKey}-${credentialId} returned this ${value}`);
         return wasKeyDeleted;
     }
+   
 
+    private async getAuthInfoFromSecretStorage(
+        productKey: string,
+        credentialId: string,
+        serviceName?: string
+    ): Promise<AuthInfo | undefined> {
+        Logger.debug(`Retrieving secretstorage info for product: ${productKey} credentialID: ${credentialId}`);
+        let authInfo: string | undefined = undefined;
+        await this._queue.add(
+            async () => {
+                authInfo = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+            },
+            { priority: Priority.Read }
+        );
+
+        if (!authInfo) {
+            return undefined;
+        }
+        
+        let info: AuthInfo = JSON.parse(authInfo);
+
+        // When in doubt, assume credentials are valid
+        if (info.state === undefined) {
+            info.state = AuthInfoState.Valid;
+        }
+        
+        return info;
+    }
     private async getAuthInfoFromKeychain(
         productKey: string,
         credentialId: string,
@@ -279,7 +327,7 @@ export class CredentialManager implements Disposable {
     }
 
     /**
-     * Removes an auth item from both the in-memory store and the keychain.
+     * Removes an auth item from both the in-memory store and the secretstorage.
      */
     public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
         let productAuths = this._memStore.get(site.product.key);
@@ -290,8 +338,7 @@ export class CredentialManager implements Disposable {
             this._memStore.set(site.product.key, productAuths);
         }
 
-        wasKeyDeleted = await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
-
+        wasKeyDeleted = await this.removeSiteInformationFromSecretStorage(site.product.key, site.credentialId);
         if (wasMemDeleted || wasKeyDeleted) {
             const cmdctx = this.commandContextFor(site.product);
             if (cmdctx) {

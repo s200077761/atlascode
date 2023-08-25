@@ -20,8 +20,8 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
 
     private _emptyState = 'No issues';
     private _emptyStateCommand: Command | undefined;
-    protected _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
-    public get onDidChangeTreeData(): Event<AbstractBaseNode> {
+    protected _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | undefined>();
+    public get onDidChangeTreeData(): Event<AbstractBaseNode | undefined> {
         return this._onDidChangeTreeData.event;
     }
 
@@ -53,7 +53,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
 
     refresh() {
         this._issues = undefined;
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     dispose() {

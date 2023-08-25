@@ -51,7 +51,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
 
     refresh(): void {
         this.updateChildren();
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     addItems(issues: PaginatedBitbucketIssues): void {
@@ -60,7 +60,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         }
 
         this._childrenMap.get(issues.workspaceRepo.rootUri)!.addItems(issues);
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {
