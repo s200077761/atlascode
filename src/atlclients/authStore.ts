@@ -147,17 +147,7 @@ export class CredentialManager implements Disposable {
                         );
                         await this.addSiteInformationToSecretStorage(productKey, credentialId, infoEntry);
                         // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
-                        await this._queue.add(
-                            async () => {
-                                if (keychain) {
-                                    await keychain.deletePassword(
-                                        keychainServiceNameV3,
-                                        `${productKey}-${credentialId}`
-                                    );
-                                }
-                            },
-                            { priority: Priority.Write }
-                        );
+                        await this.removeSiteInformationFromKeychain(productKey, credentialId);
                     }
                 }
                 if (isOAuthInfo(infoEntry)) {
@@ -208,7 +198,19 @@ export class CredentialManager implements Disposable {
             { priority: Priority.Write }
         );
     }
-
+    private async getSiteInformationFromSecretStorage(
+        productKey: string,
+        credentialId: string
+    ): Promise<string | undefined> {
+        let info: string | undefined = undefined;
+        await this._queue.add(
+            async () => {
+                info = await Container.context.secrets.get(`${productKey}-${credentialId}`);
+            },
+            { priority: Priority.Read }
+        );
+        return info;
+    }
     private async removeSiteInformationFromSecretStorage(productKey: string, credentialId: string): Promise<boolean> {
         let wasKeyDeleted = false;
         await this._queue.add(
@@ -223,6 +225,21 @@ export class CredentialManager implements Disposable {
         );
         return wasKeyDeleted;
     }
+    private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
+        let wasKeyDeleted = false;
+        await this._queue.add(
+            async () => {
+                if (keychain) {
+                    wasKeyDeleted = await keychain.deletePassword(
+                        keychainServiceNameV3,
+                        `${productKey}-${credentialId}`
+                    );
+                }
+            },
+            { priority: Priority.Write }
+        );
+        return wasKeyDeleted;
+    }
 
     private async getAuthInfoFromSecretStorage(
         productKey: string,
@@ -231,13 +248,7 @@ export class CredentialManager implements Disposable {
     ): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving secretstorage info for product: ${productKey} credentialID: ${credentialId}`);
         let authInfo: string | undefined = undefined;
-        await this._queue.add(
-            async () => {
-                authInfo = await Container.context.secrets.get(`${productKey}-${credentialId}`);
-            },
-            { priority: Priority.Read }
-        );
-
+        authInfo = await this.getSiteInformationFromSecretStorage(productKey, credentialId);
         if (!authInfo) {
             return undefined;
         }
