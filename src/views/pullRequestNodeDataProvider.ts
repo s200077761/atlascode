@@ -20,10 +20,8 @@ const createPRNode = new CreatePullRequestNode();
 const MAX_WORKSPACE_REPOS_TO_PRELOAD = 3;
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
-    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<
-        AbstractBaseNode | undefined
-    >();
-    readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | null> = new EventEmitter<AbstractBaseNode | null>();
+    readonly onDidChangeTreeData: Event<AbstractBaseNode | null> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
     private _headerNode: PullRequestHeaderNode;
 
@@ -161,7 +159,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     async refresh() {
         await this.updateChildren();
-        this._onDidChangeTreeData.fire(undefined);
+        this._onDidChangeTreeData.fire(null);
     }
 
     async refreshResource(uri: Uri) {
@@ -215,7 +213,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         }
 
         this._childrenMap.get(prs.workspaceRepo.rootUri)!.addItems(prs);
-        this._onDidChangeTreeData.fire(undefined);
+        this._onDidChangeTreeData.fire(null);
     }
 
     async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {

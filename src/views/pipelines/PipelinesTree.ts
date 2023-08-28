@@ -29,8 +29,8 @@ const defaultPageLength = 25;
 export class PipelinesTree extends BaseTreeDataProvider {
     private _disposable: Disposable;
     private _childrenMap = new Map<string, PipelinesRepoNode>();
-    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | undefined>();
-    public get onDidChangeTreeData(): Event<AbstractBaseNode | undefined> {
+    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode | null>();
+    public get onDidChangeTreeData(): Event<AbstractBaseNode | null> {
         return this._onDidChangeTreeData.event;
     }
 
@@ -61,7 +61,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
         if (node) {
             await node.fetchNextPage();
         }
-        this._onDidChangeTreeData.fire(undefined);
+        this._onDidChangeTreeData.fire(null);
     }
 
     getTreeItem(element: AbstractBaseNode): TreeItem | Promise<TreeItem> {
@@ -87,7 +87,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
 
     public refresh() {
         this._childrenMap.clear();
-        this._onDidChangeTreeData.fire(undefined);
+        this._onDidChangeTreeData.fire(null);
     }
 
     async dispose() {

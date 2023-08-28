@@ -138,7 +138,7 @@ export class CredentialManager implements Disposable {
             try {
                 let infoEntry = await this.getAuthInfoFromSecretStorage(productKey, credentialId);
                 // for users using secretstorage for the first time there will be no info in secretstorage,
-                // so fetching authInfo from the keychain and storing it in the secretstorage so that such users dont' have to relogin manually
+                // so fetching authInfo from the keychain and storing it in the secretstorage so that such users don't have to relogin manually
                 if (!infoEntry && keychain) {
                     infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
                     if (infoEntry) {
@@ -190,12 +190,9 @@ export class CredentialManager implements Disposable {
         try {
             // secretstorage can be accessed using the ExtensionContext provided by vscode to the activate function and the Container class has the
             // "ExtensionContext" stored as it's private static member, hence using it to access vscode's secretstorage
-            const storedInfo = await Container.context.secrets.get(productKey);
-            if (storedInfo) {
-                await Container.context.secrets.delete(productKey);
-            }
+            await Container.context.secrets.delete(productKey);
         } catch (e) {
-            Logger.info(`secretstorage error error ${e}`);
+            Logger.info(`secretstorage error ${e}`);
         }
     }
 
@@ -224,7 +221,6 @@ export class CredentialManager implements Disposable {
             },
             { priority: Priority.Write }
         );
-        // Logger.debug(`Deleting from secretstorage ${productKey}-${credentialId} returned this ${value}`);
         return wasKeyDeleted;
     }
 
