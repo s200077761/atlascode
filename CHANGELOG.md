@@ -1,3 +1,9 @@
+## What's New in 3.0.5
+
+### Improvements
+
+- Migrated from keytar to secretstorage
+
 ## What's New in 3.0.4
 
 ### Bugs fixed
