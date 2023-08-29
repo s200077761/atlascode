@@ -14,10 +14,8 @@ import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 const createBitbucketIssueNode = new CreateBitbucketIssueNode();
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
-    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<
-        AbstractBaseNode | undefined
-    >();
-    readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | null> = new EventEmitter<AbstractBaseNode | null>();
+    readonly onDidChangeTreeData: Event<AbstractBaseNode | null> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, BitbucketIssuesRepositoryNode> | undefined = undefined;
 
     private _disposable: Disposable;
@@ -51,7 +49,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
 
     refresh(): void {
         this.updateChildren();
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(null);
     }
 
     addItems(issues: PaginatedBitbucketIssues): void {
@@ -60,7 +58,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         }
 
         this._childrenMap.get(issues.workspaceRepo.rootUri)!.addItems(issues);
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(null);
     }
 
     async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {
