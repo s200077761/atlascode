@@ -4,11 +4,25 @@ import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
 import { Remote, Repository } from '../typings/git';
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from './model';
-
 const bbServerRepoRegEx = new RegExp(/(?<type>users|projects)\/(?<owner>.*)\/repos/);
 
 export function parseGitUrl(url: string): gup.GitUrl {
     const parsed = gup(url);
+    const parsedHrefArray = parsed.href.split('/');
+    const repoNameWithExt = parsedHrefArray[parsedHrefArray.length - 1];
+    let repoNameArray = repoNameWithExt.split('.');
+    if (repoNameArray.length > 2) {
+        let pathnameArray = parsed.pathname.split('/');
+        pathnameArray[pathnameArray.length - 1] = repoNameWithExt;
+        parsed.pathname = pathnameArray.join('/');
+        //removing the extension (e.g : .git) from the repoNameArray and using it to modify 'name' and 'full_name'
+        repoNameArray.pop();
+        const repoName = repoNameArray.join('.');
+        parsed.name = repoName;
+        let fullnameArray = parsed.full_name.split('/');
+        fullnameArray[fullnameArray.length - 1] = repoName;
+        parsed.full_name = fullnameArray.join('/');
+    }
     parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);
 
     if (parsed.owner === 'repos') {
