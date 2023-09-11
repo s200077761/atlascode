@@ -1,4 +1,4 @@
-import * as gup from 'git-url-parse';
+import gitUrlParse from 'git-url-parse';
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
@@ -7,8 +7,8 @@ import { BitbucketApi, BitbucketSite, WorkspaceRepo } from './model';
 
 const bbServerRepoRegEx = new RegExp(/(?<type>users|projects)\/(?<owner>.*)\/repos/);
 
-export function parseGitUrl(url: string): gup.GitUrl {
-    const parsed = gup(url);
+export function parseGitUrl(url: string): gitUrlParse.GitUrl {
+    const parsed = gitUrlParse(url);
     parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);
 
     if (parsed.owner === 'repos') {

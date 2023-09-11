@@ -38,6 +38,7 @@ module.exports = [
             extensions: ['.tsx', '.ts', '.js', '.json'],
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
             alias: {
+                'parse-url$': 'parse-url/dist/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
             },
         },
