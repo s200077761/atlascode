@@ -84,6 +84,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 3.0.6 🎉</h4>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Resolved an issue where the extension was not functioning correctly
+                                                    for repositories with a period in their names.
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 3.0.5 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>

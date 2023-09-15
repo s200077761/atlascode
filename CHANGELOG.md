@@ -1,8 +1,14 @@
+## What's New in 3.0.6
+
+### Bugs fixed
+
+-   Resolved an issue where the extension was not functioning correctly for repositories with a period in their names.
+
 ## What's New in 3.0.5
 
 ### Improvements
 
-- Migrated from keytar to secretstorage
+-   Migrated from keytar to secretstorage
 
 ## What's New in 3.0.4
 
