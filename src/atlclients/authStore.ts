@@ -153,6 +153,13 @@ export class CredentialManager implements Disposable {
                             );
                             // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
                             await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
+                        } else if (Container.siteManager.getSitesAvailable(site.product).length > 0) {
+                            // if keychain exists and there's no authinfo in the keychain but there are some saved sites for the user
+                            // we should remove such sites and user should login
+                            Logger.debug(
+                                `removing dead sites for product ${site.product.key} credentialID: ${site.credentialId}`
+                            );
+                            Container.siteManager.removeDeadSites(site.product, site.credentialId);
                         }
                     } else {
                         // else if keychain does not exist, we check if some sites were saved for the current product and if there
