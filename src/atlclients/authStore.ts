@@ -153,22 +153,23 @@ export class CredentialManager implements Disposable {
                             );
                             // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
                             await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
-                        } else if (Container.siteManager.getSitesAvailable(site.product).length > 0) {
-                            // if keychain exists and there's no authinfo in the keychain but there are some saved sites for the user
-                            // we should remove such sites and user should login
+                        } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
+                            // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
                             Logger.debug(
-                                `removing dead sites for product ${site.product.key} credentialID: ${site.credentialId}`
+                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`
                             );
-                            Container.siteManager.removeDeadSites(site.product, site.credentialId);
+
+                            await Container.clientManager.removeClient(site);
+                            Container.siteManager.removeSite(site);
                         }
                     } else {
-                        // else if keychain does not exist, we check if some sites were saved for the current product and if there
-                        // are some saved sites then we need to remove such sites because now the users will have to relogin manually
-                        if (Container.siteManager.getSitesAvailable(site.product).length > 0) {
+                        // else if keychain does not exist, we check if the current site has been saved, if yes then we should remove it
+                        if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             Logger.debug(
-                                `removing dead sites for product ${site.product.key} credentialID: ${site.credentialId}`
+                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`
                             );
-                            Container.siteManager.removeDeadSites(site.product, site.credentialId);
+                            await Container.clientManager.removeClient(site);
+                            Container.siteManager.removeSite(site);
                         }
                     }
                 }

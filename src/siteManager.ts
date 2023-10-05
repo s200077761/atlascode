@@ -126,16 +126,6 @@ export class SiteManager extends Disposable {
             });
         }
     }
-    public removeDeadSites(product: Product, credentialId: string) {
-        const deadSites = this.getSitesAvailable(product).filter((site) => site.credentialId === credentialId);
-        deadSites.forEach((s) => this.removeSite(s));
-        if (deadSites.length > 0) {
-            this._onDidSitesAvailableChange.fire({
-                sites: this.getSitesAvailable(product),
-                product: product,
-            });
-        }
-    }
 
     public getSitesAvailable(product: Product): DetailedSiteInfo[] {
         return this.getSitesAvailableForKey(product.key);
