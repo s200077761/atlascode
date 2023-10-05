@@ -620,19 +620,21 @@ export class CloudPullRequestApi implements PullRequestApi {
         if (query && query.length > 0) {
             // wrapping in try-catch as some users may not have permission to access to the API
             try {
-                const { data } = await this.client.get(`/teams/${ownerSlug}/members?q=nickname="${query}"`);
+                const { data } = await this.client.get(`/workspaces/${ownerSlug}/members`, {
+                    q: `user.nickname="${query}"`,
+                });
 
-                return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
+                return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer.user));
             } catch (e) {
                 return [];
             }
         }
 
         try {
-            let { data } = await this.client.get(`/teams/${ownerSlug}/members`, {
+            let { data } = await this.client.get(`/workspaces/${ownerSlug}/members`, {
                 pagelen: 100,
                 fields:
-                    'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href',
+                    'size,next,values.user.account_id,values.user.display_name,values.user.links.html.href,values.user.links.avatar.href',
             });
             const teamMembers = data.values || [];
 
@@ -647,7 +649,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 teamMembers.push(...(data.values || []));
             }
 
-            return teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m));
+            return teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m.user));
         } catch (e) {
             return [];
         }
