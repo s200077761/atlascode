@@ -1,3 +1,11 @@
+## What's New in 3.0.7
+
+### Bugs fixed
+ 
+-   Fixed bug that would show "cannot get client for jira" and/or "cannot get client for bitbucket" error to logged in users upgrading 
+    to atlascode latest version from version 3.0.4 or older, after keytar is deprecated. 
+-   Fixed bug that caused the “reviewers” text box in the “Create Pull Request” screen to fail.
+
 ## What's New in 3.0.6
 
 ### Bugs fixed
