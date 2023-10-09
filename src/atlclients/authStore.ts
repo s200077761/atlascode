@@ -59,7 +59,7 @@ export class CredentialManager implements Disposable {
      * it's available, otherwise will return the value in the secretstorage.
      */
     public async getAuthInfo(site: DetailedSiteInfo, allowCache = true): Promise<AuthInfo | undefined> {
-        return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId, allowCache);
+        return this.getAuthInfoForProductAndCredentialId(site, allowCache);
     }
 
     /**
@@ -117,16 +117,15 @@ export class CredentialManager implements Disposable {
     }
 
     private async getAuthInfoForProductAndCredentialId(
-        productKey: string,
-        credentialId: string,
+        site: DetailedSiteInfo,
         allowCache: boolean
     ): Promise<AuthInfo | undefined> {
-        Logger.debug(`Retrieving auth info for product: ${productKey} credentialID: ${credentialId}`);
+        Logger.debug(`Retrieving auth info for product: ${site.product.key} credentialID: ${site.credentialId}`);
         let foundInfo: AuthInfo | undefined = undefined;
-        let productAuths = this._memStore.get(productKey);
+        let productAuths = this._memStore.get(site.product.key);
 
-        if (allowCache && productAuths && productAuths.has(credentialId)) {
-            foundInfo = productAuths.get(credentialId);
+        if (allowCache && productAuths && productAuths.has(site.credentialId)) {
+            foundInfo = productAuths.get(site.credentialId);
             if (foundInfo) {
                 // clone the object so editing it and saving it back doesn't trip up equality checks
                 // in saveAuthInfo
@@ -136,18 +135,42 @@ export class CredentialManager implements Disposable {
 
         if (!foundInfo) {
             try {
-                let infoEntry = await this.getAuthInfoFromSecretStorage(productKey, credentialId);
-                // for users using secretstorage for the first time there will be no info in secretstorage,
-                // so fetching authInfo from the keychain and storing it in the secretstorage so that such users don't have to relogin manually
-                if (!infoEntry && keychain) {
-                    infoEntry = await this.getAuthInfoFromKeychain(productKey, credentialId);
-                    if (infoEntry) {
-                        Logger.debug(
-                            `adding info from keychain to secretstorage for product: ${productKey} credentialID: ${credentialId}`
-                        );
-                        await this.addSiteInformationToSecretStorage(productKey, credentialId, infoEntry);
-                        // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
-                        await this.removeSiteInformationFromKeychain(productKey, credentialId);
+                let infoEntry = await this.getAuthInfoFromSecretStorage(site.product.key, site.credentialId);
+                // if no authinfo found in secretstorage
+                if (!infoEntry) {
+                    // we first check if keychain exists and if it does then we migrate users from keychain to secretstorage
+                    // without them having to relogin manually
+                    if (keychain) {
+                        infoEntry = await this.getAuthInfoFromKeychain(site.product.key, site.credentialId);
+                        if (infoEntry) {
+                            Logger.debug(
+                                `adding info from keychain to secretstorage for product: ${site.product.key} credentialID: ${site.credentialId}`
+                            );
+                            await this.addSiteInformationToSecretStorage(
+                                site.product.key,
+                                site.credentialId,
+                                infoEntry
+                            );
+                            // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
+                            await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
+                        } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
+                            // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
+                            Logger.debug(
+                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`
+                            );
+
+                            await Container.clientManager.removeClient(site);
+                            Container.siteManager.removeSite(site);
+                        }
+                    } else {
+                        // else if keychain does not exist, we check if the current site has been saved, if yes then we should remove it
+                        if (Container.siteManager.getSiteForId(site.product, site.id)) {
+                            Logger.debug(
+                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`
+                            );
+                            await Container.clientManager.removeClient(site);
+                            Container.siteManager.removeSite(site);
+                        }
                     }
                 }
                 if (isOAuthInfo(infoEntry)) {
@@ -156,7 +179,7 @@ export class CredentialManager implements Disposable {
                     }
                 }
                 if (infoEntry && productAuths) {
-                    this._memStore.set(productKey, productAuths.set(credentialId, infoEntry));
+                    this._memStore.set(site.product.key, productAuths.set(site.credentialId, infoEntry));
 
                     foundInfo = infoEntry;
                 }
