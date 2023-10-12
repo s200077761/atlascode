@@ -84,6 +84,24 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 3.0.7 🎉</h4>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that would show "cannot get client for jira" and/or
+                                                    "cannot get client for bitbucket" error to logged in users upgrading
+                                                    to atlascode latest version from version 3.0.4 or older, after
+                                                    keytar is deprecated.
+                                                </li>
+                                            </ul>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that caused the “reviewers” text box in the “Create Pull
+                                                    Request” screen to fail.
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 3.0.6 🎉</h4>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
