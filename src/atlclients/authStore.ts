@@ -18,7 +18,7 @@ import {
 import { CommandContext, setCommandContext } from '../constants';
 import { Disposable, Event, EventEmitter, version, window } from 'vscode';
 
-import { AnalyticsClient } from '../analytics-node-client/src';
+import { AnalyticsClient } from '../analytics-node-client/src/index';
 import { Logger } from '../logger';
 import { OAuthRefesher } from './oauthRefresher';
 import PQueue from 'p-queue';

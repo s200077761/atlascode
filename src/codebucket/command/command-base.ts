@@ -27,7 +27,7 @@ export abstract class CommandBase {
     /**
      * Command implementation
      */
-    protected abstract async execute(): Promise<void>;
+    protected abstract execute(): Promise<void>;
 
     /**
      * Get the backend (Git or Mercurial) for the current project.

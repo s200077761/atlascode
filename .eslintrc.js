@@ -26,7 +26,13 @@ module.exports = {
         'react-hooks/rules-of-hooks': 'error',
         'react-hooks/exhaustive-deps': 'warn',
         '@typescript-eslint/await-thenable': 'error',
-        '@typescript-eslint/class-name-casing': 'error',
+        "@typescript-eslint/naming-convention": [
+            "error",
+            {
+              "selector": "class",
+              "format": ["PascalCase"]
+            }
+        ],
         'import/no-extraneous-dependencies': [
             'error',
             { devDependencies: ['**/webpack.*', '**/test/*', '**/*.test.js', '**/*.spec.js'] },

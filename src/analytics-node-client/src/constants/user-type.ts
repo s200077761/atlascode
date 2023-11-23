@@ -1,10 +1,25 @@
 'use strict';
 
-const ATLASSIAN_ACCOUNT = 'atlassianAccount';
-const TRELLO = 'trello';
+export const ATLASSIAN_ACCOUNT = 'atlassianAccount';
+export const TRELLO = 'trello';
+export const HASHED_EMAIL = 'hashedEmail';
+export const OPSGENIE = 'opsgenie';
+export const HALP = 'halp';
+export const CUSTOMER_ACCOUNT = 'customerAccount'; // JSM customer account
 
-function isValidUserIdType(userIdType: string): boolean {
-    return userIdType === ATLASSIAN_ACCOUNT || userIdType === TRELLO;
+export function isValidUserIdType(userIdType: any) {
+    const validUserIdTypes = [ATLASSIAN_ACCOUNT, TRELLO, HASHED_EMAIL, OPSGENIE, HALP, CUSTOMER_ACCOUNT];
+    return validUserIdTypes.includes(userIdType);
 }
 
-export { ATLASSIAN_ACCOUNT, TRELLO, isValidUserIdType };
+const tenantTypes = {
+    ATLASSIAN_ACCOUNT,
+    TRELLO,
+    HASHED_EMAIL,
+    OPSGENIE,
+    HALP,
+    CUSTOMER_ACCOUNT,
+    isValidUserIdType,
+};
+
+export { tenantTypes };

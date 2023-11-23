@@ -1,10 +1,17 @@
 'use strict';
 
-const CLOUD_ID = 'cloudId';
-const NONE = 'none';
+export const CLOUD_ID = 'cloudId';
+export const HALP_TEAM_ID = 'halpTeamId';
+export const NONE = 'none';
 
-function isValidTenantType(tenantIdType: string): boolean {
-    return tenantIdType === CLOUD_ID || tenantIdType === NONE;
+export function isValidTenantType(tenantIdType: any) {
+    return tenantIdType === CLOUD_ID || tenantIdType === HALP_TEAM_ID || tenantIdType === NONE;
 }
+const tenantTypes = {
+    CLOUD_ID,
+    HALP_TEAM_ID,
+    NONE,
+    isValidTenantType,
+};
 
-export { CLOUD_ID, NONE, isValidTenantType };
+export { tenantTypes };

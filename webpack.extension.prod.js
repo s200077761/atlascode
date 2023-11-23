@@ -22,6 +22,17 @@ module.exports = [
                 {
                     test: /\.(ts|js)x?$/,
                     use: [{ loader: 'ts-loader' }],
+                    include: [
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/app/analytics-node.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/lib/http-client.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/app/event-queue.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/lib/abort.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/plugins/segmentio/publisher.js'),
+                    ],
+                },
+                {
+                    test: /\.(ts|js)x?$/,
+                    use: [{ loader: 'ts-loader' }],
                     exclude: /node_modules/,
                 },
             ],
@@ -79,6 +90,17 @@ module.exports = [
         module: {
             exprContextCritical: false,
             rules: [
+                {
+                    test: /\.(ts|js)x?$/,
+                    use: [{ loader: 'ts-loader' }],
+                    include: [
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/app/analytics-node.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/lib/http-client.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/app/event-queue.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/lib/abort.js'),
+                        path.resolve('./node_modules/@segment/analytics-node/dist/esm/plugins/segmentio/publisher.js'),
+                    ],
+                },
                 {
                     test: /\.tsx?$/,
                     use: [{ loader: 'ts-loader' }],

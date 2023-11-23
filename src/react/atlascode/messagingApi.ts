@@ -7,14 +7,14 @@ import { PMFControllerContext } from './common/pmf/pmfController';
 export type PostMessageFunc<A> = (action: A) => void;
 export type PostMessagePromiseFunc<A, R extends ReducerAction<any, any>> = (
     action: A,
-    waitForEvent: R['type'],
+    waitForEvent: (R & { type: any })['type'],
     timeout: number,
     nonce?: string
 ) => Promise<R>;
 export type ReceiveMessageFunc<M extends ReducerAction<any, any>> = (message: M) => void;
 
 interface VsCodeApi {
-    postMessage(msg: {}): void;
+    postMessage<T = {}>(msg: T): void;
     setState(state: {}): void;
     getState(): {};
 }
@@ -26,13 +26,13 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
 
     const postMessage: PostMessageFunc<A> = useCallback(
         (action: A): void => {
-            apiRef.postMessage(action);
+            apiRef.postMessage<A>(action);
         },
         [apiRef]
     );
 
     const postMessagePromise: PostMessagePromiseFunc<A, R> = useCallback(
-        (action: A, waitForEvent: R['type'], timeout: number, nonce?: string): Promise<R> => {
+        (action: A, waitForEvent: (R & { type: any })['type'], timeout: number, nonce?: string): Promise<R> => {
             apiRef.postMessage(action);
             return new Promise<R>((resolve, reject) => {
                 const timer = setTimeout(() => {
@@ -70,8 +70,12 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
 
     const internalMessageHandler = useCallback(
         (msg: any): void => {
-            const message = msg.data as M;
-
+            type M1 = {
+                type?: any;
+                showPMF?: any;
+                reason?: any;
+            } & M;
+            const message = msg.data as M1;
             if (message && message.type) {
                 switch (message.type) {
                     case CommonMessageType.Error: {
