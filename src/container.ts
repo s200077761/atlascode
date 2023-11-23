@@ -3,14 +3,8 @@ import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bit
 import { Disposable, ExtensionContext, UriHandler, env, workspace } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
 
-// const { analyticsClient } = require('./analytics-node-client/src/index');
-import { analyticsClient } from './analytics-node-client/src/index';
-import { AnalyticsClient } from './analytics-node-client/src/index';
-// import { analyticsClient } from '@atlassiansox/analytics-node-client';
-// const { AnalyticsClient } = require('./analytics-node-client/src/client');
-// import { AnalyticsClient } from './analytics-node-client/src/client';
-// import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
-// const { analyticsClient } = require('@atlassiansox/analytics-node-client');
+import { analyticsClient } from './analytics-node-client/src/client.min.js';
+import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { AuthStatusBar } from './views/authStatusBar';
 import { BitbucketContext } from './bitbucket/bbContext';
 import { BitbucketIssueAction } from './lib/ipc/fromUI/bbIssue';

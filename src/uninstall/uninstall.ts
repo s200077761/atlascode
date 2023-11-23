@@ -1,5 +1,5 @@
-import { TrackEvent } from '../analytics-node-client/src';
-import { analyticsClient } from '../analytics-node-client/src/index';
+import { TrackEvent } from '../analytics-node-client/src/types';
+import { analyticsClient } from '../analytics-node-client/src/client.min.js';
 
 import { v4 } from 'uuid';
 

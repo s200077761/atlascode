@@ -20,7 +20,7 @@ import {
 } from './authInfo';
 import { authenticatedEvent, editedEvent } from '../analytics';
 import { getAgent, getAxiosInstance } from '../jira/jira-client/providers';
-import { AnalyticsClient } from '../analytics-node-client/src/client';
+import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
 
 import { BitbucketAuthenticator } from './bitbucketAuthenticator';
 import { CredentialManager } from './authStore';

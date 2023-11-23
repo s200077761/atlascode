@@ -47,7 +47,7 @@ import {
     upgradedEvent,
     viewScreenEvent,
 } from './analytics';
-import { AnalyticsClient } from './analytics-node-client/src/index';
+import { AnalyticsClient } from './analytics-node-client/src/client.min.js';
 import { DetailedSiteInfo, Product, SiteInfo } from './atlclients/authInfo';
 import { AnalyticsApi } from './lib/analyticsApi';
 
