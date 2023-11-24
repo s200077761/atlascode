@@ -84,6 +84,13 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 3.0.8 🎉</h4>
+                                        <section>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>Fixed the vulnerability in axios</li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 3.0.7 🎉</h4>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
