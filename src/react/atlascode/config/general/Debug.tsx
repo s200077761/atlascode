@@ -51,7 +51,7 @@ interface FileWithPath extends File {
 }
 
 interface FileWithWebkitPath extends File {
-    readonly webkitRelativePath?: string;
+    readonly webkitRelativePath: string;
 }
 
 function toFileWithPath(f: File): FileWithPath {

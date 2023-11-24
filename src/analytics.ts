@@ -1,4 +1,4 @@
-import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/index';
+import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/types';
 import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira, SiteInfo } from './atlclients/authInfo';
 import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';

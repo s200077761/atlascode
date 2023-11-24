@@ -16,7 +16,7 @@ import { Logger } from '../logger';
 import { AbstractReactWebview } from './abstractWebview';
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
-    abstract async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void>;
+    abstract handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void>;
 
     protected formatSelectOptions(msg: FetchQueryAction, result: any, valueType?: ValueType): any[] {
         let suggestions: any[] = [];

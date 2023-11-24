@@ -73,7 +73,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
     abstract get title(): string;
     abstract get id(): string;
-    abstract async invalidate(): Promise<void>;
+    abstract invalidate(): Promise<void>;
     abstract get siteOrUndefined(): DetailedSiteInfo | undefined;
     abstract get productOrUndefined(): Product | undefined;
 

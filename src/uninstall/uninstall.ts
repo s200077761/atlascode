@@ -1,4 +1,6 @@
-import { AnalyticsClient, TrackEvent } from '../analytics-node-client/src';
+import { TrackEvent } from '../analytics-node-client/src/types';
+import { analyticsClient } from '../analytics-node-client/src/client.min.js';
+
 import { v4 } from 'uuid';
 
 class AnalyticsPlatform {
@@ -40,7 +42,7 @@ function handleUninstall() {
             },
         } as TrackEvent;
 
-        const c = new AnalyticsClient({
+        const c = analyticsClient({
             origin: 'desktop',
             env: 'prod',
             product: 'externalProductIntegrations',

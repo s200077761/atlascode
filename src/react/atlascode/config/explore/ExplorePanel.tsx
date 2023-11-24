@@ -108,7 +108,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                             className={[classes.code, classes.linkified].join(' ')}
                                             onClick={openTriggersSection}
                                         >
-                                            Jira > Create Jira Issue Triggers > Comment Triggers
+                                            Jira &gt; Create Jira Issue Triggers &gt; Comment Triggers
                                         </code>
                                     </>
                                 }
@@ -176,7 +176,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
                                             className={[classes.code, classes.linkified].join(' ')}
                                             onClick={openFiltersAndJQLSection}
                                         >
-                                            Jira > Jira Issues Explorer > Filters and Custom JQL.
+                                            Jira &gt; Jira Issues Explorer &gt; Filters and Custom JQL.
                                         </code>
                                         To view an issue, expand a filter and click on the issue.
                                     </>

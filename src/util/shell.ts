@@ -1,7 +1,7 @@
 import * as child from 'child_process';
 
 export interface Result {
-    code: number;
+    code: number | null;
     stdout: string;
     stderr: string;
 }

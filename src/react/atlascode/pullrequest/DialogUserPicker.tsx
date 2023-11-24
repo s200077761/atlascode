@@ -47,7 +47,7 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
 
     const handleInputChange = useCallback(
         (event: React.ChangeEvent, value: string) => {
-            if (open && event?.type === 'change') {
+            if (event?.type === 'change') {
                 setInputText(value);
             }
         },

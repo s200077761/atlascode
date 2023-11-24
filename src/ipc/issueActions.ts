@@ -132,7 +132,7 @@ export interface WorklogData {
     started: string;
     timeSpent: string;
     newEstimate?: string;
-    adjustEstimate: string;
+    adjustEstimate?: string;
 }
 
 export interface CreateWorklogAction extends Action {
