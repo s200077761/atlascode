@@ -1,3 +1,9 @@
+## What's New in 3.0.8
+
+### Improvements
+
+-   Fixed the vulnerability in axios
+
 ## What's New in 3.0.7
 
 ### Bugs fixed
