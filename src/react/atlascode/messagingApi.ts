@@ -7,7 +7,7 @@ import { PMFControllerContext } from './common/pmf/pmfController';
 export type PostMessageFunc<A> = (action: A) => void;
 export type PostMessagePromiseFunc<A, R extends ReducerAction<any, any>> = (
     action: A,
-    waitForEvent: (R & { type: any })['type'],
+    waitForEvent: any,
     timeout: number,
     nonce?: string
 ) => Promise<R>;
@@ -32,7 +32,7 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
     );
 
     const postMessagePromise: PostMessagePromiseFunc<A, R> = useCallback(
-        (action: A, waitForEvent: (R & { type: any })['type'], timeout: number, nonce?: string): Promise<R> => {
+        (action: A, waitForEvent: any, timeout: number, nonce?: string): Promise<R> => {
             apiRef.postMessage(action);
             return new Promise<R>((resolve, reject) => {
                 const timer = setTimeout(() => {

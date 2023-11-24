@@ -123,7 +123,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
         }
 
         if (needsReRender) {
-            reRender((toggle) => !toggle);
+            reRender((prevToggle) => !prevToggle);
         }
     });
 
@@ -144,7 +144,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                 }
                 await callback(fieldValues);
             } finally {
-                reRender((toggle) => !toggle);
+                reRender((prevToggle) => !prevToggle);
             }
         },
         [fields]
@@ -155,7 +155,7 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
             watchDefaults.current = watch;
             watches.current = watch;
             errors.current = {};
-            reRender((toggle) => !toggle);
+            reRender((prevToggle) => !prevToggle);
         }
     }, [watch]);
 
