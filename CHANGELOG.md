@@ -1,3 +1,9 @@
+## What's New in 3.0.9
+
+### Bugs fixed
+
+-   Resolved the issue of Visual Studio Code highlighting OpenID Connect properties as errors in bitbucket-pipelines.yml files.
+
 ## What's New in 3.0.8
 
 ### Improvements
