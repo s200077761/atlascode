@@ -84,6 +84,16 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 3.0.9 🎉</h4>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Resolved the issue of Visual Studio Code highlighting OpenID Connect
+                                                    properties as errors in bitbucket-pipelines.yml files.
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 3.0.8 🎉</h4>
                                         <section>
                                             <h4>✨ Improvements ✨</h4>
