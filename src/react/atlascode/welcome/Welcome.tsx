@@ -93,8 +93,8 @@ const WelcomePage: React.FunctionComponent = () => {
                                                     versions of babel/traverse.
                                                 </li>
                                                 <li>
-                                                    Fixed Regular Expression Denial of Service vulnerability in affected
-                                                    versions of axios
+                                                    Fixed Prototype Pollution vulnerability in affected versions of
+                                                    axios
                                                 </li>
                                             </ul>
                                         </section>

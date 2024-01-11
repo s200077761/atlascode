@@ -3,7 +3,7 @@
 ### Improvements
 
 -   Fixed Incomplete List of Disallowed Inputs vulnerability in affected versions of babel/traverse.
--   Fixed Regular Expression Denial of Service vulnerability in affected versions of axios
+-   Fixed Prototype Pollution vulnerability in affected versions of axios
 
 ## What's New in 3.0.9
 
