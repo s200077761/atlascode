@@ -6,6 +6,7 @@ import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { issueForKey } from '../../jira/issueForKey';
 import { IssueKeyRegEx } from '../../jira/issueKeyParser';
+import { JSDOM } from 'jsdom';
 
 export class IssueHoverProvider implements HoverProvider {
     async provideHover(doc: vscode.TextDocument, position: vscode.Position) {
@@ -31,7 +32,7 @@ export class IssueHoverProvider implements HoverProvider {
         //Use the TurnDown library to convert Jira's html to standard markdown
         const turnDownService = new TurnDownService();
         const descriptionText = issue.descriptionHtml
-            ? turnDownService.turndown(issue.descriptionHtml)
+            ? turnDownService.turndown(JSDOM.fragment(issue.descriptionHtml))
             : '*No description*';
 
         const header = `| ![](${issue.issuetype.iconUrl})                        | ${key}: ${summaryText} |
