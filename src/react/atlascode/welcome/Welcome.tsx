@@ -86,6 +86,13 @@ const WelcomePage: React.FunctionComponent = () => {
                                         </section>
                                         <h4>🎉 What's New in 3.0.10 🎉</h4>
                                         <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that caused comments in the PR diff view to stop showing
+                                                    up
+                                                </li>
+                                            </ul>
                                             <h4>✨ Improvements ✨</h4>
                                             <ul>
                                                 <li>

@@ -1,5 +1,9 @@
 ## What's New in 3.0.10
 
+### Bugs fixed
+
+-   Fixed bug that caused comments in the PR diff view to stop showing up.
+
 ### Improvements
 
 -   Fixed Incomplete List of Disallowed Inputs vulnerability in affected versions of babel/traverse.
