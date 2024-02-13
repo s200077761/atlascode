@@ -84,6 +84,27 @@ const WelcomePage: React.FunctionComponent = () => {
                                                 </p>
                                             </div>
                                         </section>
+                                        <h4>🎉 What's New in 3.0.10 🎉</h4>
+                                        <section>
+                                            <h4>🐞 Bugs Fixed 🐞</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed bug that caused comments in the PR diff view to stop showing
+                                                    up
+                                                </li>
+                                            </ul>
+                                            <h4>✨ Improvements ✨</h4>
+                                            <ul>
+                                                <li>
+                                                    Fixed Incomplete List of Disallowed Inputs vulnerability in affected
+                                                    versions of babel/traverse.
+                                                </li>
+                                                <li>
+                                                    Fixed Prototype Pollution vulnerability in affected versions of
+                                                    axios
+                                                </li>
+                                            </ul>
+                                        </section>
                                         <h4>🎉 What's New in 3.0.9 🎉</h4>
                                         <section>
                                             <h4>🐞 Bugs Fixed 🐞</h4>
