@@ -339,7 +339,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         //TODO: This is querying an internal API. Some day this API will hopefully be public, at which point we need to update this
         try {
             let { data } = await this.client.get(
-                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`
             );
 
             if (!data.values) {
@@ -365,7 +365,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const commentData = commentId ? { comment: { id: commentId } } : {};
         try {
             const { data } = await this.client.post(
-                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
                 {
                     ...commentData,
                     completed: false,
@@ -377,7 +377,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
             return this.convertDataToTask(data, site);
         } catch (e) {
-            const error = new Error(`Error creating new task using interal API: ${e}`);
+            const error = new Error(`Error creating new task using API: ${e}`);
             Logger.error(error);
             throw error;
         }
@@ -388,7 +388,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         try {
             const { data } = await this.client.put(
-                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
                 {
                     comment: {
                         comment: task.commentId,
@@ -404,7 +404,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
             return this.convertDataToTask(data, site);
         } catch (e) {
-            const error = new Error(`Error editing task using interal API: ${e}`);
+            const error = new Error(`Error editing task using API: ${e}`);
             Logger.error(error);
             throw error;
         }
@@ -415,11 +415,11 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         try {
             await this.client.delete(
-                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
                 {}
             );
         } catch (e) {
-            const error = new Error(`Error deleting task using interal API: ${e}`);
+            const error = new Error(`Error deleting task using API: ${e}`);
             Logger.error(error);
             throw error;
         }
