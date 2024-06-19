@@ -244,6 +244,9 @@
                 "size": {
                     "$ref": "#/definitions/size"
                 },
+                "runtime": {
+                    "$ref": "#/definitions/runtime"
+                },
                 "script": {
                     "$ref": "#/definitions/script",
                     "description": "Commands to execute in the step"
@@ -558,6 +561,9 @@
                 },
                 "size": {
                     "$ref": "#/definitions/size"
+                },
+                "runtime": {
+                    "$ref": "#/definitions/runtime"
                 }
             },
             "additionalProperties": false
@@ -581,6 +587,28 @@
                 "16x"
             ],
             "default": "1x"
+        },
+        "runtime": {
+            "description": "Custom step runtime",
+            "title": "Step runtime",
+            "type": "object",
+            "properties": {
+                "cloud": {
+                    "$ref": "#/components/schemas/cloud"
+                }
+            }
+        },
+        "cloud": {
+            "description": "Custom cloud step runtime",
+            "title": "Cloud Step Runtime",
+            "type": "object",
+            "properties": {
+                "atlassian-ip-ranges": {
+                    "default": false,
+                    "description": "Whether it uses Atlassian ip ranges.",
+                    "type": "boolean"
+                }
+            }
         },
         "clone": {
             "type": "object",
