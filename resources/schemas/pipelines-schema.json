@@ -578,10 +578,13 @@
         "size": {
             "type": "string",
             "title": "Multiplier of the resources allocated to a pipeline step",
-            "description": "You can allocate additional resources to a step, or to the whole pipeline. \nBy specifying the size of 2x, you'll have double the resources available (eg. 4GB memory → 8GB memory).\n\nAt this time, valid sizes are 1x and 2x.",
+            "description": "You can allocate additional resources to a step, or to the whole pipeline. \nBy specifying the size of 2x, you'll have double the resources available (eg. 4GB memory → 8GB memory).\n\nValid sizes are 1x, 2x, 4x and 8x.",
             "enum": [
                 "1x",
-                "2x"
+                "2x",
+                "4x",
+                "8x",
+                "16x"
             ],
             "default": "1x"
         },
