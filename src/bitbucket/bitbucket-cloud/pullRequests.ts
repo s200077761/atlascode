@@ -336,7 +336,6 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getTasks(pr: PullRequest): Promise<Task[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        //TODO: This is querying an internal API. Some day this API will hopefully be public, at which point we need to update this
         try {
             let { data } = await this.client.get(
                 `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`
