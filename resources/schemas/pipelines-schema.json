@@ -607,6 +607,10 @@
                     "default": false,
                     "description": "Whether it uses Atlassian ip ranges.",
                     "type": "boolean"
+                },
+                "version": {
+                    "description": "Cloud Runtime version.",
+                    "type": "string"
                 }
             }
         },
