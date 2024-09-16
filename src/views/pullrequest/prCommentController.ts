@@ -10,7 +10,6 @@ import { Container } from '../../container';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PRFileDiffQueryParams } from './diffViewHelper';
 import { checkoutPRBranch } from './gitActions';
-import { JSDOM } from 'jsdom';
 
 const turndownService = new TurndownService();
 
@@ -909,8 +908,8 @@ export class PullRequestCommentController implements vscode.Disposable {
         }
 
         const taskBody = task.isComplete
-            ? new vscode.MarkdownString(`~~${turndownService.turndown(JSDOM.fragment(task.content))}~~`)
-            : new vscode.MarkdownString(turndownService.turndown(JSDOM.fragment(task.content)));
+            ? new vscode.MarkdownString(`~~${turndownService.turndown(task.content)}~~`)
+            : new vscode.MarkdownString(turndownService.turndown(task.content));
         return {
             site: site,
             prCommentThreadId: parentCommentThreadId,
@@ -950,7 +949,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         return {
             site: site,
             prCommentThreadId: parentCommentThreadId,
-            body: new vscode.MarkdownString(turndownService.turndown(JSDOM.fragment(comment.htmlContent))),
+            body: new vscode.MarkdownString(turndownService.turndown(comment.htmlContent)),
             author: {
                 name: comment.user.displayName || 'Unknown user',
                 iconPath: vscode.Uri.parse(comment.user.avatarUrl),
