@@ -5,7 +5,7 @@ const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-web
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
@@ -27,22 +27,32 @@ module.exports = {
         filename: 'static/js/bundle.js',
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
     },
+    devServer: {
+        static: './',
+    },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
+        fallback: {
+            path: false
+        }
     },
     plugins: [
         new MiniCssExtractPlugin(),
-        new ManifestPlugin({
+        new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
         }),
-        new webpack.IgnorePlugin(/iconv-loader\.js/),
-        new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /iconv-loader\.js/
+        }),
+        new webpack.WatchIgnorePlugin({
+            paths: [/\.js$/, /\.d\.ts$/]
+        }),
         new ForkTsCheckerWebpackPlugin({
-            watch: resolveApp('src'),
-            tsconfig: resolveApp('tsconfig.json'),
-            eslint: true,
+            typescript: {
+                configFile: resolveApp('tsconfig.json'),
+            },
         }),
         new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
         new HtmlWebPackPlugin({
@@ -55,6 +65,12 @@ module.exports = {
     ],
     module: {
         rules: [
+            {
+                test: /\.m?js/,
+                resolve: {
+                  fullySpecified: false,
+                },
+            },
             {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,

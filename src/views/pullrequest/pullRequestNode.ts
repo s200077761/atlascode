@@ -1,5 +1,5 @@
 import { parseISO } from 'date-fns';
-import formatDistanceToNow from 'date-fns/formatDistanceToNow';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commit, PaginatedComments, PaginatedPullRequests, PullRequest } from '../../bitbucket/model';

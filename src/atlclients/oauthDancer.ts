@@ -143,7 +143,7 @@ export class OAuthDancer implements Disposable {
                         this._strategiesInFlight.delete(respEvent.provider);
                         const agent = getAgent(site);
                         const responseHandler = responseHandlerForStrategy(strategy!, agent, this._axios);
-                        const tokens = await responseHandler.tokens(respEvent.req.query.code);
+                        const tokens = await responseHandler.tokens(respEvent.req.query.code as string);
                         const accessibleResources = await responseHandler.accessibleResources(tokens.accessToken);
                         if (accessibleResources.length === 0) {
                             throw new Error(`No accessible resources found for ${provider}`);
