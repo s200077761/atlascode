@@ -1453,7 +1453,7 @@
         "ua-parser-js": "^0.7.31",
         "use-constant": "^1.0.0",
         "uuid": "^3.4.0",
-        "websocket": "^1.0.31"
+        "websocket": "^1.0.35"
     },
     "devDependencies": {
         "@babel/core": "^7.16.0",
