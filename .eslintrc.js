@@ -1,7 +1,7 @@
 module.exports = {
     extends: [
         'plugin:import/typescript',
-        'plugin:prettier/recommended'
+        'prettier',
     ],
     env: {
         browser: true,
@@ -57,13 +57,6 @@ module.exports = {
             },
         ],
         'brace-style': 'off',
-        '@stylistic/js/brace-style': [
-            'error',
-            '1tbs',
-            {
-                allowSingleLine: true,
-            },
-        ],
         curly: 'error',
         eqeqeq: ['error', 'always'],
         semi: 'off',
