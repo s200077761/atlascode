@@ -1,8 +1,5 @@
 module.exports = {
-    extends: [
-        'plugin:import/typescript',
-        'prettier',
-    ],
+    extends: ['plugin:import/typescript', 'prettier'],
     env: {
         browser: true,
         es6: true,
@@ -22,7 +19,7 @@ module.exports = {
         'react-hooks',
         'import',
         'prettier',
-        '@stylistic/js'
+        '@stylistic/js',
     ],
     rules: {
         'prettier/prettier': 'error',
@@ -30,12 +27,12 @@ module.exports = {
         'react-hooks/rules-of-hooks': 'error',
         'react-hooks/exhaustive-deps': 'warn',
         '@typescript-eslint/await-thenable': 'error',
-        "@typescript-eslint/naming-convention": [
-            "error",
+        '@typescript-eslint/naming-convention': [
+            'error',
             {
-              "selector": "class",
-              "format": ["PascalCase"]
-            }
+                selector: 'class',
+                format: ['PascalCase'],
+            },
         ],
         'import/no-extraneous-dependencies': [
             'error',

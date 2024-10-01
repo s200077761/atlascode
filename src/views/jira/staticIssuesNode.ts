@@ -11,7 +11,10 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
     private collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
     private issueKeys: string[] = [];
 
-    constructor(issueKeys: string[], private label: string) {
+    constructor(
+        issueKeys: string[],
+        private label: string,
+    ) {
         super(undefined, 'No issues found');
         this.collapsibleState =
             issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;

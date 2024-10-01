@@ -108,7 +108,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                         Uri.file(path.join(this._extensionPath, 'build')),
                         Uri.file(path.join(this._extensionPath, 'images')),
                     ],
-                }
+                },
             );
 
             this.setIconPath();
@@ -122,19 +122,19 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
                 this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
-                this.ws
+                this.ws,
             );
 
             this._panel.webview.html = this._getHtmlForWebview(
                 this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
                 this._panel.webview.cspSource,
-                this.id
+                this.id,
             );
         } else {
             this._panel.webview.html = this._getHtmlForWebview(
                 this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
                 this._panel.webview.cspSource,
-                this.id
+                this.id,
             );
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
@@ -258,7 +258,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
 
     private _getHtmlForWebview(baseUri: Uri, cspSource: string, viewName: string) {
         const manifest = JSON.parse(
-            fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString()
+            fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString(),
         );
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];

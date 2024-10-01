@@ -21,8 +21,10 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 const customBranchType: BranchType = { kind: 'Custom', prefix: '' };
 
-export class StartWorkOnIssueWebview extends AbstractReactWebview
-    implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
+export class StartWorkOnIssueWebview
+    extends AbstractReactWebview
+    implements InitializingWebview<MinimalIssue<DetailedSiteInfo>>
+{
     private _state: MinimalIssue<DetailedSiteInfo> = createEmptyMinimalIssue(emptySiteInfo);
 
     constructor(extensionPath: string) {
@@ -110,7 +112,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                                     scm,
                                     e.targetBranchName,
                                     e.sourceBranch,
-                                    e.remoteName
+                                    e.remoteName,
                                 );
                             }
                             const currentUserId = issue.siteDetails.userId;
@@ -148,7 +150,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
         repo: Repository,
         destBranch: string,
         sourceBranch: Branch,
-        remote: string
+        remote: string,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -169,7 +171,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
         await repo.createBranch(
             destBranch,
             true,
-            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`
+            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
         await repo.push(remote, destBranch, true);
         return;
@@ -236,14 +238,14 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview
                             isCloud: isCloud,
                             hasSubmodules: scm.state.submodules.length > 0,
                         };
-                    })
+                    }),
             );
 
             let issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
             if (!issueClone.status.name.toLowerCase().includes('progress')) {
                 const inProgressTransition = issueClone.transitions.find(
-                    (t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress')
+                    (t) => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'),
                 );
                 if (inProgressTransition) {
                     issueClone.status = inProgressTransition.to;

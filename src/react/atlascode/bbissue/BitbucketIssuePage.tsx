@@ -74,7 +74,7 @@ const useStyles = makeStyles(
             paperOverflow: {
                 overflow: 'hidden',
             },
-        } as const)
+        }) as const,
 );
 
 const BitbucketIssuePage: React.FunctionComponent = () => {
@@ -86,7 +86,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
             const status = await controller.updateStatus(newStatus);
             controller.applyChange({ issue: { state: status } });
         },
-        [controller]
+        [controller],
     );
 
     const handleSaveComment = useCallback(
@@ -94,7 +94,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
             const comment = await controller.postComment(content);
             controller.applyChange({ comments: [comment] });
         },
-        [controller]
+        [controller],
     );
 
     const handleAssign = useCallback(
@@ -116,7 +116,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                 },
             });
         },
-        [controller]
+        [controller],
     );
 
     return (
@@ -323,7 +323,7 @@ const BitbucketIssuePage: React.FunctionComponent = () => {
                                                     {state.issue.data.created_on
                                                         ? format(
                                                               parseISO(state.issue.data.created_on),
-                                                              'yyyy-MM-dd h:mm a'
+                                                              'yyyy-MM-dd h:mm a',
                                                           )
                                                         : ''}
                                                 </Typography>

@@ -57,7 +57,7 @@ export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props) =
                         </TableCell>
                     </TableRow>
                 )),
-        [classes.monospace, props.commits]
+        [classes.monospace, props.commits],
     );
 
     return (

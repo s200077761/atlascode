@@ -128,7 +128,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
         site: DetailedSiteInfo,
         issueKey: string,
         fieldName: string,
-        fieldKey: string
+        fieldKey: string,
     ): Promise<void> {
         return issueUpdatedEvent(site, issueKey, fieldName, fieldKey).then((e) => {
             this._analyticsClient.sendTrackEvent(e);

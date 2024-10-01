@@ -59,8 +59,10 @@ export const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo
     issueTypes: [],
 };
 
-export class CreateIssueWebview extends AbstractIssueEditorWebview
-    implements InitializingWebview<PartialIssue | undefined> {
+export class CreateIssueWebview
+    extends AbstractIssueEditorWebview
+    implements InitializingWebview<PartialIssue | undefined>
+{
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: Project | undefined;
     private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
@@ -237,7 +239,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                 const overrides = this.getValuesForExisitngKeys(
                     this._screenData.issueTypeUIs[this._selectedIssueTypeId],
                     fieldValues,
-                    ['site', 'project', 'issuetype']
+                    ['site', 'project', 'issuetype'],
                 );
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = {
                     ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues,
@@ -298,7 +300,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
 
         const selectOverrides = this.getValuesForExisitngKeys(
             this._screenData.issueTypeUIs[issueType.id],
-            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions
+            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions,
         );
         this._screenData.issueTypeUIs[issueType.id].selectFieldOptions = {
             ...this._screenData.issueTypeUIs[issueType.id].selectFieldOptions,
@@ -502,7 +504,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview
                     Container.createIssueProblemsWebview.createOrShow(
                         undefined,
                         this._siteDetails,
-                        this._currentProject
+                        this._currentProject,
                     );
                 }
                 default: {

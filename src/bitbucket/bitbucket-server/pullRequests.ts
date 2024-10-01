@@ -47,7 +47,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             ...queryParams,
         });
         const prs: PullRequest[] = data.values!.map((pr: any) =>
-            ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo)
+            ServerPullRequestApi.toPullRequestModel(pr, 0, site, workspaceRepo),
         );
         const next =
             data.isLastPage === true
@@ -114,8 +114,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 pr,
                 0,
                 paginatedPullRequests.site,
-                paginatedPullRequests.workspaceRepo
-            )
+                paginatedPullRequests.workspaceRepo,
+            ),
         );
         return { ...paginatedPullRequests, data: prs, next: undefined };
     }
@@ -140,7 +140,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         const taskCount = await this.getTaskCount(site, prId);
@@ -155,7 +155,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         return ServerPullRequestApi.toPullRequestModel(data, 0, site, undefined);
@@ -169,7 +169,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         return data.mergeConfig.strategies.map((strategy: any) => ({
@@ -183,7 +183,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`,
         );
 
         if (!data.values) {
@@ -256,7 +256,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         if (!data.diffs) {
@@ -272,8 +272,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                         markup: true,
                         avatarSize: 64,
                         start: data.nextPageStart,
-                    }
-                )
+                    },
+                ),
             );
             data = nextPage.data;
             accumulatedDiffStats.push(...(data.diffs || []));
@@ -372,7 +372,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         if (!data.values) {
@@ -388,8 +388,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                         markup: true,
                         avatarSize: 64,
                         start: data.nextPageStart,
-                    }
-                )
+                    },
+                ),
             );
             data = nextPage.data;
             accumulatedCommits.push(...(data.values || []));
@@ -413,13 +413,13 @@ export class ServerPullRequestApi implements PullRequestApi {
         In order to get the comment's version, a call must be made to the Bitbucket Server API.
         */
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`,
         );
 
         await this.client.delete(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`,
             {},
-            { version: data.version }
+            { version: data.version },
         );
     }
 
@@ -430,7 +430,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         In order to get the comment's version, a call must be made to the Bitbucket Server API.
         */
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/comments/${commentId}`,
         );
 
         const res = await this.client.put(
@@ -442,7 +442,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
         return this.convertDataToComment(site, res.data);
     }
@@ -454,7 +454,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         if (!data.values) {
@@ -470,8 +470,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                         markup: true,
                         avatarSize: 64,
                         start: data.nextPageStart,
-                    }
-                )
+                    },
+                ),
             );
             data = nextPage.data;
             accumulatedActivities.push(...(data.values || []));
@@ -482,15 +482,15 @@ export class ServerPullRequestApi implements PullRequestApi {
             .filter((activity) =>
                 activity.commentAnchor
                     ? activity.commentAnchor.diffType === 'EFFECTIVE' && activity.commentAnchor.orphaned === false
-                    : true
+                    : true,
             );
 
         return {
             data: (
                 await Promise.all(
                     activities.map((activity) =>
-                        this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor)
-                    )
+                        this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor),
+                    ),
                 )
             )
                 .filter((comment) => this.shouldDisplayComment(comment))
@@ -530,7 +530,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
         commentModel.children = await Promise.all(
-            (comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor))
+            (comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor)),
         );
         return commentModel;
     }
@@ -590,7 +590,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     filter: query,
                     limit: 10,
                 },
-                cancelToken
+                cancelToken,
             );
 
             return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));
@@ -615,11 +615,11 @@ export class ServerPullRequestApi implements PullRequestApi {
                 sourceRefId: repo.mainbranch!,
                 targetRefId: repo.mainbranch!,
             },
-            cancelToken
+            cancelToken,
         );
 
         const result = (Array.isArray(data) ? data : []).map((val: any) =>
-            ServerPullRequestApi.toUser(site.details, val)
+            ServerPullRequestApi.toUser(site.details, val),
         );
         this.defaultReviewersCache.setItem(cacheKey, result);
 
@@ -629,7 +629,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     async create(
         site: BitbucketSite,
         workspaceRepo: WorkspaceRepo,
-        createPrData: CreatePullRequestData
+        createPrData: CreatePullRequestData,
     ): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = site;
 
@@ -659,7 +659,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         return ServerPullRequestApi.toPullRequestModel(data, 0, site, workspaceRepo);
@@ -685,7 +685,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         return ServerPullRequestApi.toPullRequestModel(data, 0, pr.site, pr.workspaceRepo);
@@ -700,7 +700,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
                 status: status,
-            }
+            },
         );
 
         return data.status;
@@ -710,7 +710,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         pr: PullRequest,
         closeSourceBranch?: boolean,
         mergeStrategy?: string,
-        commitMessage?: string
+        commitMessage?: string,
     ): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
@@ -726,7 +726,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 version: pr.data.version,
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
 
         const taskCount = await this.getTaskCount(pr.site, pr.data.id);
@@ -740,7 +740,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         parentCommentId: string,
         inline?: { from?: number; to?: number; path: string },
         commentHash?: string,
-        lineMeta?: 'ADDED' | 'REMOVED'
+        lineMeta?: 'ADDED' | 'REMOVED',
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
@@ -761,7 +761,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {
                 markup: true,
                 avatarSize: 64,
-            }
+            },
         );
         return this.convertDataToComment(site, data);
     }
@@ -788,7 +788,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`,
         );
 
         return data;
@@ -812,7 +812,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         data: any,
         taskCount: number,
         site: BitbucketSite,
-        workspaceRepo?: WorkspaceRepo
+        workspaceRepo?: WorkspaceRepo,
     ): PullRequest {
         const source = ServerPullRequestApi.toPullRequestRepo(site, data.fromRef, undefined!);
         const destination = ServerPullRequestApi.toPullRequestRepo(site, data.toRef, undefined!);

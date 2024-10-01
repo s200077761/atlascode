@@ -42,7 +42,7 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
                     vscode.window
                         .showInformationMessage(
                             `New Bitbucket issue "${issue.data.title}" was created for repo "${notifiableRepos[0].repo}"`,
-                            'Show'
+                            'Show',
                         )
                         .then((usersChoice) => {
                             if (usersChoice === 'Show') {
@@ -55,7 +55,7 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
                             `New Bitbucket issues were created for the following repositories: ${notifiableRepos
                                 .map((nr) => nr.repo)
                                 .join(', ')}`,
-                            'Show'
+                            'Show',
                         )
                         .then((usersChoice) => {
                             if (usersChoice === 'Show') {

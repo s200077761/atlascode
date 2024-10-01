@@ -29,7 +29,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
         private commonHandler: CommonActionMessageHandler,
         private logger: Logger,
         private analytics: AnalyticsApi,
-        factoryData?: WorkspaceRepo
+        factoryData?: WorkspaceRepo,
     ) {
         this.initData = factoryData!;
     }
@@ -108,7 +108,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     const [commits, fileDiffs] = await this.api.fetchDetails(
                         this.initData,
                         msg.sourceBranch,
-                        msg.destinationBranch
+                        msg.destinationBranch,
                     );
                     this.postMessage({
                         type: CreatePullRequestMessageType.UpdateDetails,
@@ -126,7 +126,7 @@ export class CreatePullRequestWebviewController implements WebviewController<Wor
                     this.analytics.fireViewScreenEvent(
                         Registry.screen.pullRequestPreviewDiffScreen,
                         undefined,
-                        ProductBitbucket
+                        ProductBitbucket,
                     );
                 } catch (e) {
                     this.logger.error(new Error(`error opening diff: ${e}`));

@@ -49,7 +49,10 @@ export const ONBOARDING_URL = `${env.uriScheme}://${ExtensionId}/openOnboarding`
 export class AtlascodeUriHandler implements Disposable, UriHandler {
     private disposables: Disposable;
 
-    constructor(private analyticsApi: AnalyticsApi, private bitbucketHelper: CheckoutHelper) {
+    constructor(
+        private analyticsApi: AnalyticsApi,
+        private bitbucketHelper: CheckoutHelper,
+    ) {
         this.disposables = window.registerUriHandler(this);
     }
 
@@ -84,13 +87,13 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
 
             const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
             let site = jiraSitesAvailable.find(
-                (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL)
+                (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL),
             );
             if (!site) {
                 window
                     .showInformationMessage(
                         `Cannot start work on ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
-                        'Open auth settings'
+                        'Open auth settings',
                     )
                     .then((userChoice) => {
                         if (userChoice === 'Open auth settings') {
@@ -112,7 +115,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
 
             this.analyticsApi.fireDeepLinkEvent(
                 decodeURIComponent(query.get('source') || 'unknown'),
-                'startWorkOnJiraIssue'
+                'startWorkOnJiraIssue',
             );
         } catch (e) {
             Logger.debug('error opening start work page:', e);
@@ -132,13 +135,13 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
 
             const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
             let site = jiraSitesAvailable.find(
-                (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL)
+                (availableSite) => availableSite.isCloud && availableSite.baseLinkUrl.includes(siteBaseURL),
             );
             if (!site) {
                 window
                     .showInformationMessage(
                         `Cannot open ${issueKey} because site '${siteBaseURL}' is not authenticated. Please authenticate and try again.`,
-                        'Open auth settings'
+                        'Open auth settings',
                     )
                     .then((userChoice) => {
                         if (userChoice === 'Open auth settings') {
@@ -181,7 +184,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             if (success) {
                 this.analyticsApi.fireDeepLinkEvent(
                     decodeURIComponent(query.get('source') || 'unknown'),
-                    'checkoutBranch'
+                    'checkoutBranch',
                 );
             }
         } catch (e) {
@@ -220,7 +223,7 @@ export class AtlascodeUriHandler implements Disposable, UriHandler {
             await this.bitbucketHelper.cloneRepository(repoUrl);
             this.analyticsApi.fireDeepLinkEvent(
                 decodeURIComponent(query.get('source') || 'unknown'),
-                'cloneRepository'
+                'cloneRepository',
             );
         } catch (e) {
             Logger.debug('error cloning repository:', e);

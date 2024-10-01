@@ -26,7 +26,7 @@ export const PreferredRemotesPanel: React.FunctionComponent<PreferredRemotesPane
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.PreferredRemotes, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -88,5 +88,5 @@ export const PreferredRemotesPanel: React.FunctionComponent<PreferredRemotesPane
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

@@ -217,7 +217,7 @@ export class SiteManager extends Disposable {
             Container.bitbucketContext
                 ? Container.bitbucketContext.getMirrors(site.host).find((mirror) => mirror.includes(hostname)) !==
                   undefined
-                : false
+                : false,
         );
         if (site) {
             return site;
@@ -227,7 +227,7 @@ export class SiteManager extends Disposable {
             Container.bitbucketContext
                 ? Container.bitbucketContext.getMirrors(site.host).find((mirror) => mirror.includes(domain)) !==
                   undefined
-                : false
+                : false,
         );
     }
 

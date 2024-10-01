@@ -18,7 +18,7 @@ export class WelcomeWebviewController implements WebviewController<WelcomeInitMe
         private api: WelcomeActionApi,
         private commonHandler: CommonActionMessageHandler,
         private logger: Logger,
-        private initData?: WelcomeInitMessage
+        private initData?: WelcomeInitMessage,
     ) {}
 
     public title(): string {

@@ -31,7 +31,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             }),
             ctx.onDidChangeBitbucketContext(() => {
                 this.refresh();
-            })
+            }),
         );
     }
 

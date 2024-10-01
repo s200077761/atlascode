@@ -27,7 +27,7 @@ const useStyles = makeStyles(
                 },
             },
             disabled: {},
-        } as const)
+        }) as const,
 );
 
 export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
@@ -42,7 +42,7 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
                 setValue(n);
                 setNewInterval(n);
             },
-            [setValue, setNewInterval]
+            [setValue, setNewInterval],
         );
 
         useEffect(() => {
@@ -123,5 +123,5 @@ export const IntervalInput: React.FunctionComponent<IntervalInputProps> = memo(
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

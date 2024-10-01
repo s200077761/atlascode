@@ -14,7 +14,10 @@ import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
 export class PipelineSummaryWebviewControllerFactory implements VSCWebviewControllerFactory<Pipeline> {
-    constructor(private api: PipelinesSummaryActionApi, private analytics: AnalyticsApi) {}
+    constructor(
+        private api: PipelinesSummaryActionApi,
+        private analytics: AnalyticsApi,
+    ) {}
 
     public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
         return Resources.icons.get(iconSet.BITBUCKETICON);
@@ -30,21 +33,21 @@ export class PipelineSummaryWebviewControllerFactory implements VSCWebviewContro
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: Pipeline
+        factoryData?: Pipeline,
     ): [PipelineSummaryWebviewController, Disposable | undefined];
 
     public createController(postMessage: PostMessageFunc, factoryData?: Pipeline): PipelineSummaryWebviewController;
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: Pipeline
+        factoryData?: Pipeline,
     ): PipelineSummaryWebviewController | [PipelineSummaryWebviewController, Disposable | undefined] {
         const controller = new PipelineSummaryWebviewController(
             postMessage,
             this.api,
             Logger.Instance,
             this.analytics,
-            factoryData
+            factoryData,
         );
 
         const disposables = Disposable.from();

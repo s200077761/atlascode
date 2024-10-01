@@ -17,7 +17,7 @@ export class RelatedIssuesNode extends AbstractBaseNode {
     public static async create(
         pr: PullRequest,
         commits: Commit[],
-        allComments: Comment[]
+        allComments: Comment[],
     ): Promise<AbstractBaseNode | undefined> {
         // TODO: [VSCODE-503] handle related issues across cloud/server
         if (

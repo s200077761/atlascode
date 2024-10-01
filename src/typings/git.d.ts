@@ -273,7 +273,7 @@ export interface PushErrorHandler {
         repository: Repository,
         remote: Remote,
         refspec: string,
-        error: Error & { gitErrorCode: GitErrorCodes }
+        error: Error & { gitErrorCode: GitErrorCodes },
     ): Promise<boolean>;
 }
 

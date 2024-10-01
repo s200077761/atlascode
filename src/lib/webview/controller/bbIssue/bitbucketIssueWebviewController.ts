@@ -32,7 +32,7 @@ export class BitbucketIssueWebviewController implements WebviewController<Bitbuc
         api: BitbucketIssueActionApi,
         commonHandler: CommonActionMessageHandler,
         logger: Logger,
-        analytics: AnalyticsApi
+        analytics: AnalyticsApi,
     ) {
         this._issue = issue;
         this._messagePoster = messagePoster;

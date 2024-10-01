@@ -82,7 +82,7 @@ export function useWelcomeController(): [WelcomeState, WelcomeControllerApi] {
                 source: WebViewID.WelcomeWebview,
                 linkId: linkId,
             }),
-        [postMessage]
+        [postMessage],
     );
 
     const controllerApi = useMemo<WelcomeControllerApi>((): WelcomeControllerApi => {

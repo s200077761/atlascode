@@ -47,11 +47,11 @@ export async function activate(context: ExtensionContext) {
 
         setCommandContext(
             CommandContext.IsJiraAuthenticated,
-            Container.siteManager.productHasAtLeastOneSite(ProductJira)
+            Container.siteManager.productHasAtLeastOneSite(ProductJira),
         );
         setCommandContext(
             CommandContext.IsBBAuthenticated,
-            Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)
+            Container.siteManager.productHasAtLeastOneSite(ProductBitbucket),
         );
     } catch (e) {
         Logger.error(e, 'Error initializing atlascode!');
@@ -83,7 +83,7 @@ export async function activate(context: ExtensionContext) {
     Logger.info(
         `Atlassian for VS Code (v${atlascodeVersion}) activated in ${
             duration[0] * 1000 + Math.floor(duration[1] / 1000000)
-        } ms`
+        } ms`,
     );
 }
 
@@ -98,7 +98,7 @@ async function activateBitbucketFeatures() {
     } catch (e) {
         Logger.error(e, 'Error activating vscode.git extension');
         window.showWarningMessage(
-            'Activating Bitbucket features failed. There was an issue activating vscode.git extension.'
+            'Activating Bitbucket features failed. There was an issue activating vscode.git extension.',
         );
         return;
     }
@@ -117,8 +117,8 @@ async function activateYamlFeatures(context: ExtensionContext) {
     context.subscriptions.push(
         languages.registerCompletionItemProvider(
             { scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` },
-            new PipelinesYamlCompletionProvider()
-        )
+            new PipelinesYamlCompletionProvider(),
+        ),
     );
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();

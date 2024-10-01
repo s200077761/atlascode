@@ -85,7 +85,7 @@ export class CredentialManager implements Disposable {
 
             if (effectiveExistingIat === effectiveNewIat && existingInfo.recievedAt > info.recievedAt) {
                 Logger.debug(
-                    `Not replacing credentials because the existing credentials have were received at a later time (despite having the same iat).`
+                    `Not replacing credentials because the existing credentials have were received at a later time (despite having the same iat).`,
                 );
                 return;
             }
@@ -118,7 +118,7 @@ export class CredentialManager implements Disposable {
 
     private async getAuthInfoForProductAndCredentialId(
         site: DetailedSiteInfo,
-        allowCache: boolean
+        allowCache: boolean,
     ): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving auth info for product: ${site.product.key} credentialID: ${site.credentialId}`);
         let foundInfo: AuthInfo | undefined = undefined;
@@ -144,19 +144,19 @@ export class CredentialManager implements Disposable {
                         infoEntry = await this.getAuthInfoFromKeychain(site.product.key, site.credentialId);
                         if (infoEntry) {
                             Logger.debug(
-                                `adding info from keychain to secretstorage for product: ${site.product.key} credentialID: ${site.credentialId}`
+                                `adding info from keychain to secretstorage for product: ${site.product.key} credentialID: ${site.credentialId}`,
                             );
                             await this.addSiteInformationToSecretStorage(
                                 site.product.key,
                                 site.credentialId,
-                                infoEntry
+                                infoEntry,
                             );
                             // Once authinfo has been stored in the secretstorage, info in keychain is no longer needed so removing it
                             await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
                         } else if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             // if keychain does not have any auth info for the current site but the site has been saved, we need to remove it
                             Logger.debug(
-                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`
+                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
                             );
 
                             await Container.clientManager.removeClient(site);
@@ -166,7 +166,7 @@ export class CredentialManager implements Disposable {
                         // else if keychain does not exist, we check if the current site has been saved, if yes then we should remove it
                         if (Container.siteManager.getSiteForId(site.product, site.id)) {
                             Logger.debug(
-                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`
+                                `removing dead site for product ${site.product.key} credentialID: ${site.credentialId}`,
                             );
                             await Container.clientManager.removeClient(site);
                             Container.siteManager.removeSite(site);
@@ -218,19 +218,19 @@ export class CredentialManager implements Disposable {
                     Logger.error(e, `Error writing to secretstorage`);
                 }
             },
-            { priority: Priority.Write }
+            { priority: Priority.Write },
         );
     }
     private async getSiteInformationFromSecretStorage(
         productKey: string,
-        credentialId: string
+        credentialId: string,
     ): Promise<string | undefined> {
         let info: string | undefined = undefined;
         await this._queue.add(
             async () => {
                 info = await Container.context.secrets.get(`${productKey}-${credentialId}`);
             },
-            { priority: Priority.Read }
+            { priority: Priority.Read },
         );
         return info;
     }
@@ -244,7 +244,7 @@ export class CredentialManager implements Disposable {
                     wasKeyDeleted = true;
                 }
             },
-            { priority: Priority.Write }
+            { priority: Priority.Write },
         );
         return wasKeyDeleted;
     }
@@ -255,11 +255,11 @@ export class CredentialManager implements Disposable {
                 if (keychain) {
                     wasKeyDeleted = await keychain.deletePassword(
                         keychainServiceNameV3,
-                        `${productKey}-${credentialId}`
+                        `${productKey}-${credentialId}`,
                     );
                 }
             },
-            { priority: Priority.Write }
+            { priority: Priority.Write },
         );
         return wasKeyDeleted;
     }
@@ -267,7 +267,7 @@ export class CredentialManager implements Disposable {
     private async getAuthInfoFromSecretStorage(
         productKey: string,
         credentialId: string,
-        serviceName?: string
+        serviceName?: string,
     ): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving secretstorage info for product: ${productKey} credentialID: ${credentialId}`);
         let authInfo: string | undefined = undefined;
@@ -286,7 +286,7 @@ export class CredentialManager implements Disposable {
     private async getAuthInfoFromKeychain(
         productKey: string,
         credentialId: string,
-        serviceName?: string
+        serviceName?: string,
     ): Promise<AuthInfo | undefined> {
         Logger.debug(`Retrieving keychain info for product: ${productKey} credentialID: ${credentialId}`);
         let svcName = keychainServiceNameV3;
@@ -302,7 +302,7 @@ export class CredentialManager implements Disposable {
                     authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
                 }
             },
-            { priority: Priority.Read }
+            { priority: Priority.Read },
         );
 
         if (!authInfo) {

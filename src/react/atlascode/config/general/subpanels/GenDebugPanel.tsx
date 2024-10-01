@@ -33,7 +33,7 @@ export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Debug, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -66,5 +66,5 @@ export const GenDebugPanel: React.FunctionComponent<GenDebugPanelProps> = memo(
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

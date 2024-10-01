@@ -41,7 +41,7 @@ export abstract class Explorer extends Disposable {
             select?: boolean;
             focus?: boolean;
             expand?: boolean | number;
-        }
+        },
     ) {
         if (this.treeView === undefined) {
             return;

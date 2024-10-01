@@ -31,7 +31,7 @@ export const StatusBar: React.FunctionComponent<StatusBarProps> = ({
             changes[`${configSection}.${e.target.value}`] = e.target.checked;
             setChanges(changes);
         },
-        [configSection]
+        [configSection],
     );
 
     const disabled = !enabled;

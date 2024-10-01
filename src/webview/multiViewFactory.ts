@@ -11,7 +11,7 @@ export class MultiWebview<FD, R> implements Disposable {
     constructor(
         private readonly extensionPath: string,
         private controllerFactory: VSCWebviewControllerFactory<FD>,
-        private analyticsApi: AnalyticsApi
+        private analyticsApi: AnalyticsApi,
     ) {}
 
     // createOrShow delegates the call to the corresponding ReactWebview based on the webviewId.
@@ -19,7 +19,7 @@ export class MultiWebview<FD, R> implements Disposable {
     public async createOrShow(
         webviewId: string,
         factoryData: FD,
-        column: ViewColumn = ViewColumn.Active
+        column: ViewColumn = ViewColumn.Active,
     ): Promise<void> {
         if (!this._map.has(webviewId)) {
             const view = new SingleWebview(this.extensionPath, this.controllerFactory, this.analyticsApi);

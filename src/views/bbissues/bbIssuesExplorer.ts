@@ -26,7 +26,7 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
                     Container.analyticsClient.sendTrackEvent(e);
                 });
             }),
-            this.ctx.onDidChangeBitbucketContext(() => this.updateExplorerState())
+            this.ctx.onDidChangeBitbucketContext(() => this.updateExplorerState()),
         );
     }
 
@@ -93,7 +93,7 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
         const hasCloudRepos = this.ctx.getBitbucketCloudRepositories().length > 0;
         setCommandContext(
             CommandContext.BitbucketIssuesExplorer,
-            Container.config.bitbucket.issues.explorerEnabled && hasCloudRepos
+            Container.config.bitbucket.issues.explorerEnabled && hasCloudRepos,
         );
     }
 }

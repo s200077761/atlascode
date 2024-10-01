@@ -27,7 +27,7 @@ export const PageTaskList: React.FunctionComponent<PageTaskListProps> = ({ tasks
             await controller.addTask(content);
             setIsCreatingTask(false);
         },
-        [controller]
+        [controller],
     );
 
     return (

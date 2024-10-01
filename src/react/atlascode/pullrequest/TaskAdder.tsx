@@ -27,7 +27,7 @@ export const TaskAdder: React.FunctionComponent<TaskAdderProps> = ({ addTask, ha
         (event: React.ChangeEvent<{ value: string }>) => {
             setTaskContent(event.target.value);
         },
-        [setTaskContent]
+        [setTaskContent],
     );
 
     return (

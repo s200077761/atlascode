@@ -6,7 +6,7 @@ import { Container } from '../container';
 
 export async function fetchCreateIssueUI(
     siteDetails: DetailedSiteInfo,
-    projectKey: string
+    projectKey: string,
 ): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
     const client = await Container.clientManager.jiraClient(siteDetails);
 
@@ -15,7 +15,7 @@ export async function fetchCreateIssueUI(
 
 export async function getCachedOrFetchMinimalIssue(
     issueKey: string,
-    siteDetails: DetailedSiteInfo
+    siteDetails: DetailedSiteInfo,
 ): Promise<MinimalORIssueLink<DetailedSiteInfo>> {
     let foundIssue = await getCachedIssue(issueKey);
 
@@ -32,7 +32,7 @@ export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLi
 
 export async function fetchMinimalIssue(
     issue: string,
-    siteDetails: DetailedSiteInfo
+    siteDetails: DetailedSiteInfo,
 ): Promise<MinimalIssue<DetailedSiteInfo>> {
     const fieldIds = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
     const client = await Container.clientManager.jiraClient(siteDetails);

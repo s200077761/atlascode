@@ -25,7 +25,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             if (Array.isArray(result.sections)) {
                 suggestions = result.sections.reduce(
                     (prev, curr) => prev.concat(curr.issues),
-                    [] as IssuePickerIssue[]
+                    [] as IssuePickerIssue[],
                 );
             }
         } else if (isGroupPickerResult(result)) {
@@ -45,7 +45,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                 : result.values.filter(
                       (project) =>
                           project.name.toLowerCase().includes(msg.query.toLowerCase()) ||
-                          project.key.toLowerCase().includes(msg.query.toLowerCase())
+                          project.key.toLowerCase().includes(msg.query.toLowerCase()),
                   );
         } else if (Array.isArray(result) && result.length > 0 && isProject(result[0])) {
             suggestions = msg.site.isCloud
@@ -53,7 +53,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                 : result.filter(
                       (project) =>
                           project.name.toLowerCase().includes(msg.query.toLowerCase()) ||
-                          project.key.toLowerCase().includes(msg.query.toLowerCase())
+                          project.key.toLowerCase().includes(msg.query.toLowerCase()),
                   );
         } else if (Array.isArray(result)) {
             suggestions = result;
@@ -75,12 +75,12 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 let suggestions: IssuePickerIssue[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(
-                                        msg.autocompleteUrl + encodeURIComponent(msg.query)
+                                        msg.autocompleteUrl + encodeURIComponent(msg.query),
                                     );
                                     if (Array.isArray(result.sections)) {
                                         suggestions = result.sections.reduce(
                                             (prev, curr) => prev.concat(curr.issues),
-                                            [] as IssuePickerIssue[]
+                                            [] as IssuePickerIssue[],
                                         );
                                     }
                                 } else {
@@ -111,7 +111,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 let suggestions: any[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result = await client.getAutocompleteDataFromUrl(
-                                        msg.autocompleteUrl + encodeURIComponent(msg.query)
+                                        msg.autocompleteUrl + encodeURIComponent(msg.query),
                                     );
                                     suggestions = this.formatSelectOptions(msg, result);
                                 }

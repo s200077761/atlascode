@@ -19,7 +19,7 @@ export class HTTPClient {
         private authHeader: string,
         private agent: any,
         private errorHandler: (errJson: AxiosResponse) => Promise<Error>,
-        authInterceptor?: AuthInterceptor
+        authInterceptor?: AuthInterceptor,
     ) {
         this.transport = axios.create({
             timeout: ConnectionTimeout,
@@ -46,7 +46,7 @@ export class HTTPClient {
                         return error.response
                             ? Promise.reject(await this.errorHandler(error.response))
                             : Promise.reject(error);
-                    }
+                    },
                 );
             });
         }
@@ -202,7 +202,10 @@ export class HTTPClient {
 // part of a message to the webviews because Error fields are not enumerable
 // by default
 export class ClientError implements Error {
-    constructor(public name: string, public message: string) {}
+    constructor(
+        public name: string,
+        public message: string,
+    ) {}
 
     toJSON() {
         return {

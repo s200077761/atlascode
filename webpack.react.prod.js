@@ -21,7 +21,7 @@ module.exports = {
         mui: resolveApp('./src/react/index.tsx'),
     },
     output: {
-        publicPath: "",
+        publicPath: '',
         path: path.resolve(__dirname, 'build'),
         filename: 'static/js/[name].[chunkhash:8].js',
         chunkFilename: 'static/js/[name].[chunkhash:8].chunk.js',
@@ -69,10 +69,10 @@ module.exports = {
             fileName: 'asset-manifest.json',
         }),
         new webpack.IgnorePlugin({
-            resourceRegExp: /iconv-loader\.js/
+            resourceRegExp: /iconv-loader\.js/,
         }),
         new webpack.WatchIgnorePlugin({
-            paths: [/\.js$/, /\.d\.ts$/]
+            paths: [/\.js$/, /\.d\.ts$/],
         }),
         new ForkTsCheckerWebpackPlugin({
             typescript: {
@@ -83,17 +83,16 @@ module.exports = {
 
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
-            contextRegExp: /moment$/
+            contextRegExp: /moment$/,
         }),
     ],
     performance: {
         // About twice the default value of 244 Kib, to remove the warning
         // Shouldn't be a problem since this is an extension
         maxEntrypointSize: 512000,
-        maxAssetSize: 512000
+        maxAssetSize: 512000,
     },
     watchOptions: {
-
         ignored: /node_modules/,
     },
     module: {
@@ -101,7 +100,7 @@ module.exports = {
             {
                 test: /\.m?js/,
                 resolve: {
-                  fullySpecified: false,
+                    fullySpecified: false,
                 },
             },
             {
@@ -132,27 +131,26 @@ module.exports = {
                         loader: 'postcss-loader',
                         options: {
                             postcssOptions: {
-                              plugins: [
-                                [
-                                  "postcss-preset-env",
-                                  {
-                                    // Necessary for external CSS imports to work
-                                    // https://github.com/facebookincubator/create-react-app/issues/2677
-                                    ident: 'postcss',
-                                    
-                                    plugins: () => [
-                                        require('postcss-flexbugs-fixes'),
-                                        autoprefixer({
-                                            overrideBrowserslist: ['last 4 Chrome versions'],
-                                            flexbox: 'no-2009',
-                                        }),
+                                plugins: [
+                                    [
+                                        'postcss-preset-env',
+                                        {
+                                            // Necessary for external CSS imports to work
+                                            // https://github.com/facebookincubator/create-react-app/issues/2677
+                                            ident: 'postcss',
+
+                                            plugins: () => [
+                                                require('postcss-flexbugs-fixes'),
+                                                autoprefixer({
+                                                    overrideBrowserslist: ['last 4 Chrome versions'],
+                                                    flexbox: 'no-2009',
+                                                }),
+                                            ],
+                                        },
                                     ],
-                                
-                                  },
                                 ],
-                              ],
                             },
-                          },
+                        },
                     },
                 ],
             },

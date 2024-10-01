@@ -2,7 +2,10 @@ import { AbstractBaseNode } from './abstractBaseNode';
 import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
 
 export class SimpleNode extends AbstractBaseNode {
-    constructor(readonly _message: string, readonly _command?: Command) {
+    constructor(
+        readonly _message: string,
+        readonly _command?: Command,
+    ) {
         super();
     }
 

@@ -21,7 +21,7 @@ export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.StartWork, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -48,5 +48,5 @@ export const StartWorkPanel: React.FunctionComponent<StartWorkPanelProps> = memo
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

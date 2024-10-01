@@ -13,6 +13,6 @@ export interface Authenticator {
     getOAuthSiteDetails(
         provider: OAuthProvider,
         userId: string,
-        resources: AccessibleResource[]
+        resources: AccessibleResource[],
     ): Promise<DetailedSiteInfo[]>;
 }

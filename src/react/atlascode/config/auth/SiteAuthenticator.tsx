@@ -25,7 +25,7 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
             (swa: SiteWithAuthInfo) => {
                 authDialogController.openDialog(product, swa);
             },
-            [authDialogController, product]
+            [authDialogController, product],
         );
         const useNewAuth = false;
 
@@ -73,5 +73,5 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
                 </Grid>
             </Box>
         );
-    }
+    },
 );

@@ -62,7 +62,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortKey?: string
+        abortKey?: string,
     ): Promise<AutocompleteSuggestion[]> {
         const client = await Container.clientManager.jiraClient(site);
 
@@ -82,7 +82,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortKey?: string
+        abortKey?: string,
     ): Promise<FilterSearchResults> {
         const client = await Container.clientManager.jiraClient(site);
 
@@ -123,31 +123,23 @@ export class VSCConfigActionApi implements ConfigActionApi {
         const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
 
         const jiraSites = await Promise.all(
-            jiraSitesAvailable.map(
-                async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                    const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite, false);
-                    return {
-                        site: jiraSite,
-                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
-                    };
-                }
-            )
+            jiraSitesAvailable.map(async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
+                const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite, false);
+                return {
+                    site: jiraSite,
+                    auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
+                };
+            }),
         );
 
         const bitbucketSites = await Promise.all(
-            bitbucketSitesAvailable.map(
-                async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                    const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
-                    return {
-                        site: bitbucketSite,
-                        auth: bitbucketAuth
-                            ? bitbucketAuth
-                            : bitbucketSite.isCloud
-                            ? emptyAuthInfo
-                            : emptyBasicAuthInfo,
-                    };
-                }
-            )
+            bitbucketSitesAvailable.map(async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
+                const bitbucketAuth = await Container.credentialManager.getAuthInfo(bitbucketSite);
+                return {
+                    site: bitbucketSite,
+                    auth: bitbucketAuth ? bitbucketAuth : bitbucketSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
+                };
+            }),
         );
 
         return [jiraSites, bitbucketSites];
@@ -208,7 +200,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
     public async updateSettings(
         target: ConfigTarget,
         changes: { [key: string]: any },
-        removes?: string[]
+        removes?: string[],
     ): Promise<void> {
         let vscTarget = ConfigurationTarget.Global;
 
@@ -237,7 +229,7 @@ export class VSCConfigActionApi implements ConfigActionApi {
                 if (Array.isArray(value)) {
                     const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
                     const newJqls = value.filter(
-                        (entry: JQLEntry) => currentJQLs.find((cur) => cur.id === entry.id) === undefined
+                        (entry: JQLEntry) => currentJQLs.find((cur) => cur.id === entry.id) === undefined,
                     );
                     if (newJqls.length > 0) {
                         jqlSiteId = newJqls[0].siteId;

@@ -18,7 +18,7 @@ const useStyles = makeStyles(
                 fontSize: theme.typography.pxToRem(12),
                 fontStyle: 'italic',
             },
-        } as const)
+        }) as const,
 );
 
 export const GeneralPanel: React.FunctionComponent<GeneralPanelProps> = ({

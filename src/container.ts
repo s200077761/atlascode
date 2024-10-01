@@ -97,14 +97,14 @@ export class Container {
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push(
-            (this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath))
+            (this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath)),
         );
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(
-            (this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath))
+            (this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath)),
         );
         context.subscriptions.push(
-            (this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath))
+            (this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath)),
         );
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
@@ -118,9 +118,9 @@ export class Container {
                 new VSCConfigActionApi(this._analyticsApi, this._cancellationManager),
                 this._commonMessageHandler,
                 this._analyticsApi,
-                SETTINGS_URL
+                SETTINGS_URL,
             ),
-            this._analyticsApi
+            this._analyticsApi,
         );
 
         const onboardingV2ViewFactory = new SingleWebview<any, OnboardingAction>(
@@ -129,15 +129,15 @@ export class Container {
                 new VSCOnboardingActionApi(this._analyticsApi),
                 this._commonMessageHandler,
                 this._analyticsApi,
-                ONBOARDING_URL
+                ONBOARDING_URL,
             ),
-            this.analyticsApi
+            this.analyticsApi,
         );
 
         const welcomeV2ViewFactory = new SingleWebview<WelcomeInitMessage, WelcomeAction>(
             context.extensionPath,
             new VSCWelcomeWebviewControllerFactory(new VSCWelcomeActionApi(), this._commonMessageHandler),
-            this._analyticsApi
+            this._analyticsApi,
         );
 
         const startWorkV2ViewFactory = new SingleWebview<StartWorkIssueMessage, StartWorkAction>(
@@ -145,9 +145,9 @@ export class Container {
             new VSCStartWorkWebviewControllerFactory(
                 new VSCStartWorkActionApi(),
                 this._commonMessageHandler,
-                this._analyticsApi
+                this._analyticsApi,
             ),
-            this._analyticsApi
+            this._analyticsApi,
         );
 
         const createPullRequestV2ViewFactory = new SingleWebview<WorkspaceRepo, StartWorkAction>(
@@ -155,9 +155,9 @@ export class Container {
             new VSCCreatePullRequestWebviewControllerFactory(
                 new VSCCreatePullRequestActionApi(this._cancellationManager),
                 this._commonMessageHandler,
-                this._analyticsApi
+                this._analyticsApi,
             ),
-            this._analyticsApi
+            this._analyticsApi,
         );
 
         context.subscriptions.push((this._settingsWebviewFactory = settingsV2ViewFactory));
@@ -169,7 +169,7 @@ export class Container {
         const pipelinesV2Webview = new MultiWebview<Pipeline, PipelineSummaryAction>(
             context.extensionPath,
             new PipelineSummaryWebviewControllerFactory(new PipelineSummaryActionImplementation(), this._analyticsApi),
-            this._analyticsApi
+            this._analyticsApi,
         );
 
         context.subscriptions.push((this._pipelinesSummaryWebview = pipelinesV2Webview));
@@ -179,7 +179,7 @@ export class Container {
         this._loginManager = new LoginManager(this._credentialManager, this._siteManager, this._analyticsClient);
         this._bitbucketHelper = new CheckoutHelper(context.globalState);
         context.subscriptions.push(
-            (this._uriHandler = new AtlascodeUriHandler(this._analyticsApi, this._bitbucketHelper))
+            (this._uriHandler = new AtlascodeUriHandler(this._analyticsApi, this._bitbucketHelper)),
         );
 
         if (config.jira.explorer.enabled) {
@@ -211,19 +211,19 @@ export class Container {
                 new VSCBitbucketIssueWebviewControllerFactory(
                     new VSCBitbucketIssueActionApi(this._cancellationManager),
                     this._commonMessageHandler,
-                    this._analyticsApi
+                    this._analyticsApi,
                 ),
-                this._analyticsApi
+                this._analyticsApi,
             )),
             (this._createBitbucketIssueWebviewFactory = new SingleWebview<BitbucketSite, CreateBitbucketIssueAction>(
                 this._context.extensionPath,
                 new VSCCreateBitbucketIssueWebviewControllerFactory(
                     new VSCCreateBitbucketIssueActionImpl(),
                     this._commonMessageHandler,
-                    this._analyticsApi
+                    this._analyticsApi,
                 ),
-                this._analyticsApi
-            ))
+                this._analyticsApi,
+            )),
         );
         this._context.subscriptions.push(
             (this._pullRequestDetailsWebviewFactory = new MultiWebview<PullRequest, PullRequestDetailsAction>(
@@ -231,10 +231,10 @@ export class Container {
                 new VSCPullRequestDetailsWebviewControllerFactory(
                     new VSCPullRequestDetailsActionApi(this._cancellationManager),
                     this._commonMessageHandler,
-                    this._analyticsApi
+                    this._analyticsApi,
                 ),
-                this._analyticsApi
-            ))
+                this._analyticsApi,
+            )),
         );
         this._context.subscriptions.push((this._jiraActiveIssueStatusBar = new JiraActiveIssueStatusBar(bbCtx)));
         // It seems to take a bit of time for VS Code to initialize git, if we try and find repos before that completes

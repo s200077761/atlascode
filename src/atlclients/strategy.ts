@@ -259,7 +259,7 @@ class BitbucketProdStrategy extends Strategy {
     // We kinda abuse refreshHeaders for bitbucket. Maybe have a authorizationHeaders as well? Just rename?
     public refreshHeaders() {
         const basicAuth = Buffer.from(
-            `${BitbucketProdStrategyData.clientID}:${BitbucketProdStrategyData.clientSecret}`
+            `${BitbucketProdStrategyData.clientID}:${BitbucketProdStrategyData.clientSecret}`,
         ).toString('base64');
         return {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -312,7 +312,7 @@ class BitbucketStagingStrategy extends Strategy {
 
     public refreshHeaders() {
         const basicAuth = Buffer.from(
-            `${BitbucketStagingStrategyData.clientID}:${BitbucketStagingStrategyData.clientSecret}`
+            `${BitbucketStagingStrategyData.clientID}:${BitbucketStagingStrategyData.clientSecret}`,
         ).toString('base64');
         return {
             'Content-Type': 'application/x-www-form-urlencoded',

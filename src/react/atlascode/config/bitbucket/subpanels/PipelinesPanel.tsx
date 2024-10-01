@@ -37,7 +37,7 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Pipelines, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -80,5 +80,5 @@ export const PipelinesPanel: React.FunctionComponent<PipelinesPanelProps> = memo
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

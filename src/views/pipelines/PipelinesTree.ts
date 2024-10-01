@@ -42,7 +42,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
             commands.registerCommand(Commands.PipelinesNextPage, (repo) => {
                 this.fetchNextPage(repo);
             }),
-            configuration.onDidChange(this.onConfigurationChanged, this)
+            configuration.onDidChange(this.onConfigurationChanged, this),
         );
     }
 
@@ -100,7 +100,10 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     private _page = 1;
     private _morePages = true;
 
-    constructor(private workspaceRepo: WorkspaceRepo, private expand?: boolean) {
+    constructor(
+        private workspaceRepo: WorkspaceRepo,
+        private expand?: boolean,
+    ) {
         super();
     }
 
@@ -108,7 +111,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         const directory = path.basename(this.workspaceRepo.rootUri);
         const item = new TreeItem(
             `${directory}`,
-            this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed
+            this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed,
         );
         item.tooltip = this.workspaceRepo.rootUri;
         return item;
@@ -154,8 +157,8 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                     new SimpleNode(
                         `No pipelines matching your filters from ${format(
                             parseISO(firstPipeTime),
-                            'yyyy-MM-dd h:mm a'
-                        )} to ${format(parseISO(lastPipeTime), 'yyyy-MM-dd h:mm a')}`
+                            'yyyy-MM-dd h:mm a',
+                        )} to ${format(parseISO(lastPipeTime), 'yyyy-MM-dd h:mm a')}`,
                     ),
                 ];
             } else {
@@ -164,7 +167,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
             if (this._morePages && filtersActive()) {
                 nodes.push(
-                    new NextPageNode(this.workspaceRepo, this._pipelines[this._pipelines.length - 1].created_on)
+                    new NextPageNode(this.workspaceRepo, this._pipelines[this._pipelines.length - 1].created_on),
                 ); //Pass the last-retrieved pipeline date
             } else if (this._morePages) {
                 nodes.push(new NextPageNode(this.workspaceRepo));
@@ -202,7 +205,10 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 const PipelineBuildContextValue = 'pipelineBuild';
 
 export class PipelineNode extends AbstractBaseNode {
-    constructor(private _repoNode: PipelinesRepoNode, readonly pipeline: Pipeline) {
+    constructor(
+        private _repoNode: PipelinesRepoNode,
+        readonly pipeline: Pipeline,
+    ) {
         super();
     }
 
@@ -225,7 +231,7 @@ export class PipelineNode extends AbstractBaseNode {
         };
         item.iconPath = iconUriForPipeline(this.pipeline);
         item.resourceUri = Uri.parse(
-            `${this.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.pipeline.build_number}`
+            `${this.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.pipeline.build_number}`,
         );
         return item;
     }
@@ -237,7 +243,10 @@ export class PipelineNode extends AbstractBaseNode {
 
 class NextPageNode extends AbstractBaseNode {
     private _resultsSince: string | undefined;
-    constructor(private workspaceRepo: WorkspaceRepo, resultsSince?: string) {
+    constructor(
+        private workspaceRepo: WorkspaceRepo,
+        resultsSince?: string,
+    ) {
         super();
         this._resultsSince = resultsSince;
     }
@@ -247,8 +256,8 @@ class NextPageNode extends AbstractBaseNode {
             ? new TreeItem(
                   `Load more (showing filtered results since ${format(
                       parseISO(this._resultsSince),
-                      'yyyy-MM-dd h:mm a'
-                  )})`
+                      'yyyy-MM-dd h:mm a',
+                  )})`,
               )
             : new TreeItem('Load more', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');

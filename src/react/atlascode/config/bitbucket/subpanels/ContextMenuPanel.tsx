@@ -20,7 +20,7 @@ export const ContextMenuPanel: React.FunctionComponent<ContextMenuPanelProps> = 
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.ContextMenus, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -47,5 +47,5 @@ export const ContextMenuPanel: React.FunctionComponent<ContextMenuPanelProps> = 
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

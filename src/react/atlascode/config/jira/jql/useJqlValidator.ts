@@ -15,8 +15,8 @@ export const useJqlValidator = (site: DetailedSiteInfo) => {
                 return await controller.validateJql(site, jql, abortSignal);
             },
             300,
-            { leading: false }
-        )
+            { leading: false },
+        ),
     );
 
     const validateJql = useCallback(
@@ -38,7 +38,7 @@ export const useJqlValidator = (site: DetailedSiteInfo) => {
                 }
             }
         },
-        [debouncedValidator, site]
+        [debouncedValidator, site],
     );
 
     return validateJql;

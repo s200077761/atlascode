@@ -35,7 +35,7 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.PR, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -69,5 +69,5 @@ export const PRExplorerPanel: React.FunctionComponent<PRExplorerPanelProps> = me
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

@@ -8,7 +8,11 @@ import { Strategy } from '../strategy';
 import { Tokens } from '../tokens';
 
 export class BitbucketResponseHandler extends ResponseHandler {
-    constructor(private strategy: Strategy, private agent: { [k: string]: any }, private axios: AxiosInstance) {
+    constructor(
+        private strategy: Strategy,
+        private agent: { [k: string]: any },
+        private axios: AxiosInstance,
+    ) {
         super();
     }
 

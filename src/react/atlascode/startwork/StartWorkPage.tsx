@@ -103,40 +103,42 @@ const StartWorkPage: React.FunctionComponent = () => {
     }>({});
     const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
 
-    const toggleTransitionIssueEnabled = useCallback(() => setTransitionIssueEnabled(!transitionIssueEnabled), [
-        transitionIssueEnabled,
-    ]);
+    const toggleTransitionIssueEnabled = useCallback(
+        () => setTransitionIssueEnabled(!transitionIssueEnabled),
+        [transitionIssueEnabled],
+    );
 
-    const toggleBranchSetupEnabled = useCallback(() => setbranchSetupEnabled(!branchSetupEnabled), [
-        branchSetupEnabled,
-    ]);
+    const toggleBranchSetupEnabled = useCallback(
+        () => setbranchSetupEnabled(!branchSetupEnabled),
+        [branchSetupEnabled],
+    );
 
     const handleTransitionChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setTransition(event.target.value);
         },
-        [setTransition]
+        [setTransition],
     );
 
     const handleRepositoryChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setRepository(event.target.value);
         },
-        [setRepository]
+        [setRepository],
     );
 
     const handleSourceBranchChange = useCallback(
         (event: React.ChangeEvent, value: Branch) => {
             setSourceBranch(value);
         },
-        [setSourceBranch]
+        [setSourceBranch],
     );
 
     const handleBranchTypeChange = useCallback(
         (event: React.ChangeEvent, value: BranchType) => {
             setBranchType(value);
         },
-        [setBranchType]
+        [setBranchType],
     );
 
     const handleExistingBranchClick = useCallback(
@@ -145,7 +147,7 @@ const StartWorkPage: React.FunctionComponent = () => {
             e.stopPropagation();
             const existingBranchName = e.currentTarget.dataset.branchName || '';
             const sourceBranchOption = [...repository.localBranches, ...repository.remoteBranches].find(
-                (branch) => branch.name === existingBranchName
+                (branch) => branch.name === existingBranchName,
             )!;
             const updatedLocalBranch =
                 sourceBranchOption.type === 0
@@ -153,7 +155,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                     : sourceBranchOption.name!.substring(sourceBranchOption.remote!.length + 1);
 
             const bt = [...repository.branchTypes, ...convertedCustomPrefixes].find((branchType) =>
-                existingBranchName.startsWith(branchType.prefix)
+                existingBranchName.startsWith(branchType.prefix),
             )!;
 
             setBranchType(bt);
@@ -167,21 +169,21 @@ const StartWorkPage: React.FunctionComponent = () => {
             }, 100);
             setSourceBranch(sourceBranchOption);
         },
-        [repository, convertedCustomPrefixes]
+        [repository, convertedCustomPrefixes],
     );
 
     const handleLocalBranchChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => {
             setLocalBranch(event.target.value);
         },
-        [setLocalBranch]
+        [setLocalBranch],
     );
 
     const handleUpstreamChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => {
             setUpstream(event.target.value);
         },
-        [setUpstream]
+        [setUpstream],
     );
 
     const buildBranchName = useCallback(() => {
@@ -236,7 +238,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 repository.workspaceRepo,
                 sourceBranch,
                 localBranch,
-                upstream
+                upstream,
             );
             setSubmitState('submit-success');
             setSubmitResponse(response);
@@ -275,9 +277,9 @@ const StartWorkPage: React.FunctionComponent = () => {
         setBranchType(repository.branchTypes?.[0] || emptyPrefix);
         setSourceBranch(
             repository.localBranches?.find(
-                (b) => repository.developmentBranch && b.name === repository.developmentBranch
+                (b) => repository.developmentBranch && b.name === repository.developmentBranch,
             ) ||
-                repository.localBranches?.[0] || { name: 'no branches found' }
+                repository.localBranches?.[0] || { name: 'no branches found' },
         );
         setExistingBranches([
             ...repository.localBranches.filter((b) => b.name?.toLowerCase().includes(state.issue.key.toLowerCase())),
@@ -285,7 +287,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                 .filter((b) => b.name?.toLowerCase().includes(state.issue.key.toLowerCase()))
                 .filter(
                     (remoteBranch) =>
-                        !repository.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!))
+                        !repository.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!)),
                 ),
         ]);
     }, [repository, state.issue]);
@@ -467,7 +469,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                             //@ts-ignore
                                                             <MenuItem key={item.workspaceRepo.rootUri} value={item}>
                                                                 {item.workspaceRepo.rootUri.substring(
-                                                                    item.workspaceRepo.rootUri.lastIndexOf('/') + 1
+                                                                    item.workspaceRepo.rootUri.lastIndexOf('/') + 1,
                                                                 )}
                                                             </MenuItem>
                                                         ))}
@@ -592,7 +594,7 @@ const StartWorkPage: React.FunctionComponent = () => {
                                                                             {b.type === 0
                                                                                 ? b.name
                                                                                 : b.name?.substring(
-                                                                                      b.remote!.length + 1
+                                                                                      b.remote!.length + 1,
                                                                                   )}
                                                                         </Link>
                                                                     </li>

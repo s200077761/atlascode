@@ -14,7 +14,7 @@ export async function addPipelinesSchemaToYamlConfig() {
         Uri.file(Resources.pipelinesSchemaPath).toString(),
         BB_PIPELINES_FILENAME,
         ConfigurationTarget.Global,
-        config!.globalValue
+        config!.globalValue,
     );
 }
 
@@ -22,7 +22,7 @@ async function addPipelinesSchemaToConfigAtScope(
     key: string,
     value: string,
     scope: ConfigurationTarget,
-    valueAtScope: any
+    valueAtScope: any,
 ) {
     let newValue: any = {};
     if (valueAtScope) {
@@ -45,7 +45,7 @@ export async function activateYamlExtension() {
         window
             .showWarningMessage(
                 "Please install 'YAML Support by Red Hat' via the Extensions pane.",
-                'install yaml extension'
+                'install yaml extension',
             )
             .then((sel) => {
                 commands.executeCommand('workbench.extensions.installExtension', VSCODE_YAML_EXTENSION_ID);
@@ -56,7 +56,7 @@ export async function activateYamlExtension() {
 
     if (!yamlPlugin || !yamlPlugin.registerContributor) {
         window.showWarningMessage(
-            "The installed Red Hat YAML extension doesn't support Intellisense. Please upgrade 'YAML Support by Red Hat' via the Extensions pane."
+            "The installed Red Hat YAML extension doesn't support Intellisense. Please upgrade 'YAML Support by Red Hat' via the Extensions pane.",
         );
         return;
     }

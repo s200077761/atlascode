@@ -336,7 +336,7 @@ export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
     getList(
         workspaceRepo: WorkspaceRepo,
-        queryParams?: { pagelen?: number; sort?: string; q?: string }
+        queryParams?: { pagelen?: number; sort?: string; q?: string },
     ): Promise<PaginatedPullRequests>;
     getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
@@ -355,7 +355,7 @@ export interface PullRequestApi {
         prId: string,
         content: string,
         commentId: string,
-        commitHash?: string
+        commitHash?: string,
     ): Promise<Comment>;
     deleteComment(site: BitbucketSite, prId: string, commentId: string, commitHash?: string): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
@@ -368,7 +368,7 @@ export interface PullRequestApi {
     create(
         site: BitbucketSite,
         workspaceRepo: WorkspaceRepo,
-        createPrData: CreatePullRequestData
+        createPrData: CreatePullRequestData,
     ): Promise<PullRequest>;
     update(pr: PullRequest, title: string, summary: string, reviewerAccountIds: string[]): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<ApprovalStatus>;
@@ -376,7 +376,7 @@ export interface PullRequestApi {
         pr: PullRequest,
         closeSourceBranch?: boolean,
         mergeStrategy?: string,
-        commitMessage?: string
+        commitMessage?: string,
     ): Promise<PullRequest>;
     postComment(
         site: BitbucketSite,
@@ -385,7 +385,7 @@ export interface PullRequestApi {
         parentCommentId: string,
         inline?: { from?: number; to?: number; path: string },
         commitHash?: string,
-        lineMeta?: 'ADDED' | 'REMOVED'
+        lineMeta?: 'ADDED' | 'REMOVED',
     ): Promise<Comment>;
     getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }

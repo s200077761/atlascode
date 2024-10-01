@@ -40,7 +40,7 @@ const useStyles = makeStyles(
             paperOverflow: {
                 overflow: 'hidden',
             },
-        } as const)
+        }) as const,
 );
 
 const WelcomePage: React.FunctionComponent = () => {

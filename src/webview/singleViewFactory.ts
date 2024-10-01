@@ -88,7 +88,7 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
 
             const [controller, controllerDisposable] = this._controllerFactory.createController(
                 this.postMessage.bind(this),
-                factoryData
+                factoryData,
             );
 
             this._controller = controller;
@@ -105,14 +105,14 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                               return;
                           },
                       },
-                this._ws
+                this._ws,
             );
 
             this._panel.title = this._controller.title();
             this._panel.webview.html = this._controllerFactory.webviewHtml(
                 this._extensionPath,
                 this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
-                this._panel.webview.cspSource
+                this._panel.webview.cspSource,
             );
 
             const { id, site, product } = this._controller.screenDetails();
@@ -121,7 +121,7 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
             this._panel.webview.html = this._controllerFactory.webviewHtml(
                 this._extensionPath,
                 this._panel.webview.asWebviewUri(Uri.file(this._extensionPath)),
-                this._panel.webview.cspSource
+                this._panel.webview.cspSource,
             );
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
             if (this._controller) {

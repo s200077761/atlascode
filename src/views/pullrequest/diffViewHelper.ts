@@ -86,7 +86,7 @@ export async function getArgsForDiffView(
     fileDiff: FileDiff,
     pr: PullRequest,
     commentController: PullRequestCommentController,
-    commitRange?: { lhs: string; rhs: string }
+    commitRange?: { lhs: string; rhs: string },
 ): Promise<DiffViewArgs> {
     const remotePrefix = pr.workspaceRepo ? `${pr.workspaceRepo.mainSiteRemote.remote.name}/` : '';
     // Use merge base to diff from common ancestor of source and destination.
@@ -261,7 +261,7 @@ export async function createFileChangesNodes(
     allComments: PaginatedComments,
     fileDiffs: FileDiff[],
     tasks: Task[],
-    commitRange?: { lhs: string; rhs: string }
+    commitRange?: { lhs: string; rhs: string },
 ): Promise<AbstractBaseNode[]> {
     const allDiffData = await Promise.all(
         fileDiffs.map(async (fileDiff) => {
@@ -271,9 +271,9 @@ export async function createFileChangesNodes(
                 fileDiff,
                 pr,
                 Container.bitbucketContext.prCommentController,
-                commitRange
+                commitRange,
             );
-        })
+        }),
     );
 
     if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
@@ -289,10 +289,10 @@ export async function createFileChangesNodes(
         //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
         let directoryNodes: DirectoryNode[] = Array.from(
             rootDirectory.subdirs.values(),
-            (subdir) => new DirectoryNode(subdir)
+            (subdir) => new DirectoryNode(subdir),
         );
         let childNodes: AbstractBaseNode[] = rootDirectory.files.map(
-            (diffViewArg) => new PullRequestFilesNode(diffViewArg)
+            (diffViewArg) => new PullRequestFilesNode(diffViewArg),
         );
         return childNodes.concat(directoryNodes);
     }
@@ -302,8 +302,8 @@ export async function createFileChangesNodes(
     if (allComments.next) {
         result.push(
             new SimpleNode(
-                '⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'
-            )
+                '⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.',
+            ),
         );
     }
     return result;

@@ -71,7 +71,7 @@ const useStyles = makeStyles(
             paperOverflow: {
                 overflow: 'hidden',
             },
-        } as const)
+        }) as const,
 );
 
 const CreateBitbucketIssuePage: React.FunctionComponent = () => {
@@ -89,25 +89,25 @@ const CreateBitbucketIssuePage: React.FunctionComponent = () => {
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setTitle(event.target.value);
         },
-        [setTitle]
+        [setTitle],
     );
     const handleDescriptionChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setDescription(event.target.value);
         },
-        [setDescription]
+        [setDescription],
     );
     const handleKindChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setKind(event.target.value);
         },
-        [setKind]
+        [setKind],
     );
     const handlePriorityChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setPriority(event.target.value);
         },
-        [setPriority]
+        [setPriority],
     );
 
     const submitForm = useCallback(async () => {

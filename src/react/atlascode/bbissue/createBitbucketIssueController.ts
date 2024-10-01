@@ -105,7 +105,7 @@ export function useCreateBitbucketIssueController(): [CreateBitbucketIssueState,
                                 ...data,
                             },
                             CreateBitbucketIssueMessageType.SubmitResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as SubmitResponseMessage).issue);
                     } catch (e) {
@@ -114,7 +114,7 @@ export function useCreateBitbucketIssueController(): [CreateBitbucketIssueState,
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const refresh = useCallback((): void => {

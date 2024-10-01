@@ -48,8 +48,10 @@ import { iconSet, Resources } from '../resources';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { InitializingWebview } from './abstractWebview';
 
-export class JiraIssueWebview extends AbstractIssueEditorWebview
-    implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
+export class JiraIssueWebview
+    extends AbstractIssueEditorWebview
+    implements InitializingWebview<MinimalIssue<DetailedSiteInfo>>
+{
     private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
@@ -173,7 +175,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
             const epicInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
             const res = await client.searchForIssuesUsingJqlGet(
                 `${epicInfo.epicLink.id} = "${this._issue.key}" order by lastViewed DESC`,
-                fields
+                fields,
             );
             const searchResults = await readSearchResults(res, site, epicInfo);
             this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
@@ -287,7 +289,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                         await client.editIssue(this._issue!.key, newFieldValues);
                         if (
                             Object.keys(newFieldValues).some(
-                                (fieldKey) => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined
+                                (fieldKey) => this._editUIData.fieldValues[`${fieldKey}.rendered`] !== undefined,
                             )
                         ) {
                             await this.forceUpdateIssue();
@@ -313,7 +315,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 key,
-                                this.fieldNameForKey(key)
+                                this.fieldNameForKey(key),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -340,13 +342,13 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                     msg.issue,
                                     msg.commentBody,
                                     msg.commentId,
-                                    msg.restriction
+                                    msg.restriction,
                                 );
                                 const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
                                 comments.splice(
                                     comments.findIndex((value) => value.id === msg.commentId),
                                     1,
-                                    res
+                                    res,
                                 );
                             } else {
                                 const res = await postComment(msg.issue, msg.commentBody, undefined, msg.restriction);
@@ -377,7 +379,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             const comments: Comment[] = this._editUIData.fieldValues['comment'].comments;
                             comments.splice(
                                 comments.findIndex((value) => value.id === msg.commentId),
-                                1
+                                1,
                             );
 
                             this.postMessage({
@@ -450,7 +452,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'issuelinks',
-                                this.fieldNameForKey('issuelinks')
+                                this.fieldNameForKey('issuelinks'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -502,7 +504,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'issuelinks',
-                                this.fieldNameForKey('issuelinks')
+                                this.fieldNameForKey('issuelinks'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -544,7 +546,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'worklog',
-                                this.fieldNameForKey('worklog')
+                                this.fieldNameForKey('worklog'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -575,9 +577,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             }
 
                             this._editUIData.fieldValues['watches'].watchers.push(msg.watcher);
-                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues[
-                                'watches'
-                            ].watchers.length;
+                            this._editUIData.fieldValues['watches'].watchCount =
+                                this._editUIData.fieldValues['watches'].watchers.length;
                             if (msg.watcher.accountId === this._currentUser.accountId) {
                                 this._editUIData.fieldValues['watches'].isWatching = true;
                             }
@@ -590,7 +591,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'watches',
-                                this.fieldNameForKey('watches')
+                                this.fieldNameForKey('watches'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -619,7 +620,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._editUIData.fieldValues['watches'].watchers = [];
                             }
                             const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex(
-                                (user: User) => user.accountId === msg.watcher.accountId
+                                (user: User) => user.accountId === msg.watcher.accountId,
                             );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
@@ -629,9 +630,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._editUIData.fieldValues['watches'].isWatching = false;
                             }
 
-                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues[
-                                'watches'
-                            ].watchers.length;
+                            this._editUIData.fieldValues['watches'].watchCount =
+                                this._editUIData.fieldValues['watches'].watchers.length;
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
@@ -641,7 +641,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'watches',
-                                this.fieldNameForKey('watches')
+                                this.fieldNameForKey('watches'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -672,9 +672,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             }
 
                             this._editUIData.fieldValues['votes'].voters.push(msg.voter);
-                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues[
-                                'votes'
-                            ].voters.length;
+                            this._editUIData.fieldValues['votes'].votes =
+                                this._editUIData.fieldValues['votes'].voters.length;
                             this._editUIData.fieldValues['votes'].hasVoted = true;
 
                             this.postMessage({
@@ -685,7 +684,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'votes',
-                                this.fieldNameForKey('votes')
+                                this.fieldNameForKey('votes'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -714,16 +713,15 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._editUIData.fieldValues['votes'].voters = [];
                             }
                             const foundIndex: number = this._editUIData.fieldValues['votes'].voters.findIndex(
-                                (user: User) => user.accountId === msg.voter.accountId
+                                (user: User) => user.accountId === msg.voter.accountId,
                             );
                             if (foundIndex > -1) {
                                 this._editUIData.fieldValues['votes'].voters.splice(foundIndex, 1);
                             }
 
                             this._editUIData.fieldValues['votes'].hasVoted = false;
-                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues[
-                                'votes'
-                            ].voters.length;
+                            this._editUIData.fieldValues['votes'].votes =
+                                this._editUIData.fieldValues['votes'].voters.length;
 
                             this.postMessage({
                                 type: 'fieldValueUpdate',
@@ -733,7 +731,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'votes',
-                                this.fieldNameForKey('votes')
+                                this.fieldNameForKey('votes'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -786,7 +784,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'attachment',
-                                this.fieldNameForKey('attachment')
+                                this.fieldNameForKey('attachment'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -830,7 +828,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                                 this._issue.siteDetails,
                                 this._issue.key,
                                 'attachment',
-                                this.fieldNameForKey('attachment')
+                                this.fieldNameForKey('attachment'),
                             ).then((e) => {
                                 Container.analyticsClient.sendTrackEvent(e);
                             });
@@ -888,13 +886,13 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                         handled = true;
                         // TODO: [VSCODE-606] abstract madness for calling Commands.BitbucketShowPullRequestDetails into a reusable function
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(
-                            (p) => p.data.url === msg.prHref
+                            (p) => p.data.url === msg.prHref,
                         );
                         if (pr) {
                             const bbApi = await clientForSite(pr.site);
                             commands.executeCommand(
                                 Commands.BitbucketShowPullRequestDetails,
-                                await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo)
+                                await bbApi.pullrequests.get(pr.site, pr.data.id, pr.workspaceRepo),
                             );
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
@@ -914,8 +912,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                             const baseApiUrl = new URL(
                                 this._issue.siteDetails.baseApiUrl.slice(
                                     0,
-                                    this._issue.siteDetails.baseApiUrl.lastIndexOf('/rest')
-                                )
+                                    this._issue.siteDetails.baseApiUrl.lastIndexOf('/rest'),
+                                ),
                             );
                             // Prefix base URL for a relative URL
                             const href = msg.url.startsWith('/secure/attachment')
@@ -975,7 +973,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview
                 return issueKeys.find((key) => key.toLowerCase() === this._issue.key.toLowerCase()) !== undefined
                     ? pr
                     : undefined;
-            })
+            }),
         );
 
         return relatedPrs.filter((pr) => pr !== undefined).map((p) => p!.data);

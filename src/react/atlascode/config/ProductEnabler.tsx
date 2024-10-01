@@ -16,7 +16,7 @@ export const ProductEnabler: React.FunctionComponent<ProductEnablerProps> = ({ l
         (event: React.ChangeEvent<HTMLInputElement>) => {
             onToggle(event.target.checked);
         },
-        [onToggle]
+        [onToggle],
     );
 
     return (

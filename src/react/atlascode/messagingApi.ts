@@ -9,7 +9,7 @@ export type PostMessagePromiseFunc<A, R extends ReducerAction<any, any>> = (
     action: A,
     waitForEvent: any,
     timeout: number,
-    nonce?: string
+    nonce?: string,
 ) => Promise<R>;
 export type ReceiveMessageFunc<M extends ReducerAction<any, any>> = (message: M) => void;
 
@@ -20,7 +20,7 @@ interface VsCodeApi {
 }
 declare function acquireVsCodeApi(): VsCodeApi;
 export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends ReducerAction<any, any>>(
-    onMessageHandler: ReceiveMessageFunc<M>
+    onMessageHandler: ReceiveMessageFunc<M>,
 ): [PostMessageFunc<A>, PostMessagePromiseFunc<A, R>] {
     const apiRef = useMemo<VsCodeApi>(acquireVsCodeApi, [acquireVsCodeApi]);
 
@@ -28,7 +28,7 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
         (action: A): void => {
             apiRef.postMessage<A>(action);
         },
-        [apiRef]
+        [apiRef],
     );
 
     const postMessagePromise: PostMessagePromiseFunc<A, R> = useCallback(
@@ -62,7 +62,7 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
                 window.addEventListener('message', promiseListener);
             });
         },
-        [apiRef]
+        [apiRef],
     );
 
     const errorController = useContext(ErrorControllerContext);
@@ -98,7 +98,7 @@ export function useMessagingApi<A, M extends ReducerAction<any, any>, R extends 
                 }
             }
         },
-        [errorController, pmfController, onMessageHandler]
+        [errorController, pmfController, onMessageHandler],
     );
 
     useEffect(() => {

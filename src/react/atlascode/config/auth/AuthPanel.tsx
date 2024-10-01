@@ -26,7 +26,7 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Auth, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -53,5 +53,5 @@ export const AuthPanel: React.FunctionComponent<AuthPanelProps> = memo(
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

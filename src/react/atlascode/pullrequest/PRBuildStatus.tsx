@@ -26,8 +26,8 @@ export const PRBuildStatus: React.FunctionComponent<PRBuildStatusProps> = ({ bui
                             status.state === 'INPROGRESS'
                                 ? inprogressIcon
                                 : status.state === 'SUCCESSFUL'
-                                ? successIcon
-                                : errorIcon
+                                  ? successIcon
+                                  : errorIcon
                         }
                     >
                         <Typography variant={'button'}>{status.name}</Typography>

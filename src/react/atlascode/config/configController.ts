@@ -39,14 +39,14 @@ export interface ConfigControllerApi {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
     ) => Promise<Suggestion[]>;
     fetchFilterSearchResults: (
         site: DetailedSiteInfo,
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
     ) => Promise<FilterSearchResults>;
     validateJql: (site: DetailedSiteInfo, jql: string, abortSignal?: AbortSignal) => Promise<JQLErrors>;
     createPullRequest: () => void;
@@ -87,7 +87,7 @@ export const emptyApi: ConfigControllerApi = {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
     ): Promise<Suggestion[]> => {
         return new Promise<Suggestion[]>((resolve, reject) => {
             resolve([]);
@@ -98,7 +98,7 @@ export const emptyApi: ConfigControllerApi = {
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
     ): Promise<FilterSearchResults> => {
         return new Promise<FilterSearchResults>((resolve, reject) => {
             resolve(emptyFilterSearchResults);
@@ -262,7 +262,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
     }, []);
 
     const [postMessage, postMessagePromise] = useMessagingApi<ConfigAction, ConfigMessage, ConfigResponse>(
-        onMessageHandler
+        onMessageHandler,
     );
 
     const handleConfigChange = useCallback(
@@ -275,7 +275,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 target: state.target,
             });
         },
-        [postMessage, state.target]
+        [postMessage, state.target],
     );
 
     const setConfigTarget = useCallback(
@@ -283,7 +283,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             dispatch({ type: ConfigUIActionType.Loading });
             postMessage({ type: ConfigActionType.SetTarget, target: target });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const sendRefresh = useCallback((): void => {
@@ -298,7 +298,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 source: WebViewID.ConfigWebview,
                 linkId: linkId,
             }),
-        [postMessage]
+        [postMessage],
     );
 
     const login = useCallback(
@@ -306,7 +306,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             dispatch({ type: ConfigUIActionType.Loading });
             postMessage({ type: ConfigActionType.Login, siteInfo: site, authInfo: auth });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const logout = useCallback(
@@ -314,7 +314,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             dispatch({ type: ConfigUIActionType.Loading });
             postMessage({ type: ConfigActionType.Logout, siteInfo: site });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const fetchJqlOptions = useCallback(
@@ -328,7 +328,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 site: site,
                             },
                             ConfigMessageType.JQLOptionsResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as JQLOptionsResponseMessage).data);
                     } catch (e) {
@@ -337,7 +337,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const fetchJqlSuggestions = useCallback(
@@ -346,7 +346,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             fieldName: string,
             userInput: string,
             predicateName?: string,
-            abortSignal?: AbortSignal
+            abortSignal?: AbortSignal,
         ): Promise<Suggestion[]> => {
             return new Promise<Suggestion[]>((resolve, reject) => {
                 (async () => {
@@ -374,7 +374,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
                             ConfigMessageType.JQLSuggestionsResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as JQLSuggestionsResponseMessage).data);
                     } catch (e) {
@@ -383,7 +383,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessage, postMessagePromise]
+        [postMessage, postMessagePromise],
     );
 
     const fetchFilterSearchResults = useCallback(
@@ -392,7 +392,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
             query: string,
             maxResults?: number,
             startAt?: number,
-            abortSignal?: AbortSignal
+            abortSignal?: AbortSignal,
         ): Promise<FilterSearchResults> => {
             return new Promise<FilterSearchResults>((resolve, reject) => {
                 (async () => {
@@ -420,7 +420,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
                             ConfigMessageType.FilterSearchResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as FilterSearchResponseMessage).data);
                     } catch (e) {
@@ -429,7 +429,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessage, postMessagePromise]
+        [postMessage, postMessagePromise],
     );
 
     const validateJql = useCallback(
@@ -458,7 +458,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
                             ConfigMessageType.ValidateJqlResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as ValidateJqlResponseMessage).data);
                     } catch (e) {
@@ -467,7 +467,7 @@ export function useConfigController(): [ConfigState, ConfigControllerApi] {
                 })();
             });
         },
-        [postMessage, postMessagePromise]
+        [postMessage, postMessagePromise],
     );
 
     const createPullRequest = useCallback((): void => {

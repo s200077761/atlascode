@@ -43,7 +43,7 @@ const useStyles = makeStyles(
             hidden: {
                 display: 'none',
             },
-        } as const)
+        }) as const,
 );
 
 interface FileWithPath extends File {
@@ -247,5 +247,5 @@ export const Debug: React.FunctionComponent<DebugProps> = memo(
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

@@ -57,7 +57,7 @@ const useStyles = makeStyles(
             paperOverflow: {
                 overflow: 'hidden',
             },
-        } as const)
+        }) as const,
 );
 
 type SectionWithSubsections = {
@@ -105,7 +105,7 @@ const ConfigPage: React.FunctionComponent = () => {
                 return oldSections;
             });
         },
-        [openSection]
+        [openSection],
     );
 
     const handleCompleteSectionChange = useCallback((section: ConfigSection, subSection: ConfigSubSection) => {

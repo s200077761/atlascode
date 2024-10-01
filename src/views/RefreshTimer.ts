@@ -13,7 +13,7 @@ export class RefreshTimer implements Disposable {
     constructor(
         private _enabledConfigPath: string | undefined,
         private _intervalConfigPath: string,
-        private _refresh: () => void
+        private _refresh: () => void,
     ) {
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
         this.reloadConfiguration();

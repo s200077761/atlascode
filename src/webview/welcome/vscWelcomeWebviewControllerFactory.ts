@@ -10,7 +10,10 @@ import { getHtmlForView } from '../common/getHtmlForView';
 import { PostMessageFunc, VSCWebviewControllerFactory } from '../vscWebviewControllerFactory';
 
 export class VSCWelcomeWebviewControllerFactory implements VSCWebviewControllerFactory<WelcomeInitMessage> {
-    constructor(private api: WelcomeActionApi, private commonHandler: CommonActionMessageHandler) {}
+    constructor(
+        private api: WelcomeActionApi,
+        private commonHandler: CommonActionMessageHandler,
+    ) {}
 
     public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
         return Resources.icons.get(iconSet.ATLASSIANICON);
@@ -22,21 +25,21 @@ export class VSCWelcomeWebviewControllerFactory implements VSCWebviewControllerF
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: WelcomeInitMessage
+        factoryData?: WelcomeInitMessage,
     ): [WelcomeWebviewController, Disposable | undefined];
 
     public createController(postMessage: PostMessageFunc, factoryData?: WelcomeInitMessage): WelcomeWebviewController;
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: WelcomeInitMessage
+        factoryData?: WelcomeInitMessage,
     ): WelcomeWebviewController | [WelcomeWebviewController, Disposable | undefined] {
         const controller = new WelcomeWebviewController(
             postMessage,
             this.api,
             this.commonHandler,
             Logger.Instance,
-            factoryData
+            factoryData,
         );
 
         return [controller, undefined];

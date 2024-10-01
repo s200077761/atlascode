@@ -71,5 +71,5 @@ export const JQLListItem: React.FunctionComponent<JQLListItemProps> = memo(
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

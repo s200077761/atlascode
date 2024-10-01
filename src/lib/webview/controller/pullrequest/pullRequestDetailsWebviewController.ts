@@ -52,7 +52,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
         api: PullRequestDetailsActionApi,
         commonHandler: CommonActionMessageHandler,
         logger: Logger,
-        analytics: AnalyticsApi
+        analytics: AnalyticsApi,
     ) {
         this.pr = pr;
         this.messagePoster = messagePoster;
@@ -350,7 +350,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         this.pageComments,
                         this.pr,
                         msg.rawText,
-                        msg.parentId
+                        msg.parentId,
                     );
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateComments,
@@ -376,7 +376,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         this.pageComments,
                         this.pr,
                         msg.rawContent,
-                        msg.commentId
+                        msg.commentId,
                     );
                     this.postMessage({
                         type: PullRequestDetailsMessageType.UpdateComments,
@@ -426,7 +426,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         [...this.pageComments, ...this.inlineComments],
                         this.pr,
                         msg.content,
-                        msg.commentId
+                        msg.commentId,
                     );
                     [this.pageComments, this.inlineComments] = this.splitComments(comments);
                     this.tasks = tasks;
@@ -454,7 +454,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         this.tasks,
                         [...this.pageComments, ...this.inlineComments],
                         this.pr,
-                        msg.task
+                        msg.task,
                     );
                     [this.pageComments, this.inlineComments] = this.splitComments(comments);
                     this.tasks = tasks;
@@ -520,7 +520,7 @@ export class PullRequestDetailsWebviewController implements WebviewController<Pu
                         msg.mergeStrategy,
                         msg.commitMessage,
                         msg.closeSourceBranch,
-                        msg.issues
+                        msg.issues,
                     );
                     this.pr = { ...this.pr, ...updatedPullRequest };
                     this.update();

@@ -42,7 +42,7 @@ export type AltDemoButtonProps = {
         modalTitle: string,
         description: React.ReactNode,
         action: () => void,
-        actionNotAvailable?: boolean
+        actionNotAvailable?: boolean,
     ) => void;
     actionNotAvailable?: boolean;
 };

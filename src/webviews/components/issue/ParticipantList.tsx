@@ -25,7 +25,7 @@ export class ParticipantList extends React.Component<Props, State> {
                         <div className="ac-inline-watcher">
                             <Avatar size="small" src={avatar} />
                             <div className="ac-inline-watcher-name">{user.displayName}</div>
-                        </div>
+                        </div>,
                     );
                 }
             });

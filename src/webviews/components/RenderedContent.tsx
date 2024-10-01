@@ -32,7 +32,7 @@ export const RenderedContent: React.FC<Props> = (props: Props) => {
                     }
                 }
             },
-            { capture: true }
+            { capture: true },
         );
     }, [props.fetchImage, ref]);
 

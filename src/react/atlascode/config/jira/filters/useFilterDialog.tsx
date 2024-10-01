@@ -19,12 +19,12 @@ export const useFilterDialog = (sites: DetailedSiteInfo[], onSave: (jqlEntry: JQ
             onSave(entry);
             setOpen(false);
         },
-        [onSave]
+        [onSave],
     );
 
     const filterDialog = useMemo(
         () => <FilterSearchDialog onCancel={handleFilterCancel} onSave={handleFilterSave} open={open} sites={sites} />,
-        [handleFilterCancel, handleFilterSave, open, sites]
+        [handleFilterCancel, handleFilterSave, open, sites],
     );
     return {
         openFilterDialog,

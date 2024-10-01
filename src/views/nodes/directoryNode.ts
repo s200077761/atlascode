@@ -18,10 +18,10 @@ export class DirectoryNode extends AbstractBaseNode {
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         let directoryNodes: DirectoryNode[] = Array.from(
             this.directoryData.subdirs.values(),
-            (subdir) => new DirectoryNode(subdir)
+            (subdir) => new DirectoryNode(subdir),
         );
         let fileNodes: AbstractBaseNode[] = this.directoryData.files.map(
-            (diffViewArg) => new PullRequestFilesNode(diffViewArg)
+            (diffViewArg) => new PullRequestFilesNode(diffViewArg),
         );
         return fileNodes.concat(directoryNodes);
     }

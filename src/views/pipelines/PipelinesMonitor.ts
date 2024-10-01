@@ -91,12 +91,12 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
         } else if (newResults.length === 3) {
             return `New build statuses for ${generatePipelineTitle(newResults[0], true)}, ${generatePipelineTitle(
                 newResults[1],
-                true
+                true,
             )}, and 1 other build.`;
         } else if (newResults.length > 3) {
             return `New build statuses for ${generatePipelineTitle(newResults[0], true)}, ${generatePipelineTitle(
                 newResults[1],
-                true
+                true,
             )}, and ${newResults.length - 2} other builds.`;
         }
         return '';

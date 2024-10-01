@@ -93,7 +93,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/pullrequests`
+            `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/pullrequests`,
         );
 
         return data.values!.map((pr: any) => pr.id) || [];

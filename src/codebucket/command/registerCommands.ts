@@ -14,7 +14,7 @@ export enum CodebucketCommands {
 export function activate(context: ExtensionContext) {
     const openInBitbucket = new OpenInBitbucketCommand();
     const openInBitbucketCmd = commands.registerCommand(CodebucketCommands.OpenInBitbucket, () =>
-        openInBitbucket.run()
+        openInBitbucket.run(),
     );
     context.subscriptions.push(openInBitbucketCmd);
 
@@ -24,13 +24,13 @@ export function activate(context: ExtensionContext) {
 
     const openPullRequest = new OpenBitbucketPullRequestCommand();
     const openPullRequestCmd = commands.registerCommand(CodebucketCommands.ViewPullRequest, () =>
-        openPullRequest.run()
+        openPullRequest.run(),
     );
     context.subscriptions.push(openPullRequestCmd);
 
     const copyPullRequest = new CopyBitbucketPullRequestCommand();
     const copyPullRequestCmd = commands.registerCommand(CodebucketCommands.CopyPullRequest, () =>
-        copyPullRequest.run()
+        copyPullRequest.run(),
     );
     context.subscriptions.push(copyPullRequestCmd);
 }

@@ -61,17 +61,14 @@ module.exports = [
             libraryTarget: 'commonjs',
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
         },
-        externals: [
-            'vscode',
-            nodeExternals()
-        ],
+        externals: ['vscode', nodeExternals()],
         plugins: [
             new webpack.IgnorePlugin({
-                resourceRegExp: /iconv-loader\.js/
+                resourceRegExp: /iconv-loader\.js/,
             }),
             new webpack.WatchIgnorePlugin({
-                paths: [/\.js$/, /\.d\.ts$/]
-            })
+                paths: [/\.js$/, /\.d\.ts$/],
+            }),
         ],
     },
     {
@@ -109,7 +106,7 @@ module.exports = [
         },
 
         output: {
-            publicPath: "",
+            publicPath: '',
             filename: 'uninstall.js',
             path: path.resolve(__dirname, 'build', 'extension'),
             libraryTarget: 'commonjs',

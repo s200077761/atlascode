@@ -106,7 +106,7 @@ export default class PMFBBanner extends React.Component<
                                                             options={radioItems}
                                                             onChange={FieldValidators.chain(
                                                                 fieldArgs.fieldProps.onChange,
-                                                                this.updateQ1
+                                                                this.updateQ1,
                                                             )}
                                                         />
                                                     );

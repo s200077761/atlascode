@@ -24,14 +24,14 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         Container.context.subscriptions.push(configuration.onDidChange(this._onConfigurationChanged, this));
 
         this._refreshTimer = new RefreshTimer(this.explorerEnabledConfiguration(), this.refreshConfiguration(), () =>
-            this.refresh()
+            this.refresh(),
         );
         this._disposable = Disposable.from(
             this.ctx.onDidChangeBitbucketContext(() => {
                 this.onBitbucketContextChanged();
             }),
             Container.explorerFocusManager.onFocusEvent(this.handleFocusEvent, this),
-            this._refreshTimer
+            this._refreshTimer,
         );
 
         this._onConfigurationChanged(configuration.initializingChangeEvent);
@@ -122,7 +122,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             if (prNode) {
                 this.reveal(prNode, { focus: true, expand: true });
                 const detailsNode: DescriptionNode = await (dataProvider as PullRequestNodeDataProvider).getDetailsNode(
-                    prNode
+                    prNode,
                 );
                 this.reveal(detailsNode, { focus: true });
                 if (openNode) {

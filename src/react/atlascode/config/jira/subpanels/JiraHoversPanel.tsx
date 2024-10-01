@@ -20,7 +20,7 @@ export const JiraHoversPanel: React.FunctionComponent<JiraHoversPanelProps> = me
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Hovers, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -47,5 +47,5 @@ export const JiraHoversPanel: React.FunctionComponent<JiraHoversPanelProps> = me
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

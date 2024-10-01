@@ -14,7 +14,7 @@ const useStyles = makeStyles(
             indent: {
                 marginLeft: theme.spacing(3),
             },
-        } as const)
+        }) as const,
 );
 
 export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => {
@@ -41,7 +41,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
                 <p key={key}>
                     <b>{key}:</b>
                     <span className={classes.indent}>{state.errorDetails.errors[key]}</span>
-                </p>
+                </p>,
             );
         });
 
@@ -49,7 +49,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
             errorMarkup.push(
                 <p key={v4()}>
                     <span className={classes.indent}>{msg}</span>
-                </p>
+                </p>,
             );
         });
     } else if (isErrorWithMessages(state.errorDetails)) {
@@ -57,7 +57,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
             errorMarkup.push(
                 <p key={v4()}>
                     <span className={classes.indent}>{msg}</span>
-                </p>
+                </p>,
             );
         });
     } else if (typeof state.errorDetails === 'object') {
@@ -66,7 +66,7 @@ export const ErrorDisplay: React.FunctionComponent<ErrorDisplayProps> = ({}) => 
                 <p key={key}>
                     <b>{key}:</b>
                     <span className={classes.indent}>{JSON.stringify(state.errorDetails[key])}</span>
-                </p>
+                </p>,
             );
         });
     } else {

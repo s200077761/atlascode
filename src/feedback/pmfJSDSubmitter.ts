@@ -101,7 +101,7 @@ export async function submitJSDPMF(pmfData: PMFData) {
             },
             data: JSON.stringify(payload),
             ...getAgent(),
-        }
+        },
     );
 
     window.showInformationMessage('The Atlassian team thanks you for your feedback!');
@@ -196,7 +196,7 @@ export async function submitLegacyJSDPMF(feedback: LegacyPMFData) {
             },
             data: JSON.stringify(payload),
             ...getAgent(),
-        }
+        },
     );
 
     window.showInformationMessage('The Atlassian team thanks you for your feedback!');

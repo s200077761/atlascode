@@ -30,5 +30,5 @@ export const BasicPanel: React.FunctionComponent<BasicPanelProps> = memo(
                 </ExpansionPanel>
             </Box>
         );
-    }
+    },
 );

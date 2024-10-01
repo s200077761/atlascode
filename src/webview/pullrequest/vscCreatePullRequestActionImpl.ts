@@ -60,9 +60,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
         return repoData;
     }
 
-    async getRepoScmState(
-        wsRepo: WorkspaceRepo
-    ): Promise<{
+    async getRepoScmState(wsRepo: WorkspaceRepo): Promise<{
         localBranches: Branch[];
         remoteBranches: Branch[];
         hasSubmodules: boolean;
@@ -116,7 +114,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
     async fetchDetails(
         wsRepo: WorkspaceRepo,
         sourceBranch: Branch,
-        destinationBranch: Branch
+        destinationBranch: Branch,
     ): Promise<[Commit[], FileDiff[]]> {
         const site = wsRepo.mainSiteRemote.site!;
         const sourceBranchName = sourceBranch.name!;
@@ -131,7 +129,7 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
 
         const shell = new Shell(Uri.parse(wsRepo.rootUri).fsPath);
         const diff = await shell.output(
-            `git log --format=${this.commitFormat} ${destinationBranch.name}..${sourceBranchName} -z`
+            `git log --format=${this.commitFormat} ${destinationBranch.name}..${sourceBranchName} -z`,
         );
         const gitCommits = this.parseGitCommits(diff);
 
@@ -239,9 +237,9 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
             //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
             const filePath = numstatWords.slice(2).join(' ');
             const firstLetterOfStatus = namestatusWords[0].slice(0, 1) as FileStatus;
-            const fileStatus = (Object.values(FileStatus).includes(firstLetterOfStatus)
-                ? firstLetterOfStatus
-                : 'X') as FileStatus;
+            const fileStatus = (
+                Object.values(FileStatus).includes(firstLetterOfStatus) ? firstLetterOfStatus : 'X'
+            ) as FileStatus;
             const { lhsFilePath, rhsFilePath } = this.getFilePaths(namestatusWords, fileStatus);
             fileDiffs.push({
                 linesAdded: +numstatWords[0],
@@ -282,14 +280,14 @@ export class VSCCreatePullRequestActionApi implements CreatePullRequestActionApi
     async create(data: SubmitCreateRequestAction): Promise<PullRequest> {
         if (data.pushLocalChanges) {
             Logger.info(
-                `pushing local changes for branch: ${data.sourceBranch.name} to remote: ${data.sourceRemoteName} `
+                `pushing local changes for branch: ${data.sourceBranch.name} to remote: ${data.sourceRemoteName} `,
             );
             const scm = Container.bitbucketContext.getRepositoryScm(data.workspaceRepo.rootUri)!;
             await scm.push(data.sourceRemoteName, data.sourceBranch.name);
         }
 
         const destinationSiteRemote = data.workspaceRepo.siteRemotes.find(
-            (r) => r.remote.name === data.destinationBranch.remote
+            (r) => r.remote.name === data.destinationBranch.remote,
         )!;
         // fallback to mainSite remote if destinationSiteRemote is not passed
         const site = destinationSiteRemote?.site ?? data.workspaceRepo.mainSiteRemote.site;

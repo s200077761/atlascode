@@ -36,7 +36,7 @@ export function replaceCommentInHierarchy(comments: Comment[], updatedComment: C
                 //Therefore, we must be careful to carry over these properties. Note that it is not sufficient generalize with ...c, ...updatedComment,
                 //because these properties are defined but empty in updatedComment, so they will be overwritten as empty.
                 comments.map((c) =>
-                    c.id === updatedComment.id ? { ...updatedComment, children: c.children, tasks: c.tasks } : c
+                    c.id === updatedComment.id ? { ...updatedComment, children: c.children, tasks: c.tasks } : c,
                 ),
                 true,
             ];

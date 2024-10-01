@@ -55,7 +55,7 @@ type MergeDialogProps = {
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
     ) => void;
 };
 
@@ -73,12 +73,10 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     const [commitMessage, setCommitMessage] = useState<string>('');
     const [mergeStrategy, setMergeStrategy] = useState<MergeStrategy>(emptyMergeStrategy);
     const [isMerging, setIsMerging] = useState<boolean>(false);
-    const [transitionedJiraIssues, setTransitionedJiraIssues] = useState<MinimalIssue<DetailedSiteInfo>[]>(
-        relatedJiraIssues
-    );
-    const [transitionedBitbucketIssues, setTransitionedBitbucketIssues] = useState<BitbucketIssue[]>(
-        relatedBitbucketIssues
-    );
+    const [transitionedJiraIssues, setTransitionedJiraIssues] =
+        useState<MinimalIssue<DetailedSiteInfo>[]>(relatedJiraIssues);
+    const [transitionedBitbucketIssues, setTransitionedBitbucketIssues] =
+        useState<BitbucketIssue[]>(relatedBitbucketIssues);
     const [jiraIssuesToTransition] = useState<Map<string, boolean>>(new Map<string, boolean>());
     const [bitbucketIssuesToTransition] = useState<Map<string, boolean>>(new Map<string, boolean>());
     const [closeSourceBranch, setCloseSourceBranch] = useState<boolean>(true);
@@ -86,7 +84,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
     const handleMerge = useCallback(() => {
         const jiraIssues = transitionedJiraIssues.filter((issue) => jiraIssuesToTransition.get(issue.id));
         const bitbucketIssues = transitionedBitbucketIssues.filter((issue) =>
-            bitbucketIssuesToTransition.get(issue.data.id)
+            bitbucketIssuesToTransition.get(issue.data.id),
         );
         setIsMerging(true);
         merge(mergeStrategy, commitMessage, closeSourceBranch, [...jiraIssues, ...bitbucketIssues]);
@@ -115,7 +113,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setMergeStrategy(event.target.value);
         },
-        []
+        [],
     );
 
     const handleCommitMessageChange = useCallback((text: string) => {
@@ -161,7 +159,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
 
             return defaultCommitMessage;
         },
-        [commits, prData]
+        [commits, prData],
     );
 
     const handleJiraIssueTransition = useCallback(
@@ -181,7 +179,7 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
 
             setTransitionedJiraIssues(newTransitionedIssues);
         },
-        [transitionedJiraIssues]
+        [transitionedJiraIssues],
     );
 
     const handleBitbucketIssueTransition = useCallback(
@@ -197,26 +195,27 @@ export const MergeDialog: React.FC<MergeDialogProps> = ({
 
             setTransitionedBitbucketIssues(newTransitionedIssues);
         },
-        [transitionedBitbucketIssues]
+        [transitionedBitbucketIssues],
     );
 
     const handleShouldTransitionChangeJira = useCallback(
         (issueId: string, shouldTransition: boolean) => {
             jiraIssuesToTransition.set(issueId, shouldTransition);
         },
-        [jiraIssuesToTransition]
+        [jiraIssuesToTransition],
     );
 
     const handleShouldTransitionChangeBitbucket = useCallback(
         (issueId: string, shouldTransition: boolean) => {
             bitbucketIssuesToTransition.set(issueId, shouldTransition);
         },
-        [bitbucketIssuesToTransition]
+        [bitbucketIssuesToTransition],
     );
 
-    const handleCloseSourceBranchChange = useCallback(() => setCloseSourceBranch(!closeSourceBranch), [
-        closeSourceBranch,
-    ]);
+    const handleCloseSourceBranchChange = useCallback(
+        () => setCloseSourceBranch(!closeSourceBranch),
+        [closeSourceBranch],
+    );
 
     useEffect(() => {
         relatedJiraIssues.forEach((issue) => jiraIssuesToTransition.set(issue.id, true));

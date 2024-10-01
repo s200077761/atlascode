@@ -23,7 +23,7 @@ const useStyles = makeStyles(
             indent: {
                 marginLeft: theme.spacing(3),
             },
-        } as const)
+        }) as const,
 );
 
 export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> = memo(
@@ -174,5 +174,5 @@ export const PipelinesExplorer: React.FunctionComponent<PipelinesExplorerProps> 
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

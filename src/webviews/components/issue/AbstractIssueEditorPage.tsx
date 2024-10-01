@@ -98,7 +98,7 @@ export abstract class AbstractIssueEditorPage<
     EA extends CommonEditorPageEmit,
     ER,
     EP,
-    ES extends CommonEditorViewState
+    ES extends CommonEditorViewState,
 > extends WebviewComponent<EA, ER, EP, ES> {
     abstract getProjectKey(): string;
     abstract fetchUsers: (input: string) => Promise<any[]>;
@@ -274,7 +274,7 @@ export abstract class AbstractIssueEditorPage<
                         },
                         'issueSuggestionsList',
                         ConnectionTimeout,
-                        nonce
+                        nonce,
                     );
                     resolve((listEvent as IssueSuggestionsList).issues);
                 } catch (e) {
@@ -305,7 +305,7 @@ export abstract class AbstractIssueEditorPage<
                         },
                         'selectOptionsList',
                         ConnectionTimeout,
-                        nonce
+                        nonce,
                     );
 
                     this.setState({ isSomethingLoading: false });
@@ -340,7 +340,7 @@ export abstract class AbstractIssueEditorPage<
                         },
                         'optionCreated',
                         ConnectionTimeout,
-                        nonce
+                        nonce,
                     );
 
                     this.setState({
@@ -416,7 +416,7 @@ export abstract class AbstractIssueEditorPage<
                                             },
                                             'getImageDone',
                                             ConnectionTimeout,
-                                            nonce
+                                            nonce,
                                         )
                                     ).imgData;
                                 }}
@@ -689,13 +689,13 @@ export abstract class AbstractIssueEditorPage<
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select"
                                                 components={SelectFieldHelper.getComponentsForValueType(
-                                                    ValueType.IssueLinks
+                                                    ValueType.IssueLinks,
                                                 )}
                                                 getOptionLabel={SelectFieldHelper.labelFuncForValueType(
-                                                    ValueType.IssueLinks
+                                                    ValueType.IssueLinks,
                                                 )}
                                                 getOptionValue={SelectFieldHelper.valueFuncForValueType(
-                                                    ValueType.IssueLinks
+                                                    ValueType.IssueLinks,
                                                 )}
                                                 placeholder="Select link type"
                                                 isDisabled={this.state.isSomethingLoading}
@@ -708,7 +708,7 @@ export abstract class AbstractIssueEditorPage<
                                                             ...{ key: `${field.key}.type` },
                                                         };
                                                         this.handleInlineEdit(subField, val);
-                                                    }
+                                                    },
                                                 )}
                                             />
                                             {errDiv}
@@ -741,7 +741,7 @@ export abstract class AbstractIssueEditorPage<
                                                         ...{ key: `${field.key}.issue` },
                                                     };
                                                     this.handleInlineEdit(subField, val);
-                                                }
+                                                },
                                             )}
                                             components={{
                                                 Option: SelectFieldHelper.IssueSuggestionOption,
@@ -883,7 +883,7 @@ export abstract class AbstractIssueEditorPage<
                                                     fieldArgs.fieldProps.onChange,
                                                     (selected: any) => {
                                                         this.handleSelectChange(selectField, selected);
-                                                    }
+                                                    },
                                                 )}
                                             />
                                             {errDiv}
@@ -953,7 +953,7 @@ export abstract class AbstractIssueEditorPage<
                                                     fieldArgs.fieldProps.onChange,
                                                     (selected: any) => {
                                                         this.handleSelectChange(selectField, selected);
-                                                    }
+                                                    },
                                                 )}
                                             />
                                             {errDiv}
@@ -1018,7 +1018,7 @@ export abstract class AbstractIssueEditorPage<
                                                     fieldArgs.fieldProps.onChange,
                                                     (selected: any) => {
                                                         this.handleSelectChange(selectField, selected);
-                                                    }
+                                                    },
                                                 )}
                                                 loadOptions={async (input: any) =>
                                                     await this.loadSelectOptionsForField(field as SelectFieldUI, input)
@@ -1108,7 +1108,7 @@ export abstract class AbstractIssueEditorPage<
                                                     fieldArgs.fieldProps.onChange,
                                                     (selected: any) => {
                                                         this.handleSelectChange(selectField, selected);
-                                                    }
+                                                    },
                                                 )}
                                                 loadOptions={async (input: any) =>
                                                     await this.loadSelectOptionsForField(field as SelectFieldUI, input)
@@ -1170,7 +1170,7 @@ export abstract class AbstractIssueEditorPage<
                                     />
                                 );
                             }}
-                        </CheckboxField>
+                        </CheckboxField>,
                     );
                 });
 
@@ -1289,7 +1289,7 @@ export abstract class AbstractIssueEditorPage<
                                                         ...{ key: `${field.key}.originalEstimate` },
                                                     };
                                                     this.handleInlineInputEdit(subField, val);
-                                                }
+                                                },
                                             )}
                                             className="ac-inputField"
                                         />
@@ -1324,7 +1324,7 @@ export abstract class AbstractIssueEditorPage<
                                                         ...{ key: `${field.key}.remainingEstimate` },
                                                     };
                                                     this.handleInlineInputEdit(subField, val);
-                                                }
+                                                },
                                             )}
                                             className="ac-inputField"
                                         />
@@ -1388,7 +1388,7 @@ export abstract class AbstractIssueEditorPage<
                                                                     ...{ key: `${field.key}.timeSpent` },
                                                                 };
                                                                 this.handleInlineInputEdit(subField, val);
-                                                            }
+                                                            },
                                                         )}
                                                         className="ac-inputField"
                                                     />
@@ -1423,7 +1423,7 @@ export abstract class AbstractIssueEditorPage<
                                                                     ...{ key: `${field.key}.newEstimate` },
                                                                 };
                                                                 this.handleInlineInputEdit(subField, val);
-                                                            }
+                                                            },
                                                         )}
                                                         className="ac-inputField"
                                                     />
@@ -1468,7 +1468,7 @@ export abstract class AbstractIssueEditorPage<
                                                                 ...{ key: `${field.key}.started` },
                                                             };
                                                             this.handleInlineEdit(subField, val);
-                                                        }
+                                                        },
                                                     )}
                                                 />
                                                 {errDiv}
@@ -1497,7 +1497,7 @@ export abstract class AbstractIssueEditorPage<
                                                             ...{ key: `${field.key}.comment` },
                                                         };
                                                         this.handleInlineInputEdit(subField, val);
-                                                    }
+                                                    },
                                                 )}
                                             />
                                         );

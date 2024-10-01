@@ -14,7 +14,7 @@ export class VSCCreateBitbucketIssueWebviewControllerFactory implements VSCWebvi
     constructor(
         private api: CreateBitbucketIssueActionApi,
         private commonHandler: CommonActionMessageHandler,
-        private analytics: AnalyticsApi
+        private analytics: AnalyticsApi,
     ) {}
 
     public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
@@ -26,14 +26,14 @@ export class VSCCreateBitbucketIssueWebviewControllerFactory implements VSCWebvi
     }
 
     public createController(
-        postMessage: PostMessageFunc
+        postMessage: PostMessageFunc,
     ): [CreateBitbucketIssueWebviewController, Disposable | undefined];
 
     public createController(postMessage: PostMessageFunc): CreateBitbucketIssueWebviewController;
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: BitbucketSite
+        factoryData?: BitbucketSite,
     ): CreateBitbucketIssueWebviewController | [CreateBitbucketIssueWebviewController, Disposable | undefined] {
         if (!factoryData) {
             throw new Error('Error creating Bitbucket issue webview');
@@ -44,7 +44,7 @@ export class VSCCreateBitbucketIssueWebviewControllerFactory implements VSCWebvi
             this.api,
             this.commonHandler,
             Logger.Instance,
-            this.analytics
+            this.analytics,
         );
 
         return [controller, undefined];

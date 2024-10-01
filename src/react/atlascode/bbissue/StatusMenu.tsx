@@ -37,7 +37,7 @@ const StatusMenu: React.FC<StatusMenuProps> = (props: StatusMenuProps) => {
                 setLoading(false);
             }
         },
-        [props]
+        [props],
     );
 
     const theme = useTheme<Theme>();

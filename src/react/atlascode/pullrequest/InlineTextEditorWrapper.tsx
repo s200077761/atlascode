@@ -33,7 +33,7 @@ export const InlineTextEditorWrapper: React.FunctionComponent<InlineTextEditorWr
             onSave(text);
             setEditMode(false);
         },
-        [onSave]
+        [onSave],
     );
 
     const handleClick = useCallback(() => {

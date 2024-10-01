@@ -146,7 +146,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
     }, []);
 
     const [postMessage, postMessagePromise] = useMessagingApi<CreatePullRequestAction, CreatePullRequestMessage, {}>(
-        onMessageHandler
+        onMessageHandler,
     );
 
     const fetchUsers = useCallback(
@@ -176,7 +176,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
                             CreatePullRequestMessageType.FetchUsersResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as FetchUsersResponseMessage).users);
                     } catch (e) {
@@ -185,7 +185,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                 })();
             });
         },
-        [postMessage, postMessagePromise]
+        [postMessage, postMessagePromise],
     );
 
     const fetchIssue = useCallback(
@@ -193,7 +193,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
             dispatch({ type: CreatePullRequestUIActionType.LocalChange, data: { issue: undefined } });
             postMessage({ type: CreatePullRequestActionType.FetchIssue, branchName });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const fetchDetails = useCallback(
@@ -201,14 +201,14 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
             dispatch({ type: CreatePullRequestUIActionType.LocalChange, data: { commits: [], fileDiffs: [] } });
             postMessage({ type: CreatePullRequestActionType.FetchDetails, sourceBranch, destinationBranch });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const openDiff = useCallback(
         (fileDiff: FileDiff): void => {
             postMessage({ type: CreatePullRequestActionType.OpenDiff, fileDiff });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const submit = useCallback(
@@ -222,7 +222,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                                 ...data,
                             },
                             CreatePullRequestMessageType.SubmitResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as SubmitResponseMessage).pr);
                     } catch (e) {
@@ -231,7 +231,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const sendRefresh = useCallback((): void => {
@@ -246,7 +246,7 @@ export function useCreatePullRequestController(): [CreatePullRequestState, Creat
                 source: WebViewID.CreatePullRequest,
                 linkId: linkId,
             }),
-        [postMessage]
+        [postMessage],
     );
 
     const controllerApi = useMemo<CreatePullRequestControllerApi>((): CreatePullRequestControllerApi => {

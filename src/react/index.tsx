@@ -17,30 +17,32 @@ declare var __webpack_public_path__: string;
 __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
-    atlascodeSettingsV2: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage')
+    atlascodeSettingsV2: React.lazy(
+        () => import(/* webpackChunkName: "atlascodeSettingsV2" */ './atlascode/config/ConfigPage'),
     ),
-    atlascodeOnboardingV2: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage')
+    atlascodeOnboardingV2: React.lazy(
+        () => import(/* webpackChunkName: "atlascodeOnboardingV2" */ './atlascode/onboarding/OnboardingPage'),
     ),
-    bitbucketIssuePageV2: React.lazy(() =>
-        import(/* webpackChunkName: "bitbucketIssuePageV2" */ './atlascode/bbissue/BitbucketIssuePage')
+    bitbucketIssuePageV2: React.lazy(
+        () => import(/* webpackChunkName: "bitbucketIssuePageV2" */ './atlascode/bbissue/BitbucketIssuePage'),
     ),
-    createBitbucketIssuePageV2: React.lazy(() =>
-        import(/* webpackChunkName: "createBitbucketIssuePageV2" */ './atlascode/bbissue/CreateBitbucketIssuePage')
+    createBitbucketIssuePageV2: React.lazy(
+        () =>
+            import(/* webpackChunkName: "createBitbucketIssuePageV2" */ './atlascode/bbissue/CreateBitbucketIssuePage'),
     ),
     welcomePageV2: React.lazy(() => import(/* webpackChunkName: "welcomePageV2" */ './atlascode/welcome/Welcome')),
-    startWorkPageV2: React.lazy(() =>
-        import(/* webpackChunkName: "startWorkPageV2" */ './atlascode/startwork/StartWorkPage')
+    startWorkPageV2: React.lazy(
+        () => import(/* webpackChunkName: "startWorkPageV2" */ './atlascode/startwork/StartWorkPage'),
     ),
-    pipelineSummaryV2: React.lazy(() =>
-        import(/* webpackChunkName: "pipelineSummaryV2" */ './atlascode/pipelines/PipelineSummaryPage')
+    pipelineSummaryV2: React.lazy(
+        () => import(/* webpackChunkName: "pipelineSummaryV2" */ './atlascode/pipelines/PipelineSummaryPage'),
     ),
-    pullRequestDetailsPageV2: React.lazy(() =>
-        import(/* webpackChunkName: "pullRequestDetailsPageV2" */ './atlascode/pullrequest/PullRequestDetailsPage')
+    pullRequestDetailsPageV2: React.lazy(
+        () =>
+            import(/* webpackChunkName: "pullRequestDetailsPageV2" */ './atlascode/pullrequest/PullRequestDetailsPage'),
     ),
-    createPullRequestPageV2: React.lazy(() =>
-        import(/* webpackChunkName: "createPullRequestPageV2" */ './atlascode/pullrequest/CreatePullRequestPage')
+    createPullRequestPageV2: React.lazy(
+        () => import(/* webpackChunkName: "createPullRequestPageV2" */ './atlascode/pullrequest/CreatePullRequestPage'),
     ),
 };
 

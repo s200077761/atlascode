@@ -21,14 +21,14 @@ export interface ConfigActionApi {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortKey?: string
+        abortKey?: string,
     ) => Promise<AutocompleteSuggestion[]>;
     fetchFilterSearchResults: (
         site: DetailedSiteInfo,
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortKey?: string
+        abortKey?: string,
     ) => Promise<FilterSearchResults>;
     validateJql: (site: DetailedSiteInfo, jql: string, abortKey?: string) => Promise<JQLErrors>;
     updateSettings(target: ConfigTarget, changes: { [key: string]: any }, removes?: string[]): Promise<void>;

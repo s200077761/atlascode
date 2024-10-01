@@ -23,7 +23,7 @@ export const BitbucketIssuesPanel: React.FunctionComponent<BitbucketIssuesPanelP
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Issues, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -55,5 +55,5 @@ export const BitbucketIssuesPanel: React.FunctionComponent<BitbucketIssuesPanelP
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

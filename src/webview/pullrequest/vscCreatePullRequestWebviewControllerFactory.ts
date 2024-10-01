@@ -14,7 +14,7 @@ export class VSCCreatePullRequestWebviewControllerFactory implements VSCWebviewC
     constructor(
         private api: CreatePullRequestActionApi,
         private commonHandler: CommonActionMessageHandler,
-        private analytics: AnalyticsApi
+        private analytics: AnalyticsApi,
     ) {}
 
     public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
@@ -31,7 +31,7 @@ export class VSCCreatePullRequestWebviewControllerFactory implements VSCWebviewC
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: WorkspaceRepo
+        factoryData?: WorkspaceRepo,
     ): CreatePullRequestWebviewController | [CreatePullRequestWebviewController, Disposable | undefined] {
         const controller = new CreatePullRequestWebviewController(
             postMessage,
@@ -39,7 +39,7 @@ export class VSCCreatePullRequestWebviewControllerFactory implements VSCWebviewC
             this.commonHandler,
             Logger.Instance,
             this.analytics,
-            factoryData
+            factoryData,
         );
 
         return [controller, undefined];

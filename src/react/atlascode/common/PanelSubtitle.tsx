@@ -14,7 +14,7 @@ const useStyles = makeStyles(
                 fontSize: theme.typography.pxToRem(14),
                 fontStyle: 'italic',
             },
-        } as const)
+        }) as const,
 );
 
 export const PanelSubtitle: React.FC<PanelSubtitleProps> = memo(({ children, className, ...other }) => {

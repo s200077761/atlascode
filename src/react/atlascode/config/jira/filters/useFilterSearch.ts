@@ -10,14 +10,14 @@ export type FilterFetcher = (
     query: string,
     maxResults?: number,
     startAt?: number,
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
 ) => Promise<FilterSearchResults>;
 
 export const useFilterSearch = (
     fetcher: FilterFetcher,
     site: DetailedSiteInfo,
     startAt: number = 0,
-    maxResults?: number
+    maxResults?: number,
 ) => {
     const [inputText, setInputText] = useState('');
 
@@ -29,13 +29,13 @@ export const useFilterSearch = (
                 text: string,
                 maxResults?: number,
                 startAt?: number,
-                abortSignal?: AbortSignal
+                abortSignal?: AbortSignal,
             ): Promise<FilterSearchResults> => {
                 return await fetcher(site, text, maxResults, startAt, abortSignal);
             },
             300,
-            { leading: true }
-        )
+            { leading: true },
+        ),
     );
 
     const filterSearch = useAsyncAbortable(
@@ -43,7 +43,7 @@ export const useFilterSearch = (
             return debouncedSearch(fetcher, site, inputText, maxResults, startAt, abortSignal);
         },
         [inputText, site, startAt, maxResults],
-        { setLoading: (state) => ({ ...state, loading: true }) }
+        { setLoading: (state) => ({ ...state, loading: true }) },
     );
 
     return {

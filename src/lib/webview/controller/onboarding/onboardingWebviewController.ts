@@ -30,7 +30,7 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
         commonHandler: CommonActionMessageHandler,
         logger: Logger,
         analytics: AnalyticsApi,
-        onboardingUrl: string
+        onboardingUrl: string,
     ) {
         this._messagePoster = messagePoster;
         this._api = api;

@@ -39,7 +39,7 @@ export const FeedbackDialogButton: React.FunctionComponent<FeedbackDialogButtonP
             setFormOpen(false);
             reset();
         },
-        [postMessageFunc, reset]
+        [postMessageFunc, reset],
     );
 
     const handleDialogClose = useCallback(() => {

@@ -92,7 +92,7 @@ export async function submitFeedback(feedback: FeedbackData) {
             },
             data: JSON.stringify(payload),
             ...getAgent(),
-        }
+        },
     );
 
     window.showInformationMessage('The Atlassian team thanks you for your feedback!');

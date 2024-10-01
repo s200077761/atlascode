@@ -104,7 +104,7 @@ export async function issueUpdatedEvent(
     site: DetailedSiteInfo,
     issueKey: string,
     fieldName: string,
-    fieldKey: string
+    fieldKey: string,
 ): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'updated', 'issue', {
         actionSubjectId: issueKey,
@@ -217,7 +217,7 @@ export async function externalLinkEvent(source: string, linkId: string): Promise
 export async function viewScreenEvent(
     screenName: string,
     site?: DetailedSiteInfo,
-    product?: Product
+    product?: Product,
 ): Promise<ScreenEvent> {
     let screenEvent = instanceType(
         {
@@ -225,7 +225,7 @@ export async function viewScreenEvent(
             platform: AnalyticsPlatform.for(process.platform),
         },
         site,
-        product
+        product,
     );
 
     if (screenName === 'atlascodeWelcomeScreen') {
@@ -559,7 +559,7 @@ async function instanceTrackEvent(
     site: DetailedSiteInfo,
     action: string,
     actionSubject: string,
-    eventProps: any = {}
+    eventProps: any = {},
 ): Promise<TrackEvent> {
     let event: TrackEvent =
         site.isCloud && site.product.key === ProductJira.key
@@ -582,7 +582,7 @@ async function tenantTrackEvent(
     tenentId: string,
     action: string,
     actionSubject: string,
-    eventProps: any = {}
+    eventProps: any = {},
 ): Promise<TrackEvent> {
     const e = {
         tenantIdType: 'cloudId',

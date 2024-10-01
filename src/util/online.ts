@@ -87,14 +87,14 @@ export class OnlineDetector extends Disposable {
                         Logger.debug(`Online check connected to ${url}`);
                         return true;
                     })();
-                })
+                }),
             );
 
         return await pRetry<boolean>(promise, {
             retries: 4,
             onFailedAttempt: (error) => {
                 Logger.debug(
-                    `Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`
+                    `Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`,
                 );
             },
         } as pRetry.Options).catch(() => false);

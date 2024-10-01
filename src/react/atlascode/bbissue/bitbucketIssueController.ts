@@ -150,7 +150,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
     }, []);
 
     const [postMessage, postMessagePromise] = useMessagingApi<BitbucketIssueAction, BitbucketIssueMessage, {}>(
-        onMessageHandler
+        onMessageHandler,
     );
 
     const updateStatus = useCallback(
@@ -161,7 +161,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                         const response = await postMessagePromise(
                             { type: BitbucketIssueActionType.UpdateStatusRequest, status: status },
                             BitbucketIssueMessageType.UpdateStatusResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as UpdateStatusResponseMessage).status);
                     } catch (e) {
@@ -170,7 +170,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const postComment = useCallback(
@@ -181,7 +181,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                         const response = await postMessagePromise(
                             { type: BitbucketIssueActionType.AddCommentRequest, content: content },
                             BitbucketIssueMessageType.AddCommentResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as AddCommentResponseMessage).comment);
                     } catch (e) {
@@ -190,7 +190,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const assign = useCallback(
@@ -201,7 +201,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                         const response = await postMessagePromise(
                             { type: BitbucketIssueActionType.AssignRequest, accountId: accountId },
                             BitbucketIssueMessageType.AssignResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as AssignResponseMessage).assignee);
                     } catch (e) {
@@ -210,7 +210,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const fetchUsers = useCallback(
@@ -239,7 +239,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
                             BitbucketIssueMessageType.FetchUsersResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as FetchUsersResponseMessage).users);
                     } catch (e) {
@@ -248,7 +248,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 })();
             });
         },
-        [postMessage, postMessagePromise]
+        [postMessage, postMessagePromise],
     );
 
     const applyChange = useCallback(
@@ -258,7 +258,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 data: change,
             });
         },
-        [dispatch]
+        [dispatch],
     );
 
     const startWork = useCallback(() => {
@@ -271,7 +271,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
 
     const copyLink = useCallback(
         (url: string) => postMessage({ type: CommonActionType.CopyLink, linkType: 'bbIssue', url }),
-        [postMessage]
+        [postMessage],
     );
 
     const sendRefresh = useCallback((): void => {
@@ -286,7 +286,7 @@ export function useBitbucketIssueController(): [BitbucketIssueState, BitbucketIs
                 source: WebViewID.BitbucketIssueWebview,
                 linkId: linkId,
             }),
-        [postMessage]
+        [postMessage],
     );
 
     const controllerApi = useMemo<BitbucketIssueControllerApi>((): BitbucketIssueControllerApi => {

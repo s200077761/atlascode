@@ -11,7 +11,7 @@ export class VSCCreateBitbucketIssueActionImpl implements CreateBitbucketIssueAc
         title: string,
         description: string,
         kind: string,
-        priority: string
+        priority: string,
     ): Promise<BitbucketIssue> {
         const bbApi = await clientForSite(site);
         const issue = await bbApi.issues!.create(site, title, description, kind, priority);

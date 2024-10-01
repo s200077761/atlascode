@@ -50,34 +50,30 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
         const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
 
         const jiraSites = await Promise.all(
-            jiraSitesAvailable.map(
-                async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                    const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite);
-                    return {
-                        site: jiraSite,
-                        auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
-                    };
-                }
-            )
+            jiraSitesAvailable.map(async (jiraSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
+                const jiraAuth = await Container.credentialManager.getAuthInfo(jiraSite);
+                return {
+                    site: jiraSite,
+                    auth: jiraAuth ? jiraAuth : jiraSite.isCloud ? emptyAuthInfo : emptyBasicAuthInfo,
+                };
+            }),
         );
 
         const bitbucketSites = await Promise.all(
-            bitbucketSitesAvailable.map(
-                async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
-                    let authInfo = await Container.credentialManager.getAuthInfo(bitbucketSite);
-                    if (!authInfo) {
-                        if (bitbucketSite.isCloud) {
-                            authInfo = emptyAuthInfo;
-                        } else {
-                            authInfo = emptyBasicAuthInfo;
-                        }
+            bitbucketSitesAvailable.map(async (bitbucketSite: DetailedSiteInfo): Promise<SiteWithAuthInfo> => {
+                let authInfo = await Container.credentialManager.getAuthInfo(bitbucketSite);
+                if (!authInfo) {
+                    if (bitbucketSite.isCloud) {
+                        authInfo = emptyAuthInfo;
+                    } else {
+                        authInfo = emptyBasicAuthInfo;
                     }
-                    return {
-                        site: bitbucketSite,
-                        auth: authInfo,
-                    };
                 }
-            )
+                return {
+                    site: bitbucketSite,
+                    auth: authInfo,
+                };
+            }),
         );
 
         return [jiraSites, bitbucketSites];
@@ -121,7 +117,7 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
     public async updateSettings(
         target: ConfigTarget,
         changes: { [key: string]: any },
-        removes?: string[]
+        removes?: string[],
     ): Promise<void> {
         let vscTarget = ConfigurationTarget.Global;
 
@@ -179,7 +175,7 @@ export class VSCOnboardingActionApi implements OnboardingActionApi {
 
     public openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
         Container.settingsWebviewFactory.createOrShow(
-            section ? { section: section, subSection: subsection } : undefined
+            section ? { section: section, subSection: subsection } : undefined,
         );
     }
 }

@@ -63,7 +63,7 @@ export interface PullRequestDetailsControllerApi {
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
     ) => void;
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => void;
     openBitbucketIssue: (issue: BitbucketIssue) => void;
@@ -97,7 +97,7 @@ export const emptyApi: PullRequestDetailsControllerApi = {
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
     ) => {},
 
     openJiraIssue: (issue: MinimalIssue<DetailedSiteInfo>) => {},
@@ -164,7 +164,7 @@ export type PullRequestDetailsUIAction =
 
 function pullRequestDetailsReducer(
     state: PullRequestDetailsState,
-    action: PullRequestDetailsUIAction
+    action: PullRequestDetailsUIAction,
 ): PullRequestDetailsState {
     switch (action.type) {
         case PullRequestDetailsUIActionType.Init: {
@@ -368,7 +368,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
 
     const copyLink = useCallback(
         (url: string) => postMessage({ type: CommonActionType.CopyLink, linkType: 'pullRequest', url }),
-        [postMessage]
+        [postMessage],
     );
 
     const fetchUsers = useCallback(
@@ -398,7 +398,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 abortKey: abortSignal ? abortKey : undefined,
                             },
                             PullRequestDetailsMessageType.FetchUsersResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve((response as FetchUsersResponseMessage).users);
                     } catch (e) {
@@ -407,7 +407,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessage, postMessagePromise]
+        [postMessage, postMessagePromise],
     );
 
     const updateSummary = useCallback(
@@ -415,7 +415,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
             postMessage({ type: PullRequestDetailsActionType.UpdateSummaryRequest, text: text });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const updateTitle = useCallback(
@@ -423,7 +423,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
             postMessage({ type: PullRequestDetailsActionType.UpdateTitleRequest, text: text });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const updateReviewers = useCallback(
@@ -437,7 +437,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 reviewers: newReviewers,
                             },
                             PullRequestDetailsMessageType.UpdateReviewersResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -446,7 +446,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const updateApprovalStatus = useCallback(
@@ -454,7 +454,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
             postMessage({ type: PullRequestDetailsActionType.UpdateApprovalStatus, status: status });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const checkoutBranch = useCallback(() => {
@@ -474,7 +474,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 parentId: parentId,
                             },
                             PullRequestDetailsMessageType.PostCommentResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -483,7 +483,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const editComment = useCallback(
@@ -498,7 +498,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 commentId: commentId,
                             },
                             PullRequestDetailsMessageType.EditCommentResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -507,7 +507,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const deleteComment = useCallback(
@@ -521,7 +521,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 comment: comment,
                             },
                             PullRequestDetailsMessageType.DeleteCommentResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -530,7 +530,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const addTask = useCallback(
@@ -545,7 +545,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 commentId: commentId,
                             },
                             PullRequestDetailsMessageType.AddTaskResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -554,7 +554,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const editTask = useCallback(
@@ -568,7 +568,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 task: task,
                             },
                             PullRequestDetailsMessageType.EditTaskResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -577,7 +577,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const deleteTask = useCallback(
@@ -591,7 +591,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                                 task: task,
                             },
                             PullRequestDetailsMessageType.DeleteTaskResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve();
                     } catch (e) {
@@ -600,12 +600,12 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const openDiff = useCallback(
         (fileDiff: FileDiff) => postMessage({ type: PullRequestDetailsActionType.OpenDiffRequest, fileDiff: fileDiff }),
-        [postMessage]
+        [postMessage],
     );
 
     const merge = useCallback(
@@ -613,7 +613,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
             mergeStrategy: MergeStrategy,
             commitMessage: string,
             closeSourceBranch: boolean,
-            issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+            issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
         ) => {
             dispatch({ type: PullRequestDetailsUIActionType.Loading });
             postMessage({
@@ -624,7 +624,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 issues: issues,
             });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const openJiraIssue = useCallback(
@@ -634,7 +634,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 issue: issue,
             });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const openBitbucketIssue = useCallback(
@@ -644,7 +644,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 issue: issue,
             });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const openBuildStatus = useCallback(
@@ -654,7 +654,7 @@ export function usePullRequestDetailsController(): [PullRequestDetailsState, Pul
                 buildStatus: buildStatus,
             });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const controllerApi = useMemo<PullRequestDetailsControllerApi>((): PullRequestDetailsControllerApi => {

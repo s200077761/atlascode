@@ -21,7 +21,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
         api: OnboardingActionApi,
         commonHandler: CommonActionMessageHandler,
         analytics: AnalyticsApi,
-        settingsUrl: string
+        settingsUrl: string,
     ) {
         this._api = api;
         this._commonHandler = commonHandler;
@@ -42,7 +42,7 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
     public createController(postMessage: PostMessageFunc): OnboardingWebviewController;
 
     public createController(
-        postMessage: PostMessageFunc
+        postMessage: PostMessageFunc,
     ): OnboardingWebviewController | [OnboardingWebviewController, Disposable | undefined] {
         const controller = new OnboardingWebviewController(
             postMessage,
@@ -50,11 +50,11 @@ export class VSCOnboardingWebviewControllerFactory implements VSCWebviewControll
             this._commonHandler,
             Logger.Instance,
             this._analytics,
-            this._onboardingUrl
+            this._onboardingUrl,
         );
 
         const disposables = Disposable.from(
-            Container.siteManager.onDidSitesAvailableChange(controller.onSitesChanged, controller)
+            Container.siteManager.onDidSitesAvailableChange(controller.onSitesChanged, controller),
         );
 
         return [controller, disposables];

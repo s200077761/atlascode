@@ -15,7 +15,10 @@ export interface Refreshable {
 export class JiraExplorer extends Explorer implements Refreshable {
     private _disposables: Disposable[] = [];
 
-    constructor(private _id: string, dataProvider: CustomJQLRoot) {
+    constructor(
+        private _id: string,
+        dataProvider: CustomJQLRoot,
+    ) {
         super(() => this.dispose());
         this.treeDataProvider = dataProvider;
         this.newTreeView();
@@ -42,7 +45,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
 
     public async findIssue(
         issueKey: string,
-        jqlRoot?: BaseTreeDataProvider
+        jqlRoot?: BaseTreeDataProvider,
     ): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
         let dp = jqlRoot;
         if (dp === undefined) {
@@ -109,7 +112,7 @@ export class JiraExplorer extends Explorer implements Refreshable {
 
     async findIssueInChildren(
         issueKey: string,
-        parent: IssueNode
+        parent: IssueNode,
     ): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
         let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
         const children = await parent.getChildren();

@@ -29,7 +29,7 @@ export type FormValidation<FieldTypes> = {
     register<Element extends InputElement = InputElement>(validate: ValidateFunc): (ref: Element | null) => void;
     register<Element extends InputElement = InputElement>(
         ref?: Element,
-        validate?: ValidateFunc
+        validate?: ValidateFunc,
     ): ((ref: Element | null) => void) | void;
     watches: Partial<FieldTypes>;
     errors: Partial<Errors<FieldTypes>>;
@@ -74,8 +74,8 @@ const getFieldValue = (field: FieldDescriptor): any => {
         return checkOptions.length > 1
             ? checkOptions.map((opt) => opt.value)
             : checkOptions.length > 0
-            ? (checkOptions[0] as HTMLInputElement).checked
-            : false;
+              ? (checkOptions[0] as HTMLInputElement).checked
+              : false;
     }
 
     return field.inputRef.value;
@@ -128,26 +128,27 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
     });
 
     const handleSubmit = useCallback(
-        (callback: OnSubmit<Partial<FieldTypes>>) => async (e?: React.BaseSyntheticEvent): Promise<void> => {
-            if (e) {
-                e.preventDefault();
-                e.persist();
-            }
-
-            //TODO: add an option to validate all fields before submitting.
-            let fieldValues: Partial<FieldTypes> = {};
-            try {
-                for (const field of Object.values<FieldDescriptor>(fields)) {
-                    if (field) {
-                        fieldValues[field.inputRef.name] = getFieldValue(field);
-                    }
+        (callback: OnSubmit<Partial<FieldTypes>>) =>
+            async (e?: React.BaseSyntheticEvent): Promise<void> => {
+                if (e) {
+                    e.preventDefault();
+                    e.persist();
                 }
-                await callback(fieldValues);
-            } finally {
-                reRender((prevToggle) => !prevToggle);
-            }
-        },
-        [fields]
+
+                //TODO: add an option to validate all fields before submitting.
+                let fieldValues: Partial<FieldTypes> = {};
+                try {
+                    for (const field of Object.values<FieldDescriptor>(fields)) {
+                        if (field) {
+                            fieldValues[field.inputRef.name] = getFieldValue(field);
+                        }
+                    }
+                    await callback(fieldValues);
+                } finally {
+                    reRender((prevToggle) => !prevToggle);
+                }
+            },
+        [fields],
     );
 
     useEffect(() => {
@@ -172,11 +173,11 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                 if (validate) {
                     ref.addEventListener(
                         'input',
-                        AwesomeDebouncePromise(handleChange, 300, { key: (fieldId, text) => fieldId })
+                        AwesomeDebouncePromise(handleChange, 300, { key: (fieldId, text) => fieldId }),
                     );
                     ref.addEventListener(
                         'blur',
-                        AwesomeDebouncePromise(handleChange, 10, { key: (fieldId, text) => fieldId })
+                        AwesomeDebouncePromise(handleChange, 10, { key: (fieldId, text) => fieldId }),
                     );
                 } else {
                     ref.addEventListener('input', handleChange);
@@ -210,11 +211,11 @@ export function useFormValidation<FieldTypes>(watch?: Partial<FieldTypes>): Form
                 }
             }
         },
-        [fields, handleChange]
+        [fields, handleChange],
     );
     function register<Element extends InputElement = InputElement>(): (ref: Element | null) => void;
     function register<Element extends InputElement = InputElement>(
-        refOrValidate?: Element | ValidateFunc
+        refOrValidate?: Element | ValidateFunc,
     ): ((ref: Element | null) => void) | void {
         if (refOrValidate) {
             if (typeof refOrValidate === 'function') {

@@ -29,7 +29,7 @@ export default class ErrorBanner extends React.Component<
                         <span className="force-wrap" style={{ marginLeft: '5px' }}>
                             {this.state.errorDetails.errors[key]}
                         </span>
-                    </p>
+                    </p>,
                 );
             });
 
@@ -39,7 +39,7 @@ export default class ErrorBanner extends React.Component<
                         <span className="force-wrap" style={{ marginLeft: '5px' }}>
                             {msg}
                         </span>
-                    </p>
+                    </p>,
                 );
             });
         } else if (isErrorWithMessages(this.state.errorDetails)) {
@@ -49,7 +49,7 @@ export default class ErrorBanner extends React.Component<
                         <span className="force-wrap" style={{ marginLeft: '5px' }}>
                             {msg}
                         </span>
-                    </p>
+                    </p>,
                 );
             });
         } else if (typeof this.state.errorDetails === 'object') {
@@ -60,7 +60,7 @@ export default class ErrorBanner extends React.Component<
                         <span className="force-wrap" style={{ marginLeft: '5px' }}>
                             {JSON.stringify(this.state.errorDetails[key])}
                         </span>
-                    </p>
+                    </p>,
                 );
             });
         } else {

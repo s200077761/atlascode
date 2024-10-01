@@ -38,7 +38,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
             Container.jqlManager.onDidJQLChange(this.refresh, this),
-            commands.registerCommand(Commands.JiraSearchIssues, this.createIssueQuickPick)
+            commands.registerCommand(Commands.JiraSearchIssues, this.createIssueQuickPick),
         );
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
@@ -106,7 +106,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
                         title: 'Login to Jira',
                         arguments: [ProductJira],
                     },
-                    undefined
+                    undefined,
                 ),
             ]);
         }
@@ -147,7 +147,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
                 childTree.setNumIssues(flattenedIssueList.length);
                 allIssues.push(...flattenedIssueList);
                 return childTree;
-            })
+            }),
         );
         allIssues = [...new Map(allIssues.map((issue) => [issue.key, issue])).values()]; //dedupe
         searchJiraIssuesNode.setIssues(allIssues);

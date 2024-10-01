@@ -24,13 +24,13 @@ export class JiraContext extends Disposable {
         commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
 
         this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () =>
-            this.refresh()
+            this.refresh(),
         );
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             Container.explorerFocusManager.onFocusEvent(this.handleFocusEvent, this),
-            this._refreshTimer
+            this._refreshTimer,
         );
 
         Container.context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));

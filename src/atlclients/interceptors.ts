@@ -36,7 +36,7 @@ export function rewriteSecureImageRequests(transport: AxiosInstance): void {
         function (error) {
             // Do something with request error
             return Promise.reject(error);
-        }
+        },
     );
 }
 

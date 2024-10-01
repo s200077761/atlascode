@@ -8,7 +8,7 @@ export interface PipelinesSummaryActionApi {
         site: BitbucketSite,
         pipelineUuid: string,
         stepUuid: string,
-        range: PipelineLogRange
+        range: PipelineLogRange,
     ): Promise<string>;
     rerunPipeline(pipeline: Pipeline): Promise<any>;
 }

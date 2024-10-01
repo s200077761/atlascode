@@ -66,12 +66,12 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
             return await controller.fetchUsers(state.pr.site, input, abortSignal);
         },
         300,
-        { leading: false }
+        { leading: false },
     );
 
     const isSomethingLoading = useCallback(() => {
         return Object.entries(state.loadState).some(
-            (entry) => entry[1] /* Second index is the value in the key/value pair */
+            (entry) => entry[1] /* Second index is the value in the key/value pair */,
         );
     }, [state.loadState]);
 
@@ -83,7 +83,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
 
     useEffect(() => {
         const foundCurrentUser = state.pr.data.participants.find(
-            (participant) => participant.accountId === state.currentUser.accountId
+            (participant) => participant.accountId === state.currentUser.accountId,
         );
         if (foundCurrentUser) {
             setCurrentUserApprovalStatus(foundCurrentUser.status);

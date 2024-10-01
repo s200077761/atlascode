@@ -7,7 +7,11 @@ import { IssueNode } from './issueNode';
 export class SimpleJiraIssueNode extends IssueNode {
     private command: Command | undefined;
 
-    constructor(private text: string, command?: Command, parent?: AbstractBaseNode | undefined) {
+    constructor(
+        private text: string,
+        command?: Command,
+        parent?: AbstractBaseNode | undefined,
+    ) {
         super(createEmptyMinimalIssue(emptySiteInfo), parent);
         this.command = command;
     }

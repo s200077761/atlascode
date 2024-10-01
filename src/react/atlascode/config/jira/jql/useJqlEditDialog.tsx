@@ -23,7 +23,7 @@ export const useJqlEditDialog = (sites: DetailedSiteInfo[], onSave: (jqlEntry: J
             setJqlEntry(undefined);
             setOpen(false);
         },
-        [onSave]
+        [onSave],
     );
 
     const jqlDialog = useMemo(
@@ -36,7 +36,7 @@ export const useJqlEditDialog = (sites: DetailedSiteInfo[], onSave: (jqlEntry: J
                 sites={sites}
             />
         ),
-        [handleJQLCancel, handleJQLSave, jqlEntry, open, sites]
+        [handleJQLCancel, handleJQLSave, jqlEntry, open, sites],
     );
     return {
         openJqlDialog,

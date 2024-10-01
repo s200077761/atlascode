@@ -31,14 +31,14 @@ export class VSCPullRequestDetailsWebviewControllerFactory implements VSCWebview
     }
 
     public createController(
-        postMessage: PostMessageFunc
+        postMessage: PostMessageFunc,
     ): [PullRequestDetailsWebviewController, Disposable | undefined];
 
     public createController(postMessage: PostMessageFunc): PullRequestDetailsWebviewController;
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: PullRequest
+        factoryData?: PullRequest,
     ): PullRequestDetailsWebviewController | [PullRequestDetailsWebviewController, Disposable | undefined] {
         if (!factoryData) {
             throw new Error('Error creating Pull Request webview');
@@ -49,7 +49,7 @@ export class VSCPullRequestDetailsWebviewControllerFactory implements VSCWebview
             this.api,
             this.commonHandler,
             Logger.Instance,
-            this.analytics
+            this.analytics,
         );
 
         return [controller, undefined];

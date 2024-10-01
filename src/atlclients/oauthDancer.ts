@@ -119,7 +119,7 @@ export class OAuthDancer implements Disposable {
                             errMessage: 'Authorization did not complete in the time alotted.',
                             actionMessage: 'Please try again.',
                             vscodeurl: callback,
-                        })
+                        }),
                     );
                     reject(`Authorization did not complete in the time alotted for '${respEvent.provider}'`);
                     return;
@@ -137,7 +137,7 @@ export class OAuthDancer implements Disposable {
                         const strategy = this._strategiesInFlight.get(respEvent.provider);
                         if (!strategy) {
                             reject(
-                                `Auth failure. No strategy for provider ${respEvent.provider}. There may have been overlapping requests.`
+                                `Auth failure. No strategy for provider ${respEvent.provider}. There may have been overlapping requests.`,
                             );
                         }
                         this._strategiesInFlight.delete(respEvent.provider);
@@ -156,7 +156,7 @@ export class OAuthDancer implements Disposable {
                             Mustache.render(Resources.html.get('authSuccessHtml')!, {
                                 product: product,
                                 vscodeurl: callback,
-                            })
+                            }),
                         );
 
                         const oauthResponse: OAuthResponse = {
@@ -179,7 +179,7 @@ export class OAuthDancer implements Disposable {
                                 errMessage: `Error authenticating with ${provider}: ${err}`,
                                 actionMessage: 'Give it a moment and try again.',
                                 vscodeurl: callback,
-                            })
+                            }),
                         );
 
                         reject(`Error authenticating with ${provider}: ${err}`);
@@ -219,7 +219,7 @@ export class OAuthDancer implements Disposable {
             (): Promise<OAuthResponse> => {
                 vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
                 return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
-            }
+            },
         );
     }
 

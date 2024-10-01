@@ -36,7 +36,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         ]);
 
         const { data: defaultBranch } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches/default`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches/default`,
         );
 
         const repo = ServerRepositoriesApi.toRepo(site, repoData.data, defaultBranch.id, branchingModel);
@@ -71,7 +71,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         }
 
         const { data } = await this.client.get(
-            `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branchmodel`
+            `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branchmodel`,
         );
 
         const result = {
@@ -126,7 +126,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits/${commitHash}/pull-requests`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits/${commitHash}/pull-requests`,
         );
 
         return data.values!.map((pr: any) => pr.id) || [];
@@ -148,7 +148,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         site: BitbucketSite,
         bbRepo: any,
         defaultBranch: string,
-        branchingModel?: BitbucketBranchingModel
+        branchingModel?: BitbucketBranchingModel,
     ): Repo {
         if (!bbRepo) {
             return {

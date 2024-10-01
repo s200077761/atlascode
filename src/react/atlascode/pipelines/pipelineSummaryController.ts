@@ -103,7 +103,7 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
     }, []);
 
     const [postMessage] = useMessagingApi<PipelineSummaryAction, PipelineSummaryMessage, PipelineSummaryResponse>(
-        onMessageHandler
+        onMessageHandler,
     );
 
     const sendRefresh = useCallback((): void => {
@@ -130,7 +130,7 @@ export function usePipelineSummaryController(): [PipelineSummaryState, PipelineS
                 reference: logReference,
             });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const pipelineSummaryApi = useMemo<PipelineSummaryControllerApi>((): PipelineSummaryControllerApi => {

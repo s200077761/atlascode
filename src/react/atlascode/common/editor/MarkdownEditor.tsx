@@ -60,7 +60,7 @@ const buildInputRules = (schema: any) => {
     }
     if (schema.marks.link) {
         rules.push(
-            markInputRule(/(^|[^!])\[(.*?)\]\((\S+)\)$/, schema.marks.link, (match: string[]) => ({ href: match[3] }))
+            markInputRule(/(^|[^!])\[(.*?)\]\((\S+)\)$/, schema.marks.link, (match: string[]) => ({ href: match[3] })),
         );
     }
     rules.push(
@@ -69,13 +69,13 @@ const buildInputRules = (schema: any) => {
             /^(\d+)\.\s$/,
             schema.nodes.ordered_list,
             (match: string[]) => ({ order: +match[1] }),
-            (match: string[], node: any) => node.childCount + node.attrs.order === +match[1]
+            (match: string[], node: any) => node.childCount + node.attrs.order === +match[1],
         ),
         wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list),
         textblockTypeInputRule(/^```$/, schema.nodes.code_block),
         textblockTypeInputRule(new RegExp('^(#{1,6})\\s$'), schema.nodes.heading, (match: string[]) => ({
             level: match[1].length,
-        }))
+        })),
     );
     return rules;
 };
@@ -93,7 +93,7 @@ const mdSerializer = new MarkdownSerializer(
             state.write(node.attrs.id);
         },
     },
-    defaultMarkdownSerializer.marks
+    defaultMarkdownSerializer.marks,
 );
 
 const mdParser = new MarkdownParser(schema, defaultMarkdownParser.tokenizer, {
@@ -139,7 +139,7 @@ const useStyles = makeStyles(
                     borderWidth: 2,
                 },
             },
-        } as const)
+        }) as const,
 );
 
 interface PropsType {
@@ -165,7 +165,7 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
 
     const handlePlainTextChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: string }>) => setContent(event.target.value),
-        []
+        [],
     );
 
     const clearEditor = useCallback(() => {
@@ -238,7 +238,7 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                                     name: u.displayName,
                                     id: u.mention,
                                     email: u.emailAddress || '',
-                                }))
+                                })),
                             );
                         }
                     },
@@ -249,7 +249,7 @@ export const MarkdownEditor: React.FC<PropsType> = (props: PropsType) => {
                             return <></>;
                         }
                     },
-                })
+                }),
             );
         }
 

@@ -27,7 +27,7 @@ It basically abstracts away the details of dealing with the workspace settings d
 export class Configuration extends Disposable {
     static configure(context: ExtensionContext) {
         context.subscriptions.push(
-            workspace.onDidChangeConfiguration(configuration.onConfigurationChanged, configuration)
+            workspace.onDidChangeConfiguration(configuration.onConfigurationChanged, configuration),
         );
     }
 
@@ -84,7 +84,7 @@ export class Configuration extends Disposable {
     // inspect returns details of the given config section
     inspect<T>(
         section?: string,
-        resource?: Uri | null
+        resource?: Uri | null,
     ): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } {
         const inspect = workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
@@ -98,7 +98,7 @@ export class Configuration extends Disposable {
         section: string,
         value: any,
         target: ConfigurationTarget,
-        resource?: Uri | null
+        resource?: Uri | null,
     ): Promise<void> {
         const inspect = this.inspect(section, resource);
         if (

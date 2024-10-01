@@ -39,7 +39,7 @@ export class LoginManager {
     constructor(
         private _credentialManager: CredentialManager,
         private _siteManager: SiteManager,
-        private _analyticsClient: AnalyticsClient
+        private _analyticsClient: AnalyticsClient,
     ) {
         this._bitbucketAuthenticator = new BitbucketAuthenticator();
         this._jiraAuthenticator = new JiraAuthenticator();
@@ -71,7 +71,7 @@ export class LoginManager {
                 site.product,
                 provider,
                 resp.user.id,
-                resp.accessibleResources
+                resp.accessibleResources,
             );
 
             siteDetails.forEach(async (siteInfo) => {
@@ -91,7 +91,7 @@ export class LoginManager {
         product: Product,
         provider: OAuthProvider,
         userId: string,
-        resources: AccessibleResource[]
+        resources: AccessibleResource[],
     ): Promise<DetailedSiteInfo[]> {
         switch (product.key) {
             case ProductBitbucket.key:
@@ -145,7 +145,7 @@ export class LoginManager {
 
     private async saveDetailsForServerSite(
         site: SiteInfo,
-        credentials: BasicAuthInfo | PATAuthInfo
+        credentials: BasicAuthInfo | PATAuthInfo,
     ): Promise<DetailedSiteInfo> {
         const authHeader = this.authHeader(credentials);
         // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances

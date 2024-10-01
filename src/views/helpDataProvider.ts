@@ -22,21 +22,21 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 'Get Started',
                 'Check out our quick-start guide',
                 iconSet.ATLASSIANICON,
-                KnownLinkID.GettingStarted
+                KnownLinkID.GettingStarted,
             ),
             new LinkNode('What is JQL?', 'Learn about Jira Query Language', iconSet.JIRAICON, KnownLinkID.WhatIsJQL),
             new LinkNode(
                 'Contribute',
                 'Create pull requests for this extension',
                 iconSet.PULLREQUEST,
-                KnownLinkID.Contribute
+                KnownLinkID.Contribute,
             ),
             new LinkNode('Report an Issue', 'Report and vote on issues', iconSet.ISSUES, KnownLinkID.ReportAnIssue),
             new LinkNode(
                 'Tweet about us',
                 'Share your love for this extension',
                 iconSet.TWITTERLOGOBLUE,
-                KnownLinkID.TweetAboutUs
+                KnownLinkID.TweetAboutUs,
             ),
             new InternalLinkNode(
                 'Explore Features',
@@ -45,7 +45,7 @@ export class HelpDataProvider extends BaseTreeDataProvider {
                 {
                     command: Commands.ShowExploreSettings,
                     title: 'Open Explore Page',
-                }
+                },
             ),
         ];
     }

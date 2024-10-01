@@ -19,7 +19,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     public prHref: string;
     private childrenPromises: Promise<AbstractBaseNode[]>;
 
-    constructor(private pr: PullRequest, shouldPreload: boolean, parent: AbstractBaseNode | undefined) {
+    constructor(
+        private pr: PullRequest,
+        shouldPreload: boolean,
+        parent: AbstractBaseNode | undefined,
+    ) {
         super(parent);
         this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
@@ -41,7 +45,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         let item = new vscode.TreeItem(
             `#${this.pr.data.id!} ${this.pr.data.title!}`,
-            vscode.TreeItemCollapsibleState.Collapsed
+            vscode.TreeItemCollapsibleState.Collapsed,
         );
         item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${
             approvalText.length > 0 ? `\n\n${approvalText}` : ''
@@ -104,7 +108,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             (reason) => {
                 Logger.debug('error fetching pull request details', reason);
                 return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
-            }
+            },
         );
     }
 
@@ -118,7 +122,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     private async createRelatedJiraIssueNode(
         commits: Commit[],
-        allComments: PaginatedComments
+        allComments: PaginatedComments,
     ): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
         const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits, allComments.data);
@@ -130,7 +134,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     private async createRelatedBitbucketIssueNode(
         commits: Commit[],
-        allComments: PaginatedComments
+        allComments: PaginatedComments,
     ): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
         const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits, allComments.data);
@@ -142,7 +146,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 }
 
 export class DescriptionNode extends AbstractBaseNode {
-    constructor(private pr: PullRequest, parent?: AbstractBaseNode | undefined) {
+    constructor(
+        private pr: PullRequest,
+        parent?: AbstractBaseNode | undefined,
+    ) {
         super(parent);
     }
 

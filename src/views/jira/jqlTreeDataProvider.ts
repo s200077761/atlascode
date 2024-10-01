@@ -74,7 +74,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
                         title: 'Login to Jira',
                         arguments: [ProductJira],
                     },
-                    this
+                    this,
                 ),
             ];
         }
@@ -130,7 +130,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
     abstract getTreeItem(): TreeItem;
 
     private async constructIssueTree(
-        jqlIssues: MinimalIssue<DetailedSiteInfo>[]
+        jqlIssues: MinimalIssue<DetailedSiteInfo>[],
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         const parentIssues = await this.fetchMissingAncestorIssues(jqlIssues);
         const jqlAndParents = [...jqlIssues, ...parentIssues];
@@ -154,7 +154,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
     // Fetch any parents and grandparents that might be missing from the set to ensure that the a path can be drawn all
     // the way from a subtask to an epic.
     private async fetchMissingAncestorIssues(
-        newIssues: MinimalIssue<DetailedSiteInfo>[]
+        newIssues: MinimalIssue<DetailedSiteInfo>[],
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (newIssues.length < 1) {
             return [];
@@ -183,7 +183,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
 
     private async fetchIssuesForKeys(
         site: DetailedSiteInfo,
-        keys: string[]
+        keys: string[],
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         return await Promise.all(
             keys.map(async (issueKey) => {
@@ -191,7 +191,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider implement
                 // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                 parent.subtasks = [];
                 return parent;
-            })
+            }),
         );
     }
 

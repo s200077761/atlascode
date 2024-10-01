@@ -22,7 +22,7 @@ export const GenConnectPanel: React.FunctionComponent<GenConnectPanelProps> = me
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Connectivity, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -53,5 +53,5 @@ export const GenConnectPanel: React.FunctionComponent<GenConnectPanelProps> = me
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

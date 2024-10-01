@@ -7,7 +7,7 @@ export class JiraAuthentictor implements Authenticator {
     public async getOAuthSiteDetails(
         provider: OAuthProvider,
         userId: string,
-        resources: AccessibleResource[]
+        resources: AccessibleResource[],
     ): Promise<DetailedSiteInfo[]> {
         let newSites: DetailedSiteInfo[] = [];
 

@@ -13,7 +13,7 @@ export class IssueHoverProviderManager implements Disposable {
     constructor() {
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
-            configuration.onDidChange(this.onConfigurationChanged, this)
+            configuration.onDidChange(this.onConfigurationChanged, this),
         );
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
@@ -40,7 +40,7 @@ export class IssueHoverProviderManager implements Disposable {
             if (!this._hoverProviderDisposable) {
                 this._hoverProviderDisposable = languages.registerHoverProvider(
                     { scheme: 'file' },
-                    new IssueHoverProvider()
+                    new IssueHoverProvider(),
                 );
             }
         } else {

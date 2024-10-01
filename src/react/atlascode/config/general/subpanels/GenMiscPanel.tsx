@@ -22,7 +22,7 @@ export const GenMiscPanel: React.FunctionComponent<GenMiscPanelProps> = memo(
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Misc, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -53,5 +53,5 @@ export const GenMiscPanel: React.FunctionComponent<GenMiscPanelProps> = memo(
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

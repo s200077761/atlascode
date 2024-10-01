@@ -44,7 +44,7 @@ export class CheckoutHelper {
             await window
                 .showInformationMessage(
                     `To checkout ref ${ref}: this repository must be cloned in this workspace`,
-                    'Clone Repo'
+                    'Clone Repo',
                 )
                 .then(async (userChoice) => {
                     if (userChoice === 'Clone Repo') {
@@ -58,7 +58,7 @@ export class CheckoutHelper {
         if (!wsRepo.mainSiteRemote.site) {
             // Maybe not a not a Bitbucket repo
             throw new Error(
-                `Could not tie ${wsRepo.mainSiteRemote.remote.name} to a BitbucketSite object. Is this a Bitbucket repo?`
+                `Could not tie ${wsRepo.mainSiteRemote.remote.name} to a BitbucketSite object. Is this a Bitbucket repo?`,
             );
         }
 
@@ -86,7 +86,7 @@ export class CheckoutHelper {
                 let wsRepo = this.findRepoInCurrentWorkspace(refInfo.cloneUrl);
                 if (!wsRepo) {
                     this.showLoginMessage(
-                        `Could not find repo in current workspace after attempting to clone. Are you authenticated with Bitbucket?`
+                        `Could not find repo in current workspace after attempting to clone. Are you authenticated with Bitbucket?`,
                     );
                     return;
                 }
@@ -105,7 +105,7 @@ export class CheckoutHelper {
         const wsRepo = this.findRepoInCurrentWorkspace(repoUrl);
         if (wsRepo !== undefined) {
             window.showInformationMessage(
-                `Skipped cloning. Repository is open in this workspace already: ${wsRepo.rootUri}`
+                `Skipped cloning. Repository is open in this workspace already: ${wsRepo.rootUri}`,
             );
         } else {
             this.showCloneOptions(repoUrl);
@@ -129,7 +129,7 @@ export class CheckoutHelper {
             });
         } catch {
             this.showLoginMessage(
-                'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.'
+                'Cannot open pull request. Authenticate with Bitbucket in the extension settings and try again.',
             );
         }
     }

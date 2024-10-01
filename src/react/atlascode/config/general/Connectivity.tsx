@@ -65,5 +65,5 @@ export const Connectivity: React.FunctionComponent<ConnectivityProps> = memo(
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

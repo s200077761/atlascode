@@ -32,7 +32,7 @@
     --vscode-editor-findMatchHighlightBackground: rgba(234, 92, 0, 0.33);
     --vscode-editor-findRangeHighlightBackground: rgba(180, 180, 180, 0.3);
     --vscode-editor-focusedStackFrameHighlightBackground: rgba(206, 231, 206, 0.45);
-    --vscode-editor-font-family: "Droid Sans Mono", "monospace", monospace, "Droid Sans Fallback";
+    --vscode-editor-font-family: 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback';
     --vscode-editor-font-size: 14;
     --vscode-editor-font-weight: normal;
     --vscode-editor-foreground: #000000;
@@ -112,7 +112,7 @@
     --vscode-extensionButton-prominentForeground: #ffffff;
     --vscode-extensionButton-prominentHoverBackground: #28632b;
     --vscode-focusBorder: rgba(0, 122, 204, 0.4);
-    --vscode-font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif;
+    --vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'Ubuntu', 'Droid Sans', sans-serif;
     --vscode-font-size: 13px;
     --vscode-font-weight: normal;
     --vscode-foreground: #616161;

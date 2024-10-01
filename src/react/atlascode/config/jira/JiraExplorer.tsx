@@ -26,7 +26,7 @@ const useStyles = makeStyles(
             indent: {
                 marginLeft: theme.spacing(3),
             },
-        } as const)
+        }) as const,
 );
 
 export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
@@ -183,5 +183,5 @@ export const JiraExplorer: React.FunctionComponent<JiraExplorerProps> = memo(
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

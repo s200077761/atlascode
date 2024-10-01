@@ -29,14 +29,14 @@ export const Reviewers: React.FunctionComponent<ReviewersProps> = ({
                 setIsFetchingReviewers(false);
             }
         },
-        [onUpdateReviewers]
+        [onUpdateReviewers],
     );
 
     useEffect(() => {
         setActiveParticipants(
             participants // always show reviewers & show non-reviewers if they have approved or marked needs work
                 .filter((p) => p.status !== 'UNAPPROVED' || p.role === 'REVIEWER')
-                .sort((a, b) => (a.status < b.status ? 0 : 1))
+                .sort((a, b) => (a.status < b.status ? 0 : 1)),
         );
     }, [participants]);
 

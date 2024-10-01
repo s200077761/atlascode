@@ -98,7 +98,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
                 subSection: ConfigSubSection.Auth,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowConfigPageFromExtensionContext, () => {
             Container.analyticsApi.fireOpenSettingsButtonEvent('extensionContext');
@@ -111,37 +111,37 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
                 subSection: ConfigSubSection.Auth,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowBitbucketAuth, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
                 subSection: ConfigSubSection.Auth,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Jira,
                 subSection: ConfigSubSection.Issues,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowPullRequestSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
                 subSection: ConfigSubSection.PR,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowPipelineSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
                 subSection: ConfigSubSection.Pipelines,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowBitbucketIssueSettings, () =>
             Container.settingsWebviewFactory.createOrShow({
                 section: ConfigSection.Bitbucket,
                 subSection: ConfigSubSection.Issues,
-            })
+            }),
         ),
         commands.registerCommand(Commands.ShowExploreSettings, () => {
             Container.analyticsApi.fireExploreFeaturesButtonEvent(HelpTreeViewId);
@@ -162,31 +162,31 @@ export function registerCommands(vscodeContext: ExtensionContext) {
                 if (uri) {
                     env.openExternal(uri);
                 }
-            }
+            },
         ),
         commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
         commands.registerCommand(
             Commands.ShowIssue,
-            async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite)
+            async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite),
         ),
         commands.registerCommand(
             Commands.ShowIssueForKey,
-            async (issueKey?: string) => await showIssueForKey(issueKey)
+            async (issueKey?: string) => await showIssueForKey(issueKey),
         ),
         commands.registerCommand(
             Commands.ShowIssueForSiteIdAndKey,
-            async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey)
+            async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey),
         ),
         commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         commands.registerCommand(
             Commands.StartWorkOnIssue,
             (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>
                 startWorkOnIssue(
-                    isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue
-                )
+                    isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue,
+                ),
         ),
         commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)
+            Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue),
         ),
         commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then((e) => {
@@ -205,7 +205,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             Container.pipelinesSummaryWebview.createOrShow(pipelineInfo.uuid, pipelineInfo);
         }),
         commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
-            Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue)
+            Container.bitbucketIssueWebviewFactory.createOrShow(issue.data.links?.self?.href, issue),
         ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
         commands.registerCommand(Commands.WorkbenchOpenRepository, (source: string) => {
@@ -222,6 +222,6 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         }),
         commands.registerCommand(Commands.DisableHelpExplorer, () => {
             configuration.updateEffective('helpExplorerEnabled', false, null, true);
-        })
+        }),
     );
 }

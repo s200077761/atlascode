@@ -20,7 +20,7 @@ const useStyles = makeStyles(
             indent: {
                 marginLeft: theme.spacing(3),
             },
-        } as const)
+        }) as const,
 );
 
 export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
@@ -164,5 +164,5 @@ export const PRExplorer: React.FunctionComponent<PRExplorerProps> = memo(
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

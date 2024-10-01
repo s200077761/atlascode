@@ -7,7 +7,7 @@ export class InternalLinkNode extends AbstractBaseNode {
         readonly message: string,
         readonly description: string,
         readonly icon: iconSet,
-        readonly command: vscode.Command
+        readonly command: vscode.Command,
     ) {
         super();
     }

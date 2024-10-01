@@ -58,7 +58,7 @@ async function checkoutRemote(rootUri: string, remote: string): Promise<boolean>
                 .showInformationMessage(
                     `Checkout Failed: You have uncommitted changes`,
                     'Stash changes and try again',
-                    'Dismiss'
+                    'Dismiss',
                 )
                 .then(async (userChoice) => {
                     if (userChoice === 'Stash changes and try again') {

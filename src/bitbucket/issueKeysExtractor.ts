@@ -32,7 +32,7 @@ export async function extractIssueKeys(pr: PullRequest, commits: Commit[], allCo
 export async function extractBitbucketIssueKeys(
     pr: PullRequest,
     commits: Commit[],
-    allComments: Comment[]
+    allComments: Comment[],
 ): Promise<string[]> {
     const result = new Set<string>();
 

@@ -26,7 +26,7 @@ const useStyles = makeStyles(
                         ? lighten(theme.palette.background.default, 0.15)
                         : darken(theme.palette.background.default, 0.15),
             },
-        } as const)
+        }) as const,
 );
 
 type InlineTextEditorProps = {
@@ -52,7 +52,7 @@ const InlineRenderedTextEditor: React.FC<InlineTextEditorProps> = (props: Inline
             await props.onSave?.(value);
             exitEditMode();
         },
-        [exitEditMode, props.onSave]
+        [exitEditMode, props.onSave],
     );
 
     return editMode ? (

@@ -6,6 +6,6 @@ export interface CreateBitbucketIssueActionApi {
         title: string,
         description: string,
         kind: string,
-        priority: string
+        priority: string,
     ): Promise<BitbucketIssue>;
 }

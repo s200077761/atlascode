@@ -21,7 +21,7 @@ export class PullRequestsExplorer extends BitbucketExplorer {
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr: PullRequest) => {
                 await Container.pullRequestDetailsWebviewFactory.createOrShow(pr.data.url, pr);
             }),
-            commands.registerCommand(Commands.CreatePullRequest, () => this.pickRepoAndShowCreatePR())
+            commands.registerCommand(Commands.CreatePullRequest, () => this.pickRepoAndShowCreatePR()),
         );
     }
 

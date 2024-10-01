@@ -23,7 +23,7 @@ export class ExplorerFocusManager extends Disposable {
         super(() => this.dispose());
 
         this._disposable = Disposable.from(
-            Container.siteManager.onDidSitesAvailableChange(this.onDidSitesChange, this)
+            Container.siteManager.onDidSitesAvailableChange(this.onDidSitesChange, this),
         );
     }
 

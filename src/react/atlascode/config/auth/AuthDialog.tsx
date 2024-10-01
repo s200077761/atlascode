@@ -195,12 +195,12 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 setAuthTypeTabIndex(0);
                 doClose();
             },
-            [doClose, product, save]
+            [doClose, product, save],
         );
 
         const preventClickDefault = useCallback(
             (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault(),
-            []
+            [],
         );
 
         const registerUrl = useCallback(register(validateStartsWithProtocol), []);
@@ -499,5 +499,5 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                 <Box marginBottom={2} />
             </Dialog>
         );
-    }
+    },
 );

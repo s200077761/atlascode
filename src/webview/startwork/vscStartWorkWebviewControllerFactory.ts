@@ -14,7 +14,7 @@ export class VSCStartWorkWebviewControllerFactory implements VSCWebviewControlle
     constructor(
         private api: StartWorkActionApi,
         private commonHandler: CommonActionMessageHandler,
-        private analytics: AnalyticsApi
+        private analytics: AnalyticsApi,
     ) {}
 
     public tabIcon(): Uri | { light: Uri; dark: Uri } | undefined {
@@ -27,17 +27,17 @@ export class VSCStartWorkWebviewControllerFactory implements VSCWebviewControlle
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: StartWorkInitMessage
+        factoryData?: StartWorkInitMessage,
     ): [StartWorkWebviewController, Disposable | undefined];
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: StartWorkInitMessage
+        factoryData?: StartWorkInitMessage,
     ): StartWorkWebviewController;
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: StartWorkInitMessage
+        factoryData?: StartWorkInitMessage,
     ): StartWorkWebviewController | [StartWorkWebviewController, Disposable | undefined] {
         const controller = new StartWorkWebviewController(
             postMessage,
@@ -45,7 +45,7 @@ export class VSCStartWorkWebviewControllerFactory implements VSCWebviewControlle
             this.commonHandler,
             Logger.Instance,
             this.analytics,
-            factoryData
+            factoryData,
         );
 
         return [controller, undefined];

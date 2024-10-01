@@ -63,7 +63,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                         <td style={{ textAlign: 'center' }}>{String(fieldProblem.required)}</td>
                         <td>{fieldProblem.schema}</td>
                         <td>{fieldProblem.message}</td>
-                    </tr>
+                    </tr>,
                 );
             });
             issueTypeProblems.push(
@@ -76,7 +76,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                     </td>
                     <td style={{ textAlign: 'center' }}>{String(problem.isRenderable)}</td>
                     <td>{problem.message}</td>
-                </tr>
+                </tr>,
             );
             issueTypeProblems.push(
                 <tr>
@@ -93,7 +93,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                             {issueTypeFields}
                         </table>
                     </td>
-                </tr>
+                </tr>,
             );
         });
 

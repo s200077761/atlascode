@@ -37,7 +37,7 @@ export interface PullRequestDetailsActionApi {
     fetchRelatedJiraIssues(
         pr: PullRequest,
         commits: Commit[],
-        comments: Comment[]
+        comments: Comment[],
     ): Promise<MinimalIssue<DetailedSiteInfo>[]>;
     fetchRelatedBitbucketIssues(pr: PullRequest, commits: Commit[], comments: Comment[]): Promise<BitbucketIssue[]>;
     merge(
@@ -45,7 +45,7 @@ export interface PullRequestDetailsActionApi {
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
     ): Promise<PullRequest>;
     openJiraIssue(issue: MinimalIssue<DetailedSiteInfo>): Promise<void>;
     openBitbucketIssue(issue: BitbucketIssue): Promise<void>;
@@ -54,7 +54,7 @@ export interface PullRequestDetailsActionApi {
     getTasks(
         pr: PullRequest,
         pageComments: Comment[],
-        inlineComments: Comment[]
+        inlineComments: Comment[],
     ): Promise<{ tasks: Task[]; pageComments: Comment[]; inlineComments: Comment[] }>;
 
     createTask(
@@ -62,14 +62,14 @@ export interface PullRequestDetailsActionApi {
         comments: Comment[],
         pr: PullRequest,
         content: string,
-        commentId?: string
+        commentId?: string,
     ): Promise<{ tasks: Task[]; comments: Comment[] }>;
 
     editTask(
         tasks: Task[],
         comments: Comment[],
         pr: PullRequest,
-        task: Task
+        task: Task,
     ): Promise<{ tasks: Task[]; comments: Comment[] }>;
     deleteTask(pr: PullRequest, task: Task): Promise<{ tasks: Task[]; comments: Comment[] }>;
 }

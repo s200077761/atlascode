@@ -39,8 +39,8 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
                 return await controller.fetchUsers(site, query, abortSignal);
             },
             300,
-            { leading: false }
-        )
+            { leading: false },
+        ),
     );
 
     const handleSubmitReviewers = useCallback(async () => props.onChange(localUsers), [localUsers, props]);
@@ -51,7 +51,7 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
                 setInputText(value);
             }
         },
-        [setInputText]
+        [setInputText],
     );
 
     const fetchUsers = useAsyncAbortable(
@@ -62,7 +62,7 @@ const DialogUserPicker: React.FC<DialogUserPickerProps> = (props: DialogUserPick
             }
             return props.defaultUsers;
         },
-        [props.site, inputText]
+        [props.site, inputText],
     );
 
     const handleLocalChange = useCallback((event: React.ChangeEvent, newReviewers: User[]) => {

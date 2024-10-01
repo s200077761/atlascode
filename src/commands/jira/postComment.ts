@@ -7,7 +7,7 @@ export async function postComment(
     issue: IssueKeyAndSite<DetailedSiteInfo>,
     comment: string,
     commentId?: string,
-    restriction?: CommentVisibility
+    restriction?: CommentVisibility,
 ): Promise<Comment> {
     let client = await Container.clientManager.jiraClient(issue.siteDetails);
 

@@ -35,8 +35,8 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js', '.json'],
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
         fallback: {
-            path: false
-        }
+            path: false,
+        },
     },
     plugins: [
         new MiniCssExtractPlugin(),
@@ -44,10 +44,10 @@ module.exports = {
             fileName: 'asset-manifest.json',
         }),
         new webpack.IgnorePlugin({
-            resourceRegExp: /iconv-loader\.js/
+            resourceRegExp: /iconv-loader\.js/,
         }),
         new webpack.WatchIgnorePlugin({
-            paths: [/\.js$/, /\.d\.ts$/]
+            paths: [/\.js$/, /\.d\.ts$/],
         }),
         new ForkTsCheckerWebpackPlugin({
             typescript: {
@@ -68,7 +68,7 @@ module.exports = {
             {
                 test: /\.m?js/,
                 resolve: {
-                  fullySpecified: false,
+                    fullySpecified: false,
                 },
             },
             {

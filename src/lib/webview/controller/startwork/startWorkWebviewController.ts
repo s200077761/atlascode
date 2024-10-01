@@ -34,7 +34,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
         private commonHandler: CommonActionMessageHandler,
         private logger: Logger,
         private analytics: AnalyticsApi,
-        factoryData?: StartWorkInitMessage
+        factoryData?: StartWorkInitMessage,
     ) {
         this.initData = factoryData || emptyStartWorkIssueMessage;
     }
@@ -72,7 +72,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             ...((repoDetails.branchingModel?.branch_types || []) as BitbucketBranchingModel[]).sort(
                                 (a, b) => {
                                     return a.kind.localeCompare(b.kind);
-                                }
+                                },
                             ),
                             customBranchType,
                         ];
@@ -92,7 +92,7 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                             remoteBranches: repoScmState.remoteBranches,
                             hasSubmodules: repoScmState.hasSubmodules,
                         };
-                    })
+                    }),
             );
 
             this.logger.debug(`JS-1324 Webview Controller - Repo data Count: ${repoData.length}`);
@@ -124,14 +124,14 @@ export class StartWorkWebviewController implements WebviewController<StartWorkIs
                 try {
                     await this.api.assignAndTransitionIssue(
                         this.initData.issue,
-                        msg.transitionIssueEnabled ? msg.transition : undefined
+                        msg.transitionIssueEnabled ? msg.transition : undefined,
                     );
                     if (msg.branchSetupEnabled) {
                         await this.api.createOrCheckoutBranch(
                             msg.wsRepo,
                             msg.targetBranch,
                             msg.sourceBranch,
-                            msg.upstream
+                            msg.upstream,
                         );
                     }
                     this.postMessage({

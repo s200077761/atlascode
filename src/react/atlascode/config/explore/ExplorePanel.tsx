@@ -22,7 +22,7 @@ const useStyles = makeStyles(
                     backgroundColor: 'white',
                 },
             },
-        } as const)
+        }) as const,
 );
 
 type ExplorePanelProps = {
@@ -50,7 +50,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
             setModalActionNotAvailable(actionNotAvailable);
             setModalVisibility(true);
         },
-        []
+        [],
     );
 
     const handleModalClose = useCallback(() => {
@@ -67,7 +67,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
             setModalVisibility(false);
             sectionChanger(ConfigSection.Jira, ConfigSubSection.Triggers);
         },
-        [sectionChanger]
+        [sectionChanger],
     );
 
     const openFiltersAndJQLSection = useCallback(
@@ -76,7 +76,7 @@ export const ExplorePanel: React.FunctionComponent<ExplorePanelProps> = ({ visib
             setModalVisibility(false);
             sectionChanger(ConfigSection.Jira, ConfigSubSection.Issues);
         },
-        [sectionChanger]
+        [sectionChanger],
     );
 
     return (

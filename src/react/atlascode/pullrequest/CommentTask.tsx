@@ -40,7 +40,7 @@ export const CommentTask: React.FunctionComponent<CommentTaskProps> = ({ task, o
         (event: React.ChangeEvent<{ value: string }>) => {
             setTaskContent(event.target.value);
         },
-        [setTaskContent]
+        [setTaskContent],
     );
 
     useEffect(() => {

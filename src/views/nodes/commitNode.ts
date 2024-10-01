@@ -18,7 +18,7 @@ export class CommitNode extends AbstractBaseNode {
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem(
             `${this.commit.hash.substring(0, 7)}`,
-            vscode.TreeItemCollapsibleState.Collapsed
+            vscode.TreeItemCollapsibleState.Collapsed,
         );
         item.description = this.commit.message;
         item.tooltip = this.commit.message;

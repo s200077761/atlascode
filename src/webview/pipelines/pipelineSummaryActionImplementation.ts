@@ -47,7 +47,7 @@ export class PipelineSummaryActionImplementation implements PipelinesSummaryActi
         site: BitbucketSite,
         pipelineUuid: string,
         stepUuid: string,
-        range: PipelineLogRange
+        range: PipelineLogRange,
     ): Promise<string> {
         const bbApi = await clientForSite(site);
 

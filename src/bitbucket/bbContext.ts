@@ -40,7 +40,7 @@ export class BitbucketContext extends Disposable {
                     this.updateUsers(e.sites);
                     this.refreshRepos();
                 }
-            })
+            }),
         );
 
         this.prCommentController = new PullRequestCommentController(Container.context);
@@ -50,7 +50,7 @@ export class BitbucketContext extends Disposable {
             this._gitApi.onDidCloseRepository(() => this.refreshRepos()),
             this._pullRequestsExplorer,
             this._bitbucketIssuesExplorer,
-            this.prCommentController
+            this.prCommentController,
         );
 
         this.refreshRepos();
@@ -77,7 +77,7 @@ export class BitbucketContext extends Disposable {
                 this.getBitbucketRepositories().map(async (repo) => {
                     const bbClient = await clientForSite(repo.mainSiteRemote.site!);
                     return (await bbClient.pullrequests.getRecentAllStatus(repo)).data;
-                })
+                }),
             );
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);
@@ -104,7 +104,7 @@ export class BitbucketContext extends Disposable {
                     // log and ignore error
                     Logger.debug('Failed to fetch mirror sites');
                 }
-            })
+            }),
         );
 
         const repos = this.getAllRepositoriesRaw();
@@ -159,7 +159,7 @@ export class BitbucketContext extends Disposable {
 
     public getBitbucketCloudRepositories(): WorkspaceRepo[] {
         return this.getAllRepositories().filter(
-            (wsRepo) => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true
+            (wsRepo) => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true,
         );
     }
 

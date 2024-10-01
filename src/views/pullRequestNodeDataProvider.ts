@@ -40,7 +40,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(
                 PullRequestNodeDataProvider.SCHEME,
-                new GitContentProvider(ctx)
+                new GitContentProvider(ctx),
             ),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
                 const bbApi = await clientForSite(prs.site);
@@ -100,7 +100,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                     });
             }),
             commands.registerCommand(Commands.RefreshPullRequestExplorerNode, (uri: Uri) => this.refreshResource(uri)),
-            ctx.onDidChangeBitbucketContext(() => this.refresh())
+            ctx.onDidChangeBitbucketContext(() => this.refresh()),
         );
     }
 
@@ -134,8 +134,8 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                           (ws) => this.fetch(ws),
                           wsRepo,
                           workspaceRepos.length <= MAX_WORKSPACE_REPOS_TO_PRELOAD,
-                          expand
-                      )
+                          expand,
+                      ),
                   );
         }
     }
@@ -223,7 +223,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (Container.siteManager.getSitesAvailable(ProductBitbucket).length === 0) {
             viewScreenEvent('pullRequestsTreeViewUnauthenticatedMessage', undefined, ProductBitbucket).then((event) =>
-                Container.analyticsClient.sendScreenEvent(event)
+                Container.analyticsClient.sendScreenEvent(event),
             );
             return [
                 new SimpleNode('Authenticate with Bitbucket to view pull requests', {
@@ -236,7 +236,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         const repos = this.ctx.getBitbucketRepositories();
         if (repos.length < 1) {
             viewScreenEvent('pullRequestsTreeViewNoReposFoundMessage', undefined, ProductBitbucket).then((event) =>
-                Container.analyticsClient.sendScreenEvent(event)
+                Container.analyticsClient.sendScreenEvent(event),
             );
             return emptyBitbucketNodes;
         }

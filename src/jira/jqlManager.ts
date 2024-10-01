@@ -58,7 +58,7 @@ export class JQLManager extends Disposable {
                             Logger.error(e, `Error fetching filter "${f.name}"`);
                         }
                     }
-                })
+                }),
             );
 
             configuration.updateEffective('jira.jqlList', allList);

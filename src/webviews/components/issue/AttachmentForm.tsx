@@ -86,7 +86,7 @@ const dialogEditor = (
     files: any[],
     dispatch: any,
     getRootProps: (props?: any | undefined) => any,
-    getInputProps: (props?: any | undefined) => any
+    getInputProps: (props?: any | undefined) => any,
 ) => {
     return (
         <div className="ac-attachment-container">
@@ -139,7 +139,7 @@ const inlineEditor = (
     files: FileWithPreview[],
     dispatch: any,
     getRootProps: (props?: any | undefined) => any,
-    getInputProps: (props?: any | undefined) => any
+    getInputProps: (props?: any | undefined) => any,
 ) => {
     return (
         <div className="ac-attachment-container">
@@ -194,7 +194,7 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ f
             // Make sure to revoke the data uris to avoid memory leaks
             files.forEach((file) => URL.revokeObjectURL(file.preview));
         },
-        [files]
+        [files],
     );
 
     useEffect(() => {

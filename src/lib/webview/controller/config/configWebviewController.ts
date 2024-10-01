@@ -33,7 +33,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
         logger: Logger,
         analytics: AnalyticsApi,
         settingsUrl: string,
-        section?: SectionChangeMessage
+        section?: SectionChangeMessage,
     ) {
         this._messagePoster = messagePoster;
         this._api = api;
@@ -164,7 +164,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                             msg.fieldName,
                             msg.userInput,
                             msg.predicateName,
-                            msg.abortKey
+                            msg.abortKey,
                         );
                         this.postMessage({
                             type: ConfigMessageType.JQLSuggestionsResponse,
@@ -206,7 +206,7 @@ export class ConfigWebviewController implements WebviewController<SectionChangeM
                             msg.query,
                             msg.maxResults,
                             msg.startAt,
-                            msg.abortKey
+                            msg.abortKey,
                         );
                         this.postMessage({
                             type: ConfigMessageType.FilterSearchResponse,

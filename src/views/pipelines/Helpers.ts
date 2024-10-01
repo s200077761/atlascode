@@ -36,7 +36,7 @@ export function filtersActive(): boolean {
 export function descriptionForState(
     result: Pipeline,
     truncateCommitMessage: boolean,
-    excludePipelinePrefix?: boolean
+    excludePipelinePrefix?: boolean,
 ): string {
     const descriptionForResult = {
         pipeline_state_completed_successful: 'was successful',
@@ -64,7 +64,7 @@ export function descriptionForState(
 export function generatePipelineTitle(
     pipeline: Pipeline,
     truncateCommitMessage: boolean,
-    excludePipelinePrefix?: boolean
+    excludePipelinePrefix?: boolean,
 ): string {
     let description = '';
     let pattern = undefined;

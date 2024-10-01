@@ -34,7 +34,7 @@ export const PMFDialog: React.FunctionComponent<PMFDialogProps> = ({ open, onCan
         (data: PMFData) => {
             onSave(data);
         },
-        [onSave]
+        [onSave],
     );
 
     const handleDialogClose = useCallback(() => {

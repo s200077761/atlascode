@@ -29,7 +29,7 @@ export class VSCBitbucketIssueActionApi implements BitbucketIssueActionApi {
 
         // replace comment with change data which contains additional details
         const updatedComments = comments.data.map(
-            (comment) => changes.data.find((change) => change.id! === comment.id!) || comment
+            (comment) => changes.data.find((change) => change.id! === comment.id!) || comment,
         );
 
         return updatedComments;

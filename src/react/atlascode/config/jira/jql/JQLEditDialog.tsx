@@ -76,11 +76,11 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
             fieldName: string,
             userInput: string,
             predicateName?: string,
-            abortSignal?: AbortSignal
+            abortSignal?: AbortSignal,
         ): Promise<Suggestion[]> => {
             return await controller.fetchJqlSuggestions(site, fieldName, userInput, predicateName, abortSignal);
         },
-        [controller, site]
+        [controller, site],
     );
 
     const handleSiteChange = useCallback((site: DetailedSiteInfo) => {
@@ -102,7 +102,7 @@ export const JQLEditDialog: React.FunctionComponent<JQLEditDialogProps> = ({
 
             onSave(newEntry);
         },
-        [jqlEntry, onSave]
+        [jqlEntry, onSave],
     );
 
     useEffect(() => {

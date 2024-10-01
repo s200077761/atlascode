@@ -42,7 +42,7 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Issues, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -95,5 +95,5 @@ export const JiraExplorerPanel: React.FunctionComponent<JiraExplorerPanelProps> 
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

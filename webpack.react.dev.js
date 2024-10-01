@@ -5,7 +5,7 @@ const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-web
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const { WebpackManifestPlugin } = require('webpack-manifest-plugin');   
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 
@@ -17,7 +17,7 @@ module.exports = {
     },
     devtool: 'cheap-module-source-map',
     output: {
-        publicPath: "",
+        publicPath: '',
         pathinfo: true,
         path: path.resolve(__dirname, 'build'),
         chunkFilename: 'static/js/[name].chunk.js',
@@ -42,10 +42,10 @@ module.exports = {
         }),
         new webpack.IgnorePlugin({
             resourceRegExp: /iconv-loader\.js/,
-            contextRegExp: /moment$/
+            contextRegExp: /moment$/,
         }),
         new webpack.WatchIgnorePlugin({
-            paths: [/\.js$/, /\.d\.ts$/]
+            paths: [/\.js$/, /\.d\.ts$/],
         }),
         new ForkTsCheckerWebpackPlugin({
             typescript: {
@@ -58,7 +58,7 @@ module.exports = {
             {
                 test: /\.m?js/,
                 resolve: {
-                  fullySpecified: false,
+                    fullySpecified: false,
                 },
             },
             {
@@ -89,27 +89,26 @@ module.exports = {
                         loader: 'postcss-loader',
                         options: {
                             postcssOptions: {
-                              plugins: [
-                                [
-                                  "postcss-preset-env",
-                                  {
-                                    // Necessary for external CSS imports to work
-                                    // https://github.com/facebookincubator/create-react-app/issues/2677
-                                    ident: 'postcss',
-                                    
-                                    plugins: () => [
-                                        require('postcss-flexbugs-fixes'),
-                                        autoprefixer({
-                                            overrideBrowserslist: ['last 4 Chrome versions'],
-                                            flexbox: 'no-2009',
-                                        }),
+                                plugins: [
+                                    [
+                                        'postcss-preset-env',
+                                        {
+                                            // Necessary for external CSS imports to work
+                                            // https://github.com/facebookincubator/create-react-app/issues/2677
+                                            ident: 'postcss',
+
+                                            plugins: () => [
+                                                require('postcss-flexbugs-fixes'),
+                                                autoprefixer({
+                                                    overrideBrowserslist: ['last 4 Chrome versions'],
+                                                    flexbox: 'no-2009',
+                                                }),
+                                            ],
+                                        },
                                     ],
-                                
-                                  },
                                 ],
-                              ],
                             },
-                          },
+                        },
                     },
                 ],
             },
@@ -118,9 +117,7 @@ module.exports = {
                 use: [{ loader: 'source-map-loader' }],
                 enforce: 'pre',
                 include: /node_modules/,
-                exclude: [
-                    /node_modules\/@atlaskit\/analytics-next-stable-react-context/
-                ],
+                exclude: [/node_modules\/@atlaskit\/analytics-next-stable-react-context/],
             },
         ],
     },

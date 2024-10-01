@@ -188,7 +188,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
                 target: state.target,
             });
         },
-        [postMessage, state.target]
+        [postMessage, state.target],
     );
 
     const sendRefresh = useCallback((): void => {
@@ -199,7 +199,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
     const openLink = useCallback(
         (linkId: KnownLinkID) =>
             postMessage({ type: CommonActionType.ExternalLink, source: WebViewID.OnboardingWebview, linkId: linkId }),
-        [postMessage]
+        [postMessage],
     );
 
     const login = useCallback(
@@ -207,7 +207,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             dispatch({ type: OnboardingUIActionType.Loading });
             postMessage({ type: OnboardingActionType.Login, siteInfo: site, authInfo: auth });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const logout = useCallback(
@@ -215,7 +215,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             dispatch({ type: OnboardingUIActionType.Loading });
             postMessage({ type: OnboardingActionType.Logout, siteInfo: site });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const createPullRequest = useCallback((): void => {
@@ -248,7 +248,7 @@ export function useOnboardingController(): [OnboardingState, OnboardingControlle
             dispatch({ type: OnboardingUIActionType.Loading });
             postMessage({ type: OnboardingActionType.OpenSettings, section: section, subsection: subsection });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const controllerApi = useMemo<OnboardingControllerApi>((): OnboardingControllerApi => {

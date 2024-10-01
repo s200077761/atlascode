@@ -16,7 +16,10 @@ export class BasicInterceptor implements AuthInterceptor {
     private _errorInterceptor: (error: any) => any;
     private _invalidCredentials = false;
 
-    constructor(private site: DetailedSiteInfo, private authStore: CredentialManager) {
+    constructor(
+        private site: DetailedSiteInfo,
+        private authStore: CredentialManager,
+    ) {
         this._responseInterceptor = (value: AxiosResponse<any>) => {
             return value;
         };

@@ -18,7 +18,7 @@ const useStyles = makeStyles(
             indent: {
                 marginLeft: theme.spacing(3),
             },
-        } as const)
+        }) as const,
 );
 
 export const BitbucketIssues: React.FunctionComponent<BitbucketIssuesProps> = memo(
@@ -124,5 +124,5 @@ export const BitbucketIssues: React.FunctionComponent<BitbucketIssuesProps> = me
                 </Grid>
             </Grid>
         );
-    }
+    },
 );

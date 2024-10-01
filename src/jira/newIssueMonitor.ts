@@ -49,7 +49,7 @@ export class NewIssueMonitor {
                             return { jqlName: entry.name, issues: issues };
                         }
                         return Promise.reject(`no site for id ${entry.siteId}`);
-                    })()
+                    })(),
                 );
             });
 
@@ -78,7 +78,7 @@ export class NewIssueMonitor {
                         return result;
                     }
                 },
-                []
+                [],
             );
 
             this.showNotification(notifyIssues);

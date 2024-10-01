@@ -191,7 +191,7 @@ const useStyles = makeStyles(
                 display: 'flex',
                 alignItems: 'center',
             },
-        } as const)
+        }) as const,
 );
 
 function durationString(totalSeconds?: number): string {
@@ -363,7 +363,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
         stage: PipelineLogStage,
         logs: string | undefined,
         logRange: PipelineLogRange | undefined,
-        fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void
+        fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void,
     ) {
         const title = stage === PipelineLogStage.SETUP ? 'Build setup' : 'Build teardown';
         return (
@@ -389,7 +389,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
         stepUuid: string,
         stepIndex: number,
         commands: PipelineCommand[],
-        fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void
+        fetchLogs: (stepUuid: string, logReference: PipelineLogReference) => void,
     ) {
         return (
             <div>
@@ -443,7 +443,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                 </div>
             );
         },
-        [classes.stepHeaderContent, classes.flex, iconForPipelineState, classes.stepStatusIcon]
+        [classes.stepHeaderContent, classes.flex, iconForPipelineState, classes.stepStatusIcon],
     );
 
     const pipelineStepItem = useCallback(
@@ -469,7 +469,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                             PipelineLogStage.SETUP,
                             step.setup_logs,
                             step.setup_log_range,
-                            controller.fetchLogs
+                            controller.fetchLogs,
                         )}
                         {buildSection(step.uuid, index, step.script_commands, controller.fetchLogs)}
                         {setupAndTeardownSection(
@@ -478,20 +478,20 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                             PipelineLogStage.TEARDOWN,
                             step.teardown_logs,
                             step.teardown_log_range,
-                            controller.fetchLogs
+                            controller.fetchLogs,
                         )}
                     </div>
                 </div>
             );
         },
-        [classes.loglessStepHeader, classes.stepHeader, controller.fetchLogs, stepHeader]
+        [classes.loglessStepHeader, classes.stepHeader, controller.fetchLogs, stepHeader],
     );
 
     const renderPipelineStep = useCallback(
         (step: PipelineStep, index: number) => {
             return pipelineStepItem(step, index);
         },
-        [pipelineStepItem]
+        [pipelineStepItem],
     );
 
     const pipelineSteps = useMemo(() => {
@@ -528,7 +528,7 @@ const PipelineSummaryPage: React.FunctionComponent = () => {
                                 {`${durationString(state.pipeline.duration_in_seconds)}`}
                                 {state.pipeline.completed_on ? <CalendarTodayIcon className={classes.icon} /> : ''}
                                 <span title={dateString(state.pipeline.completed_on)}>{`${formatTime(
-                                    state.pipeline.completed_on
+                                    state.pipeline.completed_on,
                                 )}`}</span>
                             </Typography>
                             <div className={classes.flex}>

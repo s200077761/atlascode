@@ -30,7 +30,7 @@ export class PipelineSummaryWebviewController implements WebviewController<Pipel
         private api: PipelinesSummaryActionApi,
         private logger: Logger,
         private analytics: AnalyticsApi,
-        private pipeline?: Pipeline
+        private pipeline?: Pipeline,
     ) {
         this.steps = [];
     }

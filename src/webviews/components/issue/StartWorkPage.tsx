@@ -199,7 +199,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             ? this.state.data.issue.key
             : `issue-#${this.state.data.issue.data.id}`;
         const sourceBranchValue = repo.localBranches.find(
-            (b) => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1
+            (b) => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1,
         );
         this.setState({
             repo: repo,
@@ -274,7 +274,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
             .filter((b) => b.name!.toLowerCase().includes(issueId.toLowerCase()))
             .filter(
                 (remoteBranch) =>
-                    !repo.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!))
+                    !repo.localBranches.some((localBranch) => remoteBranch.name!.endsWith(localBranch.name!)),
             )
             .map((b) => b.name!.replace(`${b.remote!}/`, ''));
 
@@ -287,7 +287,7 @@ export default class StartWorkPage extends WebviewComponent<Emit, Accept, {}, St
         repo: RepoData,
         issueId: string,
         issueTitle: string,
-        transition: Transition
+        transition: Transition,
     ) {
         const branchOptions =
             this.state.existingBranchOptions.length > 0

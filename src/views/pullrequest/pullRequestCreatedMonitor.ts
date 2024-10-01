@@ -47,7 +47,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     vscode.window
                         .showInformationMessage(
                             `New pull request "${allPRs[0].data.title}" for repo "${repoName}"`,
-                            'Show'
+                            'Show',
                         )
                         .then((usersChoice) => {
                             if (usersChoice === 'Show') {
@@ -59,7 +59,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     vscode.window
                         .showInformationMessage(
                             `New pull requests found for the following repositories: ${repoNames}`,
-                            'Show'
+                            'Show',
                         )
                         .then((usersChoice) => {
                             if (usersChoice === 'Show') {

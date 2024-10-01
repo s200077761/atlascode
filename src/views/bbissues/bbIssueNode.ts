@@ -10,7 +10,10 @@ import { SimpleNode } from '../nodes/simpleNode';
 export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
 
-    constructor(private workspaceRepo: WorkspaceRepo, private expand?: boolean) {
+    constructor(
+        private workspaceRepo: WorkspaceRepo,
+        private expand?: boolean,
+    ) {
         super();
     }
 
@@ -31,7 +34,7 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
         const directory = path.basename(this.workspaceRepo.rootUri);
         const item = new vscode.TreeItem(
             `${directory}`,
-            this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed
+            this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
         );
         item.tooltip = this.workspaceRepo.rootUri;
 

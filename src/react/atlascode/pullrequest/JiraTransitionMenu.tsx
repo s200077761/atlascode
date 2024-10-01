@@ -47,7 +47,7 @@ export const JiraTransitionMenu: React.FC<JiraTransitionMenuProps> = ({
             handleIssueTransition(issue, event.target.value);
             setTransitionIssueEnabled(true);
         },
-        [setTransition, handleIssueTransition, issue]
+        [setTransition, handleIssueTransition, issue],
     );
 
     useEffect(() => {

@@ -27,7 +27,7 @@ export class AuthStatusBar extends Disposable {
         super(() => this.dispose());
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onDidSitesChange, this),
-            configuration.onDidChange(this.onConfigurationChanged, this)
+            configuration.onDidChange(this.onConfigurationChanged, this),
         );
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
@@ -78,7 +78,7 @@ export class AuthStatusBar extends Disposable {
                 StatusBarAlignment.Left,
                 product.name === 'Jira'
                     ? AuthStatusBar.JiraStausBarItemPriority
-                    : AuthStatusBar.BitbucketStausBarItemPriority
+                    : AuthStatusBar.BitbucketStausBarItemPriority,
             );
             this._authenticationStatusBarItems.set(product.key, statusBarItem);
         }
@@ -103,7 +103,7 @@ export class AuthStatusBar extends Disposable {
     private async updateStatusBarItem(
         statusBarItem: StatusBarItem,
         product: Product,
-        authInfo?: AuthInfo
+        authInfo?: AuthInfo,
     ): Promise<void> {
         let text: string = '$(sign-in)';
         let command: string | undefined;

@@ -43,7 +43,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
             await controller.addTask(content, comment.id);
             setIsCreatingTask(false);
         },
-        [controller, comment.id]
+        [controller, comment.id],
     );
 
     const handleSave = useCallback(
@@ -51,7 +51,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
             await controller.postComment(content, comment.id);
             setIsReplying(false);
         },
-        [controller, comment.id]
+        [controller, comment.id],
     );
 
     const handleEditPressed = useCallback(() => {
@@ -63,7 +63,7 @@ export const NestedComment: React.FunctionComponent<NestedCommentProps> = ({
             await controller.editComment(content, comment.id);
             setIsEditing(false);
         },
-        [controller, comment.id]
+        [controller, comment.id],
     );
 
     const handleCancelEdit = useCallback(() => {

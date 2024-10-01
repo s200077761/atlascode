@@ -21,8 +21,8 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
                 return await controller.fetchUsers(site, query, abortSignal);
             },
             300,
-            { leading: false }
-        )
+            { leading: false },
+        ),
     );
 
     const handleChange = async (event: React.ChangeEvent, value: User[]) => props.onChange(value);
@@ -33,7 +33,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
                 setInputText(value);
             }
         },
-        [open, setInputText]
+        [open, setInputText],
     );
 
     const fetchUsers = useAsyncAbortable(
@@ -44,7 +44,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             }
             return props.defaultUsers;
         },
-        [props.site, inputText]
+        [props.site, inputText],
     );
 
     return (

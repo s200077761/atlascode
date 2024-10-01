@@ -73,7 +73,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             pr,
             pr.data.title,
             text,
-            pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
+            pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId),
         );
     }
 
@@ -83,7 +83,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             pr,
             text,
             pr.data.rawSummary,
-            pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId)
+            pr.data.participants.filter((p) => p.role === 'REVIEWER').map((p) => p.accountId),
         );
 
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
@@ -103,7 +103,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             pr,
             pr.data.title,
             pr.data.rawSummary,
-            newReviewers.map((user) => (pr.site.details.isCloud ? user.accountId : user.userName ?? user.accountId))
+            newReviewers.map((user) => (pr.site.details.isCloud ? user.accountId : (user.userName ?? user.accountId))),
         );
         return data.participants;
     }
@@ -188,7 +188,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
             { data: comments },
             fileDiff,
             pr,
-            Container.bitbucketContext.prCommentController
+            Container.bitbucketContext.prCommentController,
         );
         vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
     }
@@ -206,7 +206,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async fetchRelatedJiraIssues(
         pr: PullRequest,
         commits: Commit[],
-        comments: Comment[]
+        comments: Comment[],
     ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         let foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         try {
@@ -228,7 +228,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async fetchRelatedBitbucketIssues(
         pr: PullRequest,
         commits: Commit[],
-        comments: Comment[]
+        comments: Comment[],
     ): Promise<BitbucketIssue[]> {
         let result: BitbucketIssue[] = [];
         try {
@@ -249,14 +249,14 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         mergeStrategy: MergeStrategy,
         commitMessage: string,
         closeSourceBranch: boolean,
-        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[]
+        issues: (MinimalIssue<DetailedSiteInfo> | BitbucketIssue)[],
     ): Promise<PullRequest> {
         const bbApi = await clientForSite(pr.site);
         const updatedPullRequest = await bbApi.pullrequests.merge(
             pr,
             closeSourceBranch,
             mergeStrategy.value,
-            commitMessage
+            commitMessage,
         );
 
         await this.updateIssues(issues);
@@ -308,7 +308,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
     async getTasks(
         pr: PullRequest,
         pageComments: Comment[],
-        inlineComments: Comment[]
+        inlineComments: Comment[],
     ): Promise<{ tasks: Task[]; pageComments: Comment[]; inlineComments: Comment[] }> {
         const bbApi = await clientForSite(pr.site);
         const tasks = await bbApi.pullrequests.getTasks(pr);
@@ -324,7 +324,7 @@ export class VSCPullRequestDetailsActionApi implements PullRequestDetailsActionA
         comments: Comment[],
         pr: PullRequest,
         content: string,
-        commentId?: string
+        commentId?: string,
     ): Promise<{ tasks: Task[]; comments: Comment[] }> {
         const bbApi = await clientForSite(pr.site);
         const newTask = await bbApi.pullrequests.postTask(pr.site, pr.data.id, content, commentId);

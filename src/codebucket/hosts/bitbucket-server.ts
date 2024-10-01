@@ -17,7 +17,7 @@ export class BitbucketServerSite extends BitbucketSiteBase {
         const { ownerSlug, repoSlug } = this.site;
         const hash = lineRanges.map((range) => range.replace(':', '-')).join(',');
         return `${this.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/browse/${encodeURIComponent(
-            filePath
+            filePath,
         )}?at=${revision}#${hash}`;
     }
 

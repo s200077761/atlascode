@@ -16,7 +16,7 @@ export const AddReviewers: React.FunctionComponent<AddReviewersProps> = ({ site,
             setIsOpen(false);
             await updateReviewers(newReviewers);
         },
-        [updateReviewers]
+        [updateReviewers],
     );
 
     const handleToggleOpen = useCallback(() => {

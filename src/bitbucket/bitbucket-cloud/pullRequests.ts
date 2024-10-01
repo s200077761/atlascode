@@ -78,7 +78,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async getList(
         workspaceRepo: WorkspaceRepo,
-        queryParams?: { pagelen?: number; sort?: string; q?: string }
+        queryParams?: { pagelen?: number; sort?: string; q?: string },
     ): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
         if (!site) {
@@ -93,7 +93,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
 
         const prs: PullRequest[] = data.values!.map((pr: any) =>
-            CloudPullRequestApi.toPullRequestData(pr, site, workspaceRepo)
+            CloudPullRequestApi.toPullRequestData(pr, site, workspaceRepo),
         );
         const next = data.next;
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
@@ -152,7 +152,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { data } = await this.client.get(paginatedPullRequests.next);
 
         const prs = data.values!.map((pr: any) =>
-            CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo)
+            CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo),
         );
         return { ...paginatedPullRequests, data: prs, next: data.next };
     }
@@ -277,7 +277,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/commits`,
             {
                 pagelen: maxItemsSupported.commits,
-            }
+            },
         );
 
         if (!data.values) {
@@ -317,7 +317,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         prId: string,
         content: string,
         commentId: string,
-        commitHash?: string
+        commitHash?: string,
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
@@ -338,7 +338,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         try {
             let { data } = await this.client.get(
-                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
             );
 
             if (!data.values) {
@@ -371,7 +371,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                     content: {
                         raw: content,
                     },
-                }
+                },
             );
 
             return this.convertDataToTask(data, site);
@@ -398,7 +398,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                     },
                     id: task.id,
                     state: task.isComplete ? 'RESOLVED' : 'UNRESOLVED',
-                }
+                },
             );
 
             return this.convertDataToTask(data, site);
@@ -415,7 +415,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         try {
             await this.client.delete(
                 `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
-                {}
+                {},
             );
         } catch (e) {
             const error = new Error(`Error deleting task using API: ${e}`);
@@ -477,7 +477,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
 
         const convertedComments = await Promise.all(
-            comments.map((commentData) => this.convertDataToComment(commentData, pr.site, commitHash))
+            comments.map((commentData) => this.convertDataToComment(commentData, pr.site, commitHash)),
         );
 
         const nestedComments = this.toNestedList(convertedComments);
@@ -529,7 +529,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/statuses`,
             {
                 pagelen: maxItemsSupported.buildStatuses,
-            }
+            },
         );
 
         const statuses = data.values || [];
@@ -589,7 +589,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             {
                 pagelen: maxItemsSupported.reviewers,
             },
-            cancelToken
+            cancelToken,
         );
 
         const result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
@@ -607,7 +607,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         });
 
         const participants = data.values.flatMap((val: any) =>
-            val.participants.map((p: any) => CloudPullRequestApi.toUserModel(p.user))
+            val.participants.map((p: any) => CloudPullRequestApi.toUserModel(p.user)),
         );
 
         return this.dedupUsers(participants);
@@ -632,8 +632,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         try {
             let { data } = await this.client.get(`/workspaces/${ownerSlug}/members`, {
                 pagelen: 100,
-                fields:
-                    'size,next,values.user.account_id,values.user.display_name,values.user.links.html.href,values.user.links.avatar.href',
+                fields: 'size,next,values.user.account_id,values.user.display_name,values.user.links.html.href,values.user.links.avatar.href',
             });
             const teamMembers = data.values || [];
 
@@ -666,7 +665,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     async create(
         site: BitbucketSite,
         workspaceRepo: WorkspaceRepo,
-        createPrData: CreatePullRequestData
+        createPrData: CreatePullRequestData,
     ): Promise<PullRequest> {
         let prBody = {
             type: 'pullrequest',
@@ -717,7 +716,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const { data } = await this.client.put(
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
-            prBody
+            prBody,
         );
         return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
@@ -728,11 +727,11 @@ export class CloudPullRequestApi implements PullRequestApi {
             status === 'APPROVED'
                 ? await this.client.post(
                       `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                      {}
+                      {},
                   )
                 : await this.client.delete(
                       `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
-                      {}
+                      {},
                   );
         return data.approved ? 'APPROVED' : 'UNAPPROVED';
     }
@@ -741,7 +740,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         pr: PullRequest,
         closeSourceBranch?: boolean,
         mergeStrategy?: string,
-        commitMessage?: string
+        commitMessage?: string,
     ): Promise<PullRequest> {
         const { ownerSlug, repoSlug } = pr.site;
 
@@ -757,7 +756,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const { data } = await this.client.post(
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/merge`,
-            body
+            body,
         );
         return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
@@ -768,7 +767,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         text: string,
         parentCommentId: string,
         inline?: { from?: number; to?: number; path: string },
-        commitHash?: string
+        commitHash?: string,
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 

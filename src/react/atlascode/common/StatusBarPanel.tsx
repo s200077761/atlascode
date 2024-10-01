@@ -35,7 +35,7 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Status, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -69,5 +69,5 @@ export const StatusBarPanel: React.FunctionComponent<StatusBarPanelProps> = memo
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

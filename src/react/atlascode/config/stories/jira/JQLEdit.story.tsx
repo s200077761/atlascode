@@ -35,7 +35,7 @@ const mockConfigController: ConfigControllerApi = {
         fieldName: string,
         userInput: string,
         predicateName?: string,
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
     ): Promise<Suggestion[]> => {
         return new Promise((resolve) => {
             resolve([
@@ -51,7 +51,7 @@ const mockConfigController: ConfigControllerApi = {
         query: string,
         maxResults?: number,
         startAt?: number,
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
     ): Promise<FilterSearchResults> => {
         const filterResults = {
             filters: [

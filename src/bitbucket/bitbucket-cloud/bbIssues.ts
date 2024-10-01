@@ -67,7 +67,7 @@ export class BitbucketIssuesApiImpl {
         const keyNumbers = issueKeys.map((key) => key.replace('#', ''));
 
         const results = await Promise.all(
-            keyNumbers.map((key) => this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues/${key}`))
+            keyNumbers.map((key) => this.client.get(`/repositories/${ownerSlug}/${repoSlug}/issues/${key}`)),
         );
 
         return results.filter((result) => !!result).map((result) => ({ site, data: result.data }));
@@ -126,7 +126,7 @@ export class BitbucketIssuesApiImpl {
                 issue_id: issue.data.id!.toString(),
                 pagelen: maxItemsSupported.comments,
                 sort: '-created_on',
-            }
+            },
         );
 
         return {
@@ -171,7 +171,7 @@ export class BitbucketIssuesApiImpl {
             {
                 pagelen: pagelen || maxItemsSupported.changes,
                 sort: '-created_on',
-            }
+            },
         );
 
         // we fetch the data sorted by `-created_on` to get the latest changes
@@ -259,7 +259,7 @@ export class BitbucketIssuesApiImpl {
                 content: {
                     raw: content,
                 },
-            }
+            },
         );
 
         return [data.changes.state.new, this.convertChangeToComment(data)];
@@ -288,7 +288,7 @@ export class BitbucketIssuesApiImpl {
                 content: {
                     raw: content,
                 },
-            }
+            },
         );
         return this.toCommentModel(data);
     }
@@ -307,7 +307,7 @@ export class BitbucketIssuesApiImpl {
                         },
                     },
                 },
-                { fields: '+issue.assignee' }
+                { fields: '+issue.assignee' },
             );
             return [CloudPullRequestApi.toUserModel(data.issue.assignee), this.convertChangeToComment(data)];
         }
@@ -328,7 +328,7 @@ export class BitbucketIssuesApiImpl {
         title: string,
         description: string,
         kind: string,
-        priority: string
+        priority: string,
     ): Promise<BitbucketIssue> {
         const { ownerSlug, repoSlug } = site;
 

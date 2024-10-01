@@ -29,7 +29,7 @@ export interface StartWorkControllerApi {
         wsRepo: WorkspaceRepo,
         sourceBranch: Branch,
         targetBranch: string,
-        upstream: string
+        upstream: string,
     ) => Promise<{ transistionStatus?: string; branch?: string; upstream?: string }>;
     closePage: () => void;
     openJiraIssue: () => void;
@@ -110,7 +110,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
     }, []);
 
     const [postMessage, postMessagePromise] = useMessagingApi<StartWorkAction, StartWorkMessage, StartWorkResponse>(
-        onMessageHandler
+        onMessageHandler,
     );
 
     const startWork = useCallback(
@@ -121,7 +121,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             wsRepo: WorkspaceRepo,
             sourceBranch: Branch,
             targetBranch: string,
-            upstream: string
+            upstream: string,
         ): Promise<StartWorkResponseMessage> => {
             return new Promise<StartWorkResponseMessage>((resolve, reject) => {
                 (async () => {
@@ -138,7 +138,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                                 upstream,
                             },
                             StartWorkMessageType.StartWorkResponse,
-                            ConnectionTimeout
+                            ConnectionTimeout,
                         );
                         resolve(response as StartWorkResponseMessage);
                     } catch (e) {
@@ -147,7 +147,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
                 })();
             });
         },
-        [postMessagePromise]
+        [postMessagePromise],
     );
 
     const closePage = useCallback((): void => postMessage({ type: StartWorkActionType.ClosePage }), [postMessage]);
@@ -160,12 +160,12 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
     const openLink = useCallback(
         (linkId: KnownLinkID) =>
             postMessage({ type: CommonActionType.ExternalLink, source: WebViewID.StartWork, linkId: linkId }),
-        [postMessage]
+        [postMessage],
     );
 
     const openJiraIssue = useCallback(
         () => postMessage({ type: CommonActionType.OpenJiraIssue, issueOrKey: state.issue }),
-        [postMessage, state.issue]
+        [postMessage, state.issue],
     );
 
     const openSettings = useCallback(
@@ -173,7 +173,7 @@ export function useStartWorkController(): [StartWorkState, StartWorkControllerAp
             dispatch({ type: StartWorkUIActionType.Loading });
             postMessage({ type: StartWorkActionType.OpenSettings, section: section, subsection: subsection });
         },
-        [postMessage]
+        [postMessage],
     );
 
     const controllerApi = useMemo<StartWorkControllerApi>((): StartWorkControllerApi => {

@@ -8,7 +8,11 @@ import { Tokens } from '../tokens';
 import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common';
 
 export class JiraPKCEResponseHandler extends ResponseHandler {
-    constructor(private strategy: Strategy, private agent: { [k: string]: any }, private axios: AxiosInstance) {
+    constructor(
+        private strategy: Strategy,
+        private agent: { [k: string]: any },
+        private axios: AxiosInstance,
+    ) {
         super();
     }
 

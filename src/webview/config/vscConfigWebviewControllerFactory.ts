@@ -22,7 +22,7 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
         api: ConfigActionApi,
         commonHandler: CommonActionMessageHandler,
         analytics: AnalyticsApi,
-        settingsUrl: string
+        settingsUrl: string,
     ) {
         this._api = api;
         this._commonHandler = commonHandler;
@@ -40,14 +40,14 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: SectionChangeMessage
+        factoryData?: SectionChangeMessage,
     ): [ConfigWebviewController, Disposable | undefined];
 
     public createController(postMessage: PostMessageFunc, factoryData?: SectionChangeMessage): ConfigWebviewController;
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: SectionChangeMessage
+        factoryData?: SectionChangeMessage,
     ): ConfigWebviewController | [ConfigWebviewController, Disposable | undefined] {
         const controller = new ConfigWebviewController(
             postMessage,
@@ -56,11 +56,11 @@ export class VSCConfigWebviewControllerFactory implements VSCWebviewControllerFa
             Logger.Instance,
             this._analytics,
             this._settingsUrl,
-            factoryData
+            factoryData,
         );
 
         const disposables = Disposable.from(
-            Container.siteManager.onDidSitesAvailableChange(controller.onSitesChanged, controller)
+            Container.siteManager.onDidSitesAvailableChange(controller.onSitesChanged, controller),
         );
 
         return [controller, disposables];

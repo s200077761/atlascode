@@ -35,17 +35,17 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js', '.json'],
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
         fallback: {
-            path: false
-        }
+            path: false,
+        },
     },
     plugins: [
         new MiniCssExtractPlugin(),
         new WebpackManifestPlugin(),
         new webpack.IgnorePlugin({
-            resourceRegExp: /iconv-loader\.js/
+            resourceRegExp: /iconv-loader\.js/,
         }),
         new webpack.WatchIgnorePlugin({
-            paths: [/\.js$/, /\.d\.ts$/]
+            paths: [/\.js$/, /\.d\.ts$/],
         }),
         new ForkTsCheckerWebpackPlugin({
             typescript: {
@@ -77,7 +77,7 @@ module.exports = {
                         options: {
                             // you can specify a publicPath here
                             // by default it uses publicPath in webpackOptions.output
-                            publicPath: '../'
+                            publicPath: '../',
                         },
                     },
                     'css-loader',

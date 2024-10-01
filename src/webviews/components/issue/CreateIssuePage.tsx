@@ -254,7 +254,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             input,
             `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
                 this.state.siteDetails.isCloud ? 'query' : 'username'
-            }=`
+            }=`,
         );
     };
 
@@ -350,7 +350,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                             }}
                                                             onChange={chain(
                                                                 fieldArgs.fieldProps.onChange,
-                                                                this.handleSiteChange
+                                                                this.handleSiteChange,
                                                             )}
                                                         />
                                                     );
@@ -383,21 +383,22 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     );
                                 }}
                             </Form>
-                            {this.state.transformerProblems && Object.keys(this.state.transformerProblems).length > 0 && (
-                                <div className="fade-in" style={{ marginTop: '20px' }}>
-                                    <span>non-renderable fields detected.</span>{' '}
-                                    <Button
-                                        className="ac-banner-link-button"
-                                        appearance="link"
-                                        spacing="none"
-                                        onClick={() => {
-                                            this.postMessage({ action: 'openProblemReport' });
-                                        }}
-                                    >
-                                        View a problem report
-                                    </Button>
-                                </div>
-                            )}
+                            {this.state.transformerProblems &&
+                                Object.keys(this.state.transformerProblems).length > 0 && (
+                                    <div className="fade-in" style={{ marginTop: '20px' }}>
+                                        <span>non-renderable fields detected.</span>{' '}
+                                        <Button
+                                            className="ac-banner-link-button"
+                                            appearance="link"
+                                            spacing="none"
+                                            onClick={() => {
+                                                this.postMessage({ action: 'openProblemReport' });
+                                            }}
+                                        >
+                                            View a problem report
+                                        </Button>
+                                    </div>
+                                )}
                         </div>
                     </GridColumn>
                 </Grid>

@@ -152,7 +152,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             input,
             `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
                 this.state.siteDetails.isCloud ? 'query' : 'username'
-            }=`
+            }=`,
         );
     };
 
@@ -251,7 +251,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             },
             'editIssueDone',
             ConnectionTimeout,
-            nonce
+            nonce,
         );
     };
 
@@ -514,7 +514,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             },
                                             'getImageDone',
                                             ConnectionTimeout,
-                                            nonce
+                                            nonce,
                                         )
                                     ).imgData;
                                 }}
@@ -593,7 +593,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             },
                                             'getImageDone',
                                             ConnectionTimeout,
-                                            nonce
+                                            nonce,
                                         )
                                     ).imgData;
                                 }}
@@ -827,7 +827,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
                         {this.getInputMarkup(field, true)}
-                    </div>
+                    </div>,
                 );
             }
         });
@@ -840,7 +840,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         pullRequests={this.state.recentPullRequests}
                         onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })}
                     />
-                </div>
+                </div>,
             );
         }
 
@@ -869,7 +869,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className="ac-vpadding">
                         <label className="ac-field-label">{field.name}</label>
                         {this.getInputMarkup(field, true)}
-                    </div>
+                    </div>,
                 );
             }
         });

@@ -90,14 +90,12 @@ export class PipelineApiImpl {
         site: BitbucketSite,
         pipelineUuid: string,
         stepUuid: string,
-        range: PipelineLogRange
+        range: PipelineLogRange,
     ): Promise<string> {
         const { ownerSlug, repoSlug } = site;
-        const {
-            data,
-        } = await this.client.getOctetStream(
+        const { data } = await this.client.getOctetStream(
             `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`,
-            { start: range.firstByte, end: range.lastByte }
+            { start: range.firstByte, end: range.lastByte },
         );
 
         return data;
@@ -110,9 +108,8 @@ export class PipelineApiImpl {
      */
     async getLogRanges(site: BitbucketSite, buildNumber: number): Promise<PipelineStepLogRanges[]> {
         const { ownerSlug, repoSlug } = site;
-        let url:
-            | string
-            | undefined = `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pipelines/${buildNumber}/steps/`;
+        let url: string | undefined =
+            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pipelines/${buildNumber}/steps/`;
         let steps: any[] = [];
         do {
             const data: any = (await this.client.getUrl(url)).data;

@@ -39,7 +39,7 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
                 }
 
                 this._listeners.delete(key);
-            }, this)
+            }, this),
         );
         this._viewMap.set(key, view);
 

@@ -11,11 +11,11 @@ __webpack_public_path__ = `${document.baseURI!}build/`;
 
 const routes = {
     viewIssueScreen: React.lazy(() => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage')),
-    atlascodeCreateIssueScreen: React.lazy(() =>
-        import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage')
+    atlascodeCreateIssueScreen: React.lazy(
+        () => import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage'),
     ),
-    startWorkOnIssueScreen: React.lazy(() =>
-        import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage')
+    startWorkOnIssueScreen: React.lazy(
+        () => import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage'),
     ),
 };
 

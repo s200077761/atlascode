@@ -21,7 +21,7 @@ export class PullRequestFilesNode extends AbstractBaseNode {
         }
         let item = new vscode.TreeItem(
             `${itemData.numberOfComments > 0 ? '💬 ' : ''}${fileDisplayString}`,
-            vscode.TreeItemCollapsibleState.None
+            vscode.TreeItemCollapsibleState.None,
         );
         item.tooltip = itemData.fileDisplayName;
         item.command = {

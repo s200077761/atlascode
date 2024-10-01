@@ -56,7 +56,7 @@ export class ClientManager implements Disposable {
     constructor(context: ExtensionContext) {
         context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
-            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this)
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
         );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
         this.negotiator = new Negotiator(context.globalState);
@@ -168,21 +168,21 @@ export class ClientManager implements Disposable {
                             site,
                             oauthJiraTransportFactory(site),
                             jiraTokenAuthProvider(info.access),
-                            getAgent
+                            getAgent,
                         );
                     } else if (isBasicAuthInfo(info)) {
                         client = new JiraServerClient(
                             site,
                             basicJiraTransportFactory(site),
                             jiraBasicAuthProvider(info.username, info.password),
-                            getAgent
+                            getAgent,
                         );
                     } else if (isPATAuthInfo(info)) {
                         client = new JiraServerClient(
                             site,
                             basicJiraTransportFactory(site),
                             jiraTokenAuthProvider(info.token),
-                            getAgent
+                            getAgent,
                         );
                     }
                     Logger.debug(`${tag}: client created`);
@@ -212,7 +212,7 @@ export class ClientManager implements Disposable {
                 }
 
                 return new ClientError(response.statusText, errString);
-            }
+            },
         );
     }
 
@@ -234,7 +234,7 @@ export class ClientManager implements Disposable {
 
                 return new ClientError(response.statusText, errString);
             },
-            new BasicInterceptor(site, Container.credentialManager)
+            new BasicInterceptor(site, Container.credentialManager),
         );
     }
 
@@ -253,7 +253,7 @@ export class ClientManager implements Disposable {
                 window
                     .showErrorMessage(
                         `There was an error connecting to ${site.name}. Please log in again.`,
-                        'View Atlascode settings'
+                        'View Atlascode settings',
                     )
                     .then((userChoice) => {
                         if (userChoice === 'View Atlascode settings') {

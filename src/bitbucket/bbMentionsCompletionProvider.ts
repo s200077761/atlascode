@@ -23,7 +23,7 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
         const users = await bbApi.pullrequests.getReviewers(site, triggerWord.slice(1));
 
         users.push(
-            ...participants.filter((participant) => !users.some((user) => user.accountId === participant.accountId))
+            ...participants.filter((participant) => !users.some((user) => user.accountId === participant.accountId)),
         );
 
         return users.map((user) => {

@@ -23,8 +23,8 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
                 return await controller.fetchUsers(query, abortSignal);
             },
             300,
-            { leading: false }
-        )
+            { leading: false },
+        ),
     );
 
     const handleChange = async (event: React.ChangeEvent, value: User | undefined, reason: string) => {
@@ -48,7 +48,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
                 setInputText(value);
             }
         },
-        [open, setInputText]
+        [open, setInputText],
     );
 
     const fetchUsers = useAsyncAbortable(
@@ -56,7 +56,7 @@ const UserPicker: React.FC<UserPickerProps> = (props: UserPickerProps) => {
             const results = await debouncedUserFetcher(inputText, abortSignal);
             return results;
         },
-        [inputText]
+        [inputText],
     );
 
     return (

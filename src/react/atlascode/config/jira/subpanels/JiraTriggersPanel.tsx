@@ -23,7 +23,7 @@ export const JiraTriggersPanel: React.FunctionComponent<JiraTriggersPanelProps> 
                 setInternalExpanded(expanded);
                 onSubsectionChange(ConfigSubSection.Triggers, expanded);
             },
-            [onSubsectionChange]
+            [onSubsectionChange],
         );
 
         useEffect(() => {
@@ -60,5 +60,5 @@ export const JiraTriggersPanel: React.FunctionComponent<JiraTriggersPanelProps> 
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

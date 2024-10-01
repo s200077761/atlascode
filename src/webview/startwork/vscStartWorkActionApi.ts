@@ -26,7 +26,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
     }
 
     async getRepoScmState(
-        wsRepo: WorkspaceRepo
+        wsRepo: WorkspaceRepo,
     ): Promise<{ localBranches: Branch[]; remoteBranches: Branch[]; hasSubmodules: boolean }> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
@@ -49,7 +49,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         wsRepo: WorkspaceRepo,
         destinationBranch: string,
         sourceBranch: Branch,
-        remote: string
+        remote: string,
     ): Promise<void> {
         const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
@@ -72,7 +72,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
         await scm.createBranch(
             destinationBranch,
             true,
-            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`
+            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
         await scm.push(remote, destinationBranch, true);
         return;
@@ -87,7 +87,7 @@ export class VSCStartWorkActionApi implements StartWorkActionApi {
 
     openSettings(section?: ConfigSection, subsection?: ConfigSubSection): void {
         Container.settingsWebviewFactory.createOrShow(
-            section ? { section: section, subSection: subsection } : undefined
+            section ? { section: section, subSection: subsection } : undefined,
         );
     }
 

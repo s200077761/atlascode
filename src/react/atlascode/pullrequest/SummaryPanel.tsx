@@ -23,14 +23,14 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
             async (input: string) => {
                 return await fetchUsers(input);
             },
-            [fetchUsers]
+            [fetchUsers],
         );
 
         const handleSummaryChange = useCallback(
             async (text: string) => {
                 summaryChange(text);
             },
-            [summaryChange]
+            [summaryChange],
         );
 
         return (
@@ -48,5 +48,5 @@ export const SummaryPanel: React.FunctionComponent<SummaryPanelProps> = memo(
                 </ExpansionPanelDetails>
             </ExpansionPanel>
         );
-    }
+    },
 );

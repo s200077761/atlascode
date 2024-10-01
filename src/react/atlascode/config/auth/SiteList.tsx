@@ -44,7 +44,7 @@ const useStyles = makeStyles(
             iconStyle: {
                 color: theme.palette.grey[600],
             },
-        } as const)
+        }) as const,
 );
 
 function generateListItems(
@@ -52,7 +52,7 @@ function generateListItems(
     sites: SiteWithAuthInfo[],
     logout: (site: DetailedSiteInfo) => void,
     edit: (site: SiteWithAuthInfo) => void,
-    iconClassName: string
+    iconClassName: string,
 ): JSX.Element[] {
     const fallbackImg = `images/${product.key}-icon.svg`;
 

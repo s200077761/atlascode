@@ -9,14 +9,14 @@ export interface StartWorkActionApi {
     getWorkspaceRepos(): WorkspaceRepo[];
     getRepoDetails(repo: WorkspaceRepo): Promise<Repo>;
     getRepoScmState(
-        repo: WorkspaceRepo
+        repo: WorkspaceRepo,
     ): Promise<{ localBranches: Branch[]; remoteBranches: Branch[]; hasSubmodules: boolean }>;
     assignAndTransitionIssue(issue: MinimalIssue<DetailedSiteInfo>, transition?: Transition): Promise<void>;
     createOrCheckoutBranch(
         wsRepo: WorkspaceRepo,
         destinationBranch: string,
         sourceBranch: Branch,
-        remote: string
+        remote: string,
     ): Promise<void>;
     closePage(): void;
     getStartWorkConfig(): StartWorkBranchTemplate;

@@ -15,7 +15,7 @@ export class RepositoriesNode extends AbstractBaseNode {
         public fetcher: (wsRepo: WorkspaceRepo) => Promise<PaginatedPullRequests>,
         private workspaceRepo: WorkspaceRepo,
         private preloadingEnabled: boolean,
-        private expand?: boolean
+        private expand?: boolean,
     ) {
         super();
         this.treeItem = this.createTreeItem();
@@ -37,7 +37,7 @@ export class RepositoriesNode extends AbstractBaseNode {
         const directory = path.basename(this.workspaceRepo.rootUri);
         const item = new vscode.TreeItem(
             `${directory}`,
-            this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed
+            this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
         );
         item.tooltip = this.workspaceRepo.rootUri;
         item.contextValue = PullRequestContextValue;
@@ -46,7 +46,7 @@ export class RepositoriesNode extends AbstractBaseNode {
         item.resourceUri = vscode.Uri.parse(
             site.details.isCloud
                 ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/pull-requests`
-                : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`
+                : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`,
         );
 
         return item;
@@ -105,13 +105,13 @@ export class RepositoriesNode extends AbstractBaseNode {
 
     private createChildNodes(
         pullRequests: PullRequest[],
-        currentChildren?: (PullRequestTitlesNode | NextPageNode)[]
+        currentChildren?: (PullRequestTitlesNode | NextPageNode)[],
     ): PullRequestTitlesNode[] {
         const prMap = new Map<string, { pr: PullRequest; node: PullRequestTitlesNode }>();
         let numPRs = pullRequests.length;
         if (currentChildren) {
             const prNodes = currentChildren.filter(
-                (child) => child instanceof PullRequestTitlesNode
+                (child) => child instanceof PullRequestTitlesNode,
             ) as PullRequestTitlesNode[];
             prNodes.forEach((child) => {
                 const pr = child.getPR();

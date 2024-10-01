@@ -95,45 +95,46 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
 
     const handleTitleChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => setTitle(event.target.value),
-        [setTitle]
+        [setTitle],
     );
 
     const handleSummaryChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => setSummary(event.target.value),
-        [setSummary]
+        [setSummary],
     );
 
     const handleSourceRemoteChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => setSourceRemoteName(event.target.value),
-        [setSourceRemoteName]
+        [setSourceRemoteName],
     );
 
     const handleSourceBranchChange = useCallback(
         (event: React.ChangeEvent, value: Branch) => {
             setSourceBranch(value);
         },
-        [setSourceBranch]
+        [setSourceBranch],
     );
 
     const handleDestinationBranchChange = useCallback(
         (event: React.ChangeEvent, value: Branch) => setDestinationBranch(value),
-        [setDestinationBranch]
+        [setDestinationBranch],
     );
 
     const handleReviewersChange = useCallback((value: User[]) => setReviewers(value), [setReviewers]);
 
     const togglePushLocalChanges = useCallback(() => setPushLocalChanges(!pushLocalChanges), [pushLocalChanges]);
     const toggleCloseSourceBranch = useCallback(() => setCloseSourceBranch(!closeSourceBranch), [closeSourceBranch]);
-    const toggleTransitionIssueEnabled = useCallback(() => setTransitionIssueEnabled(!transitionIssueEnabled), [
-        transitionIssueEnabled,
-    ]);
+    const toggleTransitionIssueEnabled = useCallback(
+        () => setTransitionIssueEnabled(!transitionIssueEnabled),
+        [transitionIssueEnabled],
+    );
 
     const handleIssueTransitionChange = useCallback(
         (event: React.ChangeEvent<{ name?: string | undefined; value: any }>) => {
             setTransition(event.target.value);
             setTransitionIssueEnabled(true);
         },
-        [setTransition]
+        [setTransition],
     );
 
     const handleSubmit = useCallback(async () => {
@@ -182,7 +183,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
         if (state.repoData.remoteBranches.length > 0) {
             setDestinationBranch(
                 state.repoData.remoteBranches.find((b) => b.name!.indexOf(state.repoData.developmentBranch!) !== -1) ||
-                    state.repoData.localBranches[0]
+                    state.repoData.localBranches[0],
             );
         }
         setReviewers(state.repoData.defaultReviewers);
@@ -210,7 +211,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
     useEffect(() => {
         if (state.issue?.transitions && state.issue?.transitions.length > 0) {
             setTransition(
-                state.issue.transitions.find((t) => t.to.id === state.issue?.status.id) || state.issue.transitions[0]
+                state.issue.transitions.find((t) => t.to.id === state.issue?.status.id) || state.issue.transitions[0],
             );
         } else {
             setTransition(emptyTransition);
@@ -223,7 +224,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
         if (state.commits.length === 1) {
             setTitle(state.commits[0].message!.split('\n', 1)[0].trim());
             setSummary(
-                `${state.commits[0].message!.substring(state.commits[0].message!.indexOf('\n') + 1).trimLeft()}`
+                `${state.commits[0].message!.substring(state.commits[0].message!.indexOf('\n') + 1).trimLeft()}`,
             );
         } else if (state.commits.length > 1) {
             setTitle(sourceBranch.name!);
@@ -272,7 +273,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                             <Card>
                                                 <CardContent>
                                                     {state.repoData.workspaceRepo.siteRemotes.filter(
-                                                        (r) => !r.remote.name.endsWith('(parent repo)')
+                                                        (r) => !r.remote.name.endsWith('(parent repo)'),
                                                     ).length > 1 && (
                                                         <TextField
                                                             select
@@ -384,7 +385,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                         <UserPicker
                                             site={
                                                 state.repoData.workspaceRepo.siteRemotes.find(
-                                                    (r) => r.remote.name === destinationBranch.remote
+                                                    (r) => r.remote.name === destinationBranch.remote,
                                                 )?.site
                                             }
                                             users={reviewers}
@@ -457,7 +458,7 @@ const CreatePullRequestPage: React.FunctionComponent = () => {
                                                                     label={transition.to.name}
                                                                 />
                                                             </MenuItem>
-                                                        )
+                                                        ),
                                                     )}
                                                 </TextField>
                                             </Grid>

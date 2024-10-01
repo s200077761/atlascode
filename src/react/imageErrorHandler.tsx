@@ -16,6 +16,6 @@ export const attachImageErrorHandler = () => {
         },
         // `capture` must be set to true to handle errors caused by img failing to load
         // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
-        { capture: true }
+        { capture: true },
     );
 };

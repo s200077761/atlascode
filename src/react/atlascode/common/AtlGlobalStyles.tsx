@@ -132,9 +132,10 @@ const useStyles = makeStyles(
                 },
                 '.ProseMirror-menu-active': { background: '#eee', borderRadius: '4px' },
                 '.ProseMirror-menu-disabled': { opacity: '.3' },
-                '.ProseMirror-menu-submenu-wrap:hover .ProseMirror-menu-submenu, .ProseMirror-menu-submenu-wrap-active .ProseMirror-menu-submenu': {
-                    display: 'block',
-                },
+                '.ProseMirror-menu-submenu-wrap:hover .ProseMirror-menu-submenu, .ProseMirror-menu-submenu-wrap-active .ProseMirror-menu-submenu':
+                    {
+                        display: 'block',
+                    },
                 '.ProseMirror-menubar': {
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
@@ -237,9 +238,10 @@ const useStyles = makeStyles(
                     minWidth: '10em',
                 },
                 '.ProseMirror-prompt-buttons': { marginTop: '5px', display: 'none' },
-                '.ProseMirror p:first-child,.ProseMirror h1:first-child,.ProseMirror h2:first-child,.ProseMirror h3:first-child,.ProseMirror h4:first-child,.ProseMirror h5:first-child,.ProseMirror h6:first-child': {
-                    marginTop: '10px',
-                },
+                '.ProseMirror p:first-child,.ProseMirror h1:first-child,.ProseMirror h2:first-child,.ProseMirror h3:first-child,.ProseMirror h4:first-child,.ProseMirror h5:first-child,.ProseMirror h6:first-child':
+                    {
+                        marginTop: '10px',
+                    },
                 '.ProseMirror p': { marginBottom: '1em' },
                 '.suggestion-item-active': { background: '#08c', color: '#fff' },
                 '.prosemirror-mention-node': {
@@ -257,7 +259,7 @@ const useStyles = makeStyles(
                 '.suggestion-item': { padding: '5px' },
                 '.suggestion-item:before': { borderTop: '1px solid' },
             },
-        } as const)
+        }) as const,
 );
 
 const AtlGlobalStyles: React.FC = () => {

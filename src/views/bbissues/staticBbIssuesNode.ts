@@ -10,7 +10,10 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
     private collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
-    constructor(private site: BitbucketSite, private issueKeys: string[]) {
+    constructor(
+        private site: BitbucketSite,
+        private issueKeys: string[],
+    ) {
         super();
         this.collapsibleState =
             issueKeys.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Expanded;
@@ -38,7 +41,7 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
                         command: Commands.ShowBitbucketIssue,
                         title: 'Open bitbucket issue',
                         arguments: [i],
-                    })
+                    }),
             );
         }
         return this._children;

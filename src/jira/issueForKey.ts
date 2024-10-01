@@ -13,7 +13,7 @@ export async function issueForKey(issueKey: string): Promise<MinimalIssue<Detail
         emptyPromises.push(
             (async () => {
                 return await fetchMinimalIssue(issueKey, site);
-            })()
+            })(),
         );
     });
     const promise = pAny(emptyPromises);

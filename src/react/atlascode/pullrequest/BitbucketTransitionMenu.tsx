@@ -33,7 +33,7 @@ export const BitbucketTransitionMenu: React.FC<BitbucketTransitionMenuProps> = (
             setTransitionIssueEnabled(true);
             handleIssueTransition(issue, value);
         },
-        [issue, handleIssueTransition]
+        [issue, handleIssueTransition],
     );
 
     useEffect(() => {

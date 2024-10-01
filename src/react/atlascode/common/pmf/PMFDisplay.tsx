@@ -30,7 +30,7 @@ export const PMFDisplay: React.FunctionComponent<PMFDisplayProps> = ({ postMessa
         (data: PMFData) => {
             controller.submitPMFSurvey(data, postMessageFunc);
         },
-        [controller, postMessageFunc]
+        [controller, postMessageFunc],
     );
 
     return (

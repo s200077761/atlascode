@@ -26,7 +26,7 @@ export class CreateBitbucketIssueWebviewController implements WebviewController<
         private api: CreateBitbucketIssueActionApi,
         private commonHandler: CommonActionMessageHandler,
         private logger: Logger,
-        private analytics: AnalyticsApi
+        private analytics: AnalyticsApi,
     ) {}
 
     public title(): string {
@@ -75,7 +75,7 @@ export class CreateBitbucketIssueWebviewController implements WebviewController<
                         msg.title,
                         msg.description,
                         msg.kind,
-                        msg.priority
+                        msg.priority,
                     );
                     this.postMessage({
                         type: CreateBitbucketIssueMessageType.SubmitResponse,

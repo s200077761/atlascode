@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
         <base target="_top" />
@@ -14,9 +14,7 @@
             <h1>Success!</h1>
             <p>Your {{product.name}} account was connected with VS Code.</p>
             <p>
-                <a href="{{vscodeurl}}" class="ac-button ac-button__appearance-primary">
-                    Back to VS Code
-                </a>
+                <a href="{{vscodeurl}}" class="ac-button ac-button__appearance-primary"> Back to VS Code </a>
             </p>
         </main>
     </body>
@@ -74,7 +72,9 @@
             outline: none;
             padding: 0 12px;
             text-align: center;
-            transition: background 0.1s ease-out, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38);
+            transition:
+                background 0.1s ease-out,
+                box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38);
             user-select: none;
             vertical-align: middle;
             white-space: nowrap;
@@ -82,7 +82,9 @@
 
         .ac-button:hover {
             cursor: pointer;
-            transition: background 0s ease-out, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38);
+            transition:
+                background 0s ease-out,
+                box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38);
         }
 
         .ac-button:active {

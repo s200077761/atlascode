@@ -8,7 +8,7 @@ import { Strategy } from './strategy';
 export function responseHandlerForStrategy(
     strategy: Strategy,
     agent: { [k: string]: any },
-    axios: AxiosInstance
+    axios: AxiosInstance,
 ): ResponseHandler {
     if (strategy.provider() === OAuthProvider.JiraCloud || strategy.provider() === OAuthProvider.JiraCloudStaging) {
         return new JiraPKCEResponseHandler(strategy, agent, axios);

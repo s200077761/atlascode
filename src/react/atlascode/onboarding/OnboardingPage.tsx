@@ -82,7 +82,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
         (site: SiteInfo, auth: AuthInfo): void => {
             controller.login(site, auth);
         },
-        [controller]
+        [controller],
     );
 
     const handleExit = useCallback((): void => {

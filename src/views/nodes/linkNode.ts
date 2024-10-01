@@ -10,7 +10,7 @@ export class LinkNode extends AbstractBaseNode {
         readonly message: string,
         readonly description: string,
         readonly icon: iconSet,
-        readonly linkId: KnownLinkID
+        readonly linkId: KnownLinkID,
     ) {
         super();
     }

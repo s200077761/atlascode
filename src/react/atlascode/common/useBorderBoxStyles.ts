@@ -8,5 +8,5 @@ export const useBorderBoxStyles = makeStyles(
                 borderColor: theme.palette.divider,
                 borderStyle: 'solid',
             },
-        } as const)
+        }) as const,
 );

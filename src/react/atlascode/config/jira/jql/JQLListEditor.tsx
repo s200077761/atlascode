@@ -37,7 +37,7 @@ const useStyles = makeStyles(
                         ? lighten(theme.palette.background.paper, 0.05)
                         : darken(theme.palette.background.paper, 0.05),
             },
-        } as const)
+        }) as const,
 );
 
 export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo(({ sites, jqlList }) => {
@@ -53,7 +53,7 @@ export const JQLListEditor: React.FunctionComponent<JQLListEditorProps> = memo((
             changes['jira.jqlList'] = inputList;
             controller.updateConfig(changes);
         },
-        [controller]
+        [controller],
     );
 
     const handleJQLSave = useCallback((newEntry: JQLEntry) => {

@@ -42,5 +42,5 @@ export const PipelineFilterListEditor: React.FunctionComponent<PipelineFilterLis
                 }
             />
         );
-    }
+    },
 );

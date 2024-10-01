@@ -38,7 +38,7 @@ export class VSCBitbucketIssueWebviewControllerFactory implements VSCWebviewCont
 
     public createController(
         postMessage: PostMessageFunc,
-        factoryData?: BitbucketIssue
+        factoryData?: BitbucketIssue,
     ): BitbucketIssueWebviewController | [BitbucketIssueWebviewController, Disposable | undefined] {
         if (!factoryData) {
             throw new Error('Error creating Bitbucket issue webview');
@@ -49,7 +49,7 @@ export class VSCBitbucketIssueWebviewControllerFactory implements VSCWebviewCont
             this._api,
             this._commonHandler,
             Logger.Instance,
-            this._analytics
+            this._analytics,
         );
 
         return [controller, undefined];

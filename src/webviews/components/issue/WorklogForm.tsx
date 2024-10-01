@@ -99,7 +99,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                         this.setState({ comment: item.target.value }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
-                                                    }
+                                                    },
                                                 )}
                                             />
                                         );
@@ -141,7 +141,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                             this.setState({ started: item }, () => {
                                                                 this.setState({ savingDisabled: this.disableSaving() });
                                                             });
-                                                        }
+                                                        },
                                                     )}
                                                 />
                                                 {errDiv}
@@ -174,7 +174,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                             this.setState({ timeSpent: item.target.value }, () => {
                                                                 this.setState({ savingDisabled: this.disableSaving() });
                                                             });
-                                                        }
+                                                        },
                                                     )}
                                                 />
                                                 <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
@@ -200,7 +200,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                         this.setState({ autoAdjust: item.target.checked }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
-                                                    }
+                                                    },
                                                 )}
                                             />
                                         );
@@ -237,9 +237,9 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                                             this.setState({
                                                                                 savingDisabled: this.disableSaving(),
                                                                             });
-                                                                        }
+                                                                        },
                                                                     );
-                                                                }
+                                                                },
                                                             )}
                                                         />
                                                     </div>

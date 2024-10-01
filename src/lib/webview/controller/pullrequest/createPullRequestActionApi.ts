@@ -9,7 +9,7 @@ export interface CreatePullRequestActionApi {
     getWorkspaceRepos(): WorkspaceRepo[];
     getRepoDetails(repo: WorkspaceRepo): Promise<RepoData>;
     getRepoScmState(
-        repo: WorkspaceRepo
+        repo: WorkspaceRepo,
     ): Promise<{ localBranches: Branch[]; remoteBranches: Branch[]; hasSubmodules: boolean }>;
     currentUser(site: BitbucketSite): Promise<User>;
     fetchUsers(site: BitbucketSite, query: string, abortKey?: string): Promise<User[]>;
@@ -17,7 +17,7 @@ export interface CreatePullRequestActionApi {
     fetchDetails(
         wsRepo: WorkspaceRepo,
         sourceBranch: Branch,
-        destinationBranch: Branch
+        destinationBranch: Branch,
     ): Promise<[Commit[], FileDiff[]]>;
     openDiff(fileDiff: FileDiff): void;
     create(data: SubmitCreateRequestAction): Promise<PullRequest>;

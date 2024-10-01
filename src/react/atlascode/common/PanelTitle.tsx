@@ -13,7 +13,7 @@ const useStyles = makeStyles(
             root: {
                 marginRight: theme.spacing(2),
             },
-        } as const)
+        }) as const,
 );
 
 export const PanelTitle: React.FC<PanelTitleProps> = memo(({ children, className, ...other }) => {

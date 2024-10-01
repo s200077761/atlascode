@@ -185,7 +185,7 @@ export const FilterSearchResultsTable: React.FunctionComponent<FilterSearchResul
         controller.fetchFilterSearchResults,
         site,
         offset,
-        25
+        25,
     );
 
     const results: FilterSearchResults = filterSearch.result ? filterSearch.result : emptyResults;

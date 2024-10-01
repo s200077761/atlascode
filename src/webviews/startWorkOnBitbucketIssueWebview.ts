@@ -16,8 +16,10 @@ import { Resources, iconSet } from '../resources';
 import { Branch, RefType, Repository } from '../typings/git';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
-export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
-    implements InitializingWebview<BitbucketIssue> {
+export class StartWorkOnBitbucketIssueWebview
+    extends AbstractReactWebview
+    implements InitializingWebview<BitbucketIssue>
+{
     private _state: BitbucketIssue;
 
     constructor(extensionPath: string) {
@@ -102,7 +104,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                                     scm,
                                     e.targetBranchName,
                                     e.sourceBranch,
-                                    e.remoteName
+                                    e.remoteName,
                                 );
                             }
 
@@ -135,7 +137,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
         repo: Repository,
         destBranch: string,
         sourceBranch: Branch,
-        remote: string
+        remote: string,
     ): Promise<void> {
         // checkout if a branch exists already
         try {
@@ -156,7 +158,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
         await repo.createBranch(
             destBranch,
             true,
-            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`
+            `${sourceBranch.type === RefType.RemoteHead ? 'remotes/' : ''}${sourceBranch.name}`,
         );
         await repo.push(remote, destBranch, true);
         return;
@@ -202,7 +204,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview
                         isCloud: isCloud,
                         hasSubmodules: scm.state.submodules.length > 0,
                     };
-                })
+                }),
         );
 
         const msg: StartWorkOnBitbucketIssueData = {
