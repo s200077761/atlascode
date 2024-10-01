@@ -1380,6 +1380,7 @@
         "@atlassianlabs/jira-pi-meta-models": "^1.0.11",
         "@atlassianlabs/pi-client-common": "^1.0.11",
         "@date-io/date-fns": "^3.0.0",
+        "@devcontainers/cli": "^0.71.0",
         "@material-ui/core": "^4.9.14",
         "@material-ui/icons": "^4.9.1",
         "@material-ui/lab": "^4.0.0-alpha.52",

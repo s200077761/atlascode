@@ -3,7 +3,6 @@ build
 node_modules
 .vscode-test/
 .vscode/*
-.devcontainer/
 launch.json
 !.vscode/launch.json.example
 *.vsix
