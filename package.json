@@ -1395,7 +1395,7 @@
         "clsx": "^1.1.0",
         "date-fns": "^2.21.3",
         "eventemitter3": "^4.0.0",
-        "express": "^4.17.3",
+        "express": "^4.21.0",
         "fast-deep-equal": "^3.1.1",
         "filesize": "^4.1.2",
         "flatten-anything": "^2.0.1",
