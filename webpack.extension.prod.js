@@ -3,6 +3,7 @@ const fs = require('fs');
 const webpack = require('webpack');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const nodeExternals = require('webpack-node-externals');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
@@ -43,9 +44,12 @@ module.exports = [
             extensions: ['.tsx', '.ts', '.js', '.json'],
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })],
             alias: {
-                'parse-url$': 'parse-url/dist/index.js',
                 parse5$: 'parse5/dist/cjs/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
+            },
+            fallback: {
+                bufferutil: false,
+                'utf-8-validate': false,
             },
         },
         output: {
@@ -79,8 +83,18 @@ module.exports = [
                 },
             },
         },
-        externals: ['vscode'],
-        plugins: [new webpack.IgnorePlugin(/iconv-loader\.js/), new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/])],
+        externals: [
+            'vscode',
+            nodeExternals()
+        ],
+        plugins: [
+            new webpack.IgnorePlugin({
+                resourceRegExp: /iconv-loader\.js/
+            }),
+            new webpack.WatchIgnorePlugin({
+                paths: [/\.js$/, /\.d\.ts$/]
+            })
+        ],
     },
     {
         bail: true,
@@ -118,6 +132,7 @@ module.exports = [
         },
 
         output: {
+            publicPath: "",
             filename: 'uninstall.js',
             path: path.resolve(__dirname, 'build', 'extension'),
             libraryTarget: 'commonjs',

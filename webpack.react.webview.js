@@ -5,7 +5,7 @@ const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-web
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
@@ -27,22 +27,30 @@ module.exports = {
         filename: 'static/js/bundle.js',
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
     },
+    devServer: {
+        static: './',
+    },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
+        fallback: {
+            path: false
+        }
     },
     plugins: [
         new MiniCssExtractPlugin(),
-        new ManifestPlugin({
-            fileName: 'asset-manifest.json',
+        new WebpackManifestPlugin(),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /iconv-loader\.js/
         }),
-        new webpack.IgnorePlugin(/iconv-loader\.js/),
-        new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
+        new webpack.WatchIgnorePlugin({
+            paths: [/\.js$/, /\.d\.ts$/]
+        }),
         new ForkTsCheckerWebpackPlugin({
-            watch: resolveApp('src'),
-            tsconfig: resolveApp('tsconfig.json'),
-            eslint: true,
+            typescript: {
+                configFile: resolveApp('tsconfig.notest.json'),
+            },
         }),
         new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
         new HtmlWebPackPlugin({
@@ -69,8 +77,7 @@ module.exports = {
                         options: {
                             // you can specify a publicPath here
                             // by default it uses publicPath in webpackOptions.output
-                            publicPath: '../',
-                            hmr: process.env.NODE_ENV === 'development',
+                            publicPath: '../'
                         },
                     },
                     'css-loader',

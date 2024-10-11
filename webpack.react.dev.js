@@ -5,13 +5,11 @@ const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-web
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');   
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
-const smp = new SpeedMeasurePlugin();
 
-module.exports = smp.wrap({
+module.exports = {
     mode: 'development',
     entry: {
         main: resolveApp('./src/webviews/components/index.tsx'),
@@ -19,6 +17,7 @@ module.exports = smp.wrap({
     },
     devtool: 'cheap-module-source-map',
     output: {
+        publicPath: "",
         pathinfo: true,
         path: path.resolve(__dirname, 'build'),
         chunkFilename: 'static/js/[name].chunk.js',
@@ -30,21 +29,38 @@ module.exports = smp.wrap({
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
+        fallback: {
+            path: false,
+        },
     },
     plugins: [
-        new MiniCssExtractPlugin(),
-        new ManifestPlugin({
+        new MiniCssExtractPlugin({
+            filename: '[name].css',
+        }),
+        new WebpackManifestPlugin({
             fileName: 'asset-manifest.json',
         }),
-        new webpack.IgnorePlugin(/iconv-loader\.js/),
-        new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/]),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /iconv-loader\.js/,
+            contextRegExp: /moment$/
+        }),
+        new webpack.WatchIgnorePlugin({
+            paths: [/\.js$/, /\.d\.ts$/]
+        }),
         new ForkTsCheckerWebpackPlugin({
-            tsconfig: resolveApp('tsconfig.json'),
-            eslint: true,
+            typescript: {
+                configFile: resolveApp('tsconfig.json'),
+            },
         }),
     ],
     module: {
         rules: [
+            {
+                test: /\.m?js/,
+                resolve: {
+                  fullySpecified: false,
+                },
+            },
             {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
@@ -60,10 +76,41 @@ module.exports = smp.wrap({
                             // you can specify a publicPath here
                             // by default it uses publicPath in webpackOptions.output
                             publicPath: '../',
-                            hmr: process.env.NODE_ENV === 'development',
                         },
                     },
-                    'css-loader',
+                    {
+                        loader: require.resolve('css-loader'),
+                        options: {
+                            importLoaders: 1,
+                            sourceMap: true,
+                        },
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            postcssOptions: {
+                              plugins: [
+                                [
+                                  "postcss-preset-env",
+                                  {
+                                    // Necessary for external CSS imports to work
+                                    // https://github.com/facebookincubator/create-react-app/issues/2677
+                                    ident: 'postcss',
+                                    
+                                    plugins: () => [
+                                        require('postcss-flexbugs-fixes'),
+                                        autoprefixer({
+                                            overrideBrowserslist: ['last 4 Chrome versions'],
+                                            flexbox: 'no-2009',
+                                        }),
+                                    ],
+                                
+                                  },
+                                ],
+                              ],
+                            },
+                          },
+                    },
                 ],
             },
             {
@@ -71,7 +118,10 @@ module.exports = smp.wrap({
                 use: [{ loader: 'source-map-loader' }],
                 enforce: 'pre',
                 include: /node_modules/,
+                exclude: [
+                    /node_modules\/@atlaskit\/analytics-next-stable-react-context/
+                ],
             },
         ],
     },
-});
+};

@@ -292,7 +292,7 @@ export const FilterSearchResultsTable: React.FunctionComponent<FilterSearchResul
                     count={results.total}
                     rowsPerPage={rowsPerPage}
                     page={page}
-                    onChangePage={handleChangePage}
+                    onPageChange={handleChangePage}
                 />
             </Paper>
         </div>

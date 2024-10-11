@@ -6,7 +6,7 @@ const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
-const smp = new SpeedMeasurePlugin();
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = [
     {
@@ -51,7 +51,6 @@ module.exports = [
             extensions: ['.tsx', '.ts', '.js', '.json'],
             plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.json') })],
             alias: {
-                'parse-url$': 'parse-url/dist/index.js',
                 parse5$: 'parse5/dist/cjs/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
             },
@@ -62,8 +61,18 @@ module.exports = [
             libraryTarget: 'commonjs',
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
         },
-        externals: ['vscode', 'utf-8-validate', 'bufferutil'],
-        plugins: [new webpack.IgnorePlugin(/iconv-loader\.js/), new webpack.WatchIgnorePlugin([/\.js$/, /\.d\.ts$/])],
+        externals: [
+            'vscode',
+            nodeExternals()
+        ],
+        plugins: [
+            new webpack.IgnorePlugin({
+                resourceRegExp: /iconv-loader\.js/
+            }),
+            new webpack.WatchIgnorePlugin({
+                paths: [/\.js$/, /\.d\.ts$/]
+            })
+        ],
     },
     {
         name: 'uninstall',
@@ -100,6 +109,7 @@ module.exports = [
         },
 
         output: {
+            publicPath: "",
             filename: 'uninstall.js',
             path: path.resolve(__dirname, 'build', 'extension'),
             libraryTarget: 'commonjs',

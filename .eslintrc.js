@@ -1,5 +1,8 @@
 module.exports = {
-    extends: ['plugin:import/typescript', 'plugin:prettier/recommended'],
+    extends: [
+        'plugin:import/typescript',
+        'plugin:prettier/recommended'
+    ],
     env: {
         browser: true,
         es6: true,
@@ -19,6 +22,7 @@ module.exports = {
         'react-hooks',
         'import',
         'prettier',
+        '@stylistic/js'
     ],
     rules: {
         'prettier/prettier': 'error',
@@ -53,7 +57,7 @@ module.exports = {
             },
         ],
         'brace-style': 'off',
-        '@typescript-eslint/brace-style': [
+        '@stylistic/js/brace-style': [
             'error',
             '1tbs',
             {
@@ -63,7 +67,7 @@ module.exports = {
         curly: 'error',
         eqeqeq: ['error', 'always'],
         semi: 'off',
-        '@typescript-eslint/semi': ['error', 'always'],
+        '@stylistic/js/semi': ['error', 'always'],
         'no-throw-literal': 'error',
     },
     settings: {
