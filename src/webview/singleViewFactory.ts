@@ -16,6 +16,7 @@ import { CommonMessageType } from '../lib/ipc/toUI/common';
 import { WebviewController } from '../lib/webview/controller/webviewController';
 import { UIWebsocket } from '../ws';
 import { VSCWebviewControllerFactory } from './vscWebviewControllerFactory';
+import { FeatureFlagClient } from 'src/util/featureFlags';
 
 // ReactWebview is the interface for all basic webviews.
 // It takes FD as a generic type parameter that represents the type of "Factory Data" that will be
@@ -128,6 +129,11 @@ export class SingleWebview<FD, R> implements ReactWebview<FD> {
                 this._controller.update(factoryData);
             }
         }
+
+        // Send feature gates to the panel in a message
+        const featureFlags = await FeatureFlagClient.evaluateFeatures();
+        console.log(`FeatureGates: sending ${JSON.stringify(featureFlags)}`);
+        this.postMessage({ command: CommonMessageType.UpdateFeatureFlags, featureFlags: featureFlags });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {

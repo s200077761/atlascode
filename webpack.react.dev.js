@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const dotenv = require('dotenv');
 const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
@@ -8,6 +9,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
+
+dotenv.config();
 
 module.exports = {
     mode: 'development',
@@ -24,7 +27,7 @@ module.exports = {
         filename: 'static/js/[name].js',
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
     },
-    externals: ['utf-8-validate', 'bufferutil'],
+    externals: ['utf-8-validate', 'bufferutil', 'vscode'],
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.tsx', '.js', '.json'],
@@ -52,6 +55,12 @@ module.exports = {
                 configFile: resolveApp('tsconfig.json'),
             },
         }),
+        new webpack.DefinePlugin({
+            'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
+            'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
+            'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
+            'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
+        }),
     ],
     module: {
         rules: [
@@ -64,7 +73,7 @@ module.exports = {
             {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
-                exclude: /node_modules/,
+                exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
             },
             {

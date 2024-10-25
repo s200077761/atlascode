@@ -1,12 +1,15 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const dotenv = require('dotenv');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
+
+dotenv.config();
 
 module.exports = [
     {
@@ -91,6 +94,12 @@ module.exports = [
             new webpack.WatchIgnorePlugin({
                 paths: [/\.js$/, /\.d\.ts$/],
             }),
+            new webpack.DefinePlugin({
+                'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
+                'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
+                'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
+                'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
+            }),
         ],
     },
     {
@@ -120,7 +129,7 @@ module.exports = [
                 {
                     test: /\.tsx?$/,
                     use: [{ loader: 'ts-loader' }],
-                    exclude: /node_modules/,
+                    exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 },
             ],
         },

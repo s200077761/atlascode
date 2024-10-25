@@ -17,3 +17,11 @@ To run `atlascode` in such a way, please follow the VSCode documentation:
 The configuration for the Dev Container is located in [./.devcontainer/devcontainer.json](https://bitbucket.org/atlassianlabs/atlascode/src/main/.devcontainer/devcontainer.json).
 
 Note: for advanced use-cases, it is possible to run scripts in dev containers via [@devcontainers/cli](https://github.com/devcontainers/cli) - try `npx devcontainer --help`
+
+### Feature Flags
+
+This package uses FX3 - Atlassian's internal solution for running experiments and rolling out features. Using it requires an API key, which is not included in code as a matter of policy.
+
+If you are an Atlassian dev reading this - please look up the `atlascode` section [here](https://developer.atlassian.com/platform/frontend-feature-flags/resources/api-keys/), copy the value for the appropriate environment into `.env`, and rebuild the project.
+
+If you are an external contributor - please feel free to ignore the feature gate client initialization failure, the default configuration of the extension will work without it, as if all feature gated content were disabled.

@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const dotenv = require('dotenv');
 const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
@@ -14,6 +15,8 @@ const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const pageTsx = process.env.PAGETSX ? process.env.PAGETSX : 'config/ConfigPage.tsx';
 const view = process.env.VIEW ? process.env.VIEW : 'atlascodeSettingsV2';
 const theme = process.env.THEME ? process.env.THEME : 'dark';
+
+dotenv.config();
 
 module.exports = {
     mode: 'development',
@@ -62,6 +65,12 @@ module.exports = {
                 theme: theme,
             },
         }),
+        new webpack.DefinePlugin({
+            'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
+            'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
+            'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
+            'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
+        }),
     ],
     module: {
         rules: [
@@ -74,7 +83,7 @@ module.exports = {
             {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
-                exclude: /node_modules/,
+                exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
             },
             {

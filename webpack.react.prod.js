@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const dotenv = require('dotenv');
 const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
@@ -12,6 +13,8 @@ const autoprefixer = require('autoprefixer');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
+
+dotenv.config();
 
 module.exports = {
     bail: true,
@@ -85,6 +88,12 @@ module.exports = {
             resourceRegExp: /^\.\/locale$/,
             contextRegExp: /moment$/,
         }),
+        new webpack.DefinePlugin({
+            'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
+            'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
+            'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
+            'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
+        }),
     ],
     performance: {
         // About twice the default value of 244 Kib, to remove the warning
@@ -106,7 +115,7 @@ module.exports = {
             {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
-                exclude: /node_modules/,
+                exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 use: [{ loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }],
             },
             {

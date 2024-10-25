@@ -1,12 +1,15 @@
 const path = require('path');
 const fs = require('fs');
 const webpack = require('webpack');
+const dotenv = require('dotenv');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const nodeExternals = require('webpack-node-externals');
+
+dotenv.config();
 
 module.exports = [
     {
@@ -37,7 +40,7 @@ module.exports = [
                 {
                     test: /\.(ts|js)x?$/,
                     use: [{ loader: 'ts-loader' }],
-                    exclude: /node_modules/,
+                    exclude: [/node_modules/, /\.test\.ts$/, /\.spec\.ts$/],
                 },
                 {
                     test: /\.js$/,
@@ -68,6 +71,12 @@ module.exports = [
             }),
             new webpack.WatchIgnorePlugin({
                 paths: [/\.js$/, /\.d\.ts$/],
+            }),
+            new webpack.DefinePlugin({
+                'process.env.ATLASCODE_FX3_API_KEY': JSON.stringify(process.env.ATLASCODE_FX3_API_KEY),
+                'process.env.ATLASCODE_FX3_ENVIRONMENT': JSON.stringify(process.env.ATLASCODE_FX3_ENVIRONMENT),
+                'process.env.ATLASCODE_FX3_TARGET_APP': JSON.stringify(process.env.ATLASCODE_FX3_TARGET_APP),
+                'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
             }),
         ],
     },

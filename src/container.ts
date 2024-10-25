@@ -65,6 +65,7 @@ import { VSCWelcomeActionApi } from './webview/welcome/vscWelcomeActionApi';
 import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcomeWebviewControllerFactory';
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
+import { FeatureFlagClient } from './util/featureFlags';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -81,6 +82,13 @@ export class Container {
             version: version,
             deviceId: env.machineId,
             enable: this.getAnalyticsEnable(),
+        });
+
+        FeatureFlagClient.initialize({
+            analyticsClient: this._analyticsClient,
+            identifiers: {
+                analyticsAnonymousId: env.machineId,
+            },
         });
 
         this._cancellationManager = new Map();
