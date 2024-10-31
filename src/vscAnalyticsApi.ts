@@ -53,9 +53,13 @@ import { AnalyticsApi } from './lib/analyticsApi';
 
 export class VSCAnalyticsApi implements AnalyticsApi {
     private _analyticsClient: AnalyticsClient;
+    private _isRemote: boolean;
+    private _isWebUI: boolean;
 
-    constructor(analyticsClient: AnalyticsClient) {
+    constructor(analyticsClient: AnalyticsClient, isRemote: boolean, isWebUI: boolean) {
         this._analyticsClient = analyticsClient;
+        this._isRemote = isRemote;
+        this._isWebUI = isWebUI;
     }
 
     public async fireInstalledEvent(version: string): Promise<void> {
@@ -310,7 +314,7 @@ export class VSCAnalyticsApi implements AnalyticsApi {
     }
 
     public async fireAuthenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<void> {
-        return authenticateButtonEvent(source, site, isCloud).then((e) => {
+        return authenticateButtonEvent(source, site, isCloud, this._isRemote, this._isWebUI).then((e) => {
             this._analyticsClient.sendUIEvent(e);
         });
     }

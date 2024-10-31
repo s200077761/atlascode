@@ -8,8 +8,6 @@ jest.mock('./features', () => {
     };
 });
 
-import { FeatureFlagClient, FeatureFlagClientOptions } from './client';
-
 jest.mock('@atlaskit/feature-gate-js-client', () => {
     return {
         ...jest.requireActual('@atlaskit/feature-gate-js-client'),
@@ -21,6 +19,14 @@ jest.mock('@atlaskit/feature-gate-js-client', () => {
 });
 import FeatureGates from '@atlaskit/feature-gate-js-client';
 
+import { FeatureFlagClient, FeatureFlagClientOptions } from './client';
+import { EventBuilderInterface } from './analytics';
+
+class MockEventBuilder implements EventBuilderInterface {
+    public featureFlagClientInitializedEvent = jest.fn(() => Promise.resolve({}));
+    public featureFlagClientErrorEvent = jest.fn(() => Promise.resolve({}));
+}
+
 describe('FeatureFlagClient', () => {
     let analyticsClient: any;
     let options: FeatureFlagClientOptions;
@@ -29,12 +35,14 @@ describe('FeatureFlagClient', () => {
     beforeEach(() => {
         analyticsClient = {
             sendOperationalEvent: jest.fn(),
+            sendTrackEvent: jest.fn(),
         };
         options = {
             analyticsClient,
             identifiers: {
                 analyticsAnonymousId: 'some-id',
             },
+            eventBuilder: new MockEventBuilder(),
         };
         process.env = {
             ...originalEnv,

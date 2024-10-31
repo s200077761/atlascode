@@ -1,18 +1,18 @@
-// import FeatureFlagClient, { AnalyticsClientInterface, EnvironmentType, FeatureExposedEventType, LogLevel } from '@atlassiansox/feature-flag-web-client';
-// import { Container } from './container';
 import { AnalyticsClient } from '../../analytics-node-client/src/client.min';
 
 import FeatureGates, { FeatureGateEnvironment, Identifiers } from '@atlaskit/feature-gate-js-client';
-import { AnalyticsClientMapper } from './analytics';
+import { AnalyticsClientMapper, EventBuilderInterface } from './analytics';
 import { Features } from './features';
 
 export type FeatureFlagClientOptions = {
     analyticsClient: AnalyticsClient;
+    eventBuilder: EventBuilderInterface;
     identifiers: Identifiers;
 };
 
 export class FeatureFlagClient {
     private static analyticsClient: AnalyticsClientMapper;
+    private static eventBuilder: EventBuilderInterface;
 
     public static async initialize(options: FeatureFlagClientOptions): Promise<void> {
         const targetApp = process.env.ATLASCODE_FX3_TARGET_APP || '';
@@ -21,6 +21,7 @@ export class FeatureFlagClient {
 
         console.log(`FeatureGates: initializing, target: ${targetApp}, environment: ${environment}`);
         this.analyticsClient = new AnalyticsClientMapper(options.analyticsClient, options.identifiers);
+        this.eventBuilder = options.eventBuilder;
 
         return FeatureGates.initialize(
             {
@@ -34,10 +35,14 @@ export class FeatureFlagClient {
         )
             .then(() => {
                 console.log(`FeatureGates: client initialized!`);
+                this.eventBuilder.featureFlagClientInitializedEvent().then((e) => {
+                    options.analyticsClient.sendTrackEvent(e);
+                });
             })
             .catch((err) => {
                 console.warn(`FeatureGates: Failed to initialize client. ${err}`);
                 console.warn('FeatureGates: Disabling feature flags');
+                this.eventBuilder.featureFlagClientErrorEvent().then((e) => options.analyticsClient.sendTrackEvent(e));
             });
     }
 

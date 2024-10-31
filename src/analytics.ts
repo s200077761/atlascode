@@ -78,6 +78,16 @@ export async function loggedOutEvent(site: DetailedSiteInfo): Promise<TrackEvent
     });
 }
 
+// Feature Flag Events
+
+export async function featureFlagClientInitializedEvent(): Promise<TrackEvent> {
+    return trackEvent('initialized', 'featureFlagClient');
+}
+
+export async function featureFlagClientErrorEvent(): Promise<TrackEvent> {
+    return trackEvent('error', 'featureFlagClient');
+}
+
 // Jira issue events
 
 export async function issueCreatedEvent(site: DetailedSiteInfo, issueKey: string): Promise<TrackEvent> {
@@ -376,7 +386,13 @@ export async function doneButtonEvent(source: string): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
-export async function authenticateButtonEvent(source: string, site: SiteInfo, isCloud: boolean): Promise<UIEvent> {
+export async function authenticateButtonEvent(
+    source: string,
+    site: SiteInfo,
+    isCloud: boolean,
+    isRemote: boolean,
+    isWebUI: boolean,
+): Promise<UIEvent> {
     const e = {
         tenantIdType: null,
         uiEvent: {
@@ -386,7 +402,12 @@ export async function authenticateButtonEvent(source: string, site: SiteInfo, is
             actionSubject: 'button',
             actionSubjectId: 'authenticateButton',
             source: source,
-            attributes: { instanceType: isCloud ? 'cloud' : 'server', hostProduct: site.product.name },
+            attributes: {
+                instanceType: isCloud ? 'cloud' : 'server',
+                hostProduct: site.product.name,
+                isRemote: isRemote,
+                isWebUI: isWebUI,
+            },
         },
     };
 
@@ -609,7 +630,7 @@ function anyUserOrAnonymous<T>(e: Object): T {
     const aaid = Container.siteManager.getFirstAAID();
 
     if (aaid) {
-        newObj = { ...e, ...{ userId: aaid, userIdType: 'atlassianAccount' } };
+        newObj = { ...e, ...{ userId: aaid, userIdType: 'atlassianAccount', anonymousId: Container.machineId } };
     } else {
         newObj = { ...e, ...{ anonymousId: Container.machineId } };
     }

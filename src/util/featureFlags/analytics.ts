@@ -16,6 +16,11 @@ type OperationalEventPayload = {
     source: string;
 };
 
+export interface EventBuilderInterface {
+    featureFlagClientInitializedEvent: () => Promise<any>;
+    featureFlagClientErrorEvent: () => Promise<any>;
+}
+
 export class AnalyticsClientMapper implements AnalyticsWebClient {
     public identifiers: Identifiers;
 
@@ -27,17 +32,16 @@ export class AnalyticsClientMapper implements AnalyticsWebClient {
     }
 
     public sendOperationalEvent(event: OperationalEventPayload, callback?: any): void {
-        // Map the identifiers in line with the usage in src/analytics.ts
-        // We might want to always keep sending the anonymousId in the future
         const ids = this.identifiers.atlassianAccountId
             ? { userId: this.identifiers.atlassianAccountId, userIdType: 'atlassianAccount' }
-            : { anonymousId: this.identifiers.analyticsAnonymousId };
+            : {};
 
         const constructedEvent = {
             operationalEvent: {
                 ...event,
             },
             ...ids,
+            anonymousId: this.identifiers.analyticsAnonymousId,
         };
 
         this.analyticsClient.sendOperationalEvent(constructedEvent as any);

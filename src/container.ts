@@ -1,6 +1,6 @@
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
 import { BitbucketIssue, BitbucketSite, PullRequest, WorkspaceRepo } from './bitbucket/model';
-import { Disposable, ExtensionContext, UriHandler, env, workspace } from 'vscode';
+import { Disposable, ExtensionContext, UriHandler, env, workspace, UIKind } from 'vscode';
 import { IConfig, configuration } from './config/configuration';
 
 import { analyticsClient } from './analytics-node-client/src/client.min.js';
@@ -66,6 +66,7 @@ import { VSCWelcomeWebviewControllerFactory } from './webview/welcome/vscWelcome
 import { WelcomeAction } from './lib/ipc/fromUI/welcome';
 import { WelcomeInitMessage } from './lib/ipc/toUI/welcome';
 import { FeatureFlagClient } from './util/featureFlags';
+import { EventBuilder } from './util/featureFlags/eventBuilder';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 const ConfigTargetKey = 'configurationTarget';
@@ -89,10 +90,11 @@ export class Container {
             identifiers: {
                 analyticsAnonymousId: env.machineId,
             },
+            eventBuilder: new EventBuilder(),
         });
 
         this._cancellationManager = new Map();
-        this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient);
+        this._analyticsApi = new VSCAnalyticsApi(this._analyticsClient, this.isRemote, this.isWebUI);
         this._commonMessageHandler = new VSCCommonMessageHandler(this._analyticsApi, this._cancellationManager);
 
         this._context = context;
@@ -254,6 +256,14 @@ export class Container {
 
     static get machineId() {
         return env.machineId;
+    }
+
+    static get isRemote() {
+        return env.remoteName !== undefined;
+    }
+
+    static get isWebUI() {
+        return env.uiKind === UIKind.Web;
     }
 
     private static _isDebugging: boolean | undefined;

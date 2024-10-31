@@ -49,7 +49,7 @@ describe('AnalyticsClientMapper', () => {
                 },
                 userId: 'some-account-id',
                 userIdType: 'atlassianAccount',
-                // note the missing anonymousId
+                anonymousId: 'some-id', // Still present
             });
         });
     });
