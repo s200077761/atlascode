@@ -15,7 +15,7 @@ import {
     isOAuthInfo,
     oauthProviderForSite,
 } from './authInfo';
-import { CommandContext, setCommandContext } from '../constants';
+import { CommandContext, setCommandContext } from '../commandContext';
 import { Disposable, Event, EventEmitter, version, window } from 'vscode';
 
 import { AnalyticsClient } from '../analytics-node-client/src/client.min.js';
