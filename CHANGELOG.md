@@ -1,3 +1,11 @@
+## What's New in 3.0.11
+
+### Improvements
+
+-   A number of small improvements on the package structure
+-   Re-enabled authentication when VSCode is running remotely
+
+
 ## What's New in 3.0.10
 
 ### Bugs fixed
