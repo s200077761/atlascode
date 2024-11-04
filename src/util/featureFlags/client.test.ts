@@ -24,7 +24,7 @@ import { EventBuilderInterface } from './analytics';
 
 class MockEventBuilder implements EventBuilderInterface {
     public featureFlagClientInitializedEvent = jest.fn(() => Promise.resolve({}));
-    public featureFlagClientErrorEvent = jest.fn(() => Promise.resolve({}));
+    public featureFlagClientInitializationFailedEvent = jest.fn(() => Promise.resolve({}));
 }
 
 describe('FeatureFlagClient', () => {

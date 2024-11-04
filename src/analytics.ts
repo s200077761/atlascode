@@ -84,8 +84,8 @@ export async function featureFlagClientInitializedEvent(): Promise<TrackEvent> {
     return trackEvent('initialized', 'featureFlagClient');
 }
 
-export async function featureFlagClientErrorEvent(): Promise<TrackEvent> {
-    return trackEvent('error', 'featureFlagClient');
+export async function featureFlagClientInitializationFailedEvent(): Promise<TrackEvent> {
+    return trackEvent('initializationFailed', 'featureFlagClient');
 }
 
 // Jira issue events

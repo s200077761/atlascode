@@ -18,7 +18,7 @@ type OperationalEventPayload = {
 
 export interface EventBuilderInterface {
     featureFlagClientInitializedEvent: () => Promise<any>;
-    featureFlagClientErrorEvent: () => Promise<any>;
+    featureFlagClientInitializationFailedEvent: () => Promise<any>;
 }
 
 export class AnalyticsClientMapper implements AnalyticsWebClient {

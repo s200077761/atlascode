@@ -42,7 +42,9 @@ export class FeatureFlagClient {
             .catch((err) => {
                 console.warn(`FeatureGates: Failed to initialize client. ${err}`);
                 console.warn('FeatureGates: Disabling feature flags');
-                this.eventBuilder.featureFlagClientErrorEvent().then((e) => options.analyticsClient.sendTrackEvent(e));
+                this.eventBuilder
+                    .featureFlagClientInitializationFailedEvent()
+                    .then((e) => options.analyticsClient.sendTrackEvent(e));
             });
     }
 

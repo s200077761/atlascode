@@ -1,4 +1,4 @@
-import { featureFlagClientInitializedEvent, featureFlagClientErrorEvent } from '../../analytics';
+import { featureFlagClientInitializedEvent, featureFlagClientInitializationFailedEvent } from '../../analytics';
 import { EventBuilderInterface } from './analytics';
 
 // Stopgap solution to prevent React dependencies on vscode-internal stuff
@@ -8,7 +8,7 @@ export class EventBuilder implements EventBuilderInterface {
         return featureFlagClientInitializedEvent();
     }
 
-    public featureFlagClientErrorEvent() {
-        return featureFlagClientErrorEvent();
+    public featureFlagClientInitializationFailedEvent() {
+        return featureFlagClientInitializationFailedEvent();
     }
 }
