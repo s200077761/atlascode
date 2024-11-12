@@ -49,6 +49,8 @@ module.exports = [
             alias: {
                 parse5$: 'parse5/dist/cjs/index.js',
                 axios: path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
+                semver: path.resolve(__dirname, 'node_modules/semver'),
+                bufferutil: path.resolve(__dirname, 'node_modules/bufferutil'),
             },
             fallback: {
                 bufferutil: false,
@@ -86,7 +88,6 @@ module.exports = [
                 },
             },
         },
-        externals: ['vscode', nodeExternals()],
         plugins: [
             new webpack.IgnorePlugin({
                 resourceRegExp: /iconv-loader\.js/,
@@ -101,6 +102,7 @@ module.exports = [
                 'process.env.ATLASCODE_FX3_TIMEOUT': JSON.stringify(process.env.ATLASCODE_FX3_TIMEOUT),
             }),
         ],
+        externals: ['vscode'],
     },
     {
         bail: true,
@@ -135,6 +137,10 @@ module.exports = [
         },
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
+            alias: {
+                semver: path.resolve(__dirname, 'node_modules/semver'),
+                bufferutil: path.resolve(__dirname, 'node_modules/bufferutil'),
+            },
         },
 
         output: {
