@@ -3,6 +3,7 @@ image: node:20
 pipelines:
     default:
         - step:
+              size: 2x
               caches:
                   - node
               script:
@@ -15,6 +16,7 @@ pipelines:
     tags:
         '*':
             - step:
+                  size: 2x
                   caches:
                       - node
                   script:
@@ -31,6 +33,7 @@ pipelines:
     custom:
         nightly:
             - step:
+                  size: 2x
                   caches:
                       - node
                   script:
