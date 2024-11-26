@@ -61,7 +61,7 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js', '.json'],
         plugins: [new TsconfigPathsPlugin({ configFile: resolveApp('./tsconfig.notest.json') })],
         fallback: {
-            path: false,
+            path: require.resolve('path-browserify'),
         },
     },
     plugins: [

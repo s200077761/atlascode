@@ -55,6 +55,7 @@ module.exports = [
             fallback: {
                 bufferutil: false,
                 'utf-8-validate': false,
+                path: require.resolve('path-browserify'),
             },
         },
         output: {
