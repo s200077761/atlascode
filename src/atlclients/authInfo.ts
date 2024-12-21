@@ -271,9 +271,10 @@ export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined 
         return OAuthProvider.JiraCloud;
     }
 
-    if (hostname.endsWith('jira-dev.com')) {
-        return OAuthProvider.JiraCloudStaging;
-    }
+    // Commented out to allow for testing flow of AXON-32 PR: https://github.com/atlassian/atlascode/pull/54/files
+    // if (hostname.endsWith('jira-dev.com')) {
+    //     return OAuthProvider.JiraCloudStaging;
+    // }
 
     if (hostname.endsWith('bitbucket.org')) {
         return OAuthProvider.BitbucketCloud;
