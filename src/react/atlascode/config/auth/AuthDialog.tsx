@@ -34,6 +34,8 @@ import {
 import { emptySiteWithAuthInfo, SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
 import { useFormValidation } from '../../common/form/useFormValidation';
 import { validateRequiredString, validateStartsWithProtocol } from '../../util/fieldValidators';
+import { ATLASCODE_TEST_HOST } from 'src/constants';
+
 export type AuthDialogProps = {
     open: boolean;
     doClose: () => void;
@@ -85,11 +87,15 @@ const isCustomUrl = (data?: string) => {
     try {
         const url = new URL(data);
 
+        // To allow for testing flow of AXON-32
+        if (url.hostname.endsWith(ATLASCODE_TEST_HOST)) {
+            return true;
+        }
+
         return (
             !url.hostname.endsWith('atlassian.net') &&
             !url.hostname.endsWith('jira.com') &&
-            // Commented out to allow for testing flow of AXON-32 PR: https://github.com/atlassian/atlascode/pull/54/files
-            // !url.hostname.endsWith('jira-dev.com') &&
+            !url.hostname.endsWith('jira-dev.com') &&
             !url.hostname.endsWith('bitbucket.org') &&
             !url.hostname.endsWith('bb-inf.net')
         );
