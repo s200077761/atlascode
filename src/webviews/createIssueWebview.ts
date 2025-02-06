@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-
 import { Action, onlineStatus } from '../ipc/messaging';
 import {
     CreateIssueAction,
@@ -25,6 +23,7 @@ import { configuration } from '../config/configuration';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { format } from 'date-fns';
 import { issueCreatedEvent } from '../analytics';
+import { decode } from 'base64-arraybuffer-es6';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -465,7 +464,10 @@ export class CreateIssueWebview
                             if (attachments && attachments.length > 0) {
                                 let formData = new FormData();
                                 attachments.forEach((file: any) => {
-                                    formData.append('file', fs.createReadStream(file.path), {
+                                    if (!file.fileContent) {
+                                        throw new Error(`Unable to read the file '${file.name}'`);
+                                    }
+                                    formData.append('file', Buffer.from(decode(file.fileContent)), {
                                         filename: file.name,
                                         contentType: file.type,
                                     });

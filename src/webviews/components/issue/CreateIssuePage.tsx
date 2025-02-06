@@ -28,6 +28,7 @@ import Spinner from '@atlaskit/spinner';
 import { chain } from '../fieldValidators';
 import { AtlascodeErrorBoundary } from 'src/react/atlascode/common/ErrorBoundary';
 import { AnalyticsView } from 'src/analyticsTypes';
+import { readFilesContentAsync } from '../../../util/files';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -64,6 +65,7 @@ const IconValue = (props: any) => (
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     private advancedFields: FieldUI[] = [];
     private commonFields: FieldUI[] = [];
+    private attachingInProgress: boolean;
 
     getProjectKey(): string {
         return this.state.fieldValues['project'].key;
@@ -189,6 +191,33 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         });
     };
 
+    protected handleInlineAttachments = async (fieldkey: string, newValue: any) => {
+        if (this.attachingInProgress) {
+            return;
+        }
+
+        if (Array.isArray(newValue) && newValue.length > 0) {
+            this.attachingInProgress = true;
+            readFilesContentAsync(newValue)
+                .then((filesWithContent) => {
+                    const serFiles = filesWithContent.map((file) => {
+                        return {
+                            lastModified: file.lastModified,
+                            lastModifiedDate: (file as any).lastModifiedDate,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            path: (file as any).path,
+                            fileContent: file.fileContent,
+                        };
+                    });
+
+                    this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: serFiles } } });
+                })
+                .finally(() => (this.attachingInProgress = false));
+        }
+    };
+
     protected handleInlineEdit = async (field: FieldUI, newValue: any) => {
         let typedVal = newValue;
         let fieldkey = field.key;
@@ -214,20 +243,8 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         }
 
         if (field.uiType === UIType.Attachment) {
-            if (Array.isArray(newValue) && newValue.length > 0) {
-                const serFiles = newValue.map((file: any) => {
-                    return {
-                        lastModified: file.lastModified,
-                        lastModifiedDate: file.lastModifiedDate,
-                        name: file.name,
-                        size: file.size,
-                        type: file.type,
-                        path: file.path,
-                    };
-                });
-
-                typedVal = serFiles;
-            }
+            await this.handleInlineAttachments(fieldkey, newValue);
+            return;
         }
 
         this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: typedVal } } });
