@@ -108,8 +108,9 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                         });
                     }
                 } else {
-                    this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
+                    await this._api.authenticateCloud(msg.siteInfo, this._onboardingUrl);
                 }
+                this.postMessage({ type: OnboardingMessageType.LoginResponse });
                 this._analytics.fireAuthenticateButtonEvent(id, msg.siteInfo, isCloud);
                 break;
             }
@@ -158,7 +159,11 @@ export class OnboardingWebviewController implements WebviewController<SectionCha
                 this._analytics.fireMoreSettingsButtonEvent(id);
                 break;
             }
-
+            case OnboardingActionType.Error: {
+                this._logger.error(msg.error);
+                this.postMessage({ type: CommonMessageType.Error, reason: formatError(msg.error, 'Onboarding Error') });
+                break;
+            }
             case CommonActionType.SendAnalytics:
             case CommonActionType.CopyLink:
             case CommonActionType.OpenJiraIssue:
