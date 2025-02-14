@@ -7,8 +7,6 @@ import DomainIcon from '@material-ui/icons/Domain';
 import { Product, ProductJira } from '../../../../atlclients/authInfo';
 import { SiteList } from './SiteList';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
-import { Features } from 'src/util/featureFlags';
-import { CommonMessageType } from 'src/lib/ipc/toUI/common';
 
 type SiteAuthenticatorProps = {
     product: Product;
@@ -30,24 +28,10 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
             [authDialogController, product],
         );
 
-        const [useNewAuth, setUseNewAuth] = React.useState(false);
-        React.useEffect(() => {
-            window.addEventListener('message', (event) => {
-                const message = event.data;
-                if (message.command === CommonMessageType.UpdateFeatureFlags) {
-                    const featureValue = message.featureFlags[Features.EnableRemoteAuthentication];
-                    console.log(
-                        `FeatureGates: received by SiteAuthenticator - ${Features.EnableRemoteAuthentication} -> ${featureValue}`,
-                    );
-                    setUseNewAuth(featureValue);
-                }
-            });
-        }, []);
-
         return (
             <Box flexGrow={1}>
                 <Grid container direction="column" spacing={2}>
-                    {useNewAuth && product.key === ProductJira.key ? (
+                    {product.key === ProductJira.key ? (
                         <AuthContainer
                             isRemote={isRemote}
                             product={product}
