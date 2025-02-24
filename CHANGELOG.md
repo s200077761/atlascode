@@ -22,11 +22,6 @@
 - Cleaned up feature flag for Jira Cloud authentication from Remote Development Environments
 - Placed code for Auth UI experiment. Still needs additional work before we turn this on.
 
-### Engineeering Excellence 
-
-- Cleaned up some of our code with new lint rules
-- Added some unit tests around authentication 
-
 ## What's new in 3.4.5
 
 ### Bug Fixes
