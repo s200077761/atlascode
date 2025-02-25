@@ -74,7 +74,7 @@ export const OnboardingPage: React.FunctionComponent = () => {
                 setUseAuthUI(featureValue);
             }
         });
-    }, []);
+    }, [controller]);
     function getSteps() {
         if (useAuthUI) {
             return ['Setup Jira', 'Setup BitBucket', 'Explore'];
