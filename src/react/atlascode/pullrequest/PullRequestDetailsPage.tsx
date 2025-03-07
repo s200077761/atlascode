@@ -277,6 +277,7 @@ export const PullRequestDetailsPage: React.FunctionComponent = () => {
                                                 <DiffList
                                                     fileDiffs={state.fileDiffs}
                                                     openDiffHandler={controller.openDiff}
+                                                    conflictedFiles={state.conflictedFiles}
                                                 />
                                             </BasicPanel>
                                         </Grid>
