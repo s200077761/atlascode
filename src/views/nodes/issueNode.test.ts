@@ -50,6 +50,7 @@ const mockIssue: MinimalORIssueLink<DetailedSiteInfo> = {
         credentialId: '',
         host: '',
         product: ProductJira,
+        hasResolutionField: true,
     },
     epicLink: '',
     id: '1',
