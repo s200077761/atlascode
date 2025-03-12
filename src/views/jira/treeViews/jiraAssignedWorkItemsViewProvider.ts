@@ -1,33 +1,17 @@
-import { isMinimalIssue, MinimalIssue, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo, ProductJira } from '../../../atlclients/authInfo';
-import { JQLEntry } from '../../../config/model';
 import { Container } from '../../../container';
 import { Commands } from '../../../commands';
-import { Logger } from '../../../logger';
-import { issuesForJQL } from '../../../jira/issuesForJql';
 import { SearchJiraHelper } from '../searchJiraHelper';
 import { PromiseRacer } from '../../../util/promises';
-import {
-    Disposable,
-    TreeDataProvider,
-    TreeItem,
-    TreeItemCollapsibleState,
-    EventEmitter,
-    Command,
-    commands,
-    window,
-    Uri,
-} from 'vscode';
+import { Disposable, TreeDataProvider, TreeItem, EventEmitter, commands, window } from 'vscode';
+import { JiraIssueNode, executeJqlQuery, createLabelItem } from './utils';
 
 const enum ViewStrings {
     ConfigureJiraMessage = 'Please login to Jira',
 }
 
-function createLabelItem(label: string, command?: Command): TreeItem {
-    const item = new TreeItem(label);
-    item.command = command;
-    return item;
-}
+const AssignedWorkItemsViewProviderId = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
 export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>, Disposable {
     private static readonly _treeItemConfigureJiraMessage = createLabelItem(ViewStrings.ConfigureJiraMessage, {
@@ -35,7 +19,6 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
         title: 'Login to Jira',
         arguments: [ProductJira],
     });
-    private static readonly _id = 'atlascode.views.jira.assignedWorkItemsTreeView';
 
     private _onDidChangeTreeData = new EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -51,11 +34,11 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
             commands.registerCommand(Commands.RefreshAssignedWorkItemsExplorer, this.refresh, this),
         );
 
-        window.createTreeView(AssignedWorkItemsViewProvider._id, { treeDataProvider: this });
+        window.createTreeView(AssignedWorkItemsViewProviderId, { treeDataProvider: this });
 
         const jqlEntries = Container.jqlManager.getAllDefaultJQLEntries();
         if (jqlEntries.length) {
-            this._initPromises = new PromiseRacer(jqlEntries.map(this.executeJqlQuery));
+            this._initPromises = new PromiseRacer(jqlEntries.map(executeJqlQuery));
         }
 
         this._onDidChangeTreeData.fire();
@@ -95,7 +78,7 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
                     continue;
                 }
 
-                SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProvider._id);
+                SearchJiraHelper.appendIssues(issues, AssignedWorkItemsViewProviderId);
                 this._initChildren.push(...this.buildTreeItemsFromIssues(issues));
                 break;
             }
@@ -114,50 +97,15 @@ export class AssignedWorkItemsViewProvider implements TreeDataProvider<TreeItem>
                 return [AssignedWorkItemsViewProvider._treeItemConfigureJiraMessage];
             }
 
-            const allIssues = (await Promise.all(jqlEntries.map(this.executeJqlQuery))).flat();
-            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProvider._id);
+            const allIssues = (await Promise.all(jqlEntries.map(executeJqlQuery))).flat();
+            SearchJiraHelper.setIssues(allIssues, AssignedWorkItemsViewProviderId);
             return this.buildTreeItemsFromIssues(allIssues);
         }
     }
 
-    /** This function returns a Promise that never rejects. */
-    private async executeJqlQuery(jqlEntry: JQLEntry): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        try {
-            if (jqlEntry) {
-                const jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
-                if (jqlSite) {
-                    return await issuesForJQL(jqlEntry.query, jqlSite);
-                }
-            }
-        } catch (e) {
-            Logger.error(new Error(`Failed to execute default JQL query for site "${jqlEntry.siteId}": ${e}`));
-        }
-
-        return [];
-    }
-
     private buildTreeItemsFromIssues(issues?: MinimalIssue<DetailedSiteInfo>[]): TreeItem[] {
-        return issues ? issues.map((issue) => new JiraIssueNode(issue)) : [];
-    }
-}
-
-class JiraIssueNode extends TreeItem {
-    constructor(public issue: MinimalORIssueLink<DetailedSiteInfo>) {
-        super(issue.key, TreeItemCollapsibleState.None);
-
-        this.id = `${issue.key}_${issue.siteDetails.id}`;
-
-        this.description = isMinimalIssue(issue) && issue.isEpic ? issue.epicName : issue.summary;
-        this.command = { command: Commands.ShowIssue, title: 'Show Issue', arguments: [issue] };
-        this.iconPath = Uri.parse(issue.issuetype.iconUrl);
-        this.contextValue = 'assignedJiraIssue';
-        this.tooltip = `${issue.key} - ${issue.summary}\n\n${issue.priority.name}    |    ${issue.status.name}`;
-        this.resourceUri = Uri.parse(`${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`);
-    }
-
-    async getTreeItem(): Promise<any> {
-        return {
-            resourceUri: this.resourceUri,
-        };
+        return issues
+            ? issues.map((issue) => new JiraIssueNode(JiraIssueNode.NodeType.JiraAssignedIssuesNode, issue))
+            : [];
     }
 }
