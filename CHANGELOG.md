@@ -1,11 +1,17 @@
+## What's new in 3.4.14
+
+### Improvements
+
+- Improved the performance of BitBucket pull requests for large repositories by dividing APIs into critical and non-critical flows.
+
 ## What's new in 3.4.13
 
-## Features
+### Features
 
 - Added a loading state for the 'Checkout source Branch' button in BitBucket pull requests.
 - Added a loading icon for the BitBucket pull request summary section.
 
-## Bug Fixes
+### Bug Fixes
 
 - Fixed exceptions thrown during a failed stat-sig initialization for experimentations.
 - Fixed the time-out error that prevented the BitBucket pull request to load for large repos.
