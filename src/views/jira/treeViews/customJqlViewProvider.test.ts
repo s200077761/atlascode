@@ -1,3 +1,4 @@
+import { forceCastTo } from '../../../../testsutil';
 import { DetailedSiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import { Container } from '../../../container';
 import { CustomJQLViewProvider } from './customJqlViewProvider';
@@ -92,10 +93,6 @@ jest.mock('../../../container', () => ({
 }));
 
 jest.mock('../searchJiraHelper');
-
-function forceCastTo<T>(obj: any): T {
-    return obj as unknown as T;
-}
 
 const mockedTreeView = {
     onDidChangeVisibility: () => {},

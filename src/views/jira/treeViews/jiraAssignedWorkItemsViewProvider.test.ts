@@ -1,3 +1,4 @@
+import { forceCastTo } from '../../../../testsutil';
 import { AssignedWorkItemsViewProvider } from './jiraAssignedWorkItemsViewProvider';
 import { Container } from '../../../container';
 import { JQLManager } from '../../../jira/jqlManager';
@@ -7,10 +8,6 @@ import { JQLEntry } from '../../../config/model';
 import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import * as vscode from 'vscode';
-
-function forceCastTo<T>(obj: any): T {
-    return obj as unknown as T;
-}
 
 const mockedJqlEntry = forceCastTo<JQLEntry>({
     id: 'jqlId',
