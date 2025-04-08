@@ -43,7 +43,6 @@ import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
-import { JiraContext } from './views/jira/jiraContext';
 import { SearchJiraHelper } from './views/jira/searchJiraHelper';
 import { CustomJQLViewProvider } from './views/jira/treeViews/customJqlViewProvider';
 import { AssignedWorkItemsViewProvider } from './views/jira/treeViews/jiraAssignedWorkItemsViewProvider';
@@ -218,7 +217,10 @@ export class Container {
         FeatureFlagClient.checkGateValueWithInstrumentation(Features.NoOpFeature);
 
         this.initializeUriHandler(context, this._analyticsApi, this._bitbucketHelper);
-        this.initializeNewSidebarView(context, config);
+
+        SearchJiraHelper.initialize();
+        context.subscriptions.push(new CustomJQLViewProvider());
+        context.subscriptions.push(new AssignedWorkItemsViewProvider());
     }
 
     static openPullRequestHandler = (pullRequestUrl: string) => {
@@ -240,29 +242,6 @@ export class Container {
             context.subscriptions.push(AtlascodeUriHandler.create(analyticsApi, bitbucketHelper));
         } else {
             context.subscriptions.push(new LegacyAtlascodeUriHandler(analyticsApi, bitbucketHelper));
-        }
-    }
-
-    private static initializeNewSidebarView(context: ExtensionContext, config: IConfig) {
-        if (FeatureFlagClient.checkGate(Features.OldSidebarTreeView)) {
-            this.initializeLegacySidebarView(context, config);
-        } else {
-            SearchJiraHelper.initialize();
-            context.subscriptions.push(new CustomJQLViewProvider());
-            context.subscriptions.push(new AssignedWorkItemsViewProvider());
-        }
-    }
-
-    private static initializeLegacySidebarView(context: ExtensionContext, config: IConfig) {
-        if (config.jira.explorer.enabled) {
-            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-        } else {
-            const disposable = configuration.onDidChange((e) => {
-                if (configuration.changed(e, 'jira.explorer.enabled')) {
-                    disposable.dispose();
-                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
-                }
-            });
         }
     }
 
@@ -466,11 +445,6 @@ export class Container {
     private static _startWorkOnBitbucketIssueWebview: StartWorkOnBitbucketIssueWebview;
     public static get startWorkOnBitbucketIssueWebview() {
         return this._startWorkOnBitbucketIssueWebview;
-    }
-
-    private static _jiraExplorer: JiraContext | undefined;
-    public static get jiraExplorer(): JiraContext {
-        return this._jiraExplorer!;
     }
 
     private static _jiraIssueViewManager: JiraIssueViewManager;
