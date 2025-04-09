@@ -3,6 +3,7 @@
 ### Improvements
 
 -   Updated and improved styling in CreateIssueScreen
+-   Focus on the Atlascode UI panels when the Onboarding view triggers
 
 ## What's new in 3.4.23
 
