@@ -37,6 +37,11 @@ export async function activate(context: ExtensionContext) {
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
+    /***
+     * This is a workaround for the fact that the window object is not available but the Statsig client is reliant on a window object being defined
+     */
+    global.window = { document: {} } as any;
+
     registerResources(context);
 
     Configuration.configure(context);
