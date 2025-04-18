@@ -1360,6 +1360,12 @@
                     "description": "Shows a login button in the status bar",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.showTerminalLinkPanel": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Asks whether to create pull requests in extension or browser",
+                    "scope": "window"
+                },
                 "atlascode.helpExplorerEnabled": {
                     "type": "boolean",
                     "default": true,
