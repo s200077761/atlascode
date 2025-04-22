@@ -197,6 +197,10 @@ export class SiteManager extends Disposable {
         return this.getSitesAvailable(product).length > 0;
     }
 
+    public numberOfSites(product: Product, isCloud: boolean): number {
+        return this.getSitesAvailable(product).filter((site) => site.isCloud === isCloud).length;
+    }
+
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
         // match for complete hostname
         let site = this.getSitesAvailable(product).find((site) => site.host.includes(hostname));

@@ -179,7 +179,13 @@ async function sendAnalytics(version: string, globalState: Memento) {
         });
     }
 
-    launchedEvent(env.remoteName ? env.remoteName : 'local').then((e) => {
+    launchedEvent(
+        env.remoteName ? env.remoteName : 'local',
+        Container.siteManager.numberOfSites(ProductJira, true),
+        Container.siteManager.numberOfSites(ProductJira, false),
+        Container.siteManager.numberOfSites(ProductBitbucket, true),
+        Container.siteManager.numberOfSites(ProductBitbucket, false),
+    ).then((e) => {
         Container.analyticsClient.sendTrackEvent(e);
     });
 }

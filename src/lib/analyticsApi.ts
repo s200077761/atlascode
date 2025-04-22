@@ -5,7 +5,13 @@ import { DetailedSiteInfo, Product, SiteInfo } from '../atlclients/authInfo';
 export interface AnalyticsApi {
     fireInstalledEvent(version: string): Promise<void>;
     fireUpgradedEvent(version: string, previousVersion: string): Promise<void>;
-    fireLaunchedEvent(location: string): Promise<void>;
+    fireLaunchedEvent(
+        location: string,
+        numJiraCloudAuthed: number,
+        numJiraDcAuthed: number,
+        numBitbucketCloudAuthed: number,
+        numBitbucketDcAuthed: number,
+    ): Promise<void>;
     fireFeatureChangeEvent(featureId: string, enabled: boolean): Promise<void>;
     fireAuthenticatedEvent(site: DetailedSiteInfo): Promise<void>;
     fireLoggedOutEvent(site: DetailedSiteInfo): Promise<void>;

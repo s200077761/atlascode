@@ -49,9 +49,22 @@ export async function upgradedEvent(version: string, previousVersion: string): P
     });
 }
 
-export async function launchedEvent(location: string): Promise<TrackEvent> {
+export async function launchedEvent(
+    location: string,
+    numJiraCloudAuthed: number,
+    numJiraDcAuthed: number,
+    numBitbucketCloudAuthed: number,
+    numBitbucketDcAuthed: number,
+): Promise<TrackEvent> {
     return trackEvent('launched', 'atlascode', {
-        attributes: { machineId: Container.machineId, extensionLocation: location },
+        attributes: {
+            machineId: Container.machineId,
+            extensionLocation: location,
+            numJiraCloudAuthed: numJiraCloudAuthed,
+            numJiraDcAuthed: numJiraDcAuthed,
+            numBitbucketCloudAuthed: numBitbucketCloudAuthed,
+            numBitbucketDcAuthed: numBitbucketDcAuthed,
+        },
     });
 }
 
