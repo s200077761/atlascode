@@ -109,15 +109,13 @@ function sanitizeStackTrace(stack?: string): string | undefined {
     return stack || undefined;
 }
 
-export async function errorEvent(error: Error | string): Promise<TrackEvent> {
-    const attributes: { name: string; message?: string; stack?: string } =
-        typeof error === 'string'
-            ? { name: 'Error', message: sanitazeErrorMessage(error) }
-            : {
-                  name: error.name || 'Error',
-                  message: sanitazeErrorMessage(error.message),
-                  stack: sanitizeStackTrace(error.stack),
-              };
+export async function errorEvent(errorMessage: string, error?: Error, capturedBy?: string): Promise<TrackEvent> {
+    const attributes: { name: string; message?: string; capturedBy?: string; stack?: string } = {
+        message: sanitazeErrorMessage(errorMessage),
+        name: error?.name || 'Error',
+        capturedBy,
+        stack: error?.stack ? sanitizeStackTrace(error.stack) : undefined,
+    };
 
     return trackEvent('errorEvent_v2', 'atlascode', { attributes });
 }
