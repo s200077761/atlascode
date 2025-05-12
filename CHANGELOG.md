@@ -1,7 +1,7 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 ---
 
-## What's new in 3.7.0
+## What's new in 3.8.0
 
 ### Improvements
 - Badge notifications may be displayed if user is in an unauthenticated state. 
