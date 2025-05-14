@@ -2,6 +2,7 @@ import { Uri } from 'vscode';
 
 import { Logger } from '../../logger';
 import { AuthNotifier } from './authNotifier';
+import { BannerDelegate } from './bannerDelegate';
 
 export interface AtlasCodeNotification {
     id: string;
@@ -9,7 +10,14 @@ export interface AtlasCodeNotification {
     notificationType: NotificationType;
 }
 export interface NotificationDelegate {
-    onNotificationChange(uri: Uri): void;
+    onNotificationChange(event: NotificationChangeEvent): void;
+    getSurface(): NotificationSurface;
+}
+
+export interface NotificationChangeEvent {
+    action: NotificationAction;
+    uri: Uri;
+    notifications: Map<string, AtlasCodeNotification>;
 }
 
 export interface NotificationNotifier {
@@ -35,6 +43,11 @@ export enum NotificationSurface {
     Banner = 'Banner',
     Badge = 'Badge',
     All = 'All',
+}
+
+export enum NotificationAction {
+    Added = 'Added',
+    Removed = 'Removed',
 }
 
 const ENABLE_BADGE_FOR = [NotificationType.LoginNeeded];
@@ -65,7 +78,11 @@ export class NotificationManagerImpl {
     public static getInstance(): NotificationManagerImpl {
         if (!NotificationManagerImpl.instance) {
             NotificationManagerImpl.instance = new NotificationManagerImpl();
+
             NotificationManagerImpl.instance.notifiers.add(AuthNotifier.getInstance());
+
+            // Note: the badge delegate is not registered here as it needs the context of the tree view
+            NotificationManagerImpl.instance.registerDelegate(BannerDelegate.getInstance());
         }
         return NotificationManagerImpl.instance;
     }
@@ -108,18 +125,7 @@ export class NotificationManagerImpl {
     ): Map<string, AtlasCodeNotification> {
         Logger.debug(`Getting notifications for uri ${uri} with surface ${notificationSurface}`);
         const notificationsForUri = this.notifications.get(uri.toString()) ?? new Map();
-        switch (notificationSurface) {
-            case NotificationSurface.Banner:
-                return this.getBannerNotifications(notificationsForUri);
-            case NotificationSurface.Badge:
-                return this.getBadgeNotifications(notificationsForUri);
-            case NotificationSurface.All:
-                return notificationsForUri;
-            default:
-                const error = new Error(`Unknown notification surface: ${notificationSurface}`);
-                Logger.error(error);
-                throw error;
-        }
+        return this.filterNotificationsBySurface(notificationsForUri, notificationSurface);
     }
 
     public addNotification(uri: Uri, notification: AtlasCodeNotification): void {
@@ -136,36 +142,37 @@ export class NotificationManagerImpl {
         }
 
         notificationsForUri.set(notification.id, notification);
-        this.onNotificationChange(uri);
-    }
-
-    public removeNotification(uri: Uri, notification: AtlasCodeNotification): void {
-        Logger.debug(`Removing notification with id ${notification.id} for uri ${uri}`);
-        const notificationsForUri = this.getNotificationsByUri(uri, NotificationSurface.All);
-        if (!notificationsForUri.has(notification.id)) {
-            Logger.debug(`Notification with id ${notification.id} does not exist for uri ${uri}`);
-            return;
-        }
-        notificationsForUri.delete(notification.id);
-        if (notificationsForUri.size === 0) {
-            this.notifications.delete(uri.toString());
-        }
-
-        this.onNotificationChange(uri);
+        this.onNotificationChange(NotificationAction.Added, uri, new Map([[notification.id, notification]]));
     }
 
     public clearNotifications(uri: Uri): void {
         Logger.debug(`Clearing notifications for uri ${uri}`);
+        const removedNotifications = this.notifications.get(uri.toString());
         this.notifications.delete(uri.toString());
-        this.onNotificationChange(uri);
+        this.onNotificationChange(NotificationAction.Removed, uri, removedNotifications);
     }
 
-    private onNotificationChange(uri: Uri): void {
+    private onNotificationChange(
+        action: NotificationAction,
+        uri: Uri,
+        notifications: Map<string, AtlasCodeNotification> | undefined,
+    ): void {
+        notifications = notifications || new Map();
         Logger.debug(`Sending notification change for ${uri}`);
         this.delegates.forEach((delegate) => {
-            delegate.onNotificationChange(uri);
+            const filteredNotifications = this.filterNotificationsBySurface(notifications, delegate.getSurface());
+            if (filteredNotifications.size === 0) {
+                Logger.debug(`No notifications for delegate ${delegate} for uri ${uri}`);
+                return;
+            }
+            const notificationChangeEvent: NotificationChangeEvent = {
+                action,
+                uri,
+                notifications: filteredNotifications,
+            };
+            delegate.onNotificationChange(notificationChangeEvent);
+            Logger.debug(`Delegate ${delegate} notified for uri ${uri}`);
         });
-        Logger.debug(`Notification change sent for ${uri}`);
     }
 
     private getBadgeNotifications(
@@ -197,5 +204,22 @@ export class NotificationManagerImpl {
         this.notifiers.forEach((notifier) => {
             notifier.fetchNotifications();
         });
+    }
+
+    private filterNotificationsBySurface(
+        notificationsForUri: Map<string, AtlasCodeNotification>,
+        notificationSurface: NotificationSurface,
+    ): Map<string, AtlasCodeNotification> {
+        switch (notificationSurface) {
+            case NotificationSurface.Banner:
+                return this.getBannerNotifications(notificationsForUri);
+            case NotificationSurface.Badge:
+                return this.getBadgeNotifications(notificationsForUri);
+            case NotificationSurface.All:
+                return notificationsForUri;
+            default:
+                Logger.debug(`Unknown notification surface: ${notificationSurface}`);
+                return new Map();
+        }
     }
 }
