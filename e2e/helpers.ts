@@ -296,3 +296,53 @@ export const setupWireMockMapping = async (request: APIRequestContext, method: s
 export const cleanupWireMockMapping = async (request: APIRequestContext, mappingId: string) => {
     await request.delete(`http://wiremock-mockedteams:8080/__admin/mappings/${mappingId}`);
 };
+
+/**
+ * Helper function to update search results when assignee changes
+ */
+export const updateSearch = async (request: APIRequestContext, includeBts1: boolean = false) => {
+    const searchResponse = {
+        expand: 'names,schema',
+        startAt: 0,
+        maxResults: 50,
+        total: includeBts1 ? 5 : 4,
+        issues: [
+            {
+                key: 'BTS-5',
+                fields: {
+                    summary: 'Fix Database Connection Errors',
+                },
+            },
+            {
+                key: 'BTS-4',
+                fields: {
+                    summary: 'Resolve API Timeout Issues',
+                },
+            },
+            ...(includeBts1
+                ? [
+                      {
+                          key: 'BTS-1',
+                          fields: {
+                              summary: 'User Interface Bugs',
+                          },
+                      },
+                  ]
+                : []),
+            {
+                key: 'BTS-3',
+                fields: {
+                    summary: 'Improve Dropdown Menu Responsiveness',
+                },
+            },
+            {
+                key: 'BTS-6',
+                fields: {
+                    summary: 'Fix Button Alignment Issue',
+                },
+            },
+        ],
+    };
+
+    return await setupWireMockMapping(request, 'GET', searchResponse, '/rest/api/2/search');
+};
