@@ -72,6 +72,9 @@ export function updateIssueField(issueJson: any, updates: Record<string, any>) {
             // Add the new attachment to both fields.attachment and renderedFields.attachment arrays
             updated.fields.attachment.push(value);
             updated.renderedFields.attachment.push(value);
+        } else if (key === 'summary') {
+            updated.renderedFields.summary = value;
+            updated.fields.summary = value;
         }
     }
 
