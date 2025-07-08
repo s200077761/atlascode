@@ -149,12 +149,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     await this.executeOpenFile(e.filePath, e.tryShowDiff, e.range);
                     break;
 
-                case RovoDevViewResponseType.UndoFiles:
+                case RovoDevViewResponseType.UndoFileChanges:
                     await this.executeUndoFiles(e.filePaths);
                     break;
 
-                case RovoDevViewResponseType.AcceptFiles:
-                    await this.executeAcceptFiles(e.filePaths);
+                case RovoDevViewResponseType.KeepFileChanges:
+                    await this.executeKeepFiles(e.filePaths);
                     break;
 
                 case RovoDevViewResponseType.GetOriginalText:
@@ -438,7 +438,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await Promise.all(promises);
     }
 
-    private async executeAcceptFiles(filePaths: string[]) {
+    private async executeKeepFiles(filePaths: string[]) {
         const promises = filePaths.map(async (filePath) => {
             const cachedFilePath = await this.rovoDevApiClient!.getCacheFilePath(filePath);
             await this.getPromise((callback) => fs.rm(cachedFilePath, callback));
