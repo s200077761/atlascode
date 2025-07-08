@@ -44,6 +44,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private _pendingPrompt: string | undefined;
     private _pendingCancellation = false;
 
+    // we keep the data in this collection so we can attach some metadata to the next
+    // prompt informing Rovo Dev that those files has been reverted
+    private _revertedChanges: string[] = [];
+
     private _disposables: Disposable[] = [];
 
     private _globalState: Memento;
@@ -313,6 +317,21 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
     }
 
+    private addUndoContextToPrompt(message: string): string {
+        if (this._revertedChanges.length) {
+            const files = this._revertedChanges.join('\n');
+            this._revertedChanges = [];
+            return `<context>
+    The following files have been reverted:
+    ${files}
+</context>
+            
+${message}`;
+        } else {
+            return message;
+        }
+    }
+
     private async executeChat(message: string, suppressEcho?: boolean) {
         if (!message) {
             return;
@@ -322,12 +341,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             await this.sendUserPromptToView(message);
         }
 
+        const payloadToSend = this.addUndoContextToPrompt(message);
+
         if (this._initialized) {
             await this.executeApiWithErrorHandling((client) => {
-                return this.processChatResponse(client.chat(message));
+                return this.processChatResponse(client.chat(payloadToSend));
             }, true);
         } else {
-            this._pendingPrompt = message;
+            this._pendingPrompt = payloadToSend;
         }
     }
 
@@ -335,6 +356,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         const webview = this._webView!;
         await this.executeApiWithErrorHandling(async (client) => {
             await client.reset();
+
+            this._revertedChanges = [];
+
             await webview.postMessage({
                 type: RovoDevProviderMessageType.NewSession,
             });
@@ -436,6 +460,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         });
 
         await Promise.all(promises);
+
+        this._revertedChanges.push(...filePaths);
     }
 
     private async executeKeepFiles(filePaths: string[]) {
