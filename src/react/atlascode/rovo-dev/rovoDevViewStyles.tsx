@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const rovoDevContainerStyles: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -39,7 +41,48 @@ export const rovoDevButtonStyles: React.CSSProperties = {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    flexWrap: 'wrap',
 };
+
+export const rovoDevPromptButtonStyles: React.CSSProperties = {
+    color: 'var(--vscode-input-foreground) !important',
+    border: '1px solid var(--vscode-button-border)',
+    backgroundColor: 'var(--vscode-input-background)',
+    marginLeft: '4px',
+    marginTop: '1px',
+    marginBottom: '1px',
+};
+
+export const rovoDevPromptButtonDisabledStyles: React.CSSProperties = {
+    color: 'var(--vscode-disabledForeground) !important',
+    backgroundColor: 'unset',
+};
+
+export const rovoDevPromptButtonToggledStyles: React.CSSProperties = {
+    ...rovoDevPromptButtonStyles,
+    margin: '0 4px',
+    padding: '0 4px',
+    gap: '2px',
+    color: 'var(--vscode-inputOption-activeForeground) !important',
+    backgroundColor: 'var(--vscode-inputOption-activeBackground)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: '4px',
+    border: '1px solid var(--vscode-inputOption-activeBorder)',
+};
+
+export function rovoDevDeepPlanStylesSelector(isClicked: boolean, isDisabled: boolean): React.CSSProperties {
+    if (isClicked && isDisabled) {
+        return { ...rovoDevPromptButtonToggledStyles, ...rovoDevPromptButtonDisabledStyles };
+    } else if (isDisabled) {
+        return { ...rovoDevPromptButtonStyles, ...rovoDevPromptButtonDisabledStyles };
+    } else if (isClicked) {
+        return rovoDevPromptButtonToggledStyles;
+    } else {
+        return rovoDevPromptButtonStyles;
+    }
+}
 
 export const rovoDevTextareaContainerStyles: React.CSSProperties = {
     width: '100%',
