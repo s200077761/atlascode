@@ -12,6 +12,7 @@ import MarkdownIt from 'markdown-it';
 import React, { useCallback } from 'react';
 import { RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 
+import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import {
     agentMessageStyles,
     chatMessageStyles,
@@ -20,13 +21,11 @@ import {
     inlineModifyButtonStyles,
     messageContentStyles,
     undoKeepButtonStyles,
-    userMessageStyles,
 } from '../rovoDevViewStyles';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import {
     ChatMessage,
     CodeSnippetToChange,
-    DefaultMessage,
     ErrorMessage,
     parseToolReturnMessage,
     TechnicalPlan,
@@ -35,7 +34,7 @@ import {
     ToolReturnParseResult,
 } from '../utils';
 
-const md = new MarkdownIt({
+export const mdParser = new MarkdownIt({
     html: true,
     breaks: true,
     linkify: true,
@@ -46,28 +45,7 @@ export interface OpenFileFunc {
     (filePath: string, tryShowDiff?: boolean, lineRange?: number[]): void;
 }
 
-const ChatMessageItem: React.FC<{
-    msg: DefaultMessage;
-    index: number;
-}> = ({ msg, index }) => {
-    const messageTypeStyles = msg.source === 'User' ? userMessageStyles : agentMessageStyles;
-
-    const content = (
-        <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-            key="parsed-content"
-            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
-        />
-    );
-
-    return (
-        <div key={index} style={{ ...chatMessageStyles, ...messageTypeStyles }}>
-            <div style={messageContentStyles}>{content}</div>
-        </div>
-    );
-};
-
-const ErrorMessageItem: React.FC<{
+export const ErrorMessageItem: React.FC<{
     msg: ErrorMessage;
     index: number;
     isRetryAfterErrorButtonEnabled: (uid: string) => boolean;
@@ -77,7 +55,7 @@ const ErrorMessageItem: React.FC<{
         <div
             style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
             key="parsed-content"
-            dangerouslySetInnerHTML={{ __html: md.render(msg.text || '') }}
+            dangerouslySetInnerHTML={{ __html: mdParser.render(msg.text || '') }}
         />
     );
 
@@ -384,7 +362,7 @@ type TechnicalPlanProps = {
     onMount?: () => void;
 };
 
-const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText, onMount }) => {
+export const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFile, getText }) => {
     const clarifyingQuestions = content.logicalChanges.flatMap((change) => {
         return change.filesToChange
             .map((file) => {
@@ -433,7 +411,7 @@ const TechnicalPlanComponent: React.FC<TechnicalPlanProps> = ({ content, openFil
                             />
                             <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
                                 <div>{idx + 1}. </div>
-                                <span dangerouslySetInnerHTML={{ __html: md.render(question) }} />
+                                <span dangerouslySetInnerHTML={{ __html: mdParser.render(question) }} />
                             </div>
                         </div>
                     );
@@ -530,7 +508,7 @@ const FileToChangeComponent: React.FC<{
         codeSnippetsToChange.some((snippet) => snippet.code !== undefined && snippet.code.trim() !== '');
 
     const renderDescription = (description: string) => {
-        return <span dangerouslySetInnerHTML={{ __html: md.render(description) }} />;
+        return <span dangerouslySetInnerHTML={{ __html: mdParser.render(description) }} />;
     };
     return (
         <div className="file-to-change">
