@@ -1151,15 +1151,14 @@ describe('analytics', () => {
         );
 
         it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when successful', async (rovoDevEnv) => {
-            const failed = false;
-            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId, failed);
+            const event = await analytics.rovoDevStopActionEvent(rovoDevEnv, mockSessionId, mockPromptId);
 
             expect(event.trackEvent.action).toEqual('rovoDevStopAction');
             expect(event.trackEvent.actionSubject).toEqual('atlascode');
             expect(event.trackEvent.attributes.rovoDevEnv).toEqual(rovoDevEnv);
             expect(event.trackEvent.attributes.sessionId).toEqual(mockSessionId);
             expect(event.trackEvent.attributes.promptId).toEqual(mockPromptId);
-            expect(event.trackEvent.attributes.failed).toEqual(failed);
+            expect(event.trackEvent.attributes.failed).toBeUndefined();
         });
 
         it.each(RovoDevEnvironments)('should create rovoDevStopActionEvent when failed', async (rovoDevEnv) => {
@@ -1530,8 +1529,8 @@ describe('analytics', () => {
 
                 // Test RovoDev event (with additional params)
                 const rovoDevEvent = await analytics.performanceEvent('rovodev.response.timeToFirstByte', 100, {
-                    sessionId: 'test-session',
-                    promptId: 'test-prompt',
+                    rovoDevSessionId: 'test-session',
+                    rovoDevPromptId: 'test-prompt',
                 });
 
                 // Jira event should not have sessionId/promptId
@@ -1540,8 +1539,8 @@ describe('analytics', () => {
                 expect(jiraEvent.trackEvent.attributes.tag).toEqual('ui.cumulativeJqlFetch.render.lcp');
 
                 // RovoDev event should have sessionId/promptId
-                expect(rovoDevEvent.trackEvent.attributes.sessionId).toEqual('test-session');
-                expect(rovoDevEvent.trackEvent.attributes.promptId).toEqual('test-prompt');
+                expect(rovoDevEvent.trackEvent.attributes.rovoDevSessionId).toEqual('test-session');
+                expect(rovoDevEvent.trackEvent.attributes.rovoDevPromptId).toEqual('test-prompt');
                 expect(rovoDevEvent.trackEvent.attributes.tag).toEqual('rovodev.response.timeToFirstByte');
             });
         });
