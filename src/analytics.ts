@@ -184,15 +184,30 @@ type RovoDevPerfEvents =
     | 'rovodev.response.timeToTechPlan'
     | 'rovodev.response.timeToLastMessage';
 
+type JiraPerfEvents =
+    | 'ui.cumulativeJqlFetch.render.lcp'
+    | 'ui.cumulativeJqlFetch.update.lcp'
+    | 'ui.createJiraIssue.render.lcp'
+    | 'ui.editJiraIssue.render.lcp'
+    | 'ui.editJiraIssue.update.lcp';
+
 interface RovoDevCommonParams {
     rovoDevSessionId: string;
     rovoDevPromptId: string;
+}
+interface JiraIssueTypeParams {
+    isEpic: boolean;
 }
 
 export function performanceEvent(
     tag: RovoDevPerfEvents,
     measure: number,
     params: RovoDevCommonParams,
+): Promise<TrackEvent>;
+export async function performanceEvent(
+    tag: JiraPerfEvents,
+    measure: number,
+    params?: JiraIssueTypeParams,
 ): Promise<TrackEvent>;
 export function performanceEvent(tag: string, measure: number, params?: Record<string, any>): Promise<TrackEvent> {
     return trackEvent('performanceEvent', 'atlascode', {
