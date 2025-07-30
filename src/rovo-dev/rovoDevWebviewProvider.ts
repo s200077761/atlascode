@@ -269,9 +269,9 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                 if (result) {
                     const version = ((await this.executeHealthcheckInfo()) ?? {}).version;
                     if (version && semver_gte(version, MIN_SUPPORTED_ROVODEV_VERSION)) {
-                        if (true || this.isBBY) {
+                        this.beginNewSession();
+                        if (this.isBBY) {
                             // TODO: we should obtain the session id from the boysenberry environment
-                            this.beginNewSession();
                             await this.executeReplay();
                         }
                     } else {
@@ -287,6 +287,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                     throw new Error(errorMsg);
                 }
 
+                this._initialized = true;
                 // re-send the buffered prompt
                 if (this._pendingPrompt) {
                     this.executeChat(this._pendingPrompt, true);
@@ -460,13 +461,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         }
 
         // Send final complete message when stream ends
-        await this.completeChatResponse();
+        await this.completeChatResponse(sourceApi);
     }
 
-    private completeChatResponse() {
+    private completeChatResponse(sourceApi: 'replay' | 'chat' | 'error') {
         const webview = this._webView!;
         return webview.postMessage({
             type: RovoDevProviderMessageType.CompleteMessage,
+            isReplay: sourceApi === 'replay',
         });
     }
 
@@ -645,6 +647,7 @@ ${message}`;
         }
 
         this.beginNewPrompt();
+
         this._currentPrompt = {
             text,
             enable_deep_plan,
@@ -958,7 +961,7 @@ ${message}`;
             } catch (error) {
                 if (cancellationAware && this._pendingCancellation && error.cause?.code === 'UND_ERR_SOCKET') {
                     this._pendingCancellation = false;
-                    this.completeChatResponse();
+                    this.completeChatResponse('error');
                 } else {
                     await this.processError(error, isErrorRetriable);
                 }
