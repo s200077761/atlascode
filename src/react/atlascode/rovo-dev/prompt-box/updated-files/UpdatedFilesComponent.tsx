@@ -6,21 +6,11 @@ import { ModifiedFileItem } from './ModifiedFileItem';
 
 export const UpdatedFilesComponent: React.FC<{
     modifiedFiles: ToolReturnParseResult[];
-    onUndo: (filePath: string[]) => void;
-    onKeep: (filePath: string[]) => void;
+    onUndo: (files: ToolReturnParseResult[]) => void;
+    onKeep: (files: ToolReturnParseResult[]) => void;
     openDiff: OpenFileFunc;
     actionsEnabled?: boolean;
 }> = ({ modifiedFiles, onUndo, onKeep, openDiff, actionsEnabled }) => {
-    const handleKeepAll = React.useCallback(() => {
-        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
-        onKeep(filePaths);
-    }, [onKeep, modifiedFiles]);
-
-    const handleUndoAll = React.useCallback(() => {
-        const filePaths = modifiedFiles.map((msg) => msg.filePath).filter((path) => path !== undefined);
-        onUndo(filePaths);
-    }, [onUndo, modifiedFiles]);
-
     if (!modifiedFiles || modifiedFiles.length === 0) {
         return null;
     }
@@ -38,14 +28,14 @@ export const UpdatedFilesComponent: React.FC<{
                     <button
                         disabled={!actionsEnabled}
                         className="updated-files-action secondary"
-                        onClick={() => handleUndoAll()}
+                        onClick={() => onUndo(modifiedFiles)}
                     >
                         Undo
                     </button>
                     <button
                         disabled={!actionsEnabled}
                         className="updated-files-action primary"
-                        onClick={() => handleKeepAll()}
+                        onClick={() => onKeep(modifiedFiles)}
                     >
                         Keep
                     </button>
@@ -58,8 +48,8 @@ export const UpdatedFilesComponent: React.FC<{
                             key={index}
                             msg={msg}
                             onFileClick={(path: string) => openDiff(path, true)}
-                            onUndo={(path: string) => onUndo([path])}
-                            onKeep={(path: string) => onKeep([path])}
+                            onUndo={(file: ToolReturnParseResult) => onUndo([file])}
+                            onKeep={(file: ToolReturnParseResult) => onKeep([file])}
                             actionsEnabled={actionsEnabled}
                         />
                     );

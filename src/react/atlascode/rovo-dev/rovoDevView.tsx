@@ -16,7 +16,7 @@ import { ChatStream } from './messaging/ChatStream';
 import { PromptInputBox } from './prompt-box/prompt-input/PromptInput';
 import { PromptContextCollection } from './prompt-box/promptContext/promptContextCollection';
 import { UpdatedFilesComponent } from './prompt-box/updated-files/UpdatedFilesComponent';
-import { RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
+import { ModifiedFile, RovoDevViewResponse, RovoDevViewResponseType } from './rovoDevViewMessages';
 import * as styles from './rovoDevViewStyles';
 import { parseToolCallMessage } from './tools/ToolCallItem';
 import {
@@ -147,26 +147,37 @@ const RovoDevView: React.FC = () => {
     }, [setChatStream, setRetryAfterErrorEnabled]);
 
     const removeModifiedFileToolReturns = useCallback(
-        (filePaths: string[]) => {
-            setTotalModifiedFiles((prev) => prev.filter((x) => !filePaths.includes(x.filePath!)));
+        (files: ToolReturnParseResult[]) => {
+            setTotalModifiedFiles((prev) => prev.filter((x) => !files.includes(x)));
         },
         [setTotalModifiedFiles],
     );
 
     const keepFiles = useCallback(
-        (filePaths: string[]) => {
+        (files: ToolReturnParseResult[]) => {
             dispatch({
                 type: RovoDevViewResponseType.KeepFileChanges,
-                filePaths,
+                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
             });
-            removeModifiedFileToolReturns(filePaths);
+            removeModifiedFileToolReturns(files);
+        },
+        [dispatch, removeModifiedFileToolReturns],
+    );
+
+    const undoFiles = useCallback(
+        (files: ToolReturnParseResult[]) => {
+            dispatch({
+                type: RovoDevViewResponseType.UndoFileChanges,
+                files: files.map((file) => ({ filePath: file.filePath, type: file.type }) as ModifiedFile),
+            });
+            removeModifiedFileToolReturns(files);
         },
         [dispatch, removeModifiedFileToolReturns],
     );
 
     const clearChatHistory = useCallback(() => {
         setChatStream([]);
-        keepFiles(totalModifiedFiles.map((file) => file.filePath!).filter((filePath) => !!filePath));
+        keepFiles(totalModifiedFiles);
         setTotalModifiedFiles([]);
         setIsDeepPlanCreated(false);
         setCurThinkingMessages([]);
@@ -526,17 +537,6 @@ const RovoDevView: React.FC = () => {
         [postMessage],
     );
 
-    const undoFiles = useCallback(
-        (filePaths: string[]) => {
-            postMessage({
-                type: RovoDevViewResponseType.UndoFileChanges,
-                filePaths,
-            });
-            removeModifiedFileToolReturns(filePaths);
-        },
-        [postMessage, removeModifiedFileToolReturns],
-    );
-
     // Function to get the original text of a file for planning diff
     const getOriginalText = useCallback(
         async (filePath: string, range?: number[]) => {
@@ -566,7 +566,7 @@ const RovoDevView: React.FC = () => {
     const onChangesGitPushed = useCallback(
         (msg: DefaultMessage, pullRequestCreated: boolean) => {
             if (totalModifiedFiles.length > 0) {
-                keepFiles(totalModifiedFiles.map((file) => file.filePath!));
+                keepFiles(totalModifiedFiles);
             }
 
             setChatStream((prev) => [...prev, msg]);

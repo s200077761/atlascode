@@ -6,41 +6,40 @@ import { ToolReturnParseResult } from '../../utils';
 
 export const ModifiedFileItem: React.FC<{
     msg: ToolReturnParseResult;
-    onUndo: (filePath: string) => void;
-    onKeep: (filePath: string) => void;
+    onUndo: (file: ToolReturnParseResult) => void;
+    onKeep: (file: ToolReturnParseResult) => void;
     onFileClick: (filePath: string) => void;
     actionsEnabled?: boolean;
 }> = ({ msg, onUndo, onKeep, onFileClick, actionsEnabled = true }) => {
-    const isDeletion = msg.type === 'delete';
-    const isCreation = msg.type === 'create';
-
-    const getId = () => {
-        if (isDeletion) {
-            return 'deleted-file';
+    const getClassName = (msg: ToolReturnParseResult) => {
+        switch (msg.type) {
+            case 'delete':
+                return 'deleted-file';
+            case 'create':
+                return 'created-file';
+            default:
+                return undefined;
         }
-        if (isCreation) {
-            return 'created-file';
-        }
-        return undefined;
     };
 
     const filePath = msg.filePath;
     if (!filePath) {
         return null;
     }
+
     const handleUndo = (e: React.MouseEvent) => {
         e.stopPropagation();
-        onUndo(filePath);
+        onUndo(msg);
     };
 
     const handleKeep = (e: React.MouseEvent) => {
         e.stopPropagation();
-        onKeep(filePath);
+        onKeep(msg);
     };
 
     return (
         <div aria-label="modified-file-item" className="modified-file-item" onClick={() => onFileClick(filePath)}>
-            <div id={getId()}>{filePath}</div>
+            <div className={getClassName(msg)}>{filePath}</div>
             <div className="modified-file-actions">
                 <button
                     disabled={!actionsEnabled}
