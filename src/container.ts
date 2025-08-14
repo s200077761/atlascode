@@ -11,6 +11,7 @@ import { BitbucketCheckoutHelper } from './bitbucket/checkoutHelper';
 import { CheckoutHelper } from './bitbucket/interfaces';
 import { PullRequest, WorkspaceRepo } from './bitbucket/model';
 import { BitbucketCloudPullRequestLinkProvider } from './bitbucket/terminal-link/createPrLinkProvider';
+import { CommandContext, setCommandContext } from './commandContext';
 import { openPullRequest } from './commands/bitbucket/pullRequest';
 import { configuration, IConfig } from './config/configuration';
 import { Commands } from './constants';
@@ -36,7 +37,7 @@ import { RovoDevDecorator } from './rovo-dev/rovoDevDecorator';
 import { RovoDevWebviewProvider } from './rovo-dev/rovoDevWebviewProvider';
 import { SiteManager } from './siteManager';
 import { AtlascodeUriHandler, ONBOARDING_URL, SETTINGS_URL } from './uriHandler';
-import { FeatureFlagClient, FeatureFlagClientInitError } from './util/featureFlags';
+import { FeatureFlagClient, FeatureFlagClientInitError, Features } from './util/featureFlags';
 import { AuthStatusBar } from './views/authStatusBar';
 import { HelpExplorer } from './views/HelpExplorer';
 import { JiraActiveIssueStatusBar } from './views/jira/activeIssueStatusBar';
@@ -78,6 +79,10 @@ export class Container {
     private static _assignedWorkItemsView: AssignedWorkItemsViewProvider;
 
     static async initialize(context: ExtensionContext, version: string) {
+        canFetchInternalUrl().then((success) => {
+            this._isInAtlassianNetwork = success;
+        });
+
         const analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = analyticsClient({
@@ -211,24 +216,33 @@ export class Container {
         context.subscriptions.push(new CustomJQLViewProvider());
         context.subscriptions.push((this._assignedWorkItemsView = new AssignedWorkItemsViewProvider()));
 
-        if (!!process.env.ROVODEV_ENABLED) {
-            context.subscriptions.push(new RovoDevDecorator());
-            context.subscriptions.push(
-                languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
-                    providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
-                }),
-            );
-            context.subscriptions.push(
-                (this._rovodevWebviewProvider = new RovoDevWebviewProvider(
-                    context,
-                    context.extensionPath,
-                    context.globalState,
-                )),
-            );
-            this.configureRovodevSettingsCommands(context);
-        }
-
         this._onboardingProvider = new OnboardingProvider();
+
+        if (process.env.ROVODEV_BBY || FeatureFlagClient.checkGate(Features.RovoDevEnabled)) {
+            this._isRovoDevEnabled = true;
+            this.enableRovoDev(context);
+        }
+    }
+
+    static enableRovoDev(context: ExtensionContext) {
+        // this enables the Rovo Dev activity bar
+        setCommandContext(CommandContext.RovoDevEnabled, true);
+
+        context.subscriptions.push(new RovoDevDecorator());
+        context.subscriptions.push(
+            languages.registerCodeActionsProvider({ scheme: 'file' }, new RovoDevCodeActionProvider(), {
+                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+            }),
+        );
+        context.subscriptions.push(
+            (this._rovodevWebviewProvider = new RovoDevWebviewProvider(
+                context,
+                context.extensionPath,
+                context.globalState,
+            )),
+        );
+
+        this.configureRovodevSettingsCommands(context);
     }
 
     static configureRovodevSettingsCommands(context: ExtensionContext) {
@@ -334,6 +348,16 @@ export class Container {
 
     public static set configTarget(target: ConfigTarget) {
         this._context.globalState.update(ConfigTargetKey, target);
+    }
+
+    private static _isInAtlassianNetwork: boolean | undefined = undefined;
+    public static get isInAtlassianNetwork() {
+        return this._isInAtlassianNetwork;
+    }
+
+    private static _isRovoDevEnabled: boolean;
+    public static get isRovoDevEnabled() {
+        return this._isRovoDevEnabled;
     }
 
     private static _version: string;
@@ -474,5 +498,19 @@ export class Container {
     private static _rovodevWebviewProvider: RovoDevWebviewProvider;
     public static get rovodevWebviewProvider() {
         return this._rovodevWebviewProvider;
+    }
+}
+
+async function canFetchInternalUrl(): Promise<boolean> {
+    try {
+        const result = await fetch('http://github.internal.atlassian.com/', {
+            method: 'GET',
+            signal: AbortSignal.timeout(5000),
+        });
+
+        const statusKind = Math.floor((result.status || 0) / 100);
+        return statusKind === 2 || statusKind === 3;
+    } catch {
+        return false;
     }
 }
