@@ -375,13 +375,16 @@ const RovoDevView: React.FC = () => {
                     if (currentState === State.GeneratingResponse || currentState === State.ExecutingPlan) {
                         finalizeResponse();
                     }
+                    if (event.message.isProcessTerminated) {
+                        setCurrentState(State.ProcessTerminated);
+                    }
                     handleAppendError(event.message);
-
                     break;
 
                 case RovoDevProviderMessageType.NewSession:
                     clearChatHistory();
                     setPendingToolCallMessage('');
+                    setCurrentState(State.WaitingForPrompt);
                     break;
 
                 case RovoDevProviderMessageType.SetInitState:
@@ -657,7 +660,12 @@ const RovoDevView: React.FC = () => {
                         }}
                     />
                     <PromptInputBox
-                        disabled={workspaceCount === 0 || currentState === State.Disabled}
+                        disabled={
+                            workspaceCount === 0 ||
+                            currentState === State.Disabled ||
+                            currentState === State.ProcessTerminated
+                        }
+                        hideButtons={workspaceCount === 0 || currentState === State.Disabled}
                         state={currentState}
                         promptText={promptText}
                         onPromptTextChange={(element) => setPromptText(element)}
