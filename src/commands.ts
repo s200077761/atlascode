@@ -255,7 +255,7 @@ export function registerRovoDevCommands(vscodeContext: ExtensionContext) {
             Container.rovodevWebviewProvider.invokeRovoDevAskCommand(prompt, context);
         }),
         commands.registerCommand(Commands.RovodevNewSession, () => {
-            Container.rovodevWebviewProvider.executeReset();
+            Container.rovodevWebviewProvider.executeNewSession();
         }),
         commands.registerCommand(Commands.RovodevShowTerminal, () => RovoDevProcessManager.showTerminal()),
     );
