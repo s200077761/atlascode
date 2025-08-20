@@ -7,6 +7,7 @@ export class PRHeader {
     readonly copyButton: Locator;
     readonly requestChangesButton: Locator;
     readonly approveButton: Locator;
+    readonly unapproveButton: Locator;
     readonly mergeButton: Locator;
     readonly refreshButton: Locator;
 
@@ -17,6 +18,7 @@ export class PRHeader {
         this.copyButton = this.frame.getByRole('button', { name: 'copy link' });
         this.requestChangesButton = this.frame.getByRole('button', { name: 'Request Changes' });
         this.approveButton = this.frame.getByRole('button', { name: 'Approve' });
+        this.unapproveButton = this.frame.getByRole('button', { name: 'Unapprove' });
         this.mergeButton = this.frame.getByRole('button', { name: 'Merge' });
         this.refreshButton = this.frame.getByRole('button', { name: 'click to refresh' });
     }
@@ -28,5 +30,15 @@ export class PRHeader {
         await expect(this.approveButton).toBeVisible();
         await expect(this.mergeButton).toBeVisible();
         await expect(this.refreshButton).toBeVisible();
+    }
+
+    async approvePullRequest() {
+        await this.approveButton.click();
+        await this.unapproveButton.waitFor({ state: 'visible' });
+    }
+
+    async unapprovePullRequest() {
+        await this.unapproveButton.click();
+        await this.approveButton.waitFor({ state: 'visible' });
     }
 }
