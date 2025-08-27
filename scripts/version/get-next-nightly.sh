@@ -4,7 +4,7 @@
 # except the minor version is incremented by one
 # https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions
 
-git fetch --tags -q
+git fetch --tags >&2
 
 echo "Evaluating next nightly version..." >&2
 
@@ -37,10 +37,9 @@ Nightly: $nightly_minor
 Next nightly minor version: $next_minor
 EOF
 
-# Patch is incrementing, unless we're on a new minor
+# Patch is incrementing, unless we're on a new minor or new major
 if [[ $nightly_major -eq $stable_major && $next_minor -eq $nightly_minor ]]; then
-    nightly_patch=$(echo $latest_nightly_version | cut -d '.' -f 3 | cut -d '-' -f 1)
-    nightly_patch=${nightly_patch:--1} # In case of new nightly minor
+    nightly_patch=$(echo $latest_nightly_version | cut -d '.' -f 3)
     next_patch=$((nightly_patch + 1))
 else
     next_patch=0
