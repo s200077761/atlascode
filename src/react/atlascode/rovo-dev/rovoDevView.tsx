@@ -6,7 +6,7 @@ import { highlightElement } from '@speed-highlight/core';
 import { detectLanguage } from '@speed-highlight/core/detect';
 import { useCallback, useState } from 'react';
 import * as React from 'react';
-import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevContext, RovoDevContextItem, RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
 import { v4 } from 'uuid';
 
 import { RovoDevResponse } from '../../../rovo-dev/responseParser';
@@ -61,6 +61,7 @@ const RovoDevView: React.FC = () => {
     const [curThinkingMessages, setCurThinkingMessages] = useState<ChatMessage[]>([]);
 
     const [currentState, setCurrentState] = useState(State.WaitingForPrompt);
+    const [currentSubState, setCurrentSubState] = useState(SubState.None);
     const [initState, setInitState] = useState(
         process.env.ROVODEV_BBY ? RovoDevInitState.Initialized : RovoDevInitState.NotInitialized,
     );
@@ -388,7 +389,11 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.CompleteMessage:
-                    if (currentState !== State.WaitingForPrompt) {
+                    if (
+                        currentState === State.GeneratingResponse ||
+                        currentState === State.ExecutingPlan ||
+                        currentState === State.CancellingResponse
+                    ) {
                         finalizeResponse();
                         if (!event.isReplay) {
                             validateResponseFinalized();
@@ -428,6 +433,8 @@ const RovoDevView: React.FC = () => {
 
                 case RovoDevProviderMessageType.SetInitState:
                     setInitState(event.newState);
+                    setCurrentState(State.WaitingForPrompt);
+                    setCurrentSubState(SubState.None);
                     break;
 
                 case RovoDevProviderMessageType.ProviderReady:
@@ -446,7 +453,18 @@ const RovoDevView: React.FC = () => {
                     break;
 
                 case RovoDevProviderMessageType.RovoDevDisabled:
+                    if (
+                        currentState === State.GeneratingResponse ||
+                        currentState === State.ExecutingPlan ||
+                        currentState === State.CancellingResponse
+                    ) {
+                        finalizeResponse();
+                    }
+                    clearChatHistory();
                     setCurrentState(State.Disabled);
+                    if (event.reason === 'needAuth') {
+                        setCurrentSubState(SubState.NeedAuth);
+                    }
                     break;
 
                 case RovoDevProviderMessageType.UserFocusUpdated:
@@ -512,6 +530,8 @@ const RovoDevView: React.FC = () => {
             clearChatHistory,
             handleAppendError,
             setInitState,
+            setCurrentState,
+            setCurrentSubState,
             currentState,
         ],
     );
@@ -556,7 +576,7 @@ const RovoDevView: React.FC = () => {
             // Clear the input field
             setPromptText('');
         },
-        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, promptContextCollection],
+        [currentState, isDeepPlanCreated, isDeepPlanToggled, postMessage, setCurrentState, promptContextCollection],
     );
 
     // On the first render, get the context update
@@ -581,7 +601,7 @@ const RovoDevView: React.FC = () => {
         }
         setCurrentState(State.ExecutingPlan);
         sendPrompt(CODE_PLAN_EXECUTE_PROMPT);
-    }, [currentState, sendPrompt]);
+    }, [currentState, setCurrentState, sendPrompt]);
 
     const retryPromptAfterError = useCallback((): void => {
         setCurrentState(State.GeneratingResponse);
@@ -590,7 +610,7 @@ const RovoDevView: React.FC = () => {
         postMessage({
             type: RovoDevViewResponseType.RetryPromptAfterError,
         });
-    }, [postMessage]);
+    }, [setCurrentState, postMessage]);
 
     const cancelResponse = useCallback((): void => {
         if (currentState === State.CancellingResponse) {
@@ -670,6 +690,12 @@ const RovoDevView: React.FC = () => {
         });
     }, [postMessage]);
 
+    const onLoginClick = useCallback(() => {
+        postMessage({
+            type: RovoDevViewResponseType.LaunchJiraAuth,
+        });
+    }, [postMessage]);
+
     return (
         <div className="rovoDevChat">
             <ChatStream
@@ -689,76 +715,76 @@ const RovoDevView: React.FC = () => {
                 deepPlanCreated={isDeepPlanCreated}
                 executeCodePlan={executeCodePlan}
                 state={currentState}
+                subState={currentSubState}
                 initState={initState}
                 downloadProgress={downloadProgress}
                 onChangesGitPushed={onChangesGitPushed}
                 onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                onLoginClick={onLoginClick}
             />
-            <div className="input-section-container">
-                <UpdatedFilesComponent
-                    modifiedFiles={totalModifiedFiles}
-                    onUndo={undoFiles}
-                    onKeep={keepFiles}
-                    openDiff={openFile}
-                    actionsEnabled={currentState === State.WaitingForPrompt}
-                />
-                <div className="prompt-container">
-                    <PromptContextCollection
-                        content={promptContextCollection}
-                        readonly={false}
-                        onRemoveContext={(item: RovoDevContextItem) => {
-                            setPromptContextCollection((prev) => ({
-                                ...prev,
-                                contextItems: prev.contextItems?.filter(
-                                    (contextItem) =>
-                                        contextItem.file.absolutePath !== item.file.absolutePath ||
-                                        contextItem.selection?.start !== item.selection?.start ||
-                                        contextItem.selection?.end !== item.selection?.end,
-                                ),
-                            }));
-                        }}
-                        onToggleActiveItem={(enabled) => {
-                            setPromptContextCollection((prev) => {
-                                if (!prev.focusInfo) {
-                                    return prev;
-                                }
-                                return {
+            {currentState !== State.Disabled && (
+                <div className="input-section-container">
+                    <UpdatedFilesComponent
+                        modifiedFiles={totalModifiedFiles}
+                        onUndo={undoFiles}
+                        onKeep={keepFiles}
+                        openDiff={openFile}
+                        actionsEnabled={currentState === State.WaitingForPrompt}
+                    />
+                    <div className="prompt-container">
+                        <PromptContextCollection
+                            content={promptContextCollection}
+                            readonly={false}
+                            onRemoveContext={(item: RovoDevContextItem) => {
+                                setPromptContextCollection((prev) => ({
                                     ...prev,
-                                    focusInfo: {
-                                        ...prev.focusInfo,
-                                        enabled,
-                                    },
-                                };
-                            });
-                        }}
-                    />
-                    <PromptInputBox
-                        disabled={
-                            workspaceCount === 0 ||
-                            currentState === State.Disabled ||
-                            currentState === State.ProcessTerminated
-                        }
-                        hideButtons={workspaceCount === 0 || currentState === State.Disabled}
-                        state={currentState}
-                        promptText={promptText}
-                        onPromptTextChange={(element) => setPromptText(element)}
-                        isDeepPlanEnabled={isDeepPlanToggled}
-                        onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
-                        onSend={sendPrompt}
-                        onCancel={cancelResponse}
-                        sendButtonDisabled={currentState !== State.WaitingForPrompt}
-                        onAddContext={() => {
-                            postMessage({
-                                type: RovoDevViewResponseType.AddContext,
-                                currentContext: promptContextCollection,
-                            });
-                        }}
-                        onCopy={handleCopyResponse}
-                        handleMemoryCommand={executeGetAgentMemory}
-                    />
+                                    contextItems: prev.contextItems?.filter(
+                                        (contextItem) =>
+                                            contextItem.file.absolutePath !== item.file.absolutePath ||
+                                            contextItem.selection?.start !== item.selection?.start ||
+                                            contextItem.selection?.end !== item.selection?.end,
+                                    ),
+                                }));
+                            }}
+                            onToggleActiveItem={(enabled) => {
+                                setPromptContextCollection((prev) => {
+                                    if (!prev.focusInfo) {
+                                        return prev;
+                                    }
+                                    return {
+                                        ...prev,
+                                        focusInfo: {
+                                            ...prev.focusInfo,
+                                            enabled,
+                                        },
+                                    };
+                                });
+                            }}
+                        />
+                        <PromptInputBox
+                            disabled={workspaceCount === 0 || currentState === State.ProcessTerminated}
+                            hideButtons={workspaceCount === 0}
+                            state={currentState}
+                            promptText={promptText}
+                            onPromptTextChange={(element) => setPromptText(element)}
+                            isDeepPlanEnabled={isDeepPlanToggled}
+                            onDeepPlanToggled={() => setIsDeepPlanToggled(!isDeepPlanToggled)}
+                            onSend={sendPrompt}
+                            onCancel={cancelResponse}
+                            sendButtonDisabled={currentState !== State.WaitingForPrompt}
+                            onAddContext={() => {
+                                postMessage({
+                                    type: RovoDevViewResponseType.AddContext,
+                                    currentContext: promptContextCollection,
+                                });
+                            }}
+                            onCopy={handleCopyResponse}
+                            handleMemoryCommand={executeGetAgentMemory}
+                        />
+                    </div>
+                    <div className="ai-disclaimer">Uses AI. Verify results.</div>
                 </div>
-                <div className="ai-disclaimer">Uses AI. Verify results.</div>
-            </div>
+            )}
         </div>
     );
 };

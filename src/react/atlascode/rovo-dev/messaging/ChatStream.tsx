@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RovoDevInitState, State } from 'src/rovo-dev/rovoDevTypes';
+import { RovoDevInitState, State, SubState } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
@@ -33,10 +33,12 @@ interface ChatStreamProps {
     deepPlanCreated: boolean;
     executeCodePlan: () => void;
     state: State;
+    subState: SubState;
     initState: RovoDevInitState;
     downloadProgress: [number, number];
     onChangesGitPushed: (msg: DefaultMessage, pullRequestCreated: boolean) => void;
     onCollapsiblePanelExpanded: () => void;
+    onLoginClick: () => void;
 }
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -48,11 +50,13 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     deepPlanCreated,
     executeCodePlan,
     state,
+    subState,
     initState,
     downloadProgress,
     messagingApi,
     onChangesGitPushed,
     onCollapsiblePanelExpanded,
+    onLoginClick,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -196,9 +200,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
 
     return (
         <div ref={chatEndRef} className="chat-message-container">
-            <RovoDevLanding />
-            {chatHistory &&
-                chatHistory.map((block, idx) => {
+            <RovoDevLanding subState={subState} onLoginClick={onLoginClick} />
+            {(state !== State.Disabled || subState !== SubState.NeedAuth) &&
+                chatHistory &&
+                chatHistory.map((block) => {
                     if (block) {
                         if (Array.isArray(block)) {
                             return (
