@@ -1,5 +1,5 @@
 import { Box, Button, Grid } from '@mui/material';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Product } from '../../../../atlclients/authInfo';
 import { SiteWithAuthInfo } from '../../../../lib/ipc/toUI/config';
@@ -13,9 +13,19 @@ type SiteAuthenticatorProps = {
     product: Product;
     isRemote: boolean;
     sites: SiteWithAuthInfo[];
+    initiateApiTokenAuth: boolean;
 };
 
-export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = ({ product, isRemote, sites }) => {
+const OPEN_DIALOG_TIMEOUT = 250;
+
+export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> = ({
+    product,
+    isRemote,
+    sites,
+    initiateApiTokenAuth,
+}) => {
+    const [, setOpenDialogTimer] = useState<number | NodeJS.Timeout>(0);
+    const [opened, setOpened] = useState(false);
     const authDialogController = useContext(AuthDialogControllerContext);
     const configController = useContext(ConfigControllerContext);
 
@@ -33,6 +43,27 @@ export const SiteAuthenticator: React.FunctionComponent<SiteAuthenticatorProps> 
         },
         [authDialogController, product],
     );
+
+    useEffect(() => {
+        if (initiateApiTokenAuth && !opened) {
+            setOpenDialogTimer((prev) => {
+                clearTimeout(prev);
+                return setTimeout(() => {
+                    setOpened(true);
+                    openProductAuth();
+                }, OPEN_DIALOG_TIMEOUT);
+            });
+        }
+    }, [
+        authDialogController,
+        opened,
+        product,
+        sites,
+        initiateApiTokenAuth,
+        setOpenDialogTimer,
+        setOpened,
+        openProductAuth,
+    ]);
 
     // TODO AXON-46: feature flag this when closer to release
     const [isRemoteAuthButtonVisible] = React.useState(false);
@@ -100,7 +131,7 @@ const AuthContainer = ({
                                     </Grid>
                                     <Grid item>
                                         <Button color="primary" variant="contained" onClick={openProductAuth}>
-                                            {`Login with API Token`}
+                                            Login with API Token
                                         </Button>
                                     </Grid>
                                     {isRemoteAuthButtonVisible && (

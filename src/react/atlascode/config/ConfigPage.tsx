@@ -290,6 +290,11 @@ const ConfigPage: React.FunctionComponent = () => {
                                                 config={state.config!}
                                                 sites={state.jiraSites}
                                                 isRemote={state.isRemote}
+                                                initiateJiraApiTokenAuth={
+                                                    openSection === ConfigSection.Jira &&
+                                                    openSubsections[ConfigSection.Jira] &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
                                             />
                                             <BitbucketPanel
                                                 visible={openSection === ConfigSection.Bitbucket}
@@ -298,6 +303,11 @@ const ConfigPage: React.FunctionComponent = () => {
                                                 config={state.config!}
                                                 sites={state.bitbucketSites}
                                                 isRemote={state.isRemote}
+                                                initiateBitbucketApiTokenAuth={
+                                                    openSection === ConfigSection.Bitbucket &&
+                                                    openSubsections[ConfigSection.Bitbucket] &&
+                                                    !!state.initiateApiTokenAuth
+                                                }
                                             />
                                             <GeneralPanel
                                                 visible={openSection === ConfigSection.General}
