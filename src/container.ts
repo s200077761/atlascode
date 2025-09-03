@@ -226,6 +226,7 @@ export class Container {
             setCommandContext(CommandContext.UseNewAuthFlow, false);
         }
 
+        // in Boysenberry we don't need to listen to Jira auth updates
         if (!process.env.ROVODEV_BBY) {
             // refresh Rovo Dev when auth sites change
             this._siteManager.onDidSitesAvailableChange(async () => {
@@ -278,8 +279,10 @@ export class Container {
 
     static async refreshRovoDev(context: ExtensionContext) {
         if (this.config.jira.enabled && this._featureFlagClient.checkGate(Features.RovoDevEnabled)) {
+            this._isRovoDevEnabled = true;
             await this.enableRovoDev(context);
         } else {
+            this._isRovoDevEnabled = false;
             await this.disableRovoDev();
         }
     }
