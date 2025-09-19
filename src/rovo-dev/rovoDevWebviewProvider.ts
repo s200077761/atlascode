@@ -3,7 +3,7 @@ import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
 import { configuration } from 'src/config/configuration';
 import { getFsPromise } from 'src/util/fsPromises';
-import { setTimeout } from 'timers/promises';
+import { safeWaitFor } from 'src/util/waitFor';
 import { v4 } from 'uuid';
 import {
     CancellationToken,
@@ -783,12 +783,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         commands.executeCommand('atlascode.views.rovoDev.webView.focus');
 
         // Wait for the webview to initialize, up to 5 seconds
-        const initialized = await this.waitFor(
-            (value) => !!value,
-            () => !!this._webView,
-            5000,
-            50,
-        );
+        const initialized = await safeWaitFor({
+            condition: (value) => !!value,
+            check: () => !!this._webView,
+            timeout: 5000,
+            interval: 50,
+        });
 
         if (!initialized) {
             return;
@@ -824,32 +824,6 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             type: RovoDevProviderMessageType.ContextAdded,
             context: contextItem,
         });
-    }
-
-    private async waitFor<T>(
-        condition: (value: T) => Promise<boolean> | boolean,
-        check: () => Promise<T> | T,
-        timeoutMs: number,
-        interval: number,
-        abortIf?: () => boolean,
-    ): Promise<T> {
-        if (abortIf?.()) {
-            throw new Error('aborted');
-        }
-
-        let result = await check();
-        const checkPassed = await condition(result);
-        while (!checkPassed && timeoutMs) {
-            await setTimeout(interval);
-            if (abortIf?.()) {
-                throw new Error('aborted');
-            }
-
-            timeoutMs -= interval;
-            result = await check();
-        }
-
-        return result;
     }
 
     private _dispose() {
@@ -935,22 +909,15 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     private async initializeWithHealthcheck(rovoDevApiClient: RovoDevApiClient, timeout = 10000) {
         this._rovoDevApiClient = rovoDevApiClient;
 
+        const result = await safeWaitFor({
+            condition: (info) => !!info && info.status !== 'unhealthy', // TODO: remove check for unhealthy after Rovo Dev fixes this status
+            check: () => this.executeHealthcheckInfo(),
+            timeout,
+            interval: 500,
+            abortIf: () => !this.rovoDevApiClient,
+        });
+
         const webView = this._webView!;
-
-        // wait for Rovo Dev to be ready, for up to 10 seconds
-        let result: Awaited<ReturnType<typeof this.executeHealthcheckInfo>>;
-        try {
-            result = await this.waitFor(
-                (info) => !!info,
-                () => this.executeHealthcheckInfo(),
-                timeout,
-                500,
-                () => !this.rovoDevApiClient,
-            );
-        } catch {
-            result = undefined;
-        }
-
         const rovoDevClient = this._rovoDevApiClient;
 
         // if the client becomes undefined, it means the process terminated while we were polling the healtcheck
