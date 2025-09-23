@@ -387,11 +387,12 @@ class RovoDevTerminalInstance extends Disposable {
 
                 try {
                     const { username, key } = credentials;
+                    const siteUrl = `"https://${credentials.host}"`;
 
                     this.rovoDevTerminal = window.createTerminal({
                         name: 'Rovo Dev',
                         shellPath: this.rovoDevBinPath,
-                        shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode'],
+                        shellArgs: ['serve', `${port}`, '--xid', 'rovodev-ide-vscode', '--site-url', siteUrl],
                         cwd: this.workspacePath,
                         hideFromUser: true,
                         isTransient: true,
