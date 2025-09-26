@@ -1,5 +1,5 @@
 import { RovoDevLogger } from 'src/logger';
-import { RovoDevViewResponse } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
+import { RovoDevViewResponse, ToolPermissionChoice } from 'src/react/atlascode/rovo-dev/rovoDevViewMessages';
 import { v4 } from 'uuid';
 import { Event, Webview } from 'vscode';
 
@@ -17,12 +17,25 @@ interface TypedWebview<MessageOut, MessageIn> extends Webview {
 type StreamingApi = 'chat' | 'replay';
 
 export class RovoDevChatProvider {
+    private _pendingToolConfirmation: Record<string, ToolPermissionChoice | 'undecided'> = {};
+    private _pendingToolConfirmationLeft = 0;
     private _pendingPrompt: RovoDevPrompt | undefined;
     private _currentPrompt: RovoDevPrompt | undefined;
     private _rovoDevApiClient: RovoDevApiClient | undefined;
     private _webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined;
 
     private _replayInProgress = false;
+
+    private _yoloMode = false;
+    public get yoloMode() {
+        return this._yoloMode;
+    }
+    public set yoloMode(value: boolean) {
+        this._yoloMode = value;
+        if (value) {
+            this.signalYoloModeEngaged();
+        }
+    }
 
     private _currentPromptId: string = '';
     public get currentPromptId() {
@@ -38,7 +51,10 @@ export class RovoDevChatProvider {
         return !!this._pendingPrompt;
     }
 
-    constructor(private _telemetryProvider: RovoDevTelemetryProvider) {}
+    constructor(
+        private readonly _isBoysenberry: boolean,
+        private _telemetryProvider: RovoDevTelemetryProvider,
+    ) {}
 
     public setWebview(webView: TypedWebview<RovoDevProviderMessage, RovoDevViewResponse> | undefined) {
         this._webView = webView;
@@ -119,7 +135,8 @@ export class RovoDevChatProvider {
         this.beginNewPrompt();
 
         const fetchOp = async (client: RovoDevApiClient) => {
-            const response = await client.chat(requestPayload, true);
+            // Boysenberry is always in YOLO mode
+            const response = await client.chat(requestPayload, !this._isBoysenberry);
 
             this._telemetryProvider.fireTelemetryEvent(
                 'rovoDevPromptSentEvent',
@@ -330,14 +347,12 @@ export class RovoDevChatProvider {
 
             case 'warning':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ErrorMessage,
+                    type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'warning',
                         text: response.message,
                         title: response.title,
-                        source: 'RovoDevError',
-                        isRetriable: false,
-                        uid: v4(),
+                        source: 'RovoDevDialog',
                     },
                 });
 
@@ -348,19 +363,41 @@ export class RovoDevChatProvider {
 
             case 'prune':
                 return webview.postMessage({
-                    type: RovoDevProviderMessageType.ErrorMessage,
+                    type: RovoDevProviderMessageType.ShowDialog,
                     message: {
                         type: 'info',
                         text: response.message,
-                        source: 'RovoDevError',
-                        isRetriable: false,
-                        uid: v4(),
+                        source: 'RovoDevDialog',
                     },
                 });
 
             case 'on_call_tools_start':
-                // simulate YOLO mode
-                return this._rovoDevApiClient!.resumeToolCall(response.tools.map((x) => x.tool_call_id));
+                this._pendingToolConfirmation = {};
+                this._pendingToolConfirmationLeft = 0;
+
+                if (this.yoloMode) {
+                    const yoloChoices: RovoDevChatProvider['_pendingToolConfirmation'] = {};
+                    response.tools.forEach((x) => (yoloChoices[x.tool_call_id] = 'allow'));
+                    return this._rovoDevApiClient!.resumeToolCall(yoloChoices);
+                } else {
+                    response.tools.forEach((x) => (this._pendingToolConfirmation[x.tool_call_id] = 'undecided'));
+                    this._pendingToolConfirmationLeft = response.tools.length;
+
+                    const promises = response.tools.map((tool) => {
+                        return webview.postMessage({
+                            type: RovoDevProviderMessageType.ShowDialog,
+                            message: {
+                                type: 'toolPermissionRequest',
+                                source: 'RovoDevDialog',
+                                toolName: tool.tool_name,
+                                toolArgs: tool.args,
+                                text: 'To do this I will need to',
+                                toolCallId: tool.tool_call_id,
+                            },
+                        });
+                    });
+                    return Promise.all(promises);
+                }
 
             case 'close':
                 // response terminated
@@ -369,6 +406,36 @@ export class RovoDevChatProvider {
             default:
                 // @ts-expect-error ts(2339) - response here should be 'never'
                 throw new Error(`Rovo Dev response error: unknown event kind: ${response.event_kind}`);
+        }
+    }
+
+    public async signalToolRequestChoiceSubmit(toolCallId: string, choice: ToolPermissionChoice) {
+        if (!this._pendingToolConfirmation[toolCallId]) {
+            throw new Error('Received an unexpected tool confirmation: not found.');
+        }
+        if (this._pendingToolConfirmation[toolCallId] !== 'undecided') {
+            throw new Error('Received an unexpected tool confirmation: already confirmed.');
+        }
+
+        this._pendingToolConfirmation[toolCallId] = choice;
+
+        if (--this._pendingToolConfirmationLeft <= 0) {
+            await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
+            this._pendingToolConfirmation = {};
+        }
+    }
+
+    private async signalYoloModeEngaged() {
+        if (this._pendingToolConfirmationLeft > 0) {
+            for (const key in this._pendingToolConfirmation) {
+                if (this._pendingToolConfirmation[key] === 'undecided') {
+                    this._pendingToolConfirmation[key] = 'allow';
+                }
+            }
+            this._pendingToolConfirmationLeft = 0;
+
+            await this._rovoDevApiClient!.resumeToolCall(this._pendingToolConfirmation);
+            this._pendingToolConfirmation = {};
         }
     }
 
@@ -402,11 +469,11 @@ export class RovoDevChatProvider {
 
         const webview = this._webView!;
         return webview.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
+            type: RovoDevProviderMessageType.ShowDialog,
             message: {
                 type: 'error',
                 text: error.message,
-                source: 'RovoDevError',
+                source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),

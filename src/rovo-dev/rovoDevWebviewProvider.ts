@@ -63,7 +63,7 @@ enum RovoDevProcessState {
 
 export class RovoDevWebviewProvider extends Disposable implements WebviewViewProvider {
     private readonly viewType = 'atlascodeRovoDev';
-    private readonly isBoysenberry = process.env.ROVODEV_BBY;
+    private readonly isBoysenberry = process.env.ROVODEV_BBY === 'true';
     private readonly appInstanceId: string;
 
     private readonly _prHandler: RovoDevPullRequestHandler | undefined;
@@ -145,7 +145,8 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
             this.appInstanceId,
             onTelemetryError,
         );
-        this._chatProvider = new RovoDevChatProvider(this._telemetryProvider);
+        this._chatProvider = new RovoDevChatProvider(this.isBoysenberry, this._telemetryProvider);
+        this._chatProvider.yoloMode = this.isBoysenberry;
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
@@ -361,6 +362,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
                         await this.checkFileExists(e.filePath, e.requestId);
                         break;
 
+                    case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
+                        await this._chatProvider.signalToolRequestChoiceSubmit(e.toolCallId, e.choice);
+                        break;
+
+                    case RovoDevViewResponseType.YoloModeToggled:
+                        this._chatProvider.yoloMode = e.value;
+                        break;
+
                     default:
                         // @ts-expect-error ts(2339) - e here should be 'never'
                         this.processError(new Error(`Unknown message type: ${e.type}`));
@@ -451,12 +460,12 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
         const webview = this._webView!;
         return webview.postMessage({
-            type: RovoDevProviderMessageType.ErrorMessage,
+            type: RovoDevProviderMessageType.ShowDialog,
             message: {
                 type: 'error',
                 text: `${error.message}${error.gitErrorCode ? `\n ${error.gitErrorCode}` : ''}`,
                 title,
-                source: 'RovoDevError',
+                source: 'RovoDevDialog',
                 isRetriable,
                 isProcessTerminated,
                 uid: v4(),

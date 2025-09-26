@@ -28,6 +28,8 @@ export const enum RovoDevViewResponseType {
     LaunchJiraAuth = 'launchJiraAuth',
     McpConsentChoiceSubmit = 'mcpConsentChoiceSubmit',
     CheckFileExists = 'checkFileExists',
+    ToolPermissionChoiceSubmit = 'toolPermissionChoiceSubmit',
+    YoloModeToggled = 'yoloModeToggled',
 }
 
 export interface ModifiedFile {
@@ -36,6 +38,7 @@ export interface ModifiedFile {
 }
 
 export type McpConsentChoice = 'accept' | 'acceptAll' | 'deny';
+export type ToolPermissionChoice = 'allow' | 'deny';
 
 export type RovoDevViewResponse =
     | ReducerAction<RovoDevViewResponseType.Refresh>
@@ -64,4 +67,9 @@ export type RovoDevViewResponse =
       >
     | ReducerAction<RovoDevViewResponseType.LaunchJiraAuth>
     | ReducerAction<RovoDevViewResponseType.McpConsentChoiceSubmit, { choice: McpConsentChoice; serverName?: string }>
-    | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>;
+    | ReducerAction<RovoDevViewResponseType.CheckFileExists, { filePath: string; requestId: string }>
+    | ReducerAction<
+          RovoDevViewResponseType.ToolPermissionChoiceSubmit,
+          { choice: ToolPermissionChoice; toolCallId: string }
+      >
+    | ReducerAction<RovoDevViewResponseType.YoloModeToggled, { value: boolean }>;

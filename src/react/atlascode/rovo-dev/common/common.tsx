@@ -6,7 +6,7 @@ import { ChatMessageItem } from '../messaging/ChatMessageItem';
 import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
 import { ChatMessage, DefaultMessage, parseToolReturnMessage } from '../utils';
-import { ErrorMessageItem } from './errorMessage';
+import { DialogMessageItem } from './DialogMessage';
 
 const mdParser = new MarkdownIt({
     html: false,
@@ -67,12 +67,15 @@ export const renderChatHistory = (
                 }
                 return <ToolReturnParsedItem msg={message} openFile={openFile} />;
             });
-        case 'RovoDevError':
+        case 'RovoDevDialog':
             return (
-                <ErrorMessageItem
+                <DialogMessageItem
                     msg={msg}
                     isRetryAfterErrorButtonEnabled={isRetryAfterErrorButtonEnabled}
                     retryAfterError={retryAfterError}
+                    onToolPermissionChoice={
+                        () => {} /* this codepath is not supposed to have tool permissions requests */
+                    }
                 />
             );
         case 'RovoDev':
