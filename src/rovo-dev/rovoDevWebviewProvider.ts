@@ -1,3 +1,4 @@
+import { isMinimalIssue, MinimalIssue, readSearchResults } from '@atlassianlabs/jira-pi-common-models';
 import * as fs from 'fs';
 import path from 'path';
 import { CommandContext, setCommandContext } from 'src/commandContext';
@@ -26,6 +27,7 @@ import {
 
 import { Container } from '../../src/container';
 import { RovoDevLogger } from '../../src/logger';
+import { DetailedSiteInfo, ProductJira } from '../atlclients/authInfo';
 import { Commands, rovodevInfo } from '../constants';
 import {
     ModifiedFile,
@@ -33,6 +35,7 @@ import {
     RovoDevViewResponseType,
 } from '../react/atlascode/rovo-dev/rovoDevViewMessages';
 import { GitErrorCodes } from '../typings/git';
+import { SearchJiraHelper } from '../views/jira/searchJiraHelper';
 import { getHtmlForView } from '../webview/common/getHtmlForView';
 import { RovoDevApiClient, RovoDevHealthcheckResponse } from './rovoDevApiClient';
 import { RovoDevChatProvider } from './rovoDevChatProvider';
@@ -360,6 +363,10 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
 
                     case RovoDevViewResponseType.CheckFileExists:
                         await this.checkFileExists(e.filePath, e.requestId);
+                        break;
+
+                    case RovoDevViewResponseType.GetJiraWorkItems:
+                        await this.fetchAndSendJiraWorkItems();
                         break;
 
                     case RovoDevViewResponseType.ToolPermissionChoiceSubmit:
@@ -1185,5 +1192,114 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         this._dwellTracker = undefined;
 
         return this.refreshDebugPanel();
+    }
+
+    private getCachedJiraIssues(sites: DetailedSiteInfo[]): MinimalIssue<DetailedSiteInfo>[] {
+        const cachedIssues: MinimalIssue<DetailedSiteInfo>[] = [];
+        for (const site of sites) {
+            const assignedIssuesForSite = SearchJiraHelper.getAssignedIssuesPerSite(site.id);
+            // Filter to only include MinimalIssue items (not IssueLinkIssue)
+            const minimalIssues = assignedIssuesForSite.filter(isMinimalIssue) as MinimalIssue<DetailedSiteInfo>[];
+            cachedIssues.push(...minimalIssues);
+        }
+
+        const filteredIssues = cachedIssues.filter(
+            (issue) => issue.status && issue.status.statusCategory && issue.status.statusCategory.name !== 'Done',
+        );
+
+        // Shuffle the issues to show random selection on each page reload
+        const shuffledIssues = this.shuffleArray([...filteredIssues]);
+        return shuffledIssues.slice(0, 3);
+    }
+
+    private async sendJiraWorkItems(issues: MinimalIssue<DetailedSiteInfo>[]): Promise<void> {
+        if (!this._webView) {
+            return;
+        }
+
+        await this._webView.postMessage({
+            type: RovoDevProviderMessageType.SetJiraWorkItems,
+            issues: issues,
+        });
+    }
+
+    private async fetchJiraIssuesFromAPI(sites: DetailedSiteInfo[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        const jql = 'assignee = currentUser() AND StatusCategory != Done ORDER BY updated DESC';
+
+        // Fetch from all sites in parallel
+        const allIssues = await Promise.all(
+            sites.map(async (site) => {
+                try {
+                    const client = await Container.clientManager.jiraClient(site);
+                    const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
+                    const fields = Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(epicFieldInfo);
+
+                    const res = await client.searchForIssuesUsingJqlGet(jql, fields, 10, 0);
+                    const searchResults = await readSearchResults(res, site, epicFieldInfo);
+                    return searchResults.issues;
+                } catch (error) {
+                    RovoDevLogger.error(error, `Failed to fetch Jira issues for site ${site.host}`);
+                    return [];
+                }
+            }),
+        );
+
+        // Flatten, shuffle, and return top 3
+        const flatIssues = allIssues.flat();
+        return this.shuffleArray(flatIssues).slice(0, 3);
+    }
+
+    private shuffleArray<T>(array: T[]): T[] {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    private async fetchAndSendJiraWorkItems() {
+        if (!this._webView) {
+            return;
+        }
+
+        const sites = Container.siteManager.getSitesAvailable(ProductJira);
+        if (sites.length === 0) {
+            await this.sendJiraWorkItems([]);
+            return;
+        }
+
+        // First check if we have cached issues - show them immediately
+        const cachedIssues = this.getCachedJiraIssues(sites);
+        if (cachedIssues.length > 0) {
+            await this.sendJiraWorkItems(cachedIssues);
+            return;
+        }
+
+        // No cache available - show loading and fetch from API
+        try {
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetJiraWorkItemsLoading,
+                isLoading: true,
+            });
+
+            const apiIssues = await this.fetchJiraIssuesFromAPI(sites);
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetJiraWorkItemsLoading,
+                isLoading: false,
+            });
+
+            await this.sendJiraWorkItems(apiIssues);
+        } catch (error) {
+            RovoDevLogger.error(error, 'Failed to fetch Jira work items');
+
+            await this._webView.postMessage({
+                type: RovoDevProviderMessageType.SetJiraWorkItemsLoading,
+                isLoading: false,
+            });
+
+            await this.sendJiraWorkItems([]);
+        }
     }
 }

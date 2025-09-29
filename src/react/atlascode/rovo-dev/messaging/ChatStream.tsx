@@ -1,8 +1,10 @@
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import { State } from 'src/rovo-dev/rovoDevTypes';
 import { RovoDevProviderMessage, RovoDevProviderMessageType } from 'src/rovo-dev/rovoDevWebviewProviderMessages';
 import { ConnectionTimeout } from 'src/util/time';
 
+import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
@@ -47,6 +49,11 @@ interface ChatStreamProps {
     onLoginClick: () => void;
     onOpenFolder: () => void;
     onMcpChoice: (choice: McpConsentChoice, serverName?: string) => void;
+    onSendMessage: (message: string) => void;
+    jiraWorkItems?: MinimalIssue<DetailedSiteInfo>[];
+    isJiraWorkItemsLoading?: boolean;
+    onJiraItemClick?: (issue: MinimalIssue<DetailedSiteInfo>) => void;
+    onRequestJiraItems?: () => void;
     onToolPermissionChoice: (toolCallId: string, choice: ToolPermissionChoice) => void;
 }
 
@@ -67,6 +74,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
     onLoginClick,
     onOpenFolder,
     onMcpChoice,
+    onSendMessage,
+    jiraWorkItems,
+    isJiraWorkItemsLoading,
+    onJiraItemClick,
+    onRequestJiraItems,
     onToolPermissionChoice,
 }) => {
     const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -235,6 +247,11 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 onLoginClick={onLoginClick}
                 onOpenFolder={onOpenFolder}
                 onMcpChoice={onMcpChoice}
+                onSendMessage={onSendMessage}
+                jiraWorkItems={jiraWorkItems}
+                isJiraWorkItemsLoading={isJiraWorkItemsLoading}
+                onJiraItemClick={onJiraItemClick}
+                onRequestJiraItems={onRequestJiraItems}
             />
             {!isChatHistoryDisabled &&
                 chatHistory &&
