@@ -239,6 +239,11 @@ export abstract class RovoDevProcessManager {
         credentials: CloudCredentials | undefined,
         forceNewInstance?: boolean,
     ) {
+        if (!workspace.workspaceFolders?.length) {
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NoWorkspaceOpen');
+            return;
+        }
+
         if (forceNewInstance) {
             this.stopRovoDevInstance();
         } else {
@@ -248,7 +253,7 @@ export abstract class RovoDevProcessManager {
         this.currentCredentials = credentials;
 
         if (!credentials) {
-            await this.sendErrorToChat(this.rovoDevWebviewProvider, new ProcessManagerError('needAuth'));
+            await this.rovoDevWebviewProvider.signalRovoDevDisabled('NeedAuth');
             return;
         }
 
