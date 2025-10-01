@@ -289,6 +289,9 @@ const RovoDevView: React.FC = () => {
                 case RovoDevProviderMessageType.ProviderReady:
                     setWorkspacePath(event.workspacePath || '');
                     setHomeDir(event.homeDir || '');
+                    if (event.yoloMode !== undefined) {
+                        setIsYoloModeToggled(event.yoloMode);
+                    }
                     setCurrentState({ state: 'WaitingForPrompt' });
                     break;
 
