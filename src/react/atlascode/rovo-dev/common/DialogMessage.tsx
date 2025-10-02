@@ -66,11 +66,14 @@ export const DialogMessageItem: React.FC<{
                     }}
                 >
                     <div style={messageContentStyles}>{title}</div>
-                    <div style={messageContentStyles}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <MarkedDown value={msg.text} />
+
+                    {msg.text && (
+                        <div style={messageContentStyles}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <MarkedDown value={msg.text} />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {msg.type === 'toolPermissionRequest' && (
                         <ToolCall toolName={msg.toolName} toolArgs={msg.toolArgs} mcpServer={msg.mcpServer} />
@@ -95,7 +98,7 @@ export const DialogMessageItem: React.FC<{
                                 justifyContent: 'flex-end',
                                 width: '100%',
                                 marginTop: '8px',
-                                gap: '4px',
+                                gap: '8px',
                             }}
                         >
                             <button
