@@ -127,12 +127,14 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         await this._context.workspaceState.update(key, enabled);
     }
 
-    private get isDisabled() {
-        return this._processState === RovoDevProcessState.Disabled;
-    }
-
     public get isVisible(): boolean {
         return this._webviewView?.visible ?? false;
+    }
+
+    public get isDisabled(): boolean {
+        return (
+            this._processState === RovoDevProcessState.Disabled || this._processState === RovoDevProcessState.Terminated
+        );
     }
 
     constructor(context: ExtensionContext, extensionPath: string) {
@@ -1223,10 +1225,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
         reason: RovoDevDisabledReason,
         detail?: RovoDevEntitlementCheckFailedDetail,
     ): Promise<void> {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+        if (this.isDisabled) {
             return;
         }
 
@@ -1241,10 +1240,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public async signalProcessFailedToInitialize(errorMessage?: string) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+        if (this.isDisabled) {
             return;
         }
 
@@ -1261,10 +1257,7 @@ export class RovoDevWebviewProvider extends Disposable implements WebviewViewPro
     }
 
     public async signalProcessTerminated(code?: number) {
-        if (
-            this._processState === RovoDevProcessState.Terminated ||
-            this._processState === RovoDevProcessState.Disabled
-        ) {
+        if (this.isDisabled) {
             return;
         }
 
