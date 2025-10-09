@@ -1,5 +1,11 @@
 ### [Report an Issue](https://github.com/atlassian/atlascode/issues)
 
+## What's new in 4.0.3
+
+### Improvement
+
+- Improved the initialization time for Rovo Dev, allowing the process to start before its webview is ready
+
 ## What's new in 4.0.2
 
 ### Improvements
