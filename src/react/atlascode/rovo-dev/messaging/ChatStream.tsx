@@ -8,18 +8,15 @@ import { DetailedSiteInfo } from '../../../../atlclients/authInfo';
 import { useMessagingApi } from '../../messagingApi';
 import { CheckFileExistsFunc, FollowUpActionFooter, OpenFileFunc } from '../common/common';
 import { DialogMessageItem } from '../common/DialogMessage';
-import { PullRequestChatItem, PullRequestForm } from '../create-pr/PullRequestForm';
+import { PullRequestForm } from '../create-pr/PullRequestForm';
 import { FeedbackForm, FeedbackType } from '../feedback-form/FeedbackForm';
 import { RovoDevLanding } from '../landing-page/RovoDevLanding';
 import { McpConsentChoice, RovoDevViewResponse, RovoDevViewResponseType } from '../rovoDevViewMessages';
 import { CodePlanButton } from '../technical-plan/CodePlanButton';
-import { TechnicalPlanComponent } from '../technical-plan/TechnicalPlanComponent';
 import { ToolCallItem } from '../tools/ToolCallItem';
-import { ToolReturnParsedItem } from '../tools/ToolReturnItem';
-import { DialogMessage, parseToolReturnMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
-import { ChatMessageItem } from './ChatMessageItem';
+import { DialogMessage, PullRequestMessage, Response, scrollToEnd } from '../utils';
+import { ChatStreamMessageRenderer } from './ChatStreamMessageRenderer';
 import { DropdownButton } from './dropdown-button/DropdownButton';
-import { MessageDrawer } from './MessageDrawer';
 
 interface ChatStreamProps {
     chatHistory: Response[];
@@ -246,66 +243,17 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                     onJiraItemClick={onJiraItemClick}
                 />
             )}
-            {!isChatHistoryDisabled &&
-                chatHistory &&
-                chatHistory.map((block, idx) => {
-                    const drawerOpen =
-                        idx === chatHistory.findLastIndex((msg) => Array.isArray(msg)) &&
-                        currentState.state !== 'WaitingForPrompt';
-
-                    if (block) {
-                        if (Array.isArray(block)) {
-                            return (
-                                <MessageDrawer
-                                    messages={block}
-                                    opened={drawerOpen}
-                                    renderProps={renderProps}
-                                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
-                                />
-                            );
-                        } else if (block.event_kind === '_RovoDevUserPrompt' || block.event_kind === 'text') {
-                            return (
-                                <ChatMessageItem
-                                    msg={block}
-                                    enableActions={
-                                        block.event_kind === 'text' && currentState.state === 'WaitingForPrompt'
-                                    }
-                                    onCopy={handleCopyResponse}
-                                    onFeedback={handleFeedbackTrigger}
-                                    openFile={renderProps.openFile}
-                                />
-                            );
-                        } else if (block.event_kind === 'tool-return') {
-                            const parsedMessages = parseToolReturnMessage(block);
-
-                            return parsedMessages.map((message) => {
-                                if (message.technicalPlan) {
-                                    return (
-                                        <TechnicalPlanComponent
-                                            content={message.technicalPlan}
-                                            openFile={renderProps.openFile}
-                                            checkFileExists={renderProps.checkFileExists}
-                                        />
-                                    );
-                                }
-                                return <ToolReturnParsedItem msg={message} openFile={renderProps.openFile} />;
-                            });
-                        } else if (block.event_kind === '_RovoDevDialog') {
-                            return (
-                                <DialogMessageItem
-                                    msg={block}
-                                    isRetryAfterErrorButtonEnabled={renderProps.isRetryAfterErrorButtonEnabled}
-                                    retryAfterError={renderProps.retryPromptAfterError}
-                                    onToolPermissionChoice={onToolPermissionChoice}
-                                />
-                            );
-                        } else if (block.event_kind === '_RovoDevPullRequest') {
-                            return <PullRequestChatItem msg={block} />;
-                        }
-                    }
-
-                    return null;
-                })}
+            {!isChatHistoryDisabled && (
+                <ChatStreamMessageRenderer
+                    chatHistory={chatHistory}
+                    currentState={currentState}
+                    handleCopyResponse={handleCopyResponse}
+                    handleFeedbackTrigger={handleFeedbackTrigger}
+                    onToolPermissionChoice={onToolPermissionChoice}
+                    onCollapsiblePanelExpanded={onCollapsiblePanelExpanded}
+                    renderProps={renderProps}
+                />
+            )}
 
             {!isChatHistoryDisabled && shouldShowToolCall && pendingToolCall && (
                 <div style={{ marginBottom: '16px' }}>
