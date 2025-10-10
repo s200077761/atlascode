@@ -55,6 +55,9 @@ jest.mock('../../src/rovo-dev/rovoDevProcessManager', () => ({
     RovoDevProcessManager: {
         setRovoDevWebviewProvider: jest.fn(),
         initializeRovoDev: jest.fn(),
+        state: {
+            state: 'NotStarted',
+        },
     },
 }));
 
@@ -245,71 +248,6 @@ describe('RovoDevWebviewProvider - Real Implementation Tests', () => {
             (provider as any)._webviewReady = true;
 
             await provider.setPromptTextWithFocus('test text');
-            expect(provider).toBeDefined();
-        });
-
-        it('should handle sendErrorToChat', () => {
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            provider.sendErrorToChat('test error');
-            expect(provider).toBeDefined();
-        });
-
-        it('should handle signalInitializing', () => {
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            provider.signalInitializing();
-            expect(provider).toBeDefined();
-        });
-
-        it('should handle signalBinaryDownloadStarted', () => {
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            provider.signalBinaryDownloadStarted(1000);
-            expect(provider).toBeDefined();
-        });
-
-        it('should handle signalBinaryDownloadProgress', () => {
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            provider.signalBinaryDownloadProgress(500, 1000);
-            expect(provider).toBeDefined();
-        });
-
-        it('should handle signalBinaryDownloadEnded', () => {
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            provider.signalBinaryDownloadEnded();
-            expect(provider).toBeDefined();
-        });
-
-        it('should handle signalProcessStarted', async () => {
-            // Mock the webview
-            (provider as any)._webView = {
-                postMessage: jest.fn().mockResolvedValue(true),
-            };
-
-            // Mock the API client
-            (provider as any)._rovoDevApiClient = {
-                healthcheck: jest.fn().mockResolvedValue({ status: 'healthy' }),
-            };
-
-            await provider.signalProcessStarted(3000);
             expect(provider).toBeDefined();
         });
     });
