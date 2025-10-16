@@ -9,7 +9,6 @@ import Tooltip from '@atlaskit/tooltip';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import { DisabledState, State } from 'src/rovo-dev/rovoDevTypes';
-type NonDisabledState = Exclude<State, DisabledState>;
 
 import { rovoDevTextareaStyles } from '../../rovoDevViewStyles';
 import PromptSettingsPopup from '../prompt-settings-popup/PromptSettingsPopup';
@@ -22,6 +21,8 @@ import {
     setupPromptKeyBindings,
     SLASH_COMMANDS,
 } from './utils';
+
+type NonDisabledState = Exclude<State, DisabledState>;
 
 interface PromptInputBoxProps {
     disabled?: boolean;
@@ -58,19 +59,28 @@ const getTextAreaPlaceholder = (isGeneratingResponse: boolean, currentState: Non
     }
 };
 
+let monacoInitialized = false;
+
+function initMonaco(isBBY: boolean) {
+    if (!monacoInitialized) {
+        let commands = SLASH_COMMANDS;
+        if (isBBY) {
+            commands = commands.filter((command) => command.label !== '/yolo');
+        }
+
+        monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
+
+        monacoInitialized = true;
+    }
+}
+
 function createEditor(setIsEmpty?: (isEmpty: boolean) => void, isBBY: boolean = false) {
     const container = document.getElementById('prompt-editor-container');
     if (!container) {
         return undefined;
     }
 
-    let commands = SLASH_COMMANDS;
-
-    if (isBBY) {
-        commands = commands.filter((command) => command.label !== '/yolo');
-    }
-
-    monaco.languages.registerCompletionItemProvider('plaintext', createSlashCommandProvider(commands));
+    initMonaco(isBBY);
 
     const editor = createMonacoPromptEditor(container);
     editor.onDidChangeModelContent(() => {
