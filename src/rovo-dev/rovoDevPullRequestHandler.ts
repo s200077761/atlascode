@@ -4,6 +4,8 @@ import { API, GitExtension, Repository } from 'src/typings/git';
 import { promisify } from 'util';
 import { env, extensions, Uri } from 'vscode';
 
+const execAsync = promisify(exec);
+
 export class RovoDevPullRequestHandler {
     private readonly gitExtensionPromise: Thenable<GitExtension>;
     private gitApiCache: API | undefined;
@@ -49,6 +51,8 @@ export class RovoDevPullRequestHandler {
             /https:\/\/github\.com\/[^\s]+\/pull\/new\/[^\s]+/g,
             // Bitbucket: https://bitbucket.org/my-org/my-repo/pull-requests/new?source=my-branch
             /https:\/\/bitbucket\.org\/[^\s]+\/pull-requests\/new\?[^\s]+/g,
+            // Internal staging instance of Bitbucket
+            /https:\/\/integration\.bb-inf\.net\/[^\s]+\/pull-requests\/new\?[^\s]+/g,
             // Generic
             /https:\/\/[^\s]+\/pull[^\s]*\/new\/[^\s]+/g,
         ];
@@ -63,6 +67,50 @@ export class RovoDevPullRequestHandler {
 
         RovoDevLogger.info(`Could not find PR link in push output.`);
         RovoDevLogger.info(`Push warnings: ${output}`);
+        return undefined;
+    }
+
+    public buildCreatePrLinkFromGitOutput(output: string, branch: string): string | undefined {
+        // If no PR creation link found, try to extract one from the git remote URL
+        // example text: "To bitbucket.org:atlassian/devai-services.git"
+        const gitRemoteMatchers = [
+            // SSH Github: git@github.com:my-org/my-repo.git
+            /(github)\.com:([^\s]+)\/([^\s]+)(\.git)?/,
+            // SSH Bitbucket:
+            /(bitbucket)\.org:([^\s]+)\/([^\s]+)(\.git)?/,
+            // Internal staging instance of Bitbucket
+            /(integration\.bb-inf)\.net:([^\s]+)\/([^\s]+)(\.git)?/,
+        ];
+        for (const gitRemoteMatcher of gitRemoteMatchers) {
+            const gitRemoteMatch = output.match(gitRemoteMatcher);
+            if (gitRemoteMatch && gitRemoteMatch[2] && gitRemoteMatch[3]) {
+                const org = gitRemoteMatch[2];
+                const repo = gitRemoteMatch[3].replace(/\.git$/, '');
+                const host = gitRemoteMatch[1];
+                if (!host) {
+                    continue;
+                }
+
+                let prLink: string;
+                switch (host) {
+                    case 'github':
+                        prLink = `https://github.com/${org}/${repo}/pull/new/${branch}`;
+                        break;
+                    case 'bitbucket':
+                        prLink = `https://bitbucket.org/${org}/${repo}/pull-requests/new?source=${branch}`;
+                        break;
+                    case 'integration.bb-inf':
+                        prLink = `https://integration.bb-inf.net/${org}/${repo}/pull-requests/new?source=${branch}`;
+                        break;
+                    default:
+                        continue;
+                }
+
+                RovoDevLogger.info(`Create PR from git remote: ${prLink}`);
+                return prLink;
+            }
+        }
+
         return undefined;
     }
 
@@ -109,7 +157,6 @@ export class RovoDevPullRequestHandler {
             }
         }
 
-        const execAsync = promisify(exec);
         let stderr: string;
         try {
             const result = await execAsync(`git push origin ${branchName}`, {
@@ -134,10 +181,14 @@ export class RovoDevPullRequestHandler {
             throw new Error(`Failed to push changes: ${errorMessage}`);
         }
 
-        const prLink = this.findPRLink(stderr);
+        const prLink = this.findPRLink(stderr) || this.buildCreatePrLinkFromGitOutput(stderr, branchName);
         if (prLink) {
-            env.openExternal(Uri.parse(prLink));
             RovoDevLogger.info(`Found PR link: ${prLink}`);
+            try {
+                await env.openExternal(Uri.parse(prLink));
+            } catch (ex) {
+                RovoDevLogger.info('Failed to open PR link.', ex);
+            }
         } else {
             RovoDevLogger.info('No PR link found in push output. Changes pushed successfully.');
         }
